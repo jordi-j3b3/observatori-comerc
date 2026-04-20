@@ -1,9 +1,6 @@
 [client]
 toolbarMode = "minimal"
 
-[browser]
-gatherUsageStats = false
-
 [server]
-maxUploadSize = 200
+headless = true
 enableXsrfProtection = false
