@@ -5,6 +5,21 @@ Pàgina principal amb KPIs i navegació.
 import streamlit as st
 import pandas as pd
 import os
+import streamlit as st
+
+# Permet iFrames
+st.set_page_config(
+    page_title="Inici",
+    page_icon="🏪",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# AFEGEIX AQUESTA LÍNIA:
+st.markdown(
+    '<meta http-equiv="X-UA-Compatible" content="ie=edge">',
+    unsafe_allow_html=True
+)
 
 st.set_page_config(
     page_title="Inici",
