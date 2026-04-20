@@ -1,0 +1,135 @@
+"""
+Observatori del Comerç Minorista a Espanya (CNAE 47)
+Pàgina principal amb KPIs i navegació.
+"""
+import streamlit as st
+import pandas as pd
+import os
+
+st.set_page_config(
+    page_title="Inici",
+    page_icon="🏪",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+from style import inject_css, setup_lang, fnum, fpct, page_meta
+inject_css()
+t = setup_lang()
+
+with st.sidebar:
+    st.markdown(
+        '<img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" '
+        'alt="J3B3 Consulting" style="width:160px; margin-bottom:0.5rem;">',
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    st.caption(t("footer"))
+
+# ─── DADES ─────────────────────────────────────────────────────
+
+@st.cache_data(ttl=3600)
+def load_data(name):
+    path = os.path.join(os.path.dirname(__file__), "data", "cache", f"{name}.csv")
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    return pd.DataFrame()
+
+df_pib = load_data("pib_vab")
+df_empreses = load_data("empreses")
+df_prod = load_data("productivitat")
+
+# ─── HEADER ────────────────────────────────────────────────────
+
+st.markdown("""
+<div class="j3b3-header">
+    <img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" alt="J3B3 Consulting">
+    <span class="j3b3-badge">OBSERVATORI</span>
+</div>
+""", unsafe_allow_html=True)
+st.title(t("app_title"))
+st.markdown(f"*{t('app_subtitle')}*")
+
+# ─── KPIs ──────────────────────────────────────────────────────
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns:
+        last = df_pib.dropna(subset=["vab_cnae47_corrents"]).iloc[-1]
+        val = last["vab_cnae47_corrents"]
+        any_ = int(last["any"])
+        prev = df_pib.dropna(subset=["vab_cnae47_corrents"]).iloc[-2]["vab_cnae47_corrents"]
+        delta = fpct(((val / prev) - 1) * 100)
+        st.metric(t("kpi_pib"), f"{fnum(val)} {t('kpi_meur')}", delta, help=f"{any_}")
+    else:
+        st.metric(t("kpi_pib"), "—")
+
+with col2:
+    if not df_empreses.empty:
+        esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
+        if not esp.empty:
+            last = esp.iloc[-1]
+            val = int(last["empreses"])
+            any_ = int(last["any"])
+            if len(esp) > 1:
+                prev = int(esp.iloc[-2]["empreses"])
+                delta = fpct(((val / prev) - 1) * 100)
+            else:
+                delta = None
+            st.metric(t("kpi_empreses"), fnum(val), delta, help=f"{any_}")
+    else:
+        st.metric(t("kpi_empreses"), "—")
+
+with col3:
+    if not df_prod.empty and "personal_ocupat" in df_prod.columns:
+        last_ocu = df_prod.dropna(subset=["personal_ocupat"]).iloc[-1]
+        st.metric(t("kpi_ocupacio"), fnum(last_ocu["personal_ocupat"]), help=f"{int(last_ocu['any'])}")
+    else:
+        st.metric(t("kpi_ocupacio"), "—")
+
+with col4:
+    if not df_prod.empty and "productivitat_va_hora" in df_prod.columns:
+        last = df_prod.dropna(subset=["productivitat_va_hora"]).iloc[-1]
+        val = last["productivitat_va_hora"]
+        any_ = int(last["any"])
+        st.metric(t("kpi_productivitat"), f"{fnum(val, 1)} {t('kpi_eur_h')}", help=f"{any_}")
+    else:
+        st.metric(t("kpi_productivitat"), "—")
+
+# ─── RESUM ─────────────────────────────────────────────────────
+
+st.divider()
+
+if st.session_state.lang == "ca":
+    st.markdown("""
+    ### Sobre l'Observatori
+
+    Aquest observatori monitoritza l'evolució del **comerç al detall** (CNAE 47) a Espanya,
+    analitzant la seva contribució al PIB, el teixit empresarial, l'ocupació,
+    la productivitat, el comerç electrònic i la posició relativa a Europa.
+
+    **Fonts de dades:** INE, Eurostat, CNMC
+
+    **Actualització:** Trimestral automàtica (gener, abril, juliol, octubre)
+
+    Navega per les seccions del menú lateral per explorar cada dimensió.
+    """)
+else:
+    st.markdown("""
+    ### Sobre el Observatorio
+
+    Este observatorio monitoriza la evolución del **comercio minorista** (CNAE 47) en España,
+    analizando su contribución al PIB, el tejido empresarial, el empleo,
+    la productividad, el comercio electrónico y la posición relativa en Europa.
+
+    **Fuentes de datos:** INE, Eurostat, CNMC
+
+    **Actualización:** Trimestral automática (enero, abril, julio, octubre)
+
+    Navega por las secciones del menú lateral para explorar cada dimensión.
+    """)
+
+# ─── META ─────────────────────────────────────────────────────
+
+page_meta("INE, Eurostat, CNMC", st.session_state.lang)
