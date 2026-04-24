@@ -9,9 +9,8 @@ from style import (inject_css, setup_lang, insight, intro, source, page_meta,
                    fnum, fpct, apply_layout,
                    PURPLE, RED, BLUE, GREEN, ORANGE, GRAY)
 
-st.set_page_config(page_title="Europa", page_icon="🇪🇺", layout="wide")
 inject_css()
-t = setup_lang()
+t = setup_lang(show_selector=False)
 
 @st.cache_data(ttl=3600)
 def load_europa():

@@ -100,20 +100,21 @@ def _load_translations():
         return json.load(f)
 
 
-def setup_lang():
+def setup_lang(show_selector=True):
     """Configura l'idioma: inicialitza session_state i retorna funció t()."""
     TRANS = _load_translations()
     if "lang" not in st.session_state:
         st.session_state.lang = "ca"
 
-    with st.sidebar:
-        lang_options = {"Català": "ca", "Castellano": "es"}
-        selected = st.selectbox(
-            "Idioma",
-            list(lang_options.keys()),
-            index=0 if st.session_state.lang == "ca" else 1,
-        )
-        st.session_state.lang = lang_options[selected]
+    if show_selector:
+        with st.sidebar:
+            lang_options = {"Català": "ca", "Castellano": "es"}
+            selected = st.selectbox(
+                "Idioma",
+                list(lang_options.keys()),
+                index=0 if st.session_state.lang == "ca" else 1,
+            )
+            st.session_state.lang = lang_options[selected]
 
     def t(key):
         return TRANS.get(st.session_state.lang, {}).get(key, key)

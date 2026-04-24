@@ -5,9 +5,8 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import inject_css, setup_lang, page_meta, PURPLE
 
-st.set_page_config(page_title="Metodologia", page_icon="📐", layout="wide")
 inject_css()
-t = setup_lang()
+t = setup_lang(show_selector=False)
 
 if st.session_state.lang == "ca":
     st.title("Aspectes metodològics")

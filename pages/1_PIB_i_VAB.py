@@ -9,9 +9,8 @@ from style import (inject_css, setup_lang, insight, intro, source, page_meta,
                    fnum, fpct, cagr, apply_layout,
                    PURPLE, RED, BLUE)
 
-st.set_page_config(page_title="PIB i VAB", page_icon="📊", layout="wide")
 inject_css()
-t = setup_lang()
+t = setup_lang(show_selector=False)
 
 # Dades
 @st.cache_data(ttl=3600)
