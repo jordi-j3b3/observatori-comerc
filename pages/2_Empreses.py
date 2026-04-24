@@ -214,101 +214,142 @@ if not df_ccaa.empty:
 
     df_map = df_ccaa[df_ccaa["any"] == any_sel].copy()
 
-    map_metric = st.radio(
-        "Mètrica" if _ca else "Métrica",
-        ["density", "absolute"],
-        format_func=lambda x: (
-            ("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab.") if x == "density"
-            else ("Empreses (absolut)" if _ca else "Empresas (absoluto)")
-        ),
-        horizontal=True,
-    )
+    tab_map, tab_rank = st.tabs([
+        "Mapa" if _ca else "Mapa",
+        "Rànquing" if _ca else "Ranking",
+    ])
 
-    if map_metric == "density" and "empreses_per_1000hab" in df_map.columns:
-        col_val = "empreses_per_1000hab"
-        lbl_legend = "Emp. / 1.000 hab." if _ca else "Emp. / 1.000 hab."
-        fmt = ".1f"
-        zmin = df_ccaa["empreses_per_1000hab"].min()
-        zmax = df_ccaa["empreses_per_1000hab"].max()
-    else:
-        col_val = "empreses"
-        lbl_legend = "Empreses" if _ca else "Empresas"
-        fmt = ",.0f"
-        zmin = df_ccaa["empreses"].min()
-        zmax = df_ccaa["empreses"].max()
-
-    fig_map = go.Figure(go.Choroplethmap(
-        geojson=geojson,
-        locations=df_map["territori"],
-        featureidkey="properties.territori",
-        z=df_map[col_val],
-        zmin=zmin,
-        zmax=zmax,
-        colorscale=[
-            [0, "#f0eeff"],
-            [0.15, "#c4b5fd"],
-            [0.35, "#8b5cf6"],
-            [0.55, "#6d28d9"],
-            [0.75, "#4c1d95"],
-            [1, "#1e0a3c"],
-        ],
-        colorbar=dict(title=lbl_legend, thickness=15),
-        marker=dict(line=dict(width=1.5, color="white")),
-        text=df_map["territori"],
-        hovertemplate=(
-            "<b>%{text}</b><br>" +
-            f"{lbl_legend}: " + "%{z:" + fmt + "}<extra></extra>"
-        ),
-    ))
-    fig_map.update_layout(
-        map=dict(
-            style="white-bg",
-            center=dict(lat=39.5, lon=-3.5),
-            zoom=4.8,
-        ),
-        height=800,
-        margin=dict(l=0, r=0, t=10, b=10),
-    )
-    st.plotly_chart(fig_map, use_container_width=True)
-    source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
-           else "INE, DIRCE y Padrón Municipal. Cálculo propio")
-
-    # ─── Rànquings per CCAA ───────���──────────────────────────────
-
-    # Rànquing horitzontal
-    df_any = df_ccaa[df_ccaa["any"] == any_sel].sort_values("empreses", ascending=True)
-
-    total_esp_val = df_esp[df_esp["any"] == any_sel]["empreses"].values
-    total_val = total_esp_val[0] if len(total_esp_val) > 0 else df_any["empreses"].sum()
-
-    fig3 = go.Figure()
-    fig3.add_trace(go.Bar(
-        y=df_any["territori"], x=df_any["empreses"],
-        orientation="h",
-        marker_color=PURPLE_LIGHT,
-        text=[f"{fnum(v)}  ({fpct(v / total_val * 100, 1, sign=False)})" for v in df_any["empreses"]],
-        textposition="outside",
-        textfont=dict(size=11),
-    ))
-    # Mitjana espanyola
-    n_ccaa = len(df_any)
-    if n_ccaa > 0:
-        avg_emp = total_val / n_ccaa
-        fig3.add_vline(
-            x=avg_emp, line_dash="dash", line_color=RED, line_width=2,
-            annotation_text=f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_emp)}",
-            annotation_position="top right",
+    with tab_map:
+        map_metric = st.radio(
+            "Mètrica" if _ca else "Métrica",
+            ["density", "absolute"],
+            format_func=lambda x: (
+                ("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab.") if x == "density"
+                else ("Empreses (absolut)" if _ca else "Empresas (absoluto)")
+            ),
+            horizontal=True,
         )
-    apply_layout(fig3,
-        title=f"{t('emp_ccaa_ranking')} ({int(any_sel)})",
-        xaxis_title=t("emp_count"),
-        height=max(450, len(df_any) * 32 + 100),
-        margin=dict(l=200, r=120, t=50, b=50),
-    )
-    st.plotly_chart(fig3, use_container_width=True)
-    source("INE, DIRCE")
 
-    # Variació acumulada per CCAA
+        if map_metric == "density" and "empreses_per_1000hab" in df_map.columns:
+            col_val = "empreses_per_1000hab"
+            lbl_legend = "Emp. / 1.000 hab." if _ca else "Emp. / 1.000 hab."
+            fmt = ".1f"
+            zmin = df_ccaa["empreses_per_1000hab"].min()
+            zmax = df_ccaa["empreses_per_1000hab"].max()
+        else:
+            col_val = "empreses"
+            lbl_legend = "Empreses" if _ca else "Empresas"
+            fmt = ",.0f"
+            zmin = df_ccaa["empreses"].min()
+            zmax = df_ccaa["empreses"].max()
+
+        fig_map = go.Figure(go.Choroplethmap(
+            geojson=geojson,
+            locations=df_map["territori"],
+            featureidkey="properties.territori",
+            z=df_map[col_val],
+            zmin=zmin,
+            zmax=zmax,
+            colorscale=[
+                [0, "#f0eeff"],
+                [0.15, "#c4b5fd"],
+                [0.35, "#8b5cf6"],
+                [0.55, "#6d28d9"],
+                [0.75, "#4c1d95"],
+                [1, "#1e0a3c"],
+            ],
+            colorbar=dict(title=lbl_legend, thickness=15),
+            marker=dict(line=dict(width=1.5, color="white")),
+            text=df_map["territori"],
+            hovertemplate=(
+                "<b>%{text}</b><br>" +
+                f"{lbl_legend}: " + "%{z:" + fmt + "}<extra></extra>"
+            ),
+        ))
+        fig_map.update_layout(
+            map=dict(
+                style="white-bg",
+                center=dict(lat=39.5, lon=-3.5),
+                zoom=4.8,
+            ),
+            height=800,
+            margin=dict(l=0, r=0, t=10, b=10),
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
+        source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
+               else "INE, DIRCE y Padrón Municipal. Cálculo propio")
+
+    with tab_rank:
+        # Rànquing horitzontal per empreses
+        df_any = df_ccaa[df_ccaa["any"] == any_sel].sort_values("empreses", ascending=True)
+
+        total_esp_val = df_esp[df_esp["any"] == any_sel]["empreses"].values
+        total_val = total_esp_val[0] if len(total_esp_val) > 0 else df_any["empreses"].sum()
+
+        fig3 = go.Figure()
+        fig3.add_trace(go.Bar(
+            y=df_any["territori"], x=df_any["empreses"],
+            orientation="h",
+            marker_color=PURPLE_LIGHT,
+            text=[f"{fnum(v)}  ({fpct(v / total_val * 100, 1, sign=False)})" for v in df_any["empreses"]],
+            textposition="outside",
+            textfont=dict(size=11),
+        ))
+        n_ccaa = len(df_any)
+        if n_ccaa > 0:
+            avg_emp = total_val / n_ccaa
+            fig3.add_vline(
+                x=avg_emp, line_dash="dash", line_color=RED, line_width=2,
+                annotation_text=f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_emp)}",
+                annotation_position="top right",
+            )
+        apply_layout(fig3,
+            title=f"{t('emp_ccaa_ranking')} ({int(any_sel)})",
+            xaxis_title=t("emp_count"),
+            height=max(450, len(df_any) * 32 + 100),
+            margin=dict(l=200, r=120, t=50, b=50),
+        )
+        st.plotly_chart(fig3, use_container_width=True)
+        source("INE, DIRCE")
+
+        # Rànquing densitat comercial per CCAA
+        if "empreses_per_1000hab" in df_ccaa.columns:
+            df_dens_ccaa = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["empreses_per_1000hab"])
+            if not df_dens_ccaa.empty:
+                lbl_dens = ("Densitat comercial per CCAA (empreses / 1.000 hab.)" if _ca
+                            else "Densidad comercial por CCAA (empresas / 1.000 hab.)")
+                st.subheader(f"{lbl_dens} ({int(any_sel)})")
+
+                df_dens_ccaa = df_dens_ccaa.sort_values("empreses_per_1000hab", ascending=True)
+
+                esp_dens = df_esp[df_esp["any"] == any_sel]["empreses_per_1000hab"].values
+                avg_dens = esp_dens[0] if len(esp_dens) > 0 else None
+
+                fig_dens_ccaa = go.Figure()
+                fig_dens_ccaa.add_trace(go.Bar(
+                    y=df_dens_ccaa["territori"], x=df_dens_ccaa["empreses_per_1000hab"],
+                    orientation="h",
+                    marker_color=PURPLE_LIGHT,
+                    text=[f"{v:.1f}".replace(".", ",") for v in df_dens_ccaa["empreses_per_1000hab"]],
+                    textposition="outside",
+                    textfont=dict(size=11),
+                ))
+                if avg_dens:
+                    fig_dens_ccaa.add_vline(
+                        x=avg_dens, line_dash="dash", line_color=RED, line_width=2,
+                        annotation_text=f"{'Espanya' if _ca else 'España'}: {avg_dens:.1f}".replace(".", ","),
+                        annotation_position="top right",
+                    )
+                apply_layout(fig_dens_ccaa,
+                    xaxis_title=("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab."),
+                    height=max(450, len(df_dens_ccaa) * 32 + 100),
+                    margin=dict(l=200, r=100, t=50, b=50),
+                )
+                st.plotly_chart(fig_dens_ccaa, use_container_width=True)
+                source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
+                       else "INE, DIRCE y Padrón Municipal. Cálculo propio")
+
+    # Variació acumulada per CCAA (fora dels tabs)
     first_year = df_ccaa["any"].min()
     last_year = df_ccaa["any"].max()
     df_first = df_ccaa[df_ccaa["any"] == first_year][["territori", "empreses"]].rename(columns={"empreses": "emp_first"})
@@ -316,44 +357,6 @@ if not df_ccaa.empty:
     df_var_ccaa = df_first.merge(df_last, on="territori")
     df_var_ccaa["var_pct"] = ((df_var_ccaa["emp_last"] / df_var_ccaa["emp_first"]) - 1) * 100
     df_var_ccaa = df_var_ccaa.sort_values("var_pct", ascending=True)
-
-    # Rànquing densitat comercial per CCAA
-    if "empreses_per_1000hab" in df_ccaa.columns:
-        df_dens_ccaa = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["empreses_per_1000hab"])
-        if not df_dens_ccaa.empty:
-            lbl_dens = ("Densitat comercial per CCAA (empreses / 1.000 hab.)" if _ca
-                        else "Densidad comercial por CCAA (empresas / 1.000 hab.)")
-            st.subheader(f"{lbl_dens} ({int(any_sel)})")
-
-            df_dens_ccaa = df_dens_ccaa.sort_values("empreses_per_1000hab", ascending=True)
-
-            # Get national average
-            esp_dens = df_esp[df_esp["any"] == any_sel]["empreses_per_1000hab"].values
-            avg_dens = esp_dens[0] if len(esp_dens) > 0 else None
-
-            fig_dens_ccaa = go.Figure()
-            fig_dens_ccaa.add_trace(go.Bar(
-                y=df_dens_ccaa["territori"], x=df_dens_ccaa["empreses_per_1000hab"],
-                orientation="h",
-                marker_color=PURPLE_LIGHT,
-                text=[f"{v:.1f}".replace(".", ",") for v in df_dens_ccaa["empreses_per_1000hab"]],
-                textposition="outside",
-                textfont=dict(size=11),
-            ))
-            if avg_dens:
-                fig_dens_ccaa.add_vline(
-                    x=avg_dens, line_dash="dash", line_color=RED, line_width=2,
-                    annotation_text=f"{'Espanya' if _ca else 'España'}: {avg_dens:.1f}".replace(".", ","),
-                    annotation_position="top right",
-                )
-            apply_layout(fig_dens_ccaa,
-                xaxis_title=("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab."),
-                height=max(450, len(df_dens_ccaa) * 32 + 100),
-                margin=dict(l=200, r=100, t=50, b=50),
-            )
-            st.plotly_chart(fig_dens_ccaa, use_container_width=True)
-            source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
-                   else "INE, DIRCE y Padrón Municipal. Cálculo propio")
 
     st.subheader(f"{'Variació acumulada' if _ca else 'Variación acumulada'} {int(first_year)}-{int(last_year)} "
                  f"{'per CCAA' if _ca else 'por CCAA'}")
