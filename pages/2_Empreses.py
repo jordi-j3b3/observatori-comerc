@@ -228,16 +228,22 @@ if not df_ccaa.empty:
         col_val = "empreses_per_1000hab"
         lbl_legend = "Emp. / 1.000 hab." if _ca else "Emp. / 1.000 hab."
         fmt = ".1f"
+        zmin = df_ccaa["empreses_per_1000hab"].min()
+        zmax = df_ccaa["empreses_per_1000hab"].max()
     else:
         col_val = "empreses"
         lbl_legend = "Empreses" if _ca else "Empresas"
         fmt = ",.0f"
+        zmin = df_ccaa["empreses"].min()
+        zmax = df_ccaa["empreses"].max()
 
     fig_map = go.Figure(go.Choroplethmap(
         geojson=geojson,
         locations=df_map["territori"],
         featureidkey="properties.territori",
         z=df_map[col_val],
+        zmin=zmin,
+        zmax=zmax,
         colorscale=[
             [0, "#f0eeff"],
             [0.15, "#c4b5fd"],
@@ -258,9 +264,9 @@ if not df_ccaa.empty:
         map=dict(
             style="white-bg",
             center=dict(lat=39.5, lon=-3.5),
-            zoom=4.6,
+            zoom=4.8,
         ),
-        height=700,
+        height=800,
         margin=dict(l=0, r=0, t=10, b=10),
     )
     st.plotly_chart(fig_map, use_container_width=True)
