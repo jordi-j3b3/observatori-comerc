@@ -1,11 +1,11 @@
 name: Actualitzacio trimestral de dades                                                                                                                          
                                                             
-  on:                                                                                                                                                              
+on:                                                                                                                                                              
     schedule:                                               
       - cron: '0 8 1 1,4,7,10 *'
     workflow_dispatch:                                                                                                                                             
   
-  jobs:                                                                                                                                                            
+jobs:                                                                                                                                                            
     update-data:                                            
       runs-on: ubuntu-latest                                                                                                                                       
   
