@@ -83,20 +83,25 @@ if "productivitat_va_hora" in df.columns:
                 f"{fnum(first['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
     col3.metric(f"{'Variació' if _ca else 'Variación'} {any_first}–{any_last}",
                 fpct(var))
-    _cagr_help = (
-        f"CAGR (Compound Annual Growth Rate): taxa de creixement anual compost. "
-        f"Indica quant ha crescut la productivitat cada any de mitjana si el creixement "
-        f"hagués estat constant entre {any_first} i {any_last} ({n_anys} anys). "
-        f"Un CAGR del {fpct(cagr_prod, 2)} vol dir que, de mitjana, la productivitat "
-        f"ha augmentat un {fpct(cagr_prod, 2)} cada any."
-    ) if _ca else (
-        f"CAGR (Compound Annual Growth Rate): tasa de crecimiento anual compuesto. "
-        f"Indica cuánto ha crecido la productividad cada año de media si el crecimiento "
-        f"hubiese sido constante entre {any_first} y {any_last} ({n_anys} años). "
-        f"Un CAGR del {fpct(cagr_prod, 2)} significa que, de media, la productividad "
-        f"ha aumentado un {fpct(cagr_prod, 2)} cada año."
-        )
-    col4.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 2), help=_cagr_help)
+    with col4:
+        st.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 2))
+        with st.popover("Què és el CAGR?" if _ca else "¿Qué es el CAGR?"):
+            if _ca:
+                st.markdown(
+                    f"**CAGR** (*Compound Annual Growth Rate*) és la taxa de creixement anual compost.\n\n"
+                    f"Indica quant ha crescut la productivitat **cada any de mitjana** si el creixement "
+                    f"hagués estat constant entre {any_first} i {any_last} ({n_anys} anys).\n\n"
+                    f"Un CAGR del **{fpct(cagr_prod, 2)}** vol dir que, de mitjana, la productivitat "
+                    f"ha augmentat un {fpct(cagr_prod, 2)} cada any durant aquest període."
+                )
+            else:
+                st.markdown(
+                    f"**CAGR** (*Compound Annual Growth Rate*) es la tasa de crecimiento anual compuesto.\n\n"
+                    f"Indica cuánto ha crecido la productividad **cada año de media** si el crecimiento "
+                    f"hubiese sido constante entre {any_first} y {any_last} ({n_anys} años).\n\n"
+                    f"Un CAGR del **{fpct(cagr_prod, 2)}** significa que, de media, la productividad "
+                    f"ha aumentado un {fpct(cagr_prod, 2)} cada año durante este período."
+                )
 
 # ─── Gràfic 2: Índex base 100 ──────────��────────────────────
 
