@@ -190,14 +190,83 @@ if "empreses_per_1000hab" in df_esp.columns:
                 f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
             )
 
-# ─── Comparativa CCAA ─────────────────────────────────────────
+# ─── Mapa interactiu CCAA ────────────��───────────────────────
 
 st.markdown("---")
 st.subheader(t("emp_ccaa_title"))
 
 if not df_ccaa.empty:
-    anys_disponibles = sorted(df_ccaa["any"].dropna().unique(), reverse=True)
-    any_sel = st.selectbox(t("emp_ccaa_year"), anys_disponibles, index=0)
+    import json
+
+    @st.cache_data
+    def load_geojson():
+        path = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
+        with open(path, "r") as f:
+            return json.load(f)
+
+    geojson = load_geojson()
+
+    any_sel = st.select_slider(
+        t("emp_ccaa_year"),
+        options=sorted(df_ccaa["any"].dropna().unique()),
+        value=max(df_ccaa["any"].dropna().unique()),
+    )
+
+    df_map = df_ccaa[df_ccaa["any"] == any_sel].copy()
+
+    map_metric = st.radio(
+        "Mètrica" if _ca else "Métrica",
+        ["density", "absolute"],
+        format_func=lambda x: (
+            ("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab.") if x == "density"
+            else ("Empreses (absolut)" if _ca else "Empresas (absoluto)")
+        ),
+        horizontal=True,
+    )
+
+    if map_metric == "density" and "empreses_per_1000hab" in df_map.columns:
+        col_val = "empreses_per_1000hab"
+        lbl_legend = "Emp. / 1.000 hab." if _ca else "Emp. / 1.000 hab."
+        fmt = ".1f"
+    else:
+        col_val = "empreses"
+        lbl_legend = "Empreses" if _ca else "Empresas"
+        fmt = ",.0f"
+
+    fig_map = go.Figure(go.Choroplethmap(
+        geojson=geojson,
+        locations=df_map["territori"],
+        featureidkey="properties.territori",
+        z=df_map[col_val],
+        colorscale=[
+            [0, "#e8e5ff"],
+            [0.25, "#c4bfff"],
+            [0.5, "#9d93ff"],
+            [0.75, "#7b6fff"],
+            [1, "#5d4fff"],
+        ],
+        colorbar=dict(title=lbl_legend, thickness=15),
+        marker=dict(line=dict(width=1, color="white")),
+        text=df_map["territori"],
+        hovertemplate=(
+            "<b>%{text}</b><br>" +
+            f"{lbl_legend}: " + "%{z:" + fmt + "}<extra></extra>"
+        ),
+    ))
+    fig_map.update_layout(
+        map=dict(
+            style="white-bg",
+            center=dict(lat=39.5, lon=-3.5),
+            zoom=4.3,
+        ),
+        height=550,
+        margin=dict(l=0, r=0, t=10, b=10),
+    )
+    st.plotly_chart(fig_map, use_container_width=True)
+    source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
+           else "INE, DIRCE y Padrón Municipal. Cálculo propio")
+
+    # ─── Rànquings per CCAA ───────���──────────────────────────────
 
     # Rànquing horitzontal
     df_any = df_ccaa[df_ccaa["any"] == any_sel].sort_values("empreses", ascending=True)
