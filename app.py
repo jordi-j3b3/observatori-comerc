@@ -63,7 +63,7 @@ with col1:
         any_ = int(last["any"])
         any_prev = int(prev["any"])
         delta = fpct(((val / prev["vab_cnae47_corrents"]) - 1) * 100)
-        st.metric(t("kpi_pib"), f"{fnum(val)} {t('kpi_meur')}", f"{delta} vs. {any_prev}", help=f"{any_}")
+        st.metric(t("kpi_pib"), f"{fnum(val)} {t('kpi_meur')}", delta, help=f"{any_} (var. {any_prev}–{any_})")
     else:
         st.metric(t("kpi_pib"), "—")
 
@@ -78,7 +78,7 @@ with col2:
                 prev = esp.iloc[-2]
                 any_prev = int(prev["any"])
                 delta = fpct(((val / int(prev["empreses"])) - 1) * 100)
-                st.metric(t("kpi_empreses"), fnum(val), f"{delta} vs. {any_prev}", help=f"{any_}")
+                st.metric(t("kpi_empreses"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
             else:
                 st.metric(t("kpi_empreses"), fnum(val), help=f"{any_}")
     else:
@@ -93,7 +93,7 @@ with col3:
         any_ = int(last["any"])
         any_prev = int(prev["any"])
         delta = fpct(((val / prev["personal_ocupat"]) - 1) * 100)
-        st.metric(t("kpi_ocupacio"), fnum(val), f"{delta} vs. {any_prev}", help=f"{any_}")
+        st.metric(t("kpi_ocupacio"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
     else:
         st.metric(t("kpi_ocupacio"), "—")
 
@@ -106,7 +106,7 @@ with col4:
         any_ = int(last["any"])
         any_prev = int(prev["any"])
         delta = fpct(((val / prev["productivitat_va_hora"]) - 1) * 100)
-        st.metric(t("kpi_productivitat"), f"{fnum(val, 1)} {t('kpi_eur_h')}", f"{delta} vs. {any_prev}", help=f"{any_}")
+        st.metric(t("kpi_productivitat"), f"{fnum(val, 1)} {t('kpi_eur_h')}", delta, help=f"{any_} (var. {any_prev}–{any_})")
     else:
         st.metric(t("kpi_productivitat"), "—")
 

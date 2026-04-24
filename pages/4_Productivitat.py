@@ -81,8 +81,8 @@ if "productivitat_va_hora" in df.columns:
                 f"{fnum(last['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
     col2.metric(f"{_lbl_va_short} ({any_first})",
                 f"{fnum(first['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
-    col3.metric("Variació" if _ca else "Variación",
-                f"{fpct(var)} vs. {any_first}")
+    col3.metric(f"{'Variació' if _ca else 'Variación'} {any_first}–{any_last}",
+                fpct(var))
     col4.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 2))
 
     if _ca:
