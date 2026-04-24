@@ -239,14 +239,15 @@ if not df_ccaa.empty:
         featureidkey="properties.territori",
         z=df_map[col_val],
         colorscale=[
-            [0, "#e8e5ff"],
-            [0.25, "#c4bfff"],
-            [0.5, "#9d93ff"],
-            [0.75, "#7b6fff"],
-            [1, "#5d4fff"],
+            [0, "#f0eeff"],
+            [0.15, "#c4b5fd"],
+            [0.35, "#8b5cf6"],
+            [0.55, "#6d28d9"],
+            [0.75, "#4c1d95"],
+            [1, "#1e0a3c"],
         ],
         colorbar=dict(title=lbl_legend, thickness=15),
-        marker=dict(line=dict(width=1, color="white")),
+        marker=dict(line=dict(width=1.5, color="white")),
         text=df_map["territori"],
         hovertemplate=(
             "<b>%{text}</b><br>" +
@@ -257,9 +258,9 @@ if not df_ccaa.empty:
         map=dict(
             style="white-bg",
             center=dict(lat=39.5, lon=-3.5),
-            zoom=4.3,
+            zoom=4.6,
         ),
-        height=550,
+        height=700,
         margin=dict(l=0, r=0, t=10, b=10),
     )
     st.plotly_chart(fig_map, use_container_width=True)
