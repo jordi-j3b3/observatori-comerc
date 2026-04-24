@@ -161,77 +161,73 @@ source("INE, EEE. Càlcul propi" if _ca else "INE, EEE. Cálculo propio")
 
 # ─── Insight productivitat ────────────────────────────────────
 
-if "productivitat_va_hora" in df.columns and "productivitat_xn_hora" in df.columns:
-    first_va = df.dropna(subset=["productivitat_va_hora"]).iloc[0]
-    last_va = df.dropna(subset=["productivitat_va_hora"]).iloc[-1]
-    first_xn = df.dropna(subset=["productivitat_xn_hora"]).iloc[0]
-    last_xn = df.dropna(subset=["productivitat_xn_hora"]).iloc[-1]
+if "productivitat_va_hora" in df.columns and len(df) >= 4:
+    df_i = df.dropna(subset=["personal_ocupat", "hores_treballades", "valor_afegit_constants", "xifra_negoci_constants"])
+    if len(df_i) >= 4:
+        # Calcular marge VA/XN per any
+        df_i = df_i.copy()
+        df_i["marge"] = df_i["valor_afegit_constants"] / df_i["xifra_negoci_constants"] * 100
 
-    var_va = ((last_va["productivitat_va_hora"] / first_va["productivitat_va_hora"]) - 1) * 100
-    var_xn = ((last_xn["productivitat_xn_hora"] / first_xn["productivitat_xn_hora"]) - 1) * 100
-    divergencia = var_va - var_xn
+        # Índexs base primer any
+        base_yr = df_i.iloc[0]
+        idx_pers = (df_i["personal_ocupat"].iloc[-1] / base_yr["personal_ocupat"] - 1) * 100
+        idx_hores = (df_i["hores_treballades"].iloc[-1] / base_yr["hores_treballades"] - 1) * 100
+        any_first = int(df_i["any"].iloc[0])
+        any_last = int(df_i["any"].iloc[-1])
 
-    if _ca:
-        txt = ""
-        if abs(divergencia) > 5:
-            if divergencia > 0:
-                txt += (
-                    f"El VA/hora ha crescut ({fpct(var_va)}) més que la Xifra de Negoci/hora ({fpct(var_xn)}): "
-                    f"els <strong>marges del sector han millorat</strong>. "
-                    f"El comerç al detall reté més valor de cada euro facturat, "
-                    f"suggerint una reestructuració cap a activitats de major valor afegit "
-                    f"o una millora en l'eficiència de costos intermedis. "
-                )
-            else:
-                txt += (
-                    f"La Xifra de Negoci/hora ha crescut ({fpct(var_xn)}) més que el VA/hora ({fpct(var_va)}): "
-                    f"hi ha <strong>compressió de marges</strong>. "
-                    f"Les empreses facturen més per hora però retenen menys valor, "
-                    f"probablement per pressió competitiva o augment dels costos intermedis. "
-                )
-        else:
-            txt += (
-                f"VA/hora ({fpct(var_va)}) i Xifra de Negoci/hora ({fpct(var_xn)}) evolucionen de forma similar: "
-                f"els <strong>marges es mantenen estables</strong>. "
+        if _ca:
+            txt = (
+                f"<strong>Més hores, no més contractació.</strong> "
+                f"Entre {any_first} i {any_last}, el personal ocupat ha variat un {fpct(idx_pers)}, "
+                f"mentre que les hores treballades han crescut un {fpct(idx_hores)}. "
+                f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla existent "
+                f"abans que crear nous llocs de treball. La reforma laboral de 2022 — que va limitar la "
+                f"temporalitat i va impulsar la conversió a contractes indefinits — ha contribuït a aquest patró: "
+                f"menys rotació i més hores per treballador."
+                f"<br><br>"
+                f"<strong>La contractació segueix el VA, no la facturació.</strong> "
+                f"A partir de 2022, el Valor Afegit i el personal ocupat mostren trajectòries paral·leles, "
+                f"mentre que la Xifra de Negoci creix a un ritme diferent. "
+                f"Això suggereix que les decisions de contractació responen al <strong>valor net generat</strong> "
+                f"(descomptant costos intermedis), no al volum de vendes brut."
+                f"<br><br>"
+                f"<strong>Marges volàtils.</strong> "
+                f"El 2021 va ser excepcional: els ERTOs van reduir costos laborals mentre el consum "
+                f"post-confinament disparava el VA, generant marges artificials "
+                f"({fnum(df_i[df_i['any']==2021]['marge'].iloc[0], 1)}% de VA sobre XN). "
+                f"El 2022, la inflació va comprimir marges fins al {fnum(df_i[df_i['any']==2022]['marge'].iloc[0], 1)}%. "
+                f"El 2023 es va estancar, i el 2024 els recupera ({fnum(df_i[df_i['any']==2024]['marge'].iloc[0], 1)}%). "
+                f"Aquesta <strong>volatilitat dels marges</strong> explica la cautela del sector a l'hora de contractar "
+                f"durant 2022-23: sense certesa de marges estables, les empreses van preferir augmentar hores "
+                f"abans que assumir nous costos fixos de personal."
             )
-        txt += (
-            "Al gràfic d'índex base 100, si la línia de productivitat "
-            "creix més que la de personal, el sector guanya eficiència per treballador. "
-            "Cal tenir en compte que la productivitat del comerç al detall està condicionada per la seva "
-            "<strong>naturalesa intensiva en mà d'obra</strong>: a diferència de la indústria, "
-            "les possibilitats d'automatització són limitades per la necessitat d'atenció al client."
-        )
-    else:
-        txt = ""
-        if abs(divergencia) > 5:
-            if divergencia > 0:
-                txt += (
-                    f"El VA/hora ha crecido ({fpct(var_va)}) más que la Cifra de Negocio/hora ({fpct(var_xn)}): "
-                    f"los <strong>márgenes del sector han mejorado</strong>. "
-                    f"El comercio minorista retiene más valor de cada euro facturado, "
-                    f"sugiriendo una reestructuración hacia actividades de mayor valor añadido "
-                    f"o una mejora en la eficiencia de costes intermedios. "
-                )
-            else:
-                txt += (
-                    f"La Cifra de Negocio/hora ha crecido ({fpct(var_xn)}) más que el VA/hora ({fpct(var_va)}): "
-                    f"hay <strong>compresión de márgenes</strong>. "
-                    f"Las empresas facturan más por hora pero retienen menos valor, "
-                    f"probablemente por presión competitiva o aumento de costes intermedios. "
-                )
         else:
-            txt += (
-                f"VA/hora ({fpct(var_va)}) y Cifra de Negocio/hora ({fpct(var_xn)}) evolucionan de forma similar: "
-                f"los <strong>márgenes se mantienen estables</strong>. "
+            txt = (
+                f"<strong>Más horas, no más contratación.</strong> "
+                f"Entre {any_first} y {any_last}, el personal ocupado ha variado un {fpct(idx_pers)}, "
+                f"mientras que las horas trabajadas han crecido un {fpct(idx_hores)}. "
+                f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla existente "
+                f"antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — que limitó la "
+                f"temporalidad e impulsó la conversión a contratos indefinidos — ha contribuido a este patrón: "
+                f"menos rotación y más horas por trabajador."
+                f"<br><br>"
+                f"<strong>La contratación sigue al VA, no a la facturación.</strong> "
+                f"A partir de 2022, el Valor Añadido y el personal ocupado muestran trayectorias paralelas, "
+                f"mientras que la Cifra de Negocio crece a un ritmo diferente. "
+                f"Esto sugiere que las decisiones de contratación responden al <strong>valor neto generado</strong> "
+                f"(descontando costes intermedios), no al volumen de ventas bruto."
+                f"<br><br>"
+                f"<strong>Márgenes volátiles.</strong> "
+                f"2021 fue excepcional: los ERTEs redujeron costes laborales mientras el consumo "
+                f"post-confinamiento disparaba el VA, generando márgenes artificiales "
+                f"({fnum(df_i[df_i['any']==2021]['marge'].iloc[0], 1)}% de VA sobre XN). "
+                f"En 2022, la inflación comprimió márgenes hasta el {fnum(df_i[df_i['any']==2022]['marge'].iloc[0], 1)}%. "
+                f"2023 se estancó, y 2024 los recupera ({fnum(df_i[df_i['any']==2024]['marge'].iloc[0], 1)}%). "
+                f"Esta <strong>volatilidad de márgenes</strong> explica la cautela del sector al contratar "
+                f"durante 2022-23: sin certeza de márgenes estables, las empresas prefirieron aumentar horas "
+                f"antes que asumir nuevos costes fijos de personal."
             )
-        txt += (
-            "En el gráfico de índice base 100, si la línea de productividad "
-            "crece más que la de personal, el sector gana eficiencia por trabajador. "
-            "Cabe tener en cuenta que la productividad del comercio minorista está condicionada por su "
-            "<strong>naturaleza intensiva en mano de obra</strong>: a diferencia de la industria, "
-            "las posibilidades de automatización son limitadas por la necesidad de atención al cliente."
-        )
-    insight(txt)
+        insight(txt)
 
 # ─── Secció: Distribució del VAB ────────��────────────────────
 
