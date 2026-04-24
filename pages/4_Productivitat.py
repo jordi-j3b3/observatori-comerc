@@ -171,8 +171,6 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
         # Índexs base primer any
         base_yr = df_i.iloc[0]
         last_yr = df_i.iloc[-1]
-        idx_pers = (last_yr["personal_ocupat"] / base_yr["personal_ocupat"] - 1) * 100
-        idx_hores = (last_yr["hores_treballades"] / base_yr["hores_treballades"] - 1) * 100
         any_first = int(df_i["any"].iloc[0])
         any_last = int(df_i["any"].iloc[-1])
         n_anys = any_last - any_first
@@ -182,20 +180,6 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
 
         if _ca:
             txt = (
-                f"<strong>Més hores, no més contractació.</strong> "
-                f"Entre {any_first} i {any_last}, el personal ocupat ha variat un {fpct(idx_pers)}, "
-                f"mentre que les hores treballades han crescut un {fpct(idx_hores)}. "
-                f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla existent "
-                f"abans que crear nous llocs de treball. La reforma laboral de 2022 — que va limitar la "
-                f"temporalitat i va impulsar la conversió a contractes indefinits — ha contribuït a aquest patró: "
-                f"menys rotació i més hores per treballador."
-                f"<br><br>"
-                f"<strong>La contractació segueix el valor afegit, no la facturació.</strong> "
-                f"A partir de 2022, el valor afegit i el personal ocupat mostren trajectòries paral·leles, "
-                f"mentre que la xifra de negoci creix a un ritme diferent. "
-                f"Això suggereix que les decisions de contractació responen al <strong>valor net generat</strong> "
-                f"(descomptant costos intermedis), no al volum de vendes brut."
-                f"<br><br>"
                 f"<strong>Marges volàtils.</strong> "
                 f"El 2021 va ser excepcional: els ERTOs van reduir costos laborals mentre el consum "
                 f"post-confinament disparava el valor afegit, generant marges artificials "
@@ -209,31 +193,19 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
                 f"<strong>Un sector productiu?</strong> "
                 f"Amb {fnum(prod_last, 1)} EUR de valor afegit per hora treballada, "
                 f"el comerç al detall se situa <strong>per sota de la productivitat mitjana</strong> "
-                f"del conjunt de l'economia espanyola. Això és coherent amb la seva "
-                f"<strong>naturalesa intensiva en mà d'obra</strong>: el servei al client requereix presència "
-                f"humana que difícilment es pot automatitzar. A més, de cada euro facturat, el sector només en "
-                f"reté uns 20 cèntims com a valor afegit — la resta són compres a proveïdors. "
-                f"Dit això, la productivitat ha crescut un {fpct(var_prod)} en {n_anys} anys, "
-                f"un ritme modest però positiu. El repte del sector no és tant produir més per hora, "
-                f"sinó <strong>retenir més valor</strong> de cada euro venut, és a dir, millorar marges "
+                f"del conjunt de l'economia espanyola. "
+                f"Malgrat la creixent <strong>tecnificació</strong> del sector — impulsada pel comerç electrònic, "
+                f"la digitalització de la cadena de subministrament i l'automatització de processos —, "
+                f"el marge sobre facturació segueix sent estructuralment ajustat: "
+                f"el {int(last_yr['any'])}, el valor afegit va representar el {fnum(last_yr['marge'], 1)}% "
+                f"de la xifra de negoci. "
+                f"La productivitat ha crescut un {fpct(var_prod)} en {n_anys} anys, "
+                f"un ritme modest però positiu. El repte del sector és "
+                f"<strong>retenir més valor</strong> de cada euro venut, millorant marges "
                 f"a través de la diferenciació, el servei i la reducció de costos intermedis."
             )
         else:
             txt = (
-                f"<strong>Más horas, no más contratación.</strong> "
-                f"Entre {any_first} y {any_last}, el personal ocupado ha variado un {fpct(idx_pers)}, "
-                f"mientras que las horas trabajadas han crecido un {fpct(idx_hores)}. "
-                f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla existente "
-                f"antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — que limitó la "
-                f"temporalidad e impulsó la conversión a contratos indefinidos — ha contribuido a este patrón: "
-                f"menos rotación y más horas por trabajador."
-                f"<br><br>"
-                f"<strong>La contratación sigue al valor añadido, no a la facturación.</strong> "
-                f"A partir de 2022, el valor añadido y el personal ocupado muestran trayectorias paralelas, "
-                f"mientras que la cifra de negocio crece a un ritmo diferente. "
-                f"Esto sugiere que las decisiones de contratación responden al <strong>valor neto generado</strong> "
-                f"(descontando costes intermedios), no al volumen de ventas bruto."
-                f"<br><br>"
                 f"<strong>Márgenes volátiles.</strong> "
                 f"2021 fue excepcional: los ERTEs redujeron costes laborales mientras el consumo "
                 f"post-confinamiento disparaba el valor añadido, generando márgenes artificiales "
@@ -247,13 +219,15 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
                 f"<strong>¿Un sector productivo?</strong> "
                 f"Con {fnum(prod_last, 1)} EUR de valor añadido por hora trabajada, "
                 f"el comercio minorista se sitúa <strong>por debajo de la productividad media</strong> "
-                f"del conjunto de la economía española. Esto es coherente con su "
-                f"<strong>naturaleza intensiva en mano de obra</strong>: el servicio al cliente requiere presencia "
-                f"humana que difícilmente se puede automatizar. Además, de cada euro facturado, el sector solo "
-                f"retiene unos 20 céntimos como valor añadido — el resto son compras a proveedores. "
-                f"Dicho esto, la productividad ha crecido un {fpct(var_prod)} en {n_anys} años, "
-                f"un ritmo modesto pero positivo. El reto del sector no es tanto producir más por hora, "
-                f"sino <strong>retener más valor</strong> de cada euro vendido, es decir, mejorar márgenes "
+                f"del conjunto de la economía española. "
+                f"Pese a la creciente <strong>tecnificación</strong> del sector — impulsada por el comercio electrónico, "
+                f"la digitalización de la cadena de suministro y la automatización de procesos —, "
+                f"el margen sobre facturación sigue siendo estructuralmente ajustado: "
+                f"en {int(last_yr['any'])}, el valor añadido representó el {fnum(last_yr['marge'], 1)}% "
+                f"de la cifra de negocio. "
+                f"La productividad ha crecido un {fpct(var_prod)} en {n_anys} años, "
+                f"un ritmo modesto pero positivo. El reto del sector es "
+                f"<strong>retener más valor</strong> de cada euro vendido, mejorando márgenes "
                 f"a través de la diferenciación, el servicio y la reducción de costes intermedios."
             )
         insight(txt)

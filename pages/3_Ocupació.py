@@ -130,7 +130,7 @@ if not df_prod.empty and "personal_ocupat" in df_prod.columns:
         source("INE, EEE. Càlcul propi" if _ca else "INE, EEE. Cálculo propio")
 
     # Insight
-    if "hores_treballades" in df.columns:
+    if "hores_treballades" in df.columns and "valor_afegit_constants" in df.columns and "xifra_negoci_constants" in df.columns:
         first_h = df.dropna(subset=["hores_treballades"]).iloc[0]
         last_h = df.dropna(subset=["hores_treballades"]).iloc[-1]
         var_h = ((last_h["hores_treballades"] / first_h["hores_treballades"]) - 1) * 100
@@ -138,57 +138,42 @@ if not df_prod.empty and "personal_ocupat" in df_prod.columns:
         hpt_first = df.dropna(subset=["hores_per_treballador"]).iloc[0]["hores_per_treballador"]
         hpt_last = df.dropna(subset=["hores_per_treballador"]).iloc[-1]["hores_per_treballador"]
 
-        gap_ocu_hores = var_ocu - var_h
+        any_f = int(first["any"])
+        any_l = int(last["any"])
 
         if _ca:
-            txt = ""
-            if gap_ocu_hores > 3:
-                txt += (
-                    f"L'ocupació creix ({fpct(var_ocu)}) més que les hores ({fpct(var_h)}): "
-                    f"el sector <strong>crea llocs de treball però amb menys hores per persona</strong>, "
-                    f"suggerint un augment de la parcialitat i la flexibilització laboral. "
-                )
-            elif gap_ocu_hores < -3:
-                txt += (
-                    f"Les hores creixen ({fpct(var_h)}) més que l'ocupació ({fpct(var_ocu)}): "
-                    f"el sector <strong>intensifica les jornades dels treballadors existents</strong> "
-                    f"en lloc de crear noves places. "
-                )
-            else:
-                txt += (
-                    f"Ocupació i hores evolucionen de forma similar ({fpct(var_ocu)} vs {fpct(var_h)}), "
-                    f"indicant <strong>estabilitat en la jornada mitjana</strong> del sector. "
-                )
-            txt += (
-                f"La ràtio d'hores per treballador ha passat de {fnum(hpt_first)} a {fnum(hpt_last)} h/any. "
-                f"El comerç al detall es caracteritza per una <strong>alta incidència de treball parcial</strong> "
-                f"(caps de setmana, campanyes estacionals), cosa que fa que les hores per treballador "
-                f"siguin inferiors a la mitjana de l'economia."
+            txt = (
+                f"<strong>Més hores, no més contractació.</strong> "
+                f"Entre {any_f} i {any_l}, el personal ocupat ha variat un {fpct(var_ocu)}, "
+                f"mentre que les hores treballades han crescut un {fpct(var_h)}. "
+                f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla existent "
+                f"abans que crear nous llocs de treball. La reforma laboral de 2022 — que va limitar la "
+                f"temporalitat i va impulsar la conversió a contractes indefinits — ha contribuït a aquest patró: "
+                f"menys rotació i més hores per treballador. "
+                f"La ràtio d'hores per treballador ha passat de {fnum(hpt_first)} a {fnum(hpt_last)} h/any."
+                f"<br><br>"
+                f"<strong>La contractació segueix el valor afegit, no la facturació.</strong> "
+                f"A partir de 2022, el valor afegit i el personal ocupat mostren trajectòries paral·leles, "
+                f"mentre que la xifra de negoci creix a un ritme diferent. "
+                f"Això suggereix que les decisions de contractació responen al <strong>valor net generat</strong> "
+                f"(descomptant costos intermedis), no al volum de vendes brut."
             )
         else:
-            txt = ""
-            if gap_ocu_hores > 3:
-                txt += (
-                    f"El empleo crece ({fpct(var_ocu)}) más que las horas ({fpct(var_h)}): "
-                    f"el sector <strong>crea puestos de trabajo pero con menos horas por persona</strong>, "
-                    f"sugiriendo un aumento de la parcialidad y la flexibilización laboral. "
-                )
-            elif gap_ocu_hores < -3:
-                txt += (
-                    f"Las horas crecen ({fpct(var_h)}) más que el empleo ({fpct(var_ocu)}): "
-                    f"el sector <strong>intensifica las jornadas de los trabajadores existentes</strong> "
-                    f"en lugar de crear nuevas plazas. "
-                )
-            else:
-                txt += (
-                    f"Empleo y horas evolucionan de forma similar ({fpct(var_ocu)} vs {fpct(var_h)}), "
-                    f"indicando <strong>estabilidad en la jornada media</strong> del sector. "
-                )
-            txt += (
-                f"La ratio de horas por trabajador ha pasado de {fnum(hpt_first)} a {fnum(hpt_last)} h/año. "
-                f"El comercio minorista se caracteriza por una <strong>alta incidencia de trabajo parcial</strong> "
-                f"(fines de semana, campañas estacionales), lo que hace que las horas por trabajador "
-                f"sean inferiores a la media de la economía."
+            txt = (
+                f"<strong>Más horas, no más contratación.</strong> "
+                f"Entre {any_f} y {any_l}, el personal ocupado ha variado un {fpct(var_ocu)}, "
+                f"mientras que las horas trabajadas han crecido un {fpct(var_h)}. "
+                f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla existente "
+                f"antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — que limitó la "
+                f"temporalidad e impulsó la conversión a contratos indefinidos — ha contribuido a este patrón: "
+                f"menos rotación y más horas por trabajador. "
+                f"La ratio de horas por trabajador ha pasado de {fnum(hpt_first)} a {fnum(hpt_last)} h/año."
+                f"<br><br>"
+                f"<strong>La contratación sigue al valor añadido, no a la facturación.</strong> "
+                f"A partir de 2022, el valor añadido y el personal ocupado muestran trayectorias paralelas, "
+                f"mientras que la cifra de negocio crece a un ritmo diferente. "
+                f"Esto sugiere que las decisiones de contratación responden al <strong>valor neto generado</strong> "
+                f"(descontando costes intermedios), no al volumen de ventas bruto."
             )
         insight(txt)
 
