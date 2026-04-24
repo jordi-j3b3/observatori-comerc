@@ -227,8 +227,9 @@ def fetch_ipc():
 
     for serie in data:
         nombre = serie.get("Nombre", "")
-        # Nomes la serie exacta: "Total Nacional. Índice general. Índice."
-        if nombre.strip() != "Total Nacional. Índice general. Índice.":
+        if "ndice general" not in nombre or "ndice." not in nombre.split("general")[-1]:
+            continue
+        if "Variaci" in nombre:
             continue
 
         for obs in serie.get("Data", []):
