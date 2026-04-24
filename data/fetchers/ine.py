@@ -395,6 +395,74 @@ def fetch_confianza():
     return pd.DataFrame(results)
 
 
+def fetch_eee_comercio_ccaa():
+    """
+    Taula 76817: EEE Sector Comercio — magnituds regionalitzades.
+    CNAE 47 per CCAA (2018-2024).
+    Retorna: xifra_negoci, personal_ocupat, sous_salaris, inversio, locals
+    per cada CCAA i Total Nacional.
+    Unitats: milers EUR (xifra/sous/inversio), persones, unitats.
+    """
+    data = _fetch_table(76817, nult=10)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    MAGNITUDS = {
+        "Cifra de negocios": "xifra_negoci",
+        "Sueldos y salarios": "sous_salaris",
+        "Personal ocupado": "personal_ocupat",
+        "Inversión en activos materiales": "inversio",
+        "Número de locales": "locals",
+    }
+
+    TERR_NORM = {
+        "Asturias, Principado de": "Asturias (Principado de)",
+        "Balears, Illes": "Balears (Illes)",
+        "Madrid, Comunidad de": "Madrid (Comunidad de)",
+        "Murcia, Región de": "Murcia (Región de)",
+        "Navarra, Comunidad Foral de": "Navarra (Comunidad Foral de)",
+        "Rioja, La": "Rioja (La)",
+        "Total Nacional": "espanya",
+    }
+
+    results = {}
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        if "Comercio al por menor, excepto" not in nombre:
+            continue
+
+        terr_raw = nombre.split(".")[0].strip()
+        if terr_raw in ("Ceuta", "Melilla"):
+            continue
+        terr = TERR_NORM.get(terr_raw, terr_raw)
+
+        col_name = None
+        for key, col in MAGNITUDS.items():
+            if key in nombre:
+                col_name = col
+                break
+        if not col_name:
+            continue
+
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is not None and any_ is not None:
+                key = (terr, any_)
+                if key not in results:
+                    results[key] = {"territori": terr, "any": any_}
+                results[key][col_name] = val
+
+    df = pd.DataFrame(list(results.values()))
+    if not df.empty:
+        df = df.sort_values(["territori", "any"]).reset_index(drop=True)
+        for col in ["xifra_negoci", "sous_salaris", "inversio"]:
+            if col in df.columns:
+                df[col] = df[col] * 1000
+
+    return df
+
+
 if __name__ == "__main__":
     print("Testejant API INE...")
 
@@ -415,3 +483,9 @@ if __name__ == "__main__":
     print(f"   {len(df)} registres")
     if not df.empty:
         print(df.head())
+
+    print("\n4. EEE Comercio CCAA:")
+    df = fetch_eee_comercio_ccaa()
+    print(f"   {len(df)} registres")
+    if not df.empty:
+        print(df.head(10))

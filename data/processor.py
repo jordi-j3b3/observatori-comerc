@@ -658,6 +658,52 @@ def _load_europa_from_excel(country_names_ca):
     return pd.DataFrame(records)
 
 
+def process_eee_ccaa():
+    """
+    Processa dades EEE Comercio per CCAA (taula 76817).
+    Estima VAB CNAE 47 per CCAA usant la ràtio nacional VAB/xifra_negoci
+    de la taula 36194 (productivitat) aplicada a la xifra de negoci de cada CCAA.
+    """
+    print("  Font 1: API INE (taula 76817)")
+    try:
+        df = ine.fetch_eee_comercio_ccaa()
+        if df.empty:
+            print("  API INE EEE CCAA: sense dades")
+            df = load_cache("eee_ccaa")
+    except Exception as e:
+        print(f"  Error API INE EEE CCAA: {e}")
+        df = load_cache("eee_ccaa")
+
+    if df.empty:
+        print("  Cap font disponible per EEE CCAA")
+        return pd.DataFrame()
+
+    print(f"  EEE CCAA: {len(df)} registres, {df['territori'].nunique()} territoris")
+
+    df_prod = load_cache("productivitat")
+    if not df_prod.empty and "valor_afegit_constants" in df_prod.columns:
+        df_nac = df[df["territori"] == "espanya"].copy()
+        if not df_nac.empty and "xifra_negoci" in df_nac.columns:
+            ratio_nac = df_prod[["any"]].copy()
+            ratio_nac = ratio_nac.merge(
+                df_nac[["any", "xifra_negoci"]].rename(columns={"xifra_negoci": "xn_nac"}),
+                on="any", how="inner"
+            )
+            ratio_nac["va_nac"] = df_prod.set_index("any").loc[ratio_nac["any"].values, "valor_afegit_constants"].values
+            ratio_nac["ratio_va_xn"] = ratio_nac["va_nac"] / ratio_nac["xn_nac"]
+
+            df = df.merge(ratio_nac[["any", "ratio_va_xn"]], on="any", how="left")
+            mask = df["ratio_va_xn"].notna() & df["xifra_negoci"].notna()
+            df.loc[mask, "vab_estimat"] = df.loc[mask, "xifra_negoci"] * df.loc[mask, "ratio_va_xn"]
+            df = df.drop(columns=["ratio_va_xn"])
+
+            n_est = df["vab_estimat"].notna().sum()
+            print(f"  VAB estimat per {n_est} registres (ràtio nacional VA/XN)")
+
+    save_cache(df, "eee_ccaa")
+    return df
+
+
 def save_last_update():
     """Desa la data i hora de l'última actualització."""
     from datetime import datetime
@@ -688,7 +734,10 @@ def process_all():
     print("\n5. Europa:")
     process_europa()
 
-    print("\n6. Registrant data actualitzacio:")
+    print("\n6. EEE Comercio per CCAA:")
+    process_eee_ccaa()
+
+    print("\n7. Registrant data actualitzacio:")
     save_last_update()
 
     print("\nProcessament complet!")

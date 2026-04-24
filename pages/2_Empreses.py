@@ -190,22 +190,24 @@ if "empreses_per_1000hab" in df_esp.columns:
                 f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
             )
 
-# ─── Mapa interactiu CCAA ────────────��───────────────────────
+# ─── GeoJSON (compartit per mapa DIRCE i mapa EEE) ──────────
+
+import json
+
+@st.cache_data
+def load_geojson():
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
+    with open(path, "r") as f:
+        return json.load(f)
+
+geojson = load_geojson()
+
+# ─── Mapa interactiu CCAA ──────────��─────────────────────────
 
 st.markdown("---")
 st.subheader(t("emp_ccaa_title"))
 
 if not df_ccaa.empty:
-    import json
-
-    @st.cache_data
-    def load_geojson():
-        path = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
-        with open(path, "r") as f:
-            return json.load(f)
-
-    geojson = load_geojson()
-
     any_sel = st.select_slider(
         t("emp_ccaa_year"),
         options=sorted(df_ccaa["any"].dropna().unique()),
