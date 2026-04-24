@@ -5,22 +5,6 @@ Pàgina principal amb KPIs i navegació.
 import streamlit as st
 import pandas as pd
 import os
-import streamlit as st
-
-# Permet iFrames
-st.set_page_config(
-    page_title="Inici",
-    page_icon="🏪",
-    layout="wide",
-    initial_sidebar_state="expanded",
-
-)
-
-# AFEGEIX AQUESTA LÍNIA:
-st.markdown(
-    '<meta http-equiv="X-UA-Compatible" content="ie=edge">',
-    unsafe_allow_html=True
-)
 
 st.set_page_config(
     page_title="Inici",
@@ -72,12 +56,14 @@ col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns:
-        last = df_pib.dropna(subset=["vab_cnae47_corrents"]).iloc[-1]
+        rows = df_pib.dropna(subset=["vab_cnae47_corrents"])
+        last = rows.iloc[-1]
+        prev = rows.iloc[-2]
         val = last["vab_cnae47_corrents"]
         any_ = int(last["any"])
-        prev = df_pib.dropna(subset=["vab_cnae47_corrents"]).iloc[-2]["vab_cnae47_corrents"]
-        delta = fpct(((val / prev) - 1) * 100)
-        st.metric(t("kpi_pib"), f"{fnum(val)} {t('kpi_meur')}", delta, help=f"{any_}")
+        any_prev = int(prev["any"])
+        delta = fpct(((val / prev["vab_cnae47_corrents"]) - 1) * 100)
+        st.metric(t("kpi_pib"), f"{fnum(val)} {t('kpi_meur')}", f"{delta} vs. {any_prev}", help=f"{any_}")
     else:
         st.metric(t("kpi_pib"), "—")
 
@@ -89,27 +75,38 @@ with col2:
             val = int(last["empreses"])
             any_ = int(last["any"])
             if len(esp) > 1:
-                prev = int(esp.iloc[-2]["empreses"])
-                delta = fpct(((val / prev) - 1) * 100)
+                prev = esp.iloc[-2]
+                any_prev = int(prev["any"])
+                delta = fpct(((val / int(prev["empreses"])) - 1) * 100)
+                st.metric(t("kpi_empreses"), fnum(val), f"{delta} vs. {any_prev}", help=f"{any_}")
             else:
-                delta = None
-            st.metric(t("kpi_empreses"), fnum(val), delta, help=f"{any_}")
+                st.metric(t("kpi_empreses"), fnum(val), help=f"{any_}")
     else:
         st.metric(t("kpi_empreses"), "—")
 
 with col3:
     if not df_prod.empty and "personal_ocupat" in df_prod.columns:
-        last_ocu = df_prod.dropna(subset=["personal_ocupat"]).iloc[-1]
-        st.metric(t("kpi_ocupacio"), fnum(last_ocu["personal_ocupat"]), help=f"{int(last_ocu['any'])}")
+        rows = df_prod.dropna(subset=["personal_ocupat"])
+        last = rows.iloc[-1]
+        prev = rows.iloc[-2]
+        val = last["personal_ocupat"]
+        any_ = int(last["any"])
+        any_prev = int(prev["any"])
+        delta = fpct(((val / prev["personal_ocupat"]) - 1) * 100)
+        st.metric(t("kpi_ocupacio"), fnum(val), f"{delta} vs. {any_prev}", help=f"{any_}")
     else:
         st.metric(t("kpi_ocupacio"), "—")
 
 with col4:
     if not df_prod.empty and "productivitat_va_hora" in df_prod.columns:
-        last = df_prod.dropna(subset=["productivitat_va_hora"]).iloc[-1]
+        rows = df_prod.dropna(subset=["productivitat_va_hora"])
+        last = rows.iloc[-1]
+        prev = rows.iloc[-2]
         val = last["productivitat_va_hora"]
         any_ = int(last["any"])
-        st.metric(t("kpi_productivitat"), f"{fnum(val, 1)} {t('kpi_eur_h')}", help=f"{any_}")
+        any_prev = int(prev["any"])
+        delta = fpct(((val / prev["productivitat_va_hora"]) - 1) * 100)
+        st.metric(t("kpi_productivitat"), f"{fnum(val, 1)} {t('kpi_eur_h')}", f"{delta} vs. {any_prev}", help=f"{any_}")
     else:
         st.metric(t("kpi_productivitat"), "—")
 
