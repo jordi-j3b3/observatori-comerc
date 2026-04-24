@@ -170,10 +170,15 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
 
         # Índexs base primer any
         base_yr = df_i.iloc[0]
-        idx_pers = (df_i["personal_ocupat"].iloc[-1] / base_yr["personal_ocupat"] - 1) * 100
-        idx_hores = (df_i["hores_treballades"].iloc[-1] / base_yr["hores_treballades"] - 1) * 100
+        last_yr = df_i.iloc[-1]
+        idx_pers = (last_yr["personal_ocupat"] / base_yr["personal_ocupat"] - 1) * 100
+        idx_hores = (last_yr["hores_treballades"] / base_yr["hores_treballades"] - 1) * 100
         any_first = int(df_i["any"].iloc[0])
         any_last = int(df_i["any"].iloc[-1])
+        n_anys = any_last - any_first
+        prod_last = last_yr["valor_afegit_constants"] / last_yr["hores_treballades"]
+        prod_first = base_yr["valor_afegit_constants"] / base_yr["hores_treballades"]
+        var_prod = ((prod_last / prod_first) - 1) * 100
 
         if _ca:
             txt = (
@@ -200,6 +205,18 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
                 f"Aquesta <strong>volatilitat dels marges</strong> explica la cautela del sector a l'hora de contractar "
                 f"durant 2022-23: sense certesa de marges estables, les empreses van preferir augmentar hores "
                 f"abans que assumir nous costos fixos de personal."
+                f"<br><br>"
+                f"<strong>Un sector productiu?</strong> "
+                f"Amb {fnum(prod_last, 1)} EUR de valor afegit per hora treballada, "
+                f"el comerç al detall se situa al voltant del <strong>70% de la productivitat mitjana</strong> "
+                f"del conjunt de l'economia espanyola (~35 EUR/hora). Això és coherent amb la seva "
+                f"<strong>naturalesa intensiva en mà d'obra</strong>: el servei al client requereix presència "
+                f"humana que difícilment es pot automatitzar. A més, de cada euro facturat, el sector només en "
+                f"reté uns 20 cèntims com a valor afegit — la resta són compres a proveïdors. "
+                f"Dit això, la productivitat ha crescut un {fpct(var_prod)} en {n_anys} anys, "
+                f"un ritme modest però positiu. El repte del sector no és tant produir més per hora, "
+                f"sinó <strong>retenir més valor</strong> de cada euro venut, és a dir, millorar marges "
+                f"a través de la diferenciació, el servei i la reducció de costos intermedis."
             )
         else:
             txt = (
@@ -226,6 +243,18 @@ if "productivitat_va_hora" in df.columns and len(df) >= 4:
                 f"Esta <strong>volatilidad de márgenes</strong> explica la cautela del sector al contratar "
                 f"durante 2022-23: sin certeza de márgenes estables, las empresas prefirieron aumentar horas "
                 f"antes que asumir nuevos costes fijos de personal."
+                f"<br><br>"
+                f"<strong>¿Un sector productivo?</strong> "
+                f"Con {fnum(prod_last, 1)} EUR de valor añadido por hora trabajada, "
+                f"el comercio minorista se sitúa en torno al <strong>70% de la productividad media</strong> "
+                f"del conjunto de la economía española (~35 EUR/hora). Esto es coherente con su "
+                f"<strong>naturaleza intensiva en mano de obra</strong>: el servicio al cliente requiere presencia "
+                f"humana que difícilmente se puede automatizar. Además, de cada euro facturado, el sector solo "
+                f"retiene unos 20 céntimos como valor añadido — el resto son compras a proveedores. "
+                f"Dicho esto, la productividad ha crecido un {fpct(var_prod)} en {n_anys} años, "
+                f"un ritmo modesto pero positivo. El reto del sector no es tanto producir más por hora, "
+                f"sino <strong>retener más valor</strong> de cada euro vendido, es decir, mejorar márgenes "
+                f"a través de la diferenciación, el servicio y la reducción de costes intermedios."
             )
         insight(txt)
 
