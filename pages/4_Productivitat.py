@@ -72,47 +72,35 @@ if "productivitat_va_hora" in df.columns:
     cagr_prod = cagr(first["productivitat_va_hora"], last["productivitat_va_hora"],
                      int(last["any"]) - int(first["any"]))
 
+    any_first = int(first["any"])
+    any_last = int(last["any"])
+    n_anys = any_last - any_first
+
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric(f"{_lbl_va_short} ({int(last['any'])})",
+    col1.metric(f"{_lbl_va_short} ({any_last})",
                 f"{fnum(last['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
-    col2.metric(f"{_lbl_va_short} ({int(first['any'])})",
+    col2.metric(f"{_lbl_va_short} ({any_first})",
                 f"{fnum(first['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
-    col3.metric("Variació" if _ca else "Variación", fpct(var))
-    col4.metric("CAGR", fpct(cagr_prod, 2))
+    col3.metric("Variació" if _ca else "Variación",
+                f"{fpct(var)} vs. {any_first}")
+    col4.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 2))
 
-# ─── Gràfic 1: Productivitat VA/hora i Xifra Negoci/hora ─────
-
-st.subheader(t("prod_evolution"))
-
-fig = go.Figure()
-
-if "productivitat_va_hora" in df.columns:
-    fig.add_trace(go.Scatter(
-        x=df["any"], y=df["productivitat_va_hora"],
-        mode="lines+markers", name=_lbl_va_short,
-        line=dict(color=PURPLE, width=3),
-        marker=dict(size=8),
-    ))
-
-if "productivitat_xn_hora" in df.columns:
-    fig.add_trace(go.Scatter(
-        x=df["any"], y=df["productivitat_xn_hora"],
-        mode="lines+markers", name=_lbl_xn_short,
-        line=dict(color=RED, width=2, dash="dash"),
-        marker=dict(size=6),
-        yaxis="y2",
-    ))
-
-apply_layout(fig,
-    yaxis=dict(title=f"{_lbl_va_short} ({t('prod_eur_h')})", side="left",
-               gridcolor="rgba(0,0,0,0.06)", linecolor="rgba(0,0,0,0.1)"),
-    yaxis2=dict(title=f"{_lbl_xn_short} ({t('prod_eur_h')})", side="right",
-                overlaying="y", gridcolor="rgba(0,0,0,0)", linecolor="rgba(0,0,0,0.1)"),
-    height=500,
-)
-st.plotly_chart(fig, use_container_width=True)
-source("INE, EEE. Deflactor: IPC general. Càlcul propi" if _ca
-       else "INE, EEE. Deflactor: IPC general. Cálculo propio")
+    if _ca:
+        st.caption(
+            f"**CAGR** (Compound Annual Growth Rate): taxa de creixement anual compost. "
+            f"Indica quant hauria crescut la productivitat cada any de mitjana si el creixement "
+            f"hagués estat constant entre {any_first} i {any_last} ({n_anys} anys). "
+            f"Un CAGR del {fpct(cagr_prod, 2)} significa que, de mitjana, la productivitat "
+            f"ha augmentat un {fpct(cagr_prod, 2)} cada any durant aquest període."
+        )
+    else:
+        st.caption(
+            f"**CAGR** (Compound Annual Growth Rate): tasa de crecimiento anual compuesto. "
+            f"Indica cuánto habría crecido la productividad cada año de media si el crecimiento "
+            f"hubiese sido constante entre {any_first} y {any_last} ({n_anys} años). "
+            f"Un CAGR del {fpct(cagr_prod, 2)} significa que, de media, la productividad "
+            f"ha aumentado un {fpct(cagr_prod, 2)} cada año durante este período."
+        )
 
 # ─── Gràfic 2: Índex base 100 ──────────��────────────────────
 
