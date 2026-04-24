@@ -6,7 +6,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Observatori Comerç",
-    page_icon="🏪",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -22,21 +21,21 @@ _ca = st.session_state.lang == "ca"
 
 pg = st.navigation([
     st.Page("pages/0_Inici.py",
-            title="Inici" if _ca else "Inicio", icon="🏪", default=True),
+            title="Inici" if _ca else "Inicio", default=True),
     st.Page("pages/1_PIB_i_VAB.py",
-            title="PIB i VAB" if _ca else "PIB y VAB", icon="📊"),
+            title="PIB i VAB" if _ca else "PIB y VAB"),
     st.Page("pages/2_Empreses.py",
-            title="Empreses" if _ca else "Empresas", icon="🏢"),
+            title="Empreses" if _ca else "Empresas"),
     st.Page("pages/3_Ocupació.py",
-            title="Ocupació" if _ca else "Empleo", icon="👥"),
+            title="Ocupació" if _ca else "Empleo"),
     st.Page("pages/4_Productivitat.py",
-            title="Productivitat" if _ca else "Productividad", icon="⚡"),
+            title="Productivitat" if _ca else "Productividad"),
     st.Page("pages/5_Ecommerce.py",
-            title="E-commerce", icon="🛒"),
+            title="E-commerce"),
     st.Page("pages/6_Europa.py",
-            title="Europa", icon="🇪🇺"),
+            title="Europa"),
     st.Page("pages/7_Metodologia.py",
-            title="Metodologia" if _ca else "Metodología", icon="📖"),
+            title="Metodologia" if _ca else "Metodología"),
 ])
 
 # ─── SIDEBAR BRANDING ───────────────────────────────────────────

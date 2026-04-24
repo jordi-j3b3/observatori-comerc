@@ -1,5 +1,6 @@
 """
 Estils compartits: layout Plotly, CSS global, helpers de presentació.
+Disseny editorial basat en DM Serif Display + DM Sans.
 """
 import streamlit as st
 import os
@@ -7,18 +8,18 @@ import json
 
 # ─── COLORS ───────────────────────────────────────────────────
 
-PURPLE = "#5d4fff"
-PURPLE_LIGHT = "#aaa3ff"
-PURPLE_BG = "#F5F4FF"
-RED = "#E74C3C"
-BLUE = "#2E86C1"
-GREEN = "#27AE60"
-ORANGE = "#F39C12"
-DARK = "#02000F"
-GRAY = "#BDC3C7"
-GRAY_DARK = "#7F8C8D"
+PURPLE = "#0055a4"
+PURPLE_LIGHT = "#5a9fd4"
+PURPLE_BG = "#e8f0fe"
+RED = "#c0392b"
+BLUE = "#2980b9"
+GREEN = "#27ae60"
+ORANGE = "#e67e22"
+DARK = "#1a1a1a"
+GRAY = "#bdc3c7"
+GRAY_DARK = "#7f8c8d"
 
-PALETTE = [PURPLE, RED, GREEN, ORANGE, "#8E44AD", "#1ABC9C", "#E67E22", "#3498DB", "#2C3E50", "#D35400"]
+PALETTE = [PURPLE, RED, GREEN, ORANGE, "#8e44ad", "#1abc9c", "#e67e22", "#3498db", "#2c3e50", "#d35400"]
 
 
 # ─── FORMAT NUMÈRIC (europeu: 1.234,56) ─────────────────────
@@ -30,7 +31,6 @@ def fnum(n, decimals=0):
     if decimals == 0:
         return f"{int(round(n)):,}".replace(",", ".")
     formatted = f"{n:,.{decimals}f}"
-    # Swap: , → temp, . → , temp → .
     return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
 
 
@@ -38,7 +38,6 @@ def fpct(n, decimals=1, sign=True):
     """Formata un percentatge amb format europeu. Evita +0,0% / -0,0%."""
     if n is None:
         return "—"
-    # Arrodonir i evitar -0,0 o +0,0
     rounded = round(n, decimals)
     if rounded == 0:
         return f"0,{('0' * decimals)}%"
@@ -52,14 +51,14 @@ def fpct(n, decimals=1, sign=True):
 # ─── PLOTLY LAYOUT ────────────────────────────────────────────
 
 PLOTLY_LAYOUT = dict(
-    font=dict(family="Manrope, sans-serif", size=13, color=DARK),
+    font=dict(family="DM Sans, sans-serif", size=13, color=DARK),
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=60, r=20, t=40, b=50),
     hoverlabel=dict(
         bgcolor="white",
         font_size=13,
-        font_family="Manrope, sans-serif",
+        font_family="DM Sans, sans-serif",
         bordercolor="#ddd",
     ),
     xaxis=dict(
@@ -128,26 +127,38 @@ def inject_css():
     """Injecta CSS global a la pàgina (cridar a cada page)."""
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap');
 
         /* Tipografia global */
         html, body, [class*="css"] {
-            font-family: 'Manrope', sans-serif;
+            font-family: 'DM Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
-        h1, h2, h3, h4, h5, h6,
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
-            font-family: 'Manrope', sans-serif;
-            font-weight: 700;
-            color: #02000F;
+        h1, .stMarkdown h1 {
+            font-family: 'DM Serif Display', serif !important;
+            font-weight: 400 !important;
+            color: #0a0a0a;
+            font-size: 2.2rem !important;
+        }
+        h2, h3, .stMarkdown h2, .stMarkdown h3 {
+            font-family: 'DM Serif Display', serif !important;
+            font-weight: 400 !important;
+            color: #1a1a1a;
+        }
+        h4, h5, h6,
+        .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            color: #1a1a1a;
         }
 
         /* Accent principal */
-        .stMetricValue { color: #5d4fff !important; font-weight: 700; }
+        .stMetricValue { color: #0055a4 !important; font-weight: 700; }
         .stMetricDelta svg { display: inline; }
 
         /* Sidebar */
         [data-testid="stSidebar"] {
-            background-color: #02000F;
+            background-color: #0a0a0a;
         }
         [data-testid="stSidebar"] * {
             color: #FFFFFF !important;
@@ -158,77 +169,81 @@ def inject_css():
 
         /* Botons */
         .stDownloadButton button {
-            background-color: #5d4fff;
+            background-color: #0055a4;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-family: 'Manrope', sans-serif;
-            font-weight: 600;
+            border-radius: 3px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
         }
         .stDownloadButton button:hover {
-            background-color: #4a3fd9;
+            background-color: #003d7a;
         }
 
         /* Tabs */
         .stTabs [data-baseweb="tab"] {
-            font-family: 'Manrope', sans-serif;
-            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
         }
         .stTabs [aria-selected="true"] {
-            border-bottom-color: #5d4fff !important;
+            border-bottom-color: #0055a4 !important;
         }
 
         /* Dividers */
-        hr { border-color: #F5F4FF !important; }
+        hr { border-color: #e0e0e0 !important; }
 
         /* Cards de mètriques */
         [data-testid="stMetric"] {
-            background-color: #FAFAFA;
-            border-radius: 10px;
+            background-color: #fcfcfc;
+            border-radius: 4px;
             padding: 15px;
-            border-left: 4px solid #5d4fff;
+            border-left: 3px solid #0055a4;
         }
 
         /* Insight box */
         .insight-box {
-            background: linear-gradient(135deg, #F5F4FF 0%, #FAFAFA 100%);
-            border-left: 4px solid #5d4fff;
-            border-radius: 0 10px 10px 0;
-            padding: 20px 24px;
+            background: #f4f4f2;
+            border-left: 3px solid #0055a4;
+            border-radius: 0 4px 4px 0;
+            padding: 24px 28px;
             margin: 16px 0 24px 0;
-            font-family: 'Manrope', sans-serif;
+            font-family: 'DM Sans', sans-serif;
             font-size: 0.95rem;
             line-height: 1.7;
-            color: #02000F;
+            color: #1a1a1a;
         }
         .insight-box strong {
-            color: #5d4fff;
+            color: #0055a4;
         }
         .insight-box .insight-title {
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #5d4fff;
-            margin-bottom: 8px;
+            color: #0055a4;
+            margin-bottom: 10px;
         }
 
         /* Intro box */
         .intro-box {
-            background: #FAFAFA;
-            border-radius: 10px;
-            padding: 20px 24px;
+            background: #f4f4f2;
+            border-radius: 4px;
+            padding: 24px 28px;
             margin: 0 0 24px 0;
-            font-family: 'Manrope', sans-serif;
+            font-family: 'DM Sans', sans-serif;
             font-size: 0.93rem;
             line-height: 1.7;
-            color: #333;
+            color: #555;
         }
 
         /* Font de dades */
         .source-label {
-            font-family: 'Manrope', sans-serif;
-            font-size: 0.78rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
             color: #999;
             margin-top: -8px;
             margin-bottom: 20px;
@@ -237,10 +252,10 @@ def inject_css():
 
         /* Meta info (data actualització) */
         .meta-info {
-            font-family: 'Manrope', sans-serif;
-            font-size: 0.8rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
             color: #999;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #e0e0e0;
             padding-top: 12px;
             margin-top: 30px;
         }
@@ -249,34 +264,32 @@ def inject_css():
         .j3b3-header {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
             margin-bottom: 0.5rem;
         }
         .j3b3-header img {
-            height: 36px;
+            height: 30px;
         }
         .j3b3-badge {
-            background-color: #5d4fff;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            font-family: 'Manrope', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #0055a4;
         }
 
         /* Expander */
         .streamlit-expanderHeader {
-            font-family: 'Manrope', sans-serif;
-            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
         }
 
         /* Selectbox */
         .stSelectbox > div > div {
-            border-radius: 8px;
+            border-radius: 3px;
         }
         .stMultiSelect > div > div {
-            border-radius: 8px;
+            border-radius: 3px;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -302,10 +315,9 @@ def source(text):
     """Mostra la font de dades sota un gràfic, amb link a metodologia si escau."""
     lang = st.session_state.get("lang", "ca")
     lbl = "Font" if lang == "ca" else "Fuente"
-    # Afegir link a metodologia quan hi ha càlcul propi
     if "Càlcul propi" in text or "Cálculo propio" in text:
         meto_lbl = "Veure metodologia" if lang == "ca" else "Ver metodología"
-        extra = f' · <a href="/Metodologia" target="_self" style="color:#5d4fff;">{meto_lbl}</a>'
+        extra = f' · <a href="/Metodologia" target="_self" style="color:#0055a4;">{meto_lbl}</a>'
     else:
         extra = ""
     st.markdown(f'<div class="source-label">{lbl}: {text}{extra}</div>', unsafe_allow_html=True)
