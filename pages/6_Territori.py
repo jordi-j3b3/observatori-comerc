@@ -60,21 +60,20 @@ if df_eee.empty:
 geojson = load_geojson()
 df_ccaa = df_eee[df_eee["territori"] != "espanya"].copy()
 df_esp = df_eee[df_eee["territori"] == "espanya"].copy()
-anys = sorted(df_ccaa["any"].dropna().unique())
-
-# Ultim any amb dades de pes (Eurostat G47 pot no tenir l'ultim any EEE)
+_tots_anys = sorted(df_ccaa["any"].dropna().unique())
 if "pes_cnae47_pib" in df_ccaa.columns:
-    _anys_pes = df_ccaa.dropna(subset=["pes_cnae47_pib"])["any"].unique()
-    _default_any = int(max(_anys_pes)) if len(_anys_pes) > 0 else max(anys)
+    anys = sorted(df_ccaa.dropna(subset=["pes_cnae47_pib"])["any"].unique())
 else:
-    _default_any = max(anys)
+    anys = _tots_anys
+if not anys:
+    anys = _tots_anys
 
 # ─── Selector d'any ──────────────────────────────────────────
 
 any_sel = st.select_slider(
     t("emp_ccaa_year"),
     options=anys,
-    value=_default_any,
+    value=max(anys),
 )
 
 # ─── KPIs ────────────────────────────────────────────────────
