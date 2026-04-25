@@ -6,7 +6,7 @@ import json
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, insight, intro, source, page_meta,
+from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, apply_layout,
                    PURPLE, PURPLE_LIGHT, RED, PALETTE)
 
