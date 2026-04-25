@@ -239,7 +239,11 @@ def load_eee_ccaa():
 
 df_eee = load_eee_ccaa()
 
-if not df_eee.empty and "vab_estimat" in df_eee.columns and "vab_estimat_nominal" in df_eee.columns:
+_vab_nom_col = "vab_eurostat" if "vab_eurostat" in df_eee.columns else "vab_estimat_nominal"
+_vab_real_col = "vab_estimat"
+_has_vab = not df_eee.empty and _vab_real_col in df_eee.columns and _vab_nom_col in df_eee.columns
+
+if _has_vab:
     df_eee_ccaa = df_eee[df_eee["territori"] != "espanya"].copy()
     ccaa_list = sorted(df_eee_ccaa["territori"].unique())
 
@@ -254,18 +258,18 @@ if not df_eee.empty and "vab_estimat" in df_eee.columns and "vab_estimat_nominal
         fig_ccaa = go.Figure()
         for i, ccaa in enumerate(sel):
             dc = df_eee_ccaa[df_eee_ccaa["territori"] == ccaa].sort_values("any")
-            dc_nom = dc.dropna(subset=["vab_estimat_nominal"])
-            dc_real = dc.dropna(subset=["vab_estimat"])
+            dc_nom = dc.dropna(subset=[_vab_nom_col])
+            dc_real = dc.dropna(subset=[_vab_real_col])
             color = PALETTE[i % len(PALETTE)]
             fig_ccaa.add_trace(go.Scatter(
-                x=dc_nom["any"], y=dc_nom["vab_estimat_nominal"] / 1e6,
+                x=dc_nom["any"], y=dc_nom[_vab_nom_col] / 1e6,
                 mode="lines+markers", name=f"{ccaa} ({t('pib_nominal')})",
                 line=dict(color=color, width=2),
                 marker=dict(size=5),
                 legendgroup=ccaa,
             ))
             fig_ccaa.add_trace(go.Scatter(
-                x=dc_real["any"], y=dc_real["vab_estimat"] / 1e6,
+                x=dc_real["any"], y=dc_real[_vab_real_col] / 1e6,
                 mode="lines+markers", name=f"{ccaa} ({t('pib_real')})",
                 line=dict(color=color, width=2, dash="dash"),
                 marker=dict(size=5, symbol="diamond"),
@@ -274,8 +278,8 @@ if not df_eee.empty and "vab_estimat" in df_eee.columns and "vab_estimat_nominal
 
         apply_layout(fig_ccaa, yaxis_title=t("pib_meur"), height=500)
         st.plotly_chart(fig_ccaa, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses i Comptabilitat Nacional. Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas y Contabilidad Nacional. Cálculo propio")
+        source("INE + Eurostat. Estimacio hibrida" if _ca
+               else "INE + Eurostat. Estimacion hibrida")
 
 else:
     st.info("No hi ha dades regionals disponibles." if _ca

@@ -101,33 +101,66 @@ if st.session_state.lang == "ca":
     del directori d'empreses) més que una destrucció real de teixit empresarial.
     """)
 
-    # ── Ecommerce ──
-    st.subheader("5. Comerç electrònic")
+    # ── Territori ──
+    st.subheader("5. Estimacio del VAB CNAE 47 per CCAA (metode hibrid)")
     st.markdown("""
-    **Font:** CNMC (Comissió Nacional dels Mercats i la Competència), dades trimestrals de comerç electrònic.
+    **Problema:** La Comptabilitat Regional de l'INE no desglossa el VAB al nivell del CNAE 47
+    (comerc al detall). Per tant, cal estimar-lo.
 
-    **Agregació:** Les dades trimestrals s'agreguen a nivell anual (suma dels 4 trimestres).
+    **Fonts:**
+    - **Eurostat `nama_10r_3gva`:** VAB de la seccio G-I (comerc, transport i hostaleria) per CCAA (NUTS2).
+      Dades de comptabilitat regional real, no estimacions.
+    - **Eurostat `nama_10_a64`:** VAB del CNAE G47 a nivell nacional espanyol.
+    - **INE, taula 76817 (EEE Sector Comerc):** Xifra de negoci del CNAE 47 per CCAA.
 
-    **Any parcial:** Si l'últim any disponible mostra un volum total inferior al 85% de l'any anterior,
-    es considera que les dades són d'un any incomplet (la CNMC publica amb retard)
-    i es mostra una nota d'advertència.
+    **Metode hibrid (proporcional ponderat):**
+    1. Es calcula la **ratio nacional** `G47/GI = VAB_G47_Espanya / VAB_GI_Espanya` (~22-26% segons l'any).
+    2. Per a cada CCAA es calculen dues quotes: la **quota G-I** (pes del VAB G-I de la CCAA sobre el total G-I nacional)
+       i la **quota de xifra de negoci** (pes de la XN CNAE 47 de la CCAA sobre el total nacional).
+    3. La **quota hibrida** es la mitjana de les dues quotes. Aixo combina la informacio top-down
+       (comptabilitat regional) amb la bottom-up (enquesta d'empreses).
+    4. El VAB G47 nacional d'Eurostat es distribueix entre CCAA segons les quotes hibrides.
 
-    **Pes CNAE 47** = `Volum e-commerce CNAE 47 / Volum total e-commerce × 100`.
+    **Per que la mitjana?** La quota G-I captura l'escala economica real de cada regio pero inclou
+    transport i hostaleria (on CCAA turistiques com Balears pesen mes del que correspondria al retail).
+    La quota de XN reflexa directament l'activitat del comerc al detall pero prove d'una enquesta
+    (no de comptabilitat regional). La mitjana equilibra ambdos biaixos.
+
+    **Restriccio:** La suma del VAB estimat de totes les CCAA es exactament igual al VAB G47 nacional
+    d'Eurostat, garantint coherencia amb els comptes nacionals.
+
+    **Limitacio:** L'estimacio assumeix que la ratio G47/GI es homogenia dins cada CCAA. En realitat,
+    CCAA turistiques tenen un pes relatiu mes gran de la H (hostaleria) dins G-I. La ponderacio amb XN
+    corregeix parcialment aquest biaix.
+    """)
+
+    # ── Ecommerce ──
+    st.subheader("6. Comerc electronic")
+    st.markdown("""
+    **Font:** CNMC (Comissio Nacional dels Mercats i la Competencia), dades trimestrals de comerc electronic.
+
+    **Agregacio:** Les dades trimestrals s'agreguen a nivell anual (suma dels 4 trimestres).
+
+    **Any parcial:** Si l'ultim any disponible mostra un volum total inferior al 85% de l'any anterior,
+    es considera que les dades son d'un any incomplet (la CNMC publica amb retard)
+    i es mostra una nota d'advertencia.
+
+    **Pes CNAE 47** = `Volum e-commerce CNAE 47 / Volum total e-commerce x 100`.
     """)
 
     # ── Europa ──
-    st.subheader("6. Comparativa europea")
+    st.subheader("7. Comparativa europea")
     st.markdown("""
     **Font:** Eurostat, Comptes Nacionals (taula `nama_10_a64`).
 
-    **Pes CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total × 100` per a cada país.
+    **Pes CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` per a cada pais.
 
-    **Països inclosos:** Tots els disponibles a Eurostat amb dades per al CNAE G47, incloent
-    l'agregat UE-27 com a referència. Espanya es destaca visualment per facilitar la comparació.
+    **Paisos inclosos:** Tots els disponibles a Eurostat amb dades per al CNAE G47, incloent
+    l'agregat UE-27 com a referencia. Espanya es destaca visualment per facilitar la comparacio.
     """)
 
     # ── Periodicitat ──
-    st.subheader("7. Periodicitat d'actualització")
+    st.subheader("8. Periodicitat d'actualitzacio")
     st.markdown("""
     L'Observatori s'actualitza de forma **trimestral** (gener, abril, juliol i octubre) mitjançant
     un procés automatitzat (GitHub Actions) que:
@@ -225,30 +258,62 @@ else:
     del directorio de empresas) más que una destrucción real de tejido empresarial.
     """)
 
-    st.subheader("5. Comercio electrónico")
+    st.subheader("5. Estimacion del VAB CNAE 47 por CCAA (metodo hibrido)")
     st.markdown("""
-    **Fuente:** CNMC (Comisión Nacional de los Mercados y la Competencia), datos trimestrales de comercio electrónico.
+    **Problema:** La Contabilidad Regional del INE no desglosa el VAB al nivel del CNAE 47
+    (comercio minorista). Por tanto, es necesario estimarlo.
 
-    **Agregación:** Los datos trimestrales se agregan a nivel anual (suma de los 4 trimestres).
+    **Fuentes:**
+    - **Eurostat `nama_10r_3gva`:** VAB de la seccion G-I (comercio, transporte y hosteleria) por CCAA (NUTS2).
+      Datos de contabilidad regional real, no estimaciones.
+    - **Eurostat `nama_10_a64`:** VAB del CNAE G47 a nivel nacional espanol.
+    - **INE, tabla 76817 (EEE Sector Comercio):** Cifra de negocio del CNAE 47 por CCAA.
 
-    **Año parcial:** Si el último año disponible muestra un volumen total inferior al 85% del año anterior,
-    se considera que los datos son de un año incompleto (la CNMC publica con retraso)
-    y se muestra una nota de advertencia.
+    **Metodo hibrido (proporcional ponderado):**
+    1. Se calcula la **ratio nacional** `G47/GI = VAB_G47_Espana / VAB_GI_Espana` (~22-26% segun el ano).
+    2. Para cada CCAA se calculan dos cuotas: la **cuota G-I** (peso del VAB G-I de la CCAA sobre el total G-I nacional)
+       y la **cuota de cifra de negocio** (peso de la XN CNAE 47 de la CCAA sobre el total nacional).
+    3. La **cuota hibrida** es la media de las dos cuotas. Esto combina la informacion top-down
+       (contabilidad regional) con la bottom-up (encuesta de empresas).
+    4. El VAB G47 nacional de Eurostat se distribuye entre CCAA segun las cuotas hibridas.
 
-    **Peso CNAE 47** = `Volumen e-commerce CNAE 47 / Volumen total e-commerce × 100`.
+    **Por que la media?** La cuota G-I captura la escala economica real de cada region pero incluye
+    transporte y hosteleria (donde CCAA turisticas como Baleares pesan mas de lo que corresponderia al retail).
+    La cuota de XN refleja directamente la actividad del comercio minorista pero proviene de una encuesta
+    (no de contabilidad regional). La media equilibra ambos sesgos.
+
+    **Restriccion:** La suma del VAB estimado de todas las CCAA es exactamente igual al VAB G47 nacional
+    de Eurostat, garantizando coherencia con las cuentas nacionales.
+
+    **Limitacion:** La estimacion asume que la ratio G47/GI es homogenea dentro de cada CCAA. En realidad,
+    CCAA turisticas tienen un peso relativo mayor de la H (hosteleria) dentro de G-I. La ponderacion con XN
+    corrige parcialmente este sesgo.
     """)
 
-    st.subheader("6. Comparativa europea")
+    st.subheader("6. Comercio electronico")
+    st.markdown("""
+    **Fuente:** CNMC (Comision Nacional de los Mercados y la Competencia), datos trimestrales de comercio electronico.
+
+    **Agregacion:** Los datos trimestrales se agregan a nivel anual (suma de los 4 trimestres).
+
+    **Ano parcial:** Si el ultimo ano disponible muestra un volumen total inferior al 85% del ano anterior,
+    se considera que los datos son de un ano incompleto (la CNMC publica con retraso)
+    y se muestra una nota de advertencia.
+
+    **Peso CNAE 47** = `Volumen e-commerce CNAE 47 / Volumen total e-commerce x 100`.
+    """)
+
+    st.subheader("7. Comparativa europea")
     st.markdown("""
     **Fuente:** Eurostat, Cuentas Nacionales (tabla `nama_10_a64`).
 
-    **Peso CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total × 100` para cada país.
+    **Peso CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` para cada pais.
 
-    **Países incluidos:** Todos los disponibles en Eurostat con datos para el CNAE G47, incluyendo
-    el agregado UE-27 como referencia. España se destaca visualmente para facilitar la comparación.
+    **Paises incluidos:** Todos los disponibles en Eurostat con datos para el CNAE G47, incluyendo
+    el agregado UE-27 como referencia. Espana se destaca visualmente para facilitar la comparacion.
     """)
 
-    st.subheader("7. Periodicidad de actualización")
+    st.subheader("8. Periodicidad de actualizacion")
     st.markdown("""
     El Observatorio se actualiza de forma **trimestral** (enero, abril, julio y octubre) mediante
     un proceso automatizado (GitHub Actions) que:

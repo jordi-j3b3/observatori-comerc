@@ -191,6 +191,96 @@ def fetch_empreses_ue():
     return df[["pais", "pais_codi", "any", "empreses"]].dropna()
 
 
+NUTS2_ES = [
+    "ES11", "ES12", "ES13", "ES21", "ES22", "ES23", "ES24",
+    "ES30", "ES41", "ES42", "ES43", "ES51", "ES52", "ES53",
+    "ES61", "ES62", "ES70",
+]
+
+NUTS2_NAMES = {
+    "ES11": "Galicia", "ES12": "Asturias (Principado de)",
+    "ES13": "Cantabria", "ES21": "País Vasco",
+    "ES22": "Navarra (Comunidad Foral de)", "ES23": "Rioja (La)",
+    "ES24": "Aragón", "ES30": "Madrid (Comunidad de)",
+    "ES41": "Castilla y León", "ES42": "Castilla - La Mancha",
+    "ES43": "Extremadura", "ES51": "Cataluña",
+    "ES52": "Comunitat Valenciana", "ES53": "Balears (Illes)",
+    "ES61": "Andalucía", "ES62": "Murcia (Región de)",
+    "ES70": "Canarias",
+}
+
+
+def fetch_vab_regional_gi():
+    """
+    Dataset nama_10r_3gva: VAB seccio G-I (comerc+transport+hostaleria)
+    per CCAA espanyoles (NUTS2) + total nacional ES. Preus corrents, M EUR.
+    """
+    params = [("unit", "CP_MEUR"), ("nace_r2", "G-I")]
+    for code in NUTS2_ES:
+        params.append(("geo", code))
+    params.append(("geo", "ES"))
+
+    data = _fetch_eurostat("nama_10r_3gva", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "nuts2"})
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["vab_gi_meur"] = pd.to_numeric(df["valor"], errors="coerce")
+    df["territori"] = df["nuts2"].map(NUTS2_NAMES).fillna(df["nuts2"])
+    df.loc[df["nuts2"] == "ES", "territori"] = "espanya"
+
+    return df[["territori", "nuts2", "any", "vab_gi_meur"]].dropna()
+
+
+def fetch_vab_regional_total():
+    """
+    Dataset nama_10r_3gva: VAB TOTAL per CCAA espanyoles (NUTS2) + nacional.
+    Preus corrents, M EUR. Per calcular el pes del CNAE 47 sobre el PIB de cada CCAA.
+    """
+    params = [("unit", "CP_MEUR"), ("nace_r2", "TOTAL")]
+    for code in NUTS2_ES:
+        params.append(("geo", code))
+    params.append(("geo", "ES"))
+
+    data = _fetch_eurostat("nama_10r_3gva", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "nuts2"})
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["vab_total_meur"] = pd.to_numeric(df["valor"], errors="coerce")
+    df["territori"] = df["nuts2"].map(NUTS2_NAMES).fillna(df["nuts2"])
+    df.loc[df["nuts2"] == "ES", "territori"] = "espanya"
+
+    return df[["territori", "nuts2", "any", "vab_total_meur"]].dropna()
+
+
+def fetch_vab_nacional_g47():
+    """
+    Dataset nama_10_a64: VAB CNAE G47 nomes per Espanya. Preus corrents, M EUR.
+    Per calcular la ratio G47/GI a nivell nacional.
+    """
+    params = {
+        "nace_r2": "G47",
+        "na_item": "B1G",
+        "unit": "CP_MEUR",
+        "geo": ["ES"],
+    }
+    data = _fetch_eurostat("nama_10_a64", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any"})
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["vab_g47_meur"] = pd.to_numeric(df["valor"], errors="coerce")
+
+    return df[["any", "vab_g47_meur"]].dropna()
+
+
 if __name__ == "__main__":
     print("Testejant API Eurostat...")
 

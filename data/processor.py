@@ -658,11 +658,118 @@ def _load_europa_from_excel(country_names_ca):
     return pd.DataFrame(records)
 
 
+def _estimate_vab_eurostat(df):
+    """
+    Estimacio hibrida del VAB CNAE 47 per CCAA combinant:
+    - Eurostat nama_10r_3gva: VAB seccio G-I per CCAA (comptabilitat regional real)
+    - Eurostat nama_10_a64: VAB G47 nacional (per calcular ratio G47/GI)
+    - INE EEE taula 76817: xifra de negoci per CCAA (per ponderar)
+
+    Metode:
+    1. ratio_g47_gi = VAB_G47_ES / VAB_GI_ES (pes del detall dins G-I a nivell nacional)
+    2. Base: VAB_G47_ccaa = VAB_GI_ccaa * ratio_g47_gi
+    3. Ajust proporcional amb quotes de xifra de negoci per reflectir que
+       el pes del retail dins G-I varia per CCAA (ex: turisme a Balears pesa mes en G-I)
+    4. Restriccio: la suma de VAB estimat per CCAA = VAB G47 nacional d'Eurostat
+    """
+    print("  Estimant VAB via Eurostat (metode hibrid)...")
+    try:
+        df_gi = eurostat.fetch_vab_regional_gi()
+        df_g47 = eurostat.fetch_vab_nacional_g47()
+        df_total = eurostat.fetch_vab_regional_total()
+    except Exception as e:
+        print(f"  Error Eurostat regional: {e}")
+        return df
+
+    if df_gi.empty or df_g47.empty:
+        print("  Eurostat regional: sense dades suficients")
+        return df
+
+    gi_es = df_gi[df_gi["territori"] == "espanya"][["any", "vab_gi_meur"]].rename(
+        columns={"vab_gi_meur": "vab_gi_es"})
+    gi_ccaa = df_gi[df_gi["territori"] != "espanya"][["territori", "any", "vab_gi_meur"]]
+
+    ratio = gi_es.merge(df_g47, on="any", how="inner")
+    ratio["r_g47_gi"] = ratio["vab_g47_meur"] / ratio["vab_gi_es"]
+    print(f"  Ratio G47/GI nacional: {dict(zip(ratio['any'].astype(int), ratio['r_g47_gi'].round(4)))}")
+
+    df = df.merge(gi_ccaa, on=["territori", "any"], how="left")
+    df = df.merge(ratio[["any", "r_g47_gi", "vab_g47_meur"]], on="any", how="left")
+
+    # Base estimate: proportional to G-I
+    df["_vab_base"] = df["vab_gi_meur"] * df["r_g47_gi"]
+
+    # XN-weighted adjustment: redistribute so CCAA with higher retail XN share
+    # get proportionally more. This corrects for tourism-heavy CCAA where G-I
+    # is dominated by hospitality rather than retail.
+    df_nac = df[df["territori"] == "espanya"]
+    xn_nac_by_year = df_nac[["any", "xifra_negoci"]].rename(
+        columns={"xifra_negoci": "xn_nac"}).dropna()
+
+    df = df.merge(xn_nac_by_year, on="any", how="left")
+
+    mask_calc = (
+        df["territori"] != "espanya") & (
+        df["vab_gi_meur"].notna()) & (
+        df["r_g47_gi"].notna()) & (
+        df["xifra_negoci"].notna()) & (
+        df["xn_nac"].notna()
+    )
+
+    for year in df.loc[mask_calc, "any"].unique():
+        ym = mask_calc & (df["any"] == year)
+        if ym.sum() == 0:
+            continue
+
+        # G-I shares and XN shares per CCAA
+        gi_total = df.loc[ym, "vab_gi_meur"].sum()
+        gi_shares = df.loc[ym, "vab_gi_meur"] / gi_total
+        xn_total = df.loc[ym, "xifra_negoci"].sum()
+        xn_shares = df.loc[ym, "xifra_negoci"] / xn_total
+
+        # Hybrid share: average of G-I share (top-down) and XN share (bottom-up)
+        hybrid_shares = (gi_shares + xn_shares) / 2
+        hybrid_shares = hybrid_shares / hybrid_shares.sum()
+
+        # Distribute the national G47 total using hybrid shares
+        vab_g47_es = df.loc[ym, "vab_g47_meur"].iloc[0]
+        df.loc[ym, "vab_eurostat_meur"] = hybrid_shares * vab_g47_es
+
+    # Also set national total
+    mask_es = (df["territori"] == "espanya") & df["vab_g47_meur"].notna()
+    df.loc[mask_es, "vab_eurostat_meur"] = df.loc[mask_es, "vab_g47_meur"]
+
+    # Convert M EUR to EUR for consistency with other columns
+    if "vab_eurostat_meur" in df.columns:
+        df["vab_eurostat"] = df["vab_eurostat_meur"] * 1e6
+        n = df["vab_eurostat"].notna().sum()
+        print(f"  VAB Eurostat estimat per {n} registres")
+
+    # Pes del CNAE 47 sobre el PIB de cada CCAA
+    if not df_total.empty:
+        df = df.merge(
+            df_total[["territori", "any", "vab_total_meur"]],
+            on=["territori", "any"], how="left")
+        mask_pes = df["vab_eurostat_meur"].notna() & df["vab_total_meur"].notna() & (df["vab_total_meur"] > 0)
+        df.loc[mask_pes, "pes_cnae47_pib"] = df.loc[mask_pes, "vab_eurostat_meur"] / df.loc[mask_pes, "vab_total_meur"]
+        n_pes = df["pes_cnae47_pib"].notna().sum()
+        print(f"  Pes CNAE 47 / PIB calculat per {n_pes} registres")
+    else:
+        print("  VAB total regional no disponible, pes no calculat")
+
+    df = df.drop(columns=["vab_gi_meur", "r_g47_gi", "vab_g47_meur", "_vab_base",
+                           "xn_nac", "vab_eurostat_meur", "vab_total_meur"], errors="ignore")
+
+    return df
+
+
 def process_eee_ccaa():
     """
     Processa dades EEE Comercio per CCAA (taula 76817).
-    Estima VAB CNAE 47 per CCAA usant la ràtio nacional VAB/xifra_negoci
-    de la taula 36194 (productivitat) aplicada a la xifra de negoci de cada CCAA.
+    Tres estimacions de VAB CNAE 47 per CCAA:
+    - vab_estimat: via ratio nacional VA/XN (EEE, preus constants)
+    - vab_estimat_nominal: via ratio nacional VAB_corrents/XN (INE CNA + EEE)
+    - vab_eurostat: metode hibrid Eurostat (comptabilitat regional G-I + EEE XN)
     """
     print("  Font 1: API INE (taula 76817)")
     try:
@@ -711,6 +818,9 @@ def process_eee_ccaa():
             df.loc[mask, "vab_estimat_nominal"] = df.loc[mask, "xifra_negoci"] * df.loc[mask, "_r_nom"]
             df = df.drop(columns=["_r_nom"])
             print(f"  VAB nominal estimat per {df['vab_estimat_nominal'].notna().sum()} registres")
+
+    # Estimacio hibrida Eurostat (comptabilitat regional + EEE)
+    df = _estimate_vab_eurostat(df)
 
     save_cache(df, "eee_ccaa")
     return df

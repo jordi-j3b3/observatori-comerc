@@ -19,19 +19,23 @@ st.title("Territori" if _ca else "Territorio")
 
 if _ca:
     intro(
-        "La Comptabilitat Regional de l'INE no desglossa el CNAE 47 per comunitats autònomes. "
-        "Per obtenir una visió territorial, apliquem la <strong>ràtio nacional VAB/xifra de negoci</strong> "
-        "(de l'Enquesta Estructural d'Empreses) a la xifra de negoci declarada per cada CCAA. "
-        "Això ens permet estimar el VAB regional i comparar <strong>productivitat</strong>, "
-        "<strong>sous</strong> i <strong>estructura comercial</strong> entre territoris."
+        "La Comptabilitat Regional de l'INE no desglossa el CNAE 47 per comunitats autonomes. "
+        "Per estimar el VAB del comerc al detall per CCAA, combinem dues fonts: "
+        "la <strong>comptabilitat regional d'Eurostat</strong> (VAB de la seccio G-I: comerc, transport i hostaleria) "
+        "i la <strong>xifra de negoci per CCAA</strong> de l'Enquesta Estructural d'Empreses de l'INE. "
+        "El metode hibrid distribueix el VAB nacional del CNAE 47 entre CCAA ponderant "
+        "les quotes regionals de G-I (top-down) amb les quotes de facturacio (bottom-up), "
+        "garantint que la suma coincideixi amb el total nacional d'Eurostat."
     )
 else:
     intro(
-        "La Contabilidad Regional del INE no desglosa el CNAE 47 por comunidades autónomas. "
-        "Para obtener una visión territorial, aplicamos la <strong>ratio nacional VAB/cifra de negocio</strong> "
-        "(de la Encuesta Estructural de Empresas) a la cifra de negocio declarada por cada CCAA. "
-        "Esto nos permite estimar el VAB regional y comparar <strong>productividad</strong>, "
-        "<strong>sueldos</strong> y <strong>estructura comercial</strong> entre territorios."
+        "La Contabilidad Regional del INE no desglosa el CNAE 47 por comunidades autonomas. "
+        "Para estimar el VAB del comercio minorista por CCAA, combinamos dos fuentes: "
+        "la <strong>contabilidad regional de Eurostat</strong> (VAB de la seccion G-I: comercio, transporte y hosteleria) "
+        "y la <strong>cifra de negocio por CCAA</strong> de la Encuesta Estructural de Empresas del INE. "
+        "El metodo hibrido distribuye el VAB nacional del CNAE 47 entre CCAA ponderando "
+        "las cuotas regionales de G-I (top-down) con las cuotas de facturacion (bottom-up), "
+        "garantizando que la suma coincida con el total nacional de Eurostat."
     )
 
 @st.cache_data(ttl=3600)
@@ -68,12 +72,16 @@ any_sel = st.select_slider(
 
 # ─── KPIs ────────────────────────────────────────────────────
 
+VAB_COL = "vab_eurostat" if "vab_eurostat" in df_eee.columns else "vab_estimat"
+
 d_yr_esp = df_esp[df_esp["any"] == any_sel]
 if not d_yr_esp.empty:
     row = d_yr_esp.iloc[0]
     c1, c2, c3, c4 = st.columns(4)
-    if "vab_estimat" in row and pd.notna(row.get("vab_estimat")):
-        c1.metric("VAB real (M EUR)", fnum(row["vab_estimat"] / 1e6))
+    if pd.notna(row.get("pes_cnae47_pib")):
+        c1.metric(
+            f"{'Pes CNAE 47 / PIB' if _ca else 'Peso CNAE 47 / PIB'} ({int(any_sel)})",
+            fpct(row["pes_cnae47_pib"] * 100, 2, sign=False))
     if "xifra_negoci" in row and pd.notna(row.get("xifra_negoci")):
         c2.metric(t("eee_ccaa_xn") + " (M EUR)", fnum(row["xifra_negoci"] / 1e6))
     if "personal_ocupat" in row and pd.notna(row.get("personal_ocupat")):
@@ -81,109 +89,83 @@ if not d_yr_esp.empty:
     if "locals" in row and pd.notna(row.get("locals")):
         c4.metric("Locals" if _ca else "Locales", fnum(row["locals"]))
 
-# ─── Rànquing per magnitud ───────────────────────────────────
+# ─── Pes del CNAE 47 sobre el PIB per CCAA ──────────────────
 
-st.subheader(t("eee_ccaa_title"))
+_lbl_pes = ("Pes del comerc al detall sobre el PIB de cada CCAA" if _ca
+            else "Peso del comercio minorista sobre el PIB de cada CCAA")
+st.subheader(f"{_lbl_pes} ({int(any_sel)})")
 
-METRICS = {
-    "vab_estimat": (t("eee_ccaa_vab"), "M EUR"),
-    "xifra_negoci": (t("eee_ccaa_xn"), "M EUR"),
-    "personal_ocupat": (t("eee_ccaa_personal"), ""),
-    "sous_salaris": (t("eee_ccaa_sous"), "M EUR"),
-}
+if "pes_cnae47_pib" in df_ccaa.columns:
+    d_pes = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["pes_cnae47_pib"]).copy()
+    d_pes = d_pes.sort_values("pes_cnae47_pib", ascending=True)
 
-available = {k: v for k, v in METRICS.items() if k in df_ccaa.columns}
-sel_metric = st.radio(
-    t("eee_ccaa_metric"),
-    list(available.keys()),
-    format_func=lambda x: available[x][0],
-    horizontal=True,
-)
+    if not d_pes.empty:
+        d_pes["_pct"] = d_pes["pes_cnae47_pib"] * 100
 
-d_yr = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=[sel_metric]).copy()
+        esp_pes_row = df_esp[df_esp["any"] == any_sel]
+        esp_pes = None
+        if not esp_pes_row.empty and pd.notna(esp_pes_row.iloc[0].get("pes_cnae47_pib")):
+            esp_pes = esp_pes_row.iloc[0]["pes_cnae47_pib"] * 100
 
-if not d_yr.empty:
-    d_yr = d_yr.sort_values(sel_metric, ascending=True)
-    lbl, unit = available[sel_metric]
+        colors_pes = []
+        for _, r in d_pes.iterrows():
+            if esp_pes is not None and r["_pct"] >= esp_pes:
+                colors_pes.append(PURPLE)
+            else:
+                colors_pes.append(PURPLE_LIGHT)
 
-    if unit == "M EUR":
-        d_yr["_display"] = d_yr[sel_metric] / 1e6
-        txt_vals = [f"{fnum(v / 1e6)} M" for v in d_yr[sel_metric]]
-        ax_title = f"{lbl} (M EUR)"
-    else:
-        d_yr["_display"] = d_yr[sel_metric]
-        txt_vals = [fnum(v) for v in d_yr[sel_metric]]
-        ax_title = lbl
+        fig_pes = go.Figure()
+        fig_pes.add_trace(go.Bar(
+            y=d_pes["territori"], x=d_pes["_pct"],
+            orientation="h",
+            marker_color=colors_pes,
+            text=[fpct(v, 2, sign=False) for v in d_pes["_pct"]],
+            textposition="outside",
+            textfont=dict(size=11),
+        ))
 
-    fig_rank = go.Figure()
-    fig_rank.add_trace(go.Bar(
-        y=d_yr["territori"], x=d_yr["_display"],
-        orientation="h",
-        marker_color=PURPLE_LIGHT,
-        text=txt_vals,
-        textposition="outside",
-        textfont=dict(size=11),
-    ))
+        if esp_pes is not None:
+            fig_pes.add_vline(
+                x=esp_pes, line_dash="dash", line_color=RED, line_width=2,
+                annotation_text=f"{'Espanya' if _ca else 'Espana'}: {fpct(esp_pes, 2, sign=False)}",
+                annotation_position="top right",
+            )
 
-    esp_val = df_esp[df_esp["any"] == any_sel][sel_metric].values
-    if len(esp_val) > 0 and len(d_yr) > 0:
-        avg_val = esp_val[0] / len(d_yr)
-        if unit == "M EUR":
-            avg_disp = avg_val / 1e6
-            avg_txt = f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_val / 1e6)} M"
-        else:
-            avg_disp = avg_val
-            avg_txt = f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_val)}"
-        fig_rank.add_vline(
-            x=avg_disp, line_dash="dash", line_color=RED, line_width=2,
-            annotation_text=avg_txt, annotation_position="top right",
+        apply_layout(fig_pes,
+            xaxis_title="% PIB",
+            height=max(450, len(d_pes) * 32 + 100),
+            margin=dict(l=200, r=100, t=50, b=50),
         )
+        st.plotly_chart(fig_pes, use_container_width=True)
+        source("Eurostat + INE. Estimacio hibrida propia" if _ca
+               else "Eurostat + INE. Estimacion hibrida propia")
 
-    apply_layout(fig_rank,
-        title=f"{lbl} ({int(any_sel)})",
-        xaxis_title=ax_title,
-        height=max(450, len(d_yr) * 32 + 100),
-        margin=dict(l=200, r=120, t=50, b=50),
-    )
-    st.plotly_chart(fig_rank, use_container_width=True)
-    source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-           else "INE, Encuesta Estructural de Empresas. Cálculo propio")
-
-# ─── Mapa VAB estimat ────────────────────────────────────────
-
-if "vab_estimat" in df_ccaa.columns:
-    lbl_mapa = ("Distribució territorial del VAB del comerç al detall" if _ca
-                else "Distribución territorial del VAB del comercio minorista")
-    st.subheader(f"{lbl_mapa} ({int(any_sel)})")
-    d_map = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["vab_estimat"]).copy()
-    d_map["vab_meur"] = d_map["vab_estimat"] / 1e6
+    # ── Mapa del pes ──
+    d_map = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["pes_cnae47_pib"]).copy()
+    d_map["_pct"] = d_map["pes_cnae47_pib"] * 100
 
     if not d_map.empty:
-        zmin_v = df_ccaa["vab_estimat"].min() / 1e6
-        zmax_v = df_ccaa["vab_estimat"].max() / 1e6
-
         fig_map = go.Figure(go.Choroplethmap(
             geojson=geojson,
             locations=d_map["territori"],
             featureidkey="properties.territori",
-            z=d_map["vab_meur"],
-            zmin=zmin_v, zmax=zmax_v,
+            z=d_map["_pct"],
+            zmin=d_map["_pct"].min() * 0.9,
+            zmax=d_map["_pct"].max() * 1.05,
             colorscale=[
                 [0, "#e8f0fe"], [0.15, "#a8c8e8"], [0.35, "#5a9fd4"],
                 [0.55, "#0055a4"], [0.75, "#003d7a"], [1, "#001d3d"],
             ],
-            colorbar=dict(title="M EUR", thickness=15),
+            colorbar=dict(title="% PIB", thickness=15),
             marker=dict(line=dict(width=1.5, color="white")),
             text=d_map["territori"],
-            hovertemplate="<b>%{text}</b><br>VAB: %{z:,.0f} M EUR<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Pes CNAE 47: %{z:.2f}%<extra></extra>",
         ))
         fig_map.update_layout(
             map=dict(style="white-bg", center=dict(lat=39.5, lon=-3.5), zoom=4.8),
             height=700, margin=dict(l=0, r=0, t=10, b=10),
         )
         st.plotly_chart(fig_map, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
 # ─── Productivitat per CCAA ──────────────────────────────────
 
@@ -256,29 +238,47 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
 
 # ─── Insight ─────────────────────────────────────────────────
 
-if "vab_estimat" in df_ccaa.columns:
-    d_last = df_ccaa[df_ccaa["any"] == max(anys)].dropna(subset=["vab_estimat"])
-    if not d_last.empty:
-        top3 = d_last.nlargest(3, "vab_estimat")
-        top_names = ", ".join(top3["territori"].values[:2]) + f" {'i' if _ca else 'y'} " + top3["territori"].values[2]
-        top_pct = top3["vab_estimat"].sum() / d_last["vab_estimat"].sum() * 100
+if "pes_cnae47_pib" in df_ccaa.columns:
+    _ins_yr = max(anys)
+    d_ins = df_ccaa[df_ccaa["any"] == _ins_yr].dropna(subset=["pes_cnae47_pib"])
+    if d_ins.empty:
+        _ins_yr = max(anys) - 1
+        d_ins = df_ccaa[df_ccaa["any"] == _ins_yr].dropna(subset=["pes_cnae47_pib"])
+    if not d_ins.empty:
+        top2 = d_ins.nlargest(2, "pes_cnae47_pib")
+        bot2 = d_ins.nsmallest(2, "pes_cnae47_pib")
+        top_names = f"{top2.iloc[0]['territori']} ({fpct(top2.iloc[0]['pes_cnae47_pib']*100, 2, sign=False)})"
+        top_names += f" i {top2.iloc[1]['territori']} ({fpct(top2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})" if _ca \
+            else f" y {top2.iloc[1]['territori']} ({fpct(top2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})"
+        bot_names = f"{bot2.iloc[0]['territori']} ({fpct(bot2.iloc[0]['pes_cnae47_pib']*100, 2, sign=False)})"
+        bot_names += f" i {bot2.iloc[1]['territori']} ({fpct(bot2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})" if _ca \
+            else f" y {bot2.iloc[1]['territori']} ({fpct(bot2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})"
+        spread = (top2.iloc[0]["pes_cnae47_pib"] - bot2.iloc[0]["pes_cnae47_pib"]) * 100
+
+        esp_ins = df_esp[df_esp["any"] == _ins_yr]
+        esp_txt = ""
+        if not esp_ins.empty and pd.notna(esp_ins.iloc[0].get("pes_cnae47_pib")):
+            esp_txt = fpct(esp_ins.iloc[0]["pes_cnae47_pib"] * 100, 2, sign=False)
+
         if _ca:
             insight(
-                f"Les tres CCAA amb més VAB estimat del CNAE 47 ({int(max(anys))}) són "
-                f"<strong>{top_names}</strong>, que concentren el <strong>{fpct(top_pct, 1, sign=False)}</strong> "
-                f"del total. "
-                f"Les diferències en productivitat per ocupat i salari mitjà entre comunitats reflecteixen "
-                f"l'heterogeneïtat del sector: cost de vida, estructura comercial (gran superfície vs. petit comerç) "
-                f"i especialització territorial condicionen els resultats."
+                f"El pes del comerc al detall sobre el PIB varia significativament entre CCAA ({int(_ins_yr)}). "
+                f"Les comunitats on mes pesa son <strong>{top_names}</strong>, "
+                f"amb economies orientades al consum i al turisme. "
+                f"A l'extrem oposat, <strong>{bot_names}</strong> tenen economies mes industrials o de serveis avancats. "
+                f"La diferencia entre la CCAA amb mes pes i la que menys en te es de "
+                f"<strong>{fpct(spread, 1, sign=False)} punts</strong>"
+                + (f", amb una mitjana nacional del <strong>{esp_txt}</strong>." if esp_txt else ".")
             )
         else:
             insight(
-                f"Las tres CCAA con mayor VAB estimado del CNAE 47 ({int(max(anys))}) son "
-                f"<strong>{top_names}</strong>, que concentran el <strong>{fpct(top_pct, 1, sign=False)}</strong> "
-                f"del total. "
-                f"Las diferencias en productividad por ocupado y salario medio entre comunidades reflejan "
-                f"la heterogeneidad del sector: coste de vida, estructura comercial (gran superficie vs. pequeño comercio) "
-                f"y especialización territorial condicionan los resultados."
+                f"El peso del comercio minorista sobre el PIB varia significativamente entre CCAA ({int(_ins_yr)}). "
+                f"Las comunidades donde mas pesa son <strong>{top_names}</strong>, "
+                f"con economias orientadas al consumo y al turismo. "
+                f"En el extremo opuesto, <strong>{bot_names}</strong> tienen economias mas industriales o de servicios avanzados. "
+                f"La diferencia entre la CCAA con mas peso y la que menos es de "
+                f"<strong>{fpct(spread, 1, sign=False)} puntos</strong>"
+                + (f", con una media nacional del <strong>{esp_txt}</strong>." if esp_txt else ".")
             )
 
 # ─── Taula ────────────────────────────────────────────────────
@@ -288,5 +288,5 @@ with st.expander(t("download_data")):
     st.download_button("CSV", df_eee.to_csv(index=False).encode("utf-8"),
                        "territori_cnae47.csv", "text/csv")
 
-page_meta("INE, Enquesta Estructural d'Empreses" if _ca
-          else "INE, Encuesta Estructural de Empresas", st.session_state.lang)
+page_meta("INE + Eurostat. Estimacio hibrida propia" if _ca
+          else "INE + Eurostat. Estimacion hibrida propia", st.session_state.lang)
