@@ -277,8 +277,10 @@ if not df_ccaa.empty:
             ),
             height=800,
             margin=dict(l=0, r=0, t=10, b=10),
+            dragmode=False,
         )
-        st.plotly_chart(fig_map, use_container_width=True)
+        st.plotly_chart(fig_map, use_container_width=True,
+                        config={"scrollZoom": False, "doubleClick": False, "displayModeBar": False})
         source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
                else "INE, DIRCE y Padrón Municipal. Cálculo propio")
 

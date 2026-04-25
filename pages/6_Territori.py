@@ -208,8 +208,10 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         fig_map.update_layout(
             map=dict(style="white-bg", center=dict(lat=39.5, lon=-3.5), zoom=4.8),
             height=700, margin=dict(l=0, r=0, t=10, b=10),
+            dragmode=False,
         )
-        st.plotly_chart(fig_map, use_container_width=True)
+        st.plotly_chart(fig_map, use_container_width=True,
+                        config={"scrollZoom": False, "doubleClick": False, "displayModeBar": False})
 
 # ─── Productivitat per CCAA ──────────────────────────────────
 
