@@ -92,7 +92,7 @@ def apply_layout(fig, **overrides):
 
 # ─── i18n COMPARTIT ──────────────────────────────────────────
 
-@st.cache_data
+@st.cache_data(ttl=300)
 def _load_translations():
     path = os.path.join(os.path.dirname(__file__), "i18n", "translations.json")
     with open(path, "r", encoding="utf-8") as f:
