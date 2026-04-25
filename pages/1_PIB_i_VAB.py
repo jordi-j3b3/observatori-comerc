@@ -227,6 +227,29 @@ _ca = st.session_state.lang == "ca"
 st.markdown("---")
 st.subheader(t("eee_ccaa_title"))
 
+if _ca:
+    intro(
+        "Les dades anteriors mostren el VAB del comerç al detall a escala nacional. "
+        "Però, <strong>com es distribueix aquesta riquesa entre comunitats autònomes?</strong> "
+        "La Comptabilitat Regional de l'INE no desglossa el CNAE 47, de manera que cal recórrer a una "
+        "estimació indirecta: apliquem la <strong>ràtio nacional VAB/xifra de negoci</strong> "
+        "(obtinguda de l'Enquesta Estructural d'Empreses) a la xifra de negoci declarada per cada CCAA. "
+        "El resultat és una aproximació raonable del VAB regional, complementada amb dades de personal ocupat "
+        "i sous que permeten comparar la <strong>productivitat</strong> i els <strong>costos laborals</strong> "
+        "del sector entre territoris."
+    )
+else:
+    intro(
+        "Los datos anteriores muestran el VAB del comercio minorista a escala nacional. "
+        "Pero, <strong>como se distribuye esa riqueza entre comunidades autónomas?</strong> "
+        "La Contabilidad Regional del INE no desglosa el CNAE 47, por lo que es necesario recurrir a una "
+        "estimación indirecta: aplicamos la <strong>ratio nacional VAB/cifra de negocio</strong> "
+        "(obtenida de la Encuesta Estructural de Empresas) a la cifra de negocio declarada por cada CCAA. "
+        "El resultado es una aproximación razonable del VAB regional, complementada con datos de personal ocupado "
+        "y sueldos que permiten comparar la <strong>productividad</strong> y los <strong>costes laborales</strong> "
+        "del sector entre territorios."
+    )
+
 @st.cache_data(ttl=3600)
 def load_eee_ccaa():
     p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "eee_ccaa.csv")
