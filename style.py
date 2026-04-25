@@ -295,6 +295,18 @@ def inject_css():
     """, unsafe_allow_html=True)
 
 
+def page_header():
+    """Mostra la capçalera J3B3 + OBSERVATORI a qualsevol pàgina."""
+    lang = st.session_state.get("lang", "ca")
+    badge = "OBSERVATORI" if lang == "ca" else "OBSERVATORIO"
+    st.markdown(f"""
+    <div class="j3b3-header">
+        <img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" alt="J3B3 Consulting">
+        <span class="j3b3-badge">{badge}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def insight(text):
     """Mostra un bloc d'insight/conclusió."""
     title = "Anàlisi" if st.session_state.get("lang", "ca") == "ca" else "Análisis"

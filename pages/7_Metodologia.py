@@ -3,10 +3,11 @@ import streamlit as st
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_meta, PURPLE
+from style import inject_css, setup_lang, page_header, page_meta, PURPLE
 
 inject_css()
 t = setup_lang(show_selector=False)
+page_header()
 
 if st.session_state.lang == "ca":
     st.title("Aspectes metodològics")

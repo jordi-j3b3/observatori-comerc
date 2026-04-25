@@ -680,25 +680,37 @@ def process_eee_ccaa():
 
     print(f"  EEE CCAA: {len(df)} registres, {df['territori'].nunique()} territoris")
 
+    df_nac = df[df["territori"] == "espanya"].copy()
     df_prod = load_cache("productivitat")
-    if not df_prod.empty and "valor_afegit_constants" in df_prod.columns:
-        df_nac = df[df["territori"] == "espanya"].copy()
-        if not df_nac.empty and "xifra_negoci" in df_nac.columns:
-            ratio_nac = df_prod[["any"]].copy()
-            ratio_nac = ratio_nac.merge(
-                df_nac[["any", "xifra_negoci"]].rename(columns={"xifra_negoci": "xn_nac"}),
-                on="any", how="inner"
-            )
-            ratio_nac["va_nac"] = df_prod.set_index("any").loc[ratio_nac["any"].values, "valor_afegit_constants"].values
-            ratio_nac["ratio_va_xn"] = ratio_nac["va_nac"] / ratio_nac["xn_nac"]
+    df_pib = load_cache("pib_vab")
 
-            df = df.merge(ratio_nac[["any", "ratio_va_xn"]], on="any", how="left")
-            mask = df["ratio_va_xn"].notna() & df["xifra_negoci"].notna()
-            df.loc[mask, "vab_estimat"] = df.loc[mask, "xifra_negoci"] * df.loc[mask, "ratio_va_xn"]
-            df = df.drop(columns=["ratio_va_xn"])
+    if not df_nac.empty and "xifra_negoci" in df_nac.columns:
+        xn_nac = df_nac[["any", "xifra_negoci"]].rename(columns={"xifra_negoci": "xn_nac"})
 
-            n_est = df["vab_estimat"].notna().sum()
-            print(f"  VAB estimat per {n_est} registres (ràtio nacional VA/XN)")
+        # VAB real (preus constants) via productivitat
+        if not df_prod.empty and "valor_afegit_constants" in df_prod.columns:
+            ratio_real = df_prod[["any"]].copy()
+            ratio_real = ratio_real.merge(xn_nac, on="any", how="inner")
+            ratio_real["va_real"] = df_prod.set_index("any").loc[ratio_real["any"].values, "valor_afegit_constants"].values
+            ratio_real["ratio"] = ratio_real["va_real"] / ratio_real["xn_nac"]
+
+            df = df.merge(ratio_real[["any", "ratio"]].rename(columns={"ratio": "_r_real"}), on="any", how="left")
+            mask = df["_r_real"].notna() & df["xifra_negoci"].notna()
+            df.loc[mask, "vab_estimat"] = df.loc[mask, "xifra_negoci"] * df.loc[mask, "_r_real"]
+            df = df.drop(columns=["_r_real"])
+            print(f"  VAB real estimat per {df['vab_estimat'].notna().sum()} registres")
+
+        # VAB nominal (preus corrents) via pib_vab
+        if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns:
+            ratio_nom = df_pib[["any", "vab_cnae47_corrents"]].copy()
+            ratio_nom = ratio_nom.merge(xn_nac, on="any", how="inner")
+            ratio_nom["ratio"] = ratio_nom["vab_cnae47_corrents"] * 1e6 / ratio_nom["xn_nac"]
+
+            df = df.merge(ratio_nom[["any", "ratio"]].rename(columns={"ratio": "_r_nom"}), on="any", how="left")
+            mask = df["_r_nom"].notna() & df["xifra_negoci"].notna()
+            df.loc[mask, "vab_estimat_nominal"] = df.loc[mask, "xifra_negoci"] * df.loc[mask, "_r_nom"]
+            df = df.drop(columns=["_r_nom"])
+            print(f"  VAB nominal estimat per {df['vab_estimat_nominal'].notna().sum()} registres")
 
     save_cache(df, "eee_ccaa")
     return df

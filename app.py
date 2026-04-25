@@ -32,6 +32,8 @@ pg = st.navigation([
             title="Productivitat" if _ca else "Productividad"),
     st.Page("pages/5_Ecommerce.py",
             title="E-commerce"),
+    st.Page("pages/6_Territori.py",
+            title="Territori" if _ca else "Territorio"),
     st.Page("pages/6_Europa.py",
             title="Europa"),
     st.Page("pages/7_Metodologia.py",

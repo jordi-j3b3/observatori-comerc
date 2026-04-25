@@ -4,7 +4,7 @@ import pandas as pd
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, fnum, fpct, page_meta
+from style import inject_css, setup_lang, page_header, fnum, fpct, page_meta
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -24,12 +24,7 @@ df_prod = load_data("productivitat")
 
 # ─── HEADER ────────────────────────────────────────────────────
 
-st.markdown("""
-<div class="j3b3-header">
-    <img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" alt="J3B3 Consulting">
-    <span class="j3b3-badge">OBSERVATORI</span>
-</div>
-""", unsafe_allow_html=True)
+page_header()
 st.title(t("app_title"))
 st.markdown(f"*{t('app_subtitle')}*")
 

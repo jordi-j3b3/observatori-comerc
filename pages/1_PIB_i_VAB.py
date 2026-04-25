@@ -6,12 +6,13 @@ import json
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, insight, intro, source, page_meta,
+from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, cagr, apply_layout,
                    PURPLE, PURPLE_LIGHT, RED, BLUE, PALETTE)
 
 inject_css()
 t = setup_lang(show_selector=False)
+page_header()
 
 # Dades
 @st.cache_data(ttl=3600)
@@ -220,35 +221,14 @@ if var_cols:
            if st.session_state.lang == "ca" else
            "INE, Contabilidad Nacional. Cálculo propio")
 
-# ─── VAB CNAE 47 per CCAA ─────────────────────────────────────
+# ─── VAB nominal vs real per CCAA ─────────────────────────────
 
 _ca = st.session_state.lang == "ca"
 
 st.markdown("---")
-st.subheader(t("eee_ccaa_title"))
-
-if _ca:
-    intro(
-        "Les dades anteriors mostren el VAB del comerç al detall a escala nacional. "
-        "Però, <strong>com es distribueix aquesta riquesa entre comunitats autònomes?</strong> "
-        "La Comptabilitat Regional de l'INE no desglossa el CNAE 47, de manera que cal recórrer a una "
-        "estimació indirecta: apliquem la <strong>ràtio nacional VAB/xifra de negoci</strong> "
-        "(obtinguda de l'Enquesta Estructural d'Empreses) a la xifra de negoci declarada per cada CCAA. "
-        "El resultat és una aproximació raonable del VAB regional, complementada amb dades de personal ocupat "
-        "i sous que permeten comparar la <strong>productivitat</strong> i els <strong>costos laborals</strong> "
-        "del sector entre territoris."
-    )
-else:
-    intro(
-        "Los datos anteriores muestran el VAB del comercio minorista a escala nacional. "
-        "Pero, <strong>como se distribuye esa riqueza entre comunidades autónomas?</strong> "
-        "La Contabilidad Regional del INE no desglosa el CNAE 47, por lo que es necesario recurrir a una "
-        "estimación indirecta: aplicamos la <strong>ratio nacional VAB/cifra de negocio</strong> "
-        "(obtenida de la Encuesta Estructural de Empresas) a la cifra de negocio declarada por cada CCAA. "
-        "El resultado es una aproximación razonable del VAB regional, complementada con datos de personal ocupado "
-        "y sueldos que permiten comparar la <strong>productividad</strong> y los <strong>costes laborales</strong> "
-        "del sector entre territorios."
-    )
+lbl_ccaa = ("VAB nominal vs real del comerç al detall per CCAA" if _ca
+            else "VAB nominal vs real del comercio minorista por CCAA")
+st.subheader(lbl_ccaa)
 
 @st.cache_data(ttl=3600)
 def load_eee_ccaa():
@@ -257,229 +237,45 @@ def load_eee_ccaa():
         return pd.read_csv(p)
     return pd.DataFrame()
 
-@st.cache_data
-def load_geojson():
-    p = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
-    with open(p, "r") as f:
-        return json.load(f)
-
 df_eee = load_eee_ccaa()
 
-if not df_eee.empty:
-    geojson = load_geojson()
+if not df_eee.empty and "vab_estimat" in df_eee.columns and "vab_estimat_nominal" in df_eee.columns:
     df_eee_ccaa = df_eee[df_eee["territori"] != "espanya"].copy()
-    df_eee_esp = df_eee[df_eee["territori"] == "espanya"].copy()
+    ccaa_list = sorted(df_eee_ccaa["territori"].unique())
 
-    eee_anys = sorted(df_eee_ccaa["any"].dropna().unique())
-    eee_any = st.select_slider(
-        t("emp_ccaa_year"),
-        options=eee_anys,
-        value=max(eee_anys),
-        key="eee_any",
+    default_sel = [c for c in ["Cataluña", "Madrid (Comunidad de)", "Andalucía",
+                                "Comunitat Valenciana"] if c in ccaa_list]
+    sel = st.multiselect(
+        "Selecciona CCAA" if _ca else "Selecciona CCAA",
+        ccaa_list, default=default_sel, key="vab_ccaa_sel",
     )
 
-    METRICS_EEE = {
-        "vab_estimat": (t("eee_ccaa_vab"), "M EUR"),
-        "xifra_negoci": (t("eee_ccaa_xn"), "M EUR"),
-        "personal_ocupat": (t("eee_ccaa_personal"), ""),
-        "sous_salaris": (t("eee_ccaa_sous"), "M EUR"),
-    }
-
-    available = {k: v for k, v in METRICS_EEE.items() if k in df_eee_ccaa.columns}
-    sel_metric = st.radio(
-        t("eee_ccaa_metric"),
-        list(available.keys()),
-        format_func=lambda x: available[x][0],
-        horizontal=True,
-    )
-
-    d_yr = df_eee_ccaa[df_eee_ccaa["any"] == eee_any].dropna(subset=[sel_metric]).copy()
-
-    if not d_yr.empty:
-        d_yr = d_yr.sort_values(sel_metric, ascending=True)
-        lbl, unit = available[sel_metric]
-
-        if unit == "M EUR":
-            d_yr["_display"] = d_yr[sel_metric] / 1e6
-            txt_vals = [f"{fnum(v / 1e6)} M" for v in d_yr[sel_metric]]
-            ax_title = f"{lbl} (M EUR)"
-        else:
-            d_yr["_display"] = d_yr[sel_metric]
-            txt_vals = [fnum(v) for v in d_yr[sel_metric]]
-            ax_title = lbl
-
-        fig_eee = go.Figure()
-        fig_eee.add_trace(go.Bar(
-            y=d_yr["territori"], x=d_yr["_display"],
-            orientation="h",
-            marker_color=PURPLE_LIGHT,
-            text=txt_vals,
-            textposition="outside",
-            textfont=dict(size=11),
-        ))
-
-        esp_val = df_eee_esp[df_eee_esp["any"] == eee_any][sel_metric].values
-        if len(esp_val) > 0:
-            n_ccaa_eee = len(d_yr)
-            if n_ccaa_eee > 0:
-                avg_val = esp_val[0] / n_ccaa_eee
-                if unit == "M EUR":
-                    avg_disp = avg_val / 1e6
-                    avg_txt = f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_val / 1e6)} M"
-                else:
-                    avg_disp = avg_val
-                    avg_txt = f"{'Mitjana' if _ca else 'Media'}: {fnum(avg_val)}"
-                fig_eee.add_vline(
-                    x=avg_disp, line_dash="dash", line_color=RED, line_width=2,
-                    annotation_text=avg_txt,
-                    annotation_position="top right",
-                )
-
-        apply_layout(fig_eee,
-            title=f"{lbl} ({int(eee_any)})",
-            xaxis_title=ax_title,
-            height=max(450, len(d_yr) * 32 + 100),
-            margin=dict(l=200, r=120, t=50, b=50),
-        )
-        st.plotly_chart(fig_eee, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
-
-    # Mapa coroplet VAB estimat
-    if "vab_estimat" in df_eee_ccaa.columns:
-        st.subheader(t("eee_ccaa_vab") + f" ({int(eee_any)})")
-        d_map_eee = df_eee_ccaa[df_eee_ccaa["any"] == eee_any].dropna(subset=["vab_estimat"]).copy()
-        d_map_eee["vab_meur"] = d_map_eee["vab_estimat"] / 1e6
-
-        if not d_map_eee.empty:
-            zmin_eee = df_eee_ccaa["vab_estimat"].min() / 1e6
-            zmax_eee = df_eee_ccaa["vab_estimat"].max() / 1e6
-
-            fig_vab_map = go.Figure(go.Choroplethmap(
-                geojson=geojson,
-                locations=d_map_eee["territori"],
-                featureidkey="properties.territori",
-                z=d_map_eee["vab_meur"],
-                zmin=zmin_eee,
-                zmax=zmax_eee,
-                colorscale=[
-                    [0, "#e8f0fe"],
-                    [0.15, "#a8c8e8"],
-                    [0.35, "#5a9fd4"],
-                    [0.55, "#0055a4"],
-                    [0.75, "#003d7a"],
-                    [1, "#001d3d"],
-                ],
-                colorbar=dict(title="M EUR", thickness=15),
-                marker=dict(line=dict(width=1.5, color="white")),
-                text=d_map_eee["territori"],
-                hovertemplate="<b>%{text}</b><br>VAB: %{z:,.0f} M EUR<extra></extra>",
+    if sel:
+        fig_ccaa = go.Figure()
+        for i, ccaa in enumerate(sel):
+            dc = df_eee_ccaa[df_eee_ccaa["territori"] == ccaa].sort_values("any")
+            dc_nom = dc.dropna(subset=["vab_estimat_nominal"])
+            dc_real = dc.dropna(subset=["vab_estimat"])
+            color = PALETTE[i % len(PALETTE)]
+            fig_ccaa.add_trace(go.Scatter(
+                x=dc_nom["any"], y=dc_nom["vab_estimat_nominal"] / 1e6,
+                mode="lines+markers", name=f"{ccaa} ({t('pib_nominal')})",
+                line=dict(color=color, width=2),
+                marker=dict(size=5),
+                legendgroup=ccaa,
             ))
-            fig_vab_map.update_layout(
-                map=dict(style="white-bg", center=dict(lat=39.5, lon=-3.5), zoom=4.8),
-                height=700,
-                margin=dict(l=0, r=0, t=10, b=10),
-            )
-            st.plotly_chart(fig_vab_map, use_container_width=True)
-            source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-                   else "INE, Encuesta Estructural de Empresas. Cálculo propio")
+            fig_ccaa.add_trace(go.Scatter(
+                x=dc_real["any"], y=dc_real["vab_estimat"] / 1e6,
+                mode="lines+markers", name=f"{ccaa} ({t('pib_real')})",
+                line=dict(color=color, width=2, dash="dash"),
+                marker=dict(size=5, symbol="diamond"),
+                legendgroup=ccaa,
+            ))
 
-    # Productivitat per CCAA
-    d_derived = df_eee_ccaa[df_eee_ccaa["any"] == eee_any].copy()
-    if "xifra_negoci" in d_derived.columns and "personal_ocupat" in d_derived.columns:
-        d_derived["prod_xn_ocupat"] = d_derived["xifra_negoci"] / d_derived["personal_ocupat"]
-
-        st.subheader(t("eee_ccaa_prod") + f" ({int(eee_any)})")
-        d_prod = d_derived.dropna(subset=["prod_xn_ocupat"]).sort_values("prod_xn_ocupat", ascending=True)
-
-        fig_prod = go.Figure()
-        fig_prod.add_trace(go.Bar(
-            y=d_prod["territori"], x=d_prod["prod_xn_ocupat"] / 1000,
-            orientation="h",
-            marker_color=PURPLE_LIGHT,
-            text=[f"{fnum(v/1000, 1)} k" for v in d_prod["prod_xn_ocupat"]],
-            textposition="outside",
-            textfont=dict(size=11),
-        ))
-
-        esp_prod = df_eee_esp[df_eee_esp["any"] == eee_any]
-        if not esp_prod.empty and "xifra_negoci" in esp_prod.columns and "personal_ocupat" in esp_prod.columns:
-            esp_p = esp_prod["xifra_negoci"].values[0] / esp_prod["personal_ocupat"].values[0]
-            fig_prod.add_vline(
-                x=esp_p / 1000, line_dash="dash", line_color=RED, line_width=2,
-                annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(esp_p/1000, 1)} k",
-                annotation_position="top right",
-            )
-
-        apply_layout(fig_prod,
-            xaxis_title=("Milers EUR / ocupat" if _ca else "Miles EUR / ocupado"),
-            height=max(450, len(d_prod) * 32 + 100),
-            margin=dict(l=200, r=100, t=50, b=50),
-        )
-        st.plotly_chart(fig_prod, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
-
-    # Salari mitjà per CCAA
-    if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.columns:
-        d_derived["sal_med"] = d_derived["sous_salaris"] / d_derived["personal_ocupat"]
-
-        st.subheader(t("eee_ccaa_sal_med") + f" ({int(eee_any)})")
-        d_sal = d_derived.dropna(subset=["sal_med"]).sort_values("sal_med", ascending=True)
-
-        fig_sal = go.Figure()
-        fig_sal.add_trace(go.Bar(
-            y=d_sal["territori"], x=d_sal["sal_med"],
-            orientation="h",
-            marker_color=PURPLE_LIGHT,
-            text=[f"{fnum(v)} EUR" for v in d_sal["sal_med"]],
-            textposition="outside",
-            textfont=dict(size=11),
-        ))
-
-        esp_s = df_eee_esp[df_eee_esp["any"] == eee_any]
-        if not esp_s.empty and "sous_salaris" in esp_s.columns and "personal_ocupat" in esp_s.columns:
-            sal_esp = esp_s["sous_salaris"].values[0] / esp_s["personal_ocupat"].values[0]
-            fig_sal.add_vline(
-                x=sal_esp, line_dash="dash", line_color=RED, line_width=2,
-                annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(sal_esp)} EUR",
-                annotation_position="top right",
-            )
-
-        apply_layout(fig_sal,
-            xaxis_title="EUR / ocupat" if _ca else "EUR / ocupado",
-            height=max(450, len(d_sal) * 32 + 100),
-            margin=dict(l=200, r=100, t=50, b=50),
-        )
-        st.plotly_chart(fig_sal, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
-
-    # Insight EEE CCAA
-    if "vab_estimat" in df_eee_ccaa.columns:
-        d_last = df_eee_ccaa[df_eee_ccaa["any"] == max(eee_anys)].dropna(subset=["vab_estimat"])
-        if not d_last.empty:
-            top3 = d_last.nlargest(3, "vab_estimat")
-            top_names = ", ".join(top3["territori"].values[:2]) + f" {'i' if _ca else 'y'} " + top3["territori"].values[2]
-            top_pct = top3["vab_estimat"].sum() / d_last["vab_estimat"].sum() * 100
-            if _ca:
-                insight(
-                    f"Les tres CCAA amb més VAB estimat del CNAE 47 ({int(max(eee_anys))}) són "
-                    f"<strong>{top_names}</strong>, que concentren el <strong>{fpct(top_pct, 1, sign=False)}</strong> "
-                    f"del total. "
-                    f"Les diferències en productivitat per ocupat i salari mitjà entre comunitats reflecteixen "
-                    f"l'heterogeneïtat del sector: cost de vida, estructura comercial (gran superfície vs. petit comerç) "
-                    f"i especialització territorial condicionen els resultats."
-                )
-            else:
-                insight(
-                    f"Las tres CCAA con mayor VAB estimado del CNAE 47 ({int(max(eee_anys))}) son "
-                    f"<strong>{top_names}</strong>, que concentran el <strong>{fpct(top_pct, 1, sign=False)}</strong> "
-                    f"del total. "
-                    f"Las diferencias en productividad por ocupado y salario medio entre comunidades reflejan "
-                    f"la heterogeneidad del sector: coste de vida, estructura comercial (gran superficie vs. pequeño comercio) "
-                    f"y especialización territorial condicionan los resultados."
-                )
+        apply_layout(fig_ccaa, yaxis_title=t("pib_meur"), height=500)
+        st.plotly_chart(fig_ccaa, use_container_width=True)
+        source("INE, Enquesta Estructural d'Empreses i Comptabilitat Nacional. Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas y Contabilidad Nacional. Cálculo propio")
 
 else:
     st.info("No hi ha dades regionals disponibles." if _ca
@@ -490,13 +286,6 @@ else:
 with st.expander(t("download_data")):
     st.dataframe(df, use_container_width=True)
     st.download_button("CSV", df.to_csv(index=False).encode("utf-8"), "pib_vab_cnae47.csv", "text/csv")
-
-    if not df_eee.empty:
-        st.markdown("---")
-        st.markdown("**Magnituds CNAE 47 per CCAA**" if _ca else "**Magnitudes CNAE 47 por CCAA**")
-        st.dataframe(df_eee, use_container_width=True)
-        st.download_button("CSV (CCAA)", df_eee.to_csv(index=False).encode("utf-8"),
-                           "eee_cnae47_ccaa.csv", "text/csv")
 
 page_meta("INE, Comptabilitat Nacional d'Espanya" if st.session_state.lang == "ca"
          else "INE, Contabilidad Nacional de España", st.session_state.lang)

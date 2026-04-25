@@ -5,12 +5,13 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, insight, intro, source, page_meta,
+from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, cagr, apply_layout,
                    PURPLE, RED, BLUE, ORANGE)
 
 inject_css()
 t = setup_lang(show_selector=False)
+page_header()
 
 @st.cache_data(ttl=3600)
 def load_data():
