@@ -146,6 +146,44 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         source("Eurostat + INE. Estimacio hibrida propia" if _ca
                else "Eurostat + INE. Estimacion hibrida propia")
 
+        # Insight pes/PIB
+        _top1 = d_pes.iloc[-1]
+        _bot1 = d_pes.iloc[0]
+        _above = d_pes[d_pes["_pct"] >= esp_pes] if esp_pes else d_pes
+        _below = d_pes[d_pes["_pct"] < esp_pes] if esp_pes else pd.DataFrame()
+        _spread = _top1["_pct"] - _bot1["_pct"]
+        if _ca:
+            _txt_pes = (
+                f"<strong>{_top1['territori']}</strong> lidera amb un {fpct(_top1['_pct'], 2, sign=False)} del seu PIB "
+                f"dedicat al comerc al detall, gairebe el doble que <strong>{_bot1['territori']}</strong> "
+                f"({fpct(_bot1['_pct'], 2, sign=False)}). "
+            )
+            if esp_pes:
+                _txt_pes += (
+                    f"<strong>{len(_above)}</strong> comunitats superen la mitjana nacional ({fpct(esp_pes, 2, sign=False)}) "
+                    f"i <strong>{len(_below)}</strong> queden per sota. "
+                )
+            _txt_pes += (
+                "Les CCAA amb mes pes del retail solen tenir economies orientades al consum final i al turisme, "
+                "mentre que les de menor pes tenen estructures mes industrials o de serveis avancats."
+            )
+        else:
+            _txt_pes = (
+                f"<strong>{_top1['territori']}</strong> lidera con un {fpct(_top1['_pct'], 2, sign=False)} de su PIB "
+                f"dedicado al comercio minorista, casi el doble que <strong>{_bot1['territori']}</strong> "
+                f"({fpct(_bot1['_pct'], 2, sign=False)}). "
+            )
+            if esp_pes:
+                _txt_pes += (
+                    f"<strong>{len(_above)}</strong> comunidades superan la media nacional ({fpct(esp_pes, 2, sign=False)}) "
+                    f"y <strong>{len(_below)}</strong> quedan por debajo. "
+                )
+            _txt_pes += (
+                "Las CCAA con mas peso del retail suelen tener economias orientadas al consumo final y al turismo, "
+                "mientras que las de menor peso tienen estructuras mas industriales o de servicios avanzados."
+            )
+        insight(_txt_pes)
+
     # ── Mapa del pes ──
     d_map = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["pes_cnae47_pib"]).copy()
     d_map["_pct"] = d_map["pes_cnae47_pib"] * 100
@@ -205,8 +243,33 @@ if "xifra_negoci" in d_derived.columns and "personal_ocupat" in d_derived.column
         margin=dict(l=200, r=100, t=50, b=50),
     )
     st.plotly_chart(fig_prod, use_container_width=True)
-    source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-           else "INE, Encuesta Estructural de Empresas. Cálculo propio")
+    source("INE, Enquesta Estructural d'Empreses. Calcul propi" if _ca
+           else "INE, Encuesta Estructural de Empresas. Calculo propio")
+
+    # Insight productivitat
+    if not d_prod.empty:
+        _p_top = d_prod.iloc[-1]
+        _p_bot = d_prod.iloc[0]
+        _p_ratio = _p_top["prod_xn_ocupat"] / _p_bot["prod_xn_ocupat"]
+        if _ca:
+            _txt_prod = (
+                f"La productivitat per ocupat varia un <strong>x{fnum(_p_ratio, 1)}</strong> entre "
+                f"<strong>{_p_top['territori']}</strong> ({fnum(_p_top['prod_xn_ocupat']/1000, 1)} k EUR) "
+                f"i <strong>{_p_bot['territori']}</strong> ({fnum(_p_bot['prod_xn_ocupat']/1000, 1)} k EUR). "
+                "Aquesta diferencia reflecteix el tiquet mitja (producte de mes o menys valor), "
+                "la presencia de grans cadenes (mes eficients en facturacio per treballador) "
+                "i el cost de vida de cada regio."
+            )
+        else:
+            _txt_prod = (
+                f"La productividad por ocupado varia un <strong>x{fnum(_p_ratio, 1)}</strong> entre "
+                f"<strong>{_p_top['territori']}</strong> ({fnum(_p_top['prod_xn_ocupat']/1000, 1)} k EUR) "
+                f"y <strong>{_p_bot['territori']}</strong> ({fnum(_p_bot['prod_xn_ocupat']/1000, 1)} k EUR). "
+                "Esta diferencia refleja el ticket medio (producto de mas o menos valor), "
+                "la presencia de grandes cadenas (mas eficientes en facturacion por trabajador) "
+                "y el coste de vida de cada region."
+            )
+        insight(_txt_prod)
 
 # ─── Salari mitjà per CCAA ───────────────────────────────────
 
@@ -239,53 +302,34 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
         margin=dict(l=200, r=100, t=50, b=50),
     )
     st.plotly_chart(fig_sal, use_container_width=True)
-    source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
-           else "INE, Encuesta Estructural de Empresas. Cálculo propio")
+    source("INE, Enquesta Estructural d'Empreses. Calcul propi" if _ca
+           else "INE, Encuesta Estructural de Empresas. Calculo propio")
 
-# ─── Insight ─────────────────────────────────────────────────
-
-if "pes_cnae47_pib" in df_ccaa.columns:
-    _ins_yr = max(anys)
-    d_ins = df_ccaa[df_ccaa["any"] == _ins_yr].dropna(subset=["pes_cnae47_pib"])
-    if d_ins.empty:
-        _ins_yr = max(anys) - 1
-        d_ins = df_ccaa[df_ccaa["any"] == _ins_yr].dropna(subset=["pes_cnae47_pib"])
-    if not d_ins.empty:
-        top2 = d_ins.nlargest(2, "pes_cnae47_pib")
-        bot2 = d_ins.nsmallest(2, "pes_cnae47_pib")
-        top_names = f"{top2.iloc[0]['territori']} ({fpct(top2.iloc[0]['pes_cnae47_pib']*100, 2, sign=False)})"
-        top_names += f" i {top2.iloc[1]['territori']} ({fpct(top2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})" if _ca \
-            else f" y {top2.iloc[1]['territori']} ({fpct(top2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})"
-        bot_names = f"{bot2.iloc[0]['territori']} ({fpct(bot2.iloc[0]['pes_cnae47_pib']*100, 2, sign=False)})"
-        bot_names += f" i {bot2.iloc[1]['territori']} ({fpct(bot2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})" if _ca \
-            else f" y {bot2.iloc[1]['territori']} ({fpct(bot2.iloc[1]['pes_cnae47_pib']*100, 2, sign=False)})"
-        spread = (top2.iloc[0]["pes_cnae47_pib"] - bot2.iloc[0]["pes_cnae47_pib"]) * 100
-
-        esp_ins = df_esp[df_esp["any"] == _ins_yr]
-        esp_txt = ""
-        if not esp_ins.empty and pd.notna(esp_ins.iloc[0].get("pes_cnae47_pib")):
-            esp_txt = fpct(esp_ins.iloc[0]["pes_cnae47_pib"] * 100, 2, sign=False)
-
+    # Insight salari
+    if not d_sal.empty:
+        _s_top = d_sal.iloc[-1]
+        _s_bot = d_sal.iloc[0]
+        _s_diff = _s_top["sal_med"] - _s_bot["sal_med"]
         if _ca:
-            insight(
-                f"El pes del comerc al detall sobre el PIB varia significativament entre CCAA ({int(_ins_yr)}). "
-                f"Les comunitats on mes pesa son <strong>{top_names}</strong>, "
-                f"amb economies orientades al consum i al turisme. "
-                f"A l'extrem oposat, <strong>{bot_names}</strong> tenen economies mes industrials o de serveis avancats. "
-                f"La diferencia entre la CCAA amb mes pes i la que menys en te es de "
-                f"<strong>{fpct(spread, 1, sign=False)} punts</strong>"
-                + (f", amb una mitjana nacional del <strong>{esp_txt}</strong>." if esp_txt else ".")
+            _txt_sal = (
+                f"El salari mitja del sector varia entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
+                f"({_s_bot['territori']}) i <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
+                f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
+                "Les CCAA amb salaris mes alts coincideixen generalment amb les de major cost de vida "
+                "i concentracio de grans empreses. Cal recordar que aquesta xifra inclou sous bruts "
+                "i cotitzacions socials a carrec de l'empresa, no el salari net del treballador."
             )
         else:
-            insight(
-                f"El peso del comercio minorista sobre el PIB varia significativamente entre CCAA ({int(_ins_yr)}). "
-                f"Las comunidades donde mas pesa son <strong>{top_names}</strong>, "
-                f"con economias orientadas al consumo y al turismo. "
-                f"En el extremo opuesto, <strong>{bot_names}</strong> tienen economias mas industriales o de servicios avanzados. "
-                f"La diferencia entre la CCAA con mas peso y la que menos es de "
-                f"<strong>{fpct(spread, 1, sign=False)} puntos</strong>"
-                + (f", con una media nacional del <strong>{esp_txt}</strong>." if esp_txt else ".")
+            _txt_sal = (
+                f"El salario medio del sector varia entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
+                f"({_s_bot['territori']}) y <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
+                f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
+                "Las CCAA con salarios mas altos coinciden generalmente con las de mayor coste de vida "
+                "y concentracion de grandes empresas. Cabe recordar que esta cifra incluye sueldos brutos "
+                "y cotizaciones sociales a cargo de la empresa, no el salario neto del trabajador."
             )
+        insight(_txt_sal)
+
 
 # ─── Taula ────────────────────────────────────────────────────
 
