@@ -220,7 +220,7 @@ if var_cols:
            if st.session_state.lang == "ca" else
            "INE, Contabilidad Nacional. Cálculo propio")
 
-# ─── VAB CNAE 47 per CCAA (EEE taula 76817) ─────────────────
+# ─── VAB CNAE 47 per CCAA ─────────────────────────────────────
 
 _ca = st.session_state.lang == "ca"
 
@@ -249,7 +249,7 @@ if not df_eee.empty:
 
     eee_anys = sorted(df_eee_ccaa["any"].dropna().unique())
     eee_any = st.select_slider(
-        t("emp_ccaa_year") + " (EEE)",
+        t("emp_ccaa_year"),
         options=eee_anys,
         value=max(eee_anys),
         key="eee_any",
@@ -319,8 +319,8 @@ if not df_eee.empty:
             margin=dict(l=200, r=120, t=50, b=50),
         )
         st.plotly_chart(fig_eee, use_container_width=True)
-        source("INE, Estadística Estructural d'Empreses (EEE). Càlcul propi" if _ca
-               else "INE, Estadística Estructural de Empresas (EEE). Cálculo propio")
+        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
     # Mapa coroplet VAB estimat
     if "vab_estimat" in df_eee_ccaa.columns:
@@ -358,8 +358,8 @@ if not df_eee.empty:
                 margin=dict(l=0, r=0, t=10, b=10),
             )
             st.plotly_chart(fig_vab_map, use_container_width=True)
-            source("INE, EEE Sector Comercio (taula 76817) i EEE CNAE 47 (taula 36194). Càlcul propi" if _ca
-                   else "INE, EEE Sector Comercio (tabla 76817) y EEE CNAE 47 (tabla 36194). Cálculo propio")
+            source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
+                   else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
     # Productivitat per CCAA
     d_derived = df_eee_ccaa[df_eee_ccaa["any"] == eee_any].copy()
@@ -394,8 +394,8 @@ if not df_eee.empty:
             margin=dict(l=200, r=100, t=50, b=50),
         )
         st.plotly_chart(fig_prod, use_container_width=True)
-        source("INE, EEE Sector Comercio. Càlcul propi" if _ca
-               else "INE, EEE Sector Comercio. Cálculo propio")
+        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
     # Salari mitjà per CCAA
     if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.columns:
@@ -429,8 +429,8 @@ if not df_eee.empty:
             margin=dict(l=200, r=100, t=50, b=50),
         )
         st.plotly_chart(fig_sal, use_container_width=True)
-        source("INE, EEE Sector Comercio. Càlcul propi" if _ca
-               else "INE, EEE Sector Comercio. Cálculo propio")
+        source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
     # Insight EEE CCAA
     if "vab_estimat" in df_eee_ccaa.columns:
@@ -459,8 +459,8 @@ if not df_eee.empty:
                 )
 
 else:
-    st.info("No hi ha dades EEE per CCAA disponibles." if _ca
-            else "No hay datos EEE por CCAA disponibles.")
+    st.info("No hi ha dades regionals disponibles." if _ca
+            else "No hay datos regionales disponibles.")
 
 # ─── Taula descarregable ──────────────────────────────────────
 
@@ -470,9 +470,9 @@ with st.expander(t("download_data")):
 
     if not df_eee.empty:
         st.markdown("---")
-        st.markdown("**EEE CNAE 47 per CCAA**" if _ca else "**EEE CNAE 47 por CCAA**")
+        st.markdown("**Magnituds CNAE 47 per CCAA**" if _ca else "**Magnitudes CNAE 47 por CCAA**")
         st.dataframe(df_eee, use_container_width=True)
-        st.download_button("CSV (EEE CCAA)", df_eee.to_csv(index=False).encode("utf-8"),
+        st.download_button("CSV (CCAA)", df_eee.to_csv(index=False).encode("utf-8"),
                            "eee_cnae47_ccaa.csv", "text/csv")
 
 page_meta("INE, Comptabilitat Nacional d'Espanya" if st.session_state.lang == "ca"
