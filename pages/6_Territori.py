@@ -152,7 +152,9 @@ if not d_yr.empty:
 # ─── Mapa VAB estimat ────────────────────────────────────────
 
 if "vab_estimat" in df_ccaa.columns:
-    st.subheader(f"{t('eee_ccaa_vab')} ({int(any_sel)})")
+    lbl_mapa = ("Distribució territorial del VAB del comerç al detall" if _ca
+                else "Distribución territorial del VAB del comercio minorista")
+    st.subheader(f"{lbl_mapa} ({int(any_sel)})")
     d_map = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["vab_estimat"]).copy()
     d_map["vab_meur"] = d_map["vab_estimat"] / 1e6
 
