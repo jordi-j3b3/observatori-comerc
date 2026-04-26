@@ -1,4 +1,4 @@
-"""Pagina d'inici: KPIs, introduccio i conclusions dinamiques."""
+"""Pàgina d'inici: KPIs, introducció i conclusions dinàmiques."""
 import streamlit as st
 import pandas as pd
 import os, sys
@@ -75,9 +75,9 @@ with col3:
         any_ = int(last["any"])
         any_prev = int(prev["any"])
         delta = fpct(((val / prev["personal_ocupat"]) - 1) * 100)
-        st.metric(t("kpi_ocupacio"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
+        st.metric(t("kpi_ocupació"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
     else:
-        st.metric(t("kpi_ocupacio"), "—")
+        st.metric(t("kpi_ocupació"), "—")
 
 with col4:
     if not df_prod.empty and "productivitat_va_hora" in df_prod.columns:
@@ -102,23 +102,23 @@ if _ca:
     st.markdown("""
 ### Sobre l'Observatori
 
-El **comerc al detall** (CNAE 47) es un dels pilars de l'economia espanyola: dona feina a mes
+El **comerç al detall** (CNAE 47) és un dels pilars de l'economia espanyola: dona feina a més
 d'**1,7 milions** de persones, genera uns **70.000 M EUR** de valor afegit i articula el consum
 de les families a tot el territori. Tot i el seu pes, el sector afronta transformacions
-profundes: digitalitzacio, concentracio empresarial, canvi de patrons de consum i pressio
+profundes: digitalització, concentració empresarial, canvi de patrons de consum i pressió
 sobre marges.
 
 Aquest observatori ofereix una **radiografia actualitzada** del sector a partir de dades
 oficials (INE, Eurostat, CNMC), organitzada en sis dimensions:
 
-- **PIB i VAB:** evolucio del valor afegit nominal i real, pes sobre el PIB
+- **PIB i VAB:** evolució del valor afegit nominal i real, pes sobre el PIB
 - **Empreses:** teixit empresarial, densitat comercial per CCAA
-- **Treball i productivitat:** ocupacio, hores, productivitat, distribucio del valor afegit
+- **Treball i productivitat:** ocupació, hores, productivitat, distribució del valor afegit
 - **E-commerce:** volum del canal online i pes sobre el total
-- **Territori:** estimacio del VAB per CCAA i diferencies regionals
-- **Europa:** posicio d'Espanya en el context de la UE-27
+- **Territori:** estimació del VAB per CCAA i diferències regionals
+- **Europa:** posició d'Espanya en el context de la UE-27
 
-Les dades s'actualitzen de forma **trimestral automatica** (gener, abril, juliol, octubre).
+Les dades s'actualitzen de forma **trimestral automàtica** (gener, abril, juliol, octubre).
     """)
 else:
     st.markdown("""
@@ -133,12 +133,12 @@ sobre margenes.
 Este observatorio ofrece una **radiografia actualizada** del sector a partir de datos
 oficiales (INE, Eurostat, CNMC), organizada en seis dimensiones:
 
-- **PIB y VAB:** evolucion del valor anadido nominal y real, peso sobre el PIB
+- **PIB y VAB:** evolución del valor anadido nominal y real, peso sobre el PIB
 - **Empresas:** tejido empresarial, densidad comercial por CCAA
-- **Trabajo y productividad:** empleo, horas, productividad, distribucion del valor anadido
+- **Trabajo y productividad:** empleo, horas, productividad, distribución del valor anadido
 - **E-commerce:** volumen del canal online y peso sobre el total
-- **Territorio:** estimacion del VAB por CCAA y diferencias regionales
-- **Europa:** posicion de Espana en el contexto de la UE-27
+- **Territorio:** estimación del VAB por CCAA y diferencias regionales
+- **Europa:** posición de Espana en el contexto de la UE-27
 
 Los datos se actualizan de forma **trimestral automatica** (enero, abril, julio, octubre).
     """)
@@ -237,7 +237,7 @@ if not df_europa.empty and "pes_cnae47" in df_europa.columns:
         if _ca:
             _pos = "per sobre" if _diff > 0 else "per sota"
             _conclusions.append(
-                f"Espanya destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> del seu PIB al comerc al detall, "
+                f"Espanya destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> del seu PIB al comerç al detall, "
                 f"<strong>{fpct(abs(_diff), 2, sign=False)} pp {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 2, sign=False)})."
             )
         else:
@@ -463,7 +463,7 @@ def _build_excel():
                               "categories": [ws2_name, 1, 0, nt, 0],
                               "values": [ws2_name, 1, 1, nt, 1],
                               "fill": {"color": "#0055a4"}})
-            chart.set_title({"name": f"Pes del comerc al detall sobre el PIB ({int(yr_max)})"})
+            chart.set_title({"name": f"Pes del comerç al detall sobre el PIB ({int(yr_max)})"})
             chart.set_size({"width": 700, "height": 480})
             chart.set_legend({"position": "none"})
             chart.set_y_axis({"reverse": True})

@@ -278,8 +278,8 @@ if _has_vab:
 
         apply_layout(fig_ccaa, yaxis_title=t("pib_meur"), height=500)
         st.plotly_chart(fig_ccaa, use_container_width=True)
-        source("INE + Eurostat. Estimacio hibrida" if _ca
-               else "INE + Eurostat. Estimacion hibrida")
+        source("INE + Eurostat. Estimació híbrida" if _ca
+               else "INE + Eurostat. Estimación híbrida")
 
 else:
     st.info("No hi ha dades regionals disponibles." if _ca

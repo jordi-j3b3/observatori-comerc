@@ -20,8 +20,8 @@ st.title("Territori" if _ca else "Territorio")
 if _ca:
     intro(
         "La Comptabilitat Regional de l'INE no desglossa el CNAE 47 per comunitats autonomes. "
-        "Per estimar el VAB del comerc al detall per CCAA, combinem dues fonts: "
-        "la <strong>comptabilitat regional d'Eurostat</strong> (VAB de la seccio G-I: comerc, transport i hostaleria) "
+        "Per estimar el VAB del comerç al detall per CCAA, combinem dues fonts: "
+        "la <strong>comptabilitat regional d'Eurostat</strong> (VAB de la secció G-I: comerç, transport i hostaleria) "
         "i la <strong>xifra de negoci per CCAA</strong> de l'Enquesta Estructural d'Empreses de l'INE. "
         "El metode hibrid distribueix el VAB nacional del CNAE 47 entre CCAA ponderant "
         "les quotes regionals de G-I (top-down) amb les quotes de facturacio (bottom-up), "
@@ -31,7 +31,7 @@ else:
     intro(
         "La Contabilidad Regional del INE no desglosa el CNAE 47 por comunidades autonomas. "
         "Para estimar el VAB del comercio minorista por CCAA, combinamos dos fuentes: "
-        "la <strong>contabilidad regional de Eurostat</strong> (VAB de la seccion G-I: comercio, transporte y hosteleria) "
+        "la <strong>contabilidad regional de Eurostat</strong> (VAB de la sección G-I: comercio, transporte y hosteleria) "
         "y la <strong>cifra de negocio por CCAA</strong> de la Encuesta Estructural de Empresas del INE. "
         "El metodo hibrido distribuye el VAB nacional del CNAE 47 entre CCAA ponderando "
         "las cuotas regionales de G-I (top-down) con las cuotas de facturacion (bottom-up), "
@@ -97,7 +97,7 @@ if not d_yr_esp.empty:
 
 # ─── Pes del CNAE 47 sobre el PIB per CCAA ──────────────────
 
-_lbl_pes = ("Pes del comerc al detall sobre el PIB de cada CCAA" if _ca
+_lbl_pes = ("Pes del comerç al detall sobre el PIB de cada CCAA" if _ca
             else "Peso del comercio minorista sobre el PIB de cada CCAA")
 st.subheader(f"{_lbl_pes} ({int(any_sel)})")
 
@@ -147,14 +147,14 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             source(
                 "Eurostat (comptabilitat regional G-I, <i>nama_10r_3gva</i> + VAB G47 nacional, <i>nama_10_a64</i>) "
                 "i INE (xifra de negoci CNAE 47 per CCAA, taula 76817). "
-                "Metode: distribucio proporcional hibrida (mitjana de quotes G-I i XN) "
+                "Mètode: distribució proporcional híbrida (mitjana de quotes G-I i XN) "
                 "restringida al total nacional Eurostat"
             )
         else:
             source(
                 "Eurostat (contabilidad regional G-I, <i>nama_10r_3gva</i> + VAB G47 nacional, <i>nama_10_a64</i>) "
                 "e INE (cifra de negocio CNAE 47 por CCAA, tabla 76817). "
-                "Metodo: distribucion proporcional hibrida (media de cuotas G-I y XN) "
+                "Método: distribución proporcional híbrida (media de cuotas G-I y XN) "
                 "restringida al total nacional Eurostat"
             )
 
@@ -167,7 +167,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         if _ca:
             _txt_pes = (
                 f"<strong>{_top1['territori']}</strong> lidera amb un {fpct(_top1['_pct'], 2, sign=False)} del seu PIB "
-                f"dedicat al comerc al detall, gairebe el doble que <strong>{_bot1['territori']}</strong> "
+                f"dedicat al comerç al detall, gairebé el doble que <strong>{_bot1['territori']}</strong> "
                 f"({fpct(_bot1['_pct'], 2, sign=False)}). "
             )
             if esp_pes:
@@ -176,8 +176,8 @@ if "pes_cnae47_pib" in df_ccaa.columns:
                     f"i <strong>{len(_below)}</strong> queden per sota. "
                 )
             _txt_pes += (
-                "Les CCAA amb mes pes del retail solen tenir economies orientades al consum final i al turisme, "
-                "mentre que les de menor pes tenen estructures mes industrials o de serveis avancats."
+                "Les CCAA amb més pes del retail solen tenir economies orientades al consum final i al turisme, "
+                "mentre que les de menor pes tenen estructures més industrials o de serveis avancats."
             )
         else:
             _txt_pes = (
@@ -270,7 +270,7 @@ if "xifra_negoci" in d_derived.columns and "personal_ocupat" in d_derived.column
                 f"La productivitat per ocupat varia un <strong>x{fnum(_p_ratio, 1)}</strong> entre "
                 f"<strong>{_p_top['territori']}</strong> ({fnum(_p_top['prod_xn_ocupat']/1000, 1)} k EUR) "
                 f"i <strong>{_p_bot['territori']}</strong> ({fnum(_p_bot['prod_xn_ocupat']/1000, 1)} k EUR). "
-                "Aquesta diferencia reflecteix el tiquet mitja (producte de mes o menys valor), "
+                "Aquesta diferència reflecteix el tiquet mitja (producte de més o menys valor), "
                 "la presencia de grans cadenes (mes eficients en facturacio per treballador) "
                 "i el cost de vida de cada regio."
             )
@@ -330,7 +330,7 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
                 f"({_s_bot['territori']}) i <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
                 f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
                 "Les CCAA amb salaris mes alts coincideixen generalment amb les de major cost de vida "
-                "i concentracio de grans empreses. Cal recordar que aquesta xifra inclou sous bruts "
+                "i concentració de grans empreses. Cal recordar que aquesta xifra inclou sous bruts "
                 "i cotitzacions socials a carrec de l'empresa, no el salari net del treballador."
             )
         else:
@@ -339,7 +339,7 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
                 f"({_s_bot['territori']}) y <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
                 f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
                 "Las CCAA con salarios mas altos coinciden generalmente con las de mayor coste de vida "
-                "y concentracion de grandes empresas. Cabe recordar que esta cifra incluye sueldos brutos "
+                "y concentración de grandes empresas. Cabe recordar que esta cifra incluye sueldos brutos "
                 "y cotizaciones sociales a cargo de la empresa, no el salario neto del trabajador."
             )
         insight(_txt_sal)
@@ -352,5 +352,5 @@ with st.expander(t("download_data")):
     st.download_button("CSV", df_eee.to_csv(index=False).encode("utf-8"),
                        "territori_cnae47.csv", "text/csv")
 
-page_meta("INE + Eurostat. Estimacio hibrida propia" if _ca
-          else "INE + Eurostat. Estimacion hibrida propia", st.session_state.lang)
+page_meta("INE + Eurostat. Estimació híbrida propia" if _ca
+          else "INE + Eurostat. Estimacion híbrida pròpia", st.session_state.lang)

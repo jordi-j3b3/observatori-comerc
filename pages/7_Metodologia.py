@@ -105,43 +105,43 @@ if st.session_state.lang == "ca":
     st.subheader("5. Estimacio del VAB CNAE 47 per CCAA (metode hibrid)")
     st.markdown("""
     **Problema:** La Comptabilitat Regional de l'INE no desglossa el VAB al nivell del CNAE 47
-    (comerc al detall). Per tant, cal estimar-lo.
+    (comerç al detall). Per tant, cal estimar-lo.
 
     **Fonts:**
-    - **Eurostat `nama_10r_3gva`:** VAB de la seccio G-I (comerc, transport i hostaleria) per CCAA (NUTS2).
+    - **Eurostat `nama_10r_3gva`:** VAB de la secció G-I (comerç, transport i hostaleria) per CCAA (NUTS2).
       Dades de comptabilitat regional real, no estimacions.
     - **Eurostat `nama_10_a64`:** VAB del CNAE G47 a nivell nacional espanyol.
     - **INE, taula 76817 (EEE Sector Comerc):** Xifra de negoci del CNAE 47 per CCAA.
 
-    **Metode hibrid (proporcional ponderat):**
+    **Mètode híbrid (proporcional ponderat):**
     1. Es calcula la **ratio nacional** `G47/GI = VAB_G47_Espanya / VAB_GI_Espanya` (~22-26% segons l'any).
     2. Per a cada CCAA es calculen dues quotes: la **quota G-I** (pes del VAB G-I de la CCAA sobre el total G-I nacional)
        i la **quota de xifra de negoci** (pes de la XN CNAE 47 de la CCAA sobre el total nacional).
-    3. La **quota hibrida** es la mitjana de les dues quotes. Aixo combina la informacio top-down
+    3. La **quota híbrida** és la mitjana de les dues quotes. Això combina la informació top-down
        (comptabilitat regional) amb la bottom-up (enquesta d'empreses).
-    4. El VAB G47 nacional d'Eurostat es distribueix entre CCAA segons les quotes hibrides.
+    4. El VAB G47 nacional d'Eurostat es distribueix entre CCAA segons les quotes híbrides.
 
-    **Per que la mitjana?** La quota G-I captura l'escala economica real de cada regio pero inclou
-    transport i hostaleria (on CCAA turistiques com Balears pesen mes del que correspondria al retail).
-    La quota de XN reflexa directament l'activitat del comerc al detall pero prove d'una enquesta
-    (no de comptabilitat regional). La mitjana equilibra ambdos biaixos.
+    **Per què la mitjana?** La quota G-I captura l'escala econòmica real de cada regió però inclou
+    transport i hostaleria (on CCAA turístiques com Balears pesen més del que correspondria al retail).
+    La quota de XN reflecteix directament l'activitat del comerç al detall però prové d'una enquesta
+    (no de comptabilitat regional). La mitjana equilibra ambdós biaixos.
 
-    **Restriccio:** La suma del VAB estimat de totes les CCAA es exactament igual al VAB G47 nacional
-    d'Eurostat, garantint coherencia amb els comptes nacionals.
+    **Restricció:** La suma del VAB estimat de totes les CCAA és exactament igual al VAB G47 nacional
+    d'Eurostat, garantint coherència amb els comptes nacionals.
 
-    **Limitacio:** L'estimacio assumeix que la ratio G47/GI es homogenia dins cada CCAA. En realitat,
-    CCAA turistiques tenen un pes relatiu mes gran de la H (hostaleria) dins G-I. La ponderacio amb XN
+    **Limitació:** L'estimació assumeix que la ratio G47/GI es homogènia dins cada CCAA. En realitat,
+    CCAA turístiques tenen un pes relatiu més gran de la H (hostaleria) dins G-I. La ponderació amb XN
     corregeix parcialment aquest biaix.
     """)
 
     # ── Ecommerce ──
-    st.subheader("6. Comerc electronic")
+    st.subheader("6. Comerç electrònic")
     st.markdown("""
-    **Font:** CNMC (Comissio Nacional dels Mercats i la Competencia), dades trimestrals de comerc electronic.
+    **Font:** CNMC (Comissió Nacional dels Mercats i la Competència), dades trimestrals de comerç electrònic.
 
-    **Agregacio:** Les dades trimestrals s'agreguen a nivell anual (suma dels 4 trimestres).
+    **Agregació:** Les dades trimestrals s'agreguen a nivell anual (suma dels 4 trimestres).
 
-    **Any parcial:** Si l'ultim any disponible mostra un volum total inferior al 85% de l'any anterior,
+    **Any parcial:** Si l'últim any disponible mostra un volum total inferior al 85% de l'any anterior,
     es considera que les dades son d'un any incomplet (la CNMC publica amb retard)
     i es mostra una nota d'advertencia.
 
@@ -217,7 +217,7 @@ else:
 
     **Interpretación de la divergencia:**
     - Si VA/hora crece más que Cifra de Negocio/hora → **mejora de márgenes** (el sector retiene más valor neto).
-    - Si Cifra de Negocio/hora crece más → **compresión de márgenes** (más facturación pero menos valor retenido).
+    - Si Cifra de Negocio/hora crece más → **compresión de márgenes** (más facturación però menos valor retenido).
     """)
 
     st.subheader("3. Distribución del Valor Añadido: cuota salarial y excedente bruto")
@@ -264,7 +264,7 @@ else:
     (comercio minorista). Por tanto, es necesario estimarlo.
 
     **Fuentes:**
-    - **Eurostat `nama_10r_3gva`:** VAB de la seccion G-I (comercio, transporte y hosteleria) por CCAA (NUTS2).
+    - **Eurostat `nama_10r_3gva`:** VAB de la sección G-I (comercio, transporte y hosteleria) por CCAA (NUTS2).
       Datos de contabilidad regional real, no estimaciones.
     - **Eurostat `nama_10_a64`:** VAB del CNAE G47 a nivel nacional espanol.
     - **INE, tabla 76817 (EEE Sector Comercio):** Cifra de negocio del CNAE 47 por CCAA.
@@ -285,12 +285,12 @@ else:
     **Restriccion:** La suma del VAB estimado de todas las CCAA es exactamente igual al VAB G47 nacional
     de Eurostat, garantizando coherencia con las cuentas nacionales.
 
-    **Limitacion:** La estimacion asume que la ratio G47/GI es homogenea dentro de cada CCAA. En realidad,
+    **Limitación:** La estimacion asume que la ratio G47/GI es homogenea dentro de cada CCAA. En realidad,
     CCAA turisticas tienen un peso relativo mayor de la H (hosteleria) dentro de G-I. La ponderacion con XN
     corrige parcialmente este sesgo.
     """)
 
-    st.subheader("6. Comercio electronico")
+    st.subheader("6. Comercio electrónico")
     st.markdown("""
     **Fuente:** CNMC (Comision Nacional de los Mercados y la Competencia), datos trimestrales de comercio electronico.
 

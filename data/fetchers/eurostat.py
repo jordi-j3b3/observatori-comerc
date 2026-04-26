@@ -212,7 +212,7 @@ NUTS2_NAMES = {
 
 def fetch_vab_regional_gi():
     """
-    Dataset nama_10r_3gva: VAB seccio G-I (comerc+transport+hostaleria)
+    Dataset nama_10r_3gva: VAB secció G-I (comerç+transport+hostaleria)
     per CCAA espanyoles (NUTS2) + total nacional ES. Preus corrents, M EUR.
     """
     params = [("unit", "CP_MEUR"), ("nace_r2", "G-I")]

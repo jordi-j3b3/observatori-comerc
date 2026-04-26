@@ -180,7 +180,7 @@ def fetch_pib_vab_from_api():
     Obte PIB/VAB CNAE 47 des de l'API INE (taula 69070).
     Deflacta amb IPC general reancorat al primer any de la serie:
       VAB_constants = VAB_corrents / (IPC_any / IPC_primer_any)
-    Aixi el valor real del primer any = nominal, i despres real <= nominal sempre.
+    Així el valor real del primer any = nominal, i després real <= nominal sempre.
     """
     print("  Intentant API INE (taula 69070)...")
     try:
@@ -660,8 +660,8 @@ def _load_europa_from_excel(country_names_ca):
 
 def _estimate_vab_eurostat(df):
     """
-    Estimacio hibrida del VAB CNAE 47 per CCAA combinant:
-    - Eurostat nama_10r_3gva: VAB seccio G-I per CCAA (comptabilitat regional real)
+    Estimació híbrida del VAB CNAE 47 per CCAA combinant:
+    - Eurostat nama_10r_3gva: VAB secció G-I per CCAA (comptabilitat regional real)
     - Eurostat nama_10_a64: VAB G47 nacional (per calcular ratio G47/GI)
     - INE EEE taula 76817: xifra de negoci per CCAA (per ponderar)
 
@@ -669,7 +669,7 @@ def _estimate_vab_eurostat(df):
     1. ratio_g47_gi = VAB_G47_ES / VAB_GI_ES (pes del detall dins G-I a nivell nacional)
     2. Base: VAB_G47_ccaa = VAB_GI_ccaa * ratio_g47_gi
     3. Ajust proporcional amb quotes de xifra de negoci per reflectir que
-       el pes del retail dins G-I varia per CCAA (ex: turisme a Balears pesa mes en G-I)
+       el pes del retail dins G-I varia per CCAA (ex: turisme a Balears pesa més en G-I)
     4. Restriccio: la suma de VAB estimat per CCAA = VAB G47 nacional d'Eurostat
     """
     print("  Estimant VAB via Eurostat (metode hibrid)...")
@@ -819,7 +819,7 @@ def process_eee_ccaa():
             df = df.drop(columns=["_r_nom"])
             print(f"  VAB nominal estimat per {df['vab_estimat_nominal'].notna().sum()} registres")
 
-    # Estimacio hibrida Eurostat (comptabilitat regional + EEE)
+    # Estimació híbrida Eurostat (comptabilitat regional + EEE)
     df = _estimate_vab_eurostat(df)
 
     save_cache(df, "eee_ccaa")

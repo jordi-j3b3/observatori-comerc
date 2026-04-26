@@ -10,7 +10,7 @@ import io
 VOLUM_NEGOCI_CSV_ID = "fddca89f-d2ee-4de3-81ce-c17d3dd4b81d"
 DUMP_URL = "https://catalogodatos.cnmc.es/datastore/dump"
 
-# Codis CNAE que pertanyen al comerc minorista (47)
+# Codis CNAE que pertanyen al comerç minorista (47)
 CNAE_47_CODES = {
     "4711", "4712", "4724", "4725", "4726", "4727",
     "4730", "4740",
