@@ -1,10 +1,11 @@
-"""Pàgina d'inici: KPIs i resum de l'Observatori."""
+"""Pagina d'inici: KPIs, introduccio i conclusions dinamiques."""
 import streamlit as st
 import pandas as pd
 import os, sys
+from io import BytesIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header, fnum, fpct, page_meta
+from style import inject_css, setup_lang, page_header, insight, fnum, fpct, cagr, page_meta
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -21,6 +22,9 @@ def load_data(name):
 df_pib = load_data("pib_vab")
 df_empreses = load_data("empreses")
 df_prod = load_data("productivitat")
+df_ecommerce = load_data("ecommerce")
+df_europa = load_data("europa_vab")
+df_territori = load_data("eee_ccaa")
 
 # ─── HEADER ────────────────────────────────────────────────────
 
@@ -88,38 +92,416 @@ with col4:
     else:
         st.metric(t("kpi_productivitat"), "—")
 
-# ─── RESUM ─────────────────────────────────────────────────────
+# ─── INTRODUCCIO ──────────────────────────────────────────────
 
 st.divider()
 
-if st.session_state.lang == "ca":
+_ca = st.session_state.lang == "ca"
+
+if _ca:
     st.markdown("""
-    ### Sobre l'Observatori
+### Sobre l'Observatori
 
-    Aquest observatori monitoritza l'evolució del **comerç al detall** (CNAE 47) a Espanya,
-    analitzant la seva contribució al PIB, el teixit empresarial, l'ocupació,
-    la productivitat, el comerç electrònic i la posició relativa a Europa.
+El **comerc al detall** (CNAE 47) es un dels pilars de l'economia espanyola: dona feina a mes
+d'**1,7 milions** de persones, genera uns **70.000 M EUR** de valor afegit i articula el consum
+de les families a tot el territori. Tot i el seu pes, el sector afronta transformacions
+profundes: digitalitzacio, concentracio empresarial, canvi de patrons de consum i pressio
+sobre marges.
 
-    **Fonts de dades:** INE, Eurostat, CNMC
+Aquest observatori ofereix una **radiografia actualitzada** del sector a partir de dades
+oficials (INE, Eurostat, CNMC), organitzada en sis dimensions:
 
-    **Actualització:** Trimestral automàtica (gener, abril, juliol, octubre)
+- **PIB i VAB:** evolucio del valor afegit nominal i real, pes sobre el PIB
+- **Empreses:** teixit empresarial, densitat comercial per CCAA
+- **Treball i productivitat:** ocupacio, hores, productivitat, distribucio del valor afegit
+- **E-commerce:** volum del canal online i pes sobre el total
+- **Territori:** estimacio del VAB per CCAA i diferencies regionals
+- **Europa:** posicio d'Espanya en el context de la UE-27
 
-    Navega per les seccions del menú lateral per explorar cada dimensió.
+Les dades s'actualitzen de forma **trimestral automatica** (gener, abril, juliol, octubre).
     """)
 else:
     st.markdown("""
-    ### Sobre el Observatorio
+### Sobre el Observatorio
 
-    Este observatorio monitoriza la evolución del **comercio minorista** (CNAE 47) en España,
-    analizando su contribución al PIB, el tejido empresarial, el empleo,
-    la productividad, el comercio electrónico y la posición relativa en Europa.
+El **comercio minorista** (CNAE 47) es uno de los pilares de la economia espanola: da empleo a mas
+de **1,7 millones** de personas, genera unos **70.000 M EUR** de valor anadido y articula el consumo
+de las familias en todo el territorio. A pesar de su peso, el sector afronta transformaciones
+profundas: digitalizacion, concentracion empresarial, cambio de patrones de consumo y presion
+sobre margenes.
 
-    **Fuentes de datos:** INE, Eurostat, CNMC
+Este observatorio ofrece una **radiografia actualizada** del sector a partir de datos
+oficiales (INE, Eurostat, CNMC), organizada en seis dimensiones:
 
-    **Actualización:** Trimestral automática (enero, abril, julio, octubre)
+- **PIB y VAB:** evolucion del valor anadido nominal y real, peso sobre el PIB
+- **Empresas:** tejido empresarial, densidad comercial por CCAA
+- **Trabajo y productividad:** empleo, horas, productividad, distribucion del valor anadido
+- **E-commerce:** volumen del canal online y peso sobre el total
+- **Territorio:** estimacion del VAB por CCAA y diferencias regionales
+- **Europa:** posicion de Espana en el contexto de la UE-27
 
-    Navega por las secciones del menú lateral para explorar cada dimensión.
+Los datos se actualizan de forma **trimestral automatica** (enero, abril, julio, octubre).
     """)
+
+# ─── CONCLUSIONS DINAMIQUES ───────────────────────────────────
+
+_conclusions = []
+
+# 1. PIB/VAB
+if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns and "vab_cnae47_constants" in df_pib.columns:
+    _pib_rows = df_pib.dropna(subset=["vab_cnae47_corrents", "vab_cnae47_constants"])
+    if len(_pib_rows) >= 2:
+        _pib_last = _pib_rows.iloc[-1]
+        _pib_first = _pib_rows.iloc[0]
+        _pib_yr = int(_pib_last["any"])
+        _pib_n = _pib_yr - int(_pib_first["any"])
+        _cagr_real = cagr(_pib_first["vab_cnae47_constants"], _pib_last["vab_cnae47_constants"], _pib_n)
+        _var_last = ((_pib_last["vab_cnae47_corrents"] / _pib_rows.iloc[-2]["vab_cnae47_corrents"]) - 1) * 100
+        if _ca:
+            _conclusions.append(
+                f"El VAB nominal del CNAE 47 es de <strong>{fnum(_pib_last['vab_cnae47_corrents'])} M EUR</strong> ({_pib_yr}), "
+                f"amb un creixement real anualitzat (CAGR) del <strong>{fpct(_cagr_real, 2)}</strong> des de {int(_pib_first['any'])}."
+            )
+        else:
+            _conclusions.append(
+                f"El VAB nominal del CNAE 47 es de <strong>{fnum(_pib_last['vab_cnae47_corrents'])} M EUR</strong> ({_pib_yr}), "
+                f"con un crecimiento real anualizado (CAGR) del <strong>{fpct(_cagr_real, 2)}</strong> desde {int(_pib_first['any'])}."
+            )
+
+# 2. Empreses
+if not df_empreses.empty:
+    _emp_esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
+    if len(_emp_esp) >= 2:
+        _emp_last = _emp_esp.iloc[-1]
+        _emp_prev = _emp_esp.iloc[-2]
+        _emp_var = (int(_emp_last["empreses"]) / int(_emp_prev["empreses"]) - 1) * 100
+        if _ca:
+            _conclusions.append(
+                f"El sector compta amb <strong>{fnum(int(_emp_last['empreses']))}</strong> empreses ({int(_emp_last['any'])}), "
+                f"un <strong>{fpct(_emp_var)}</strong> respecte l'any anterior."
+            )
+        else:
+            _conclusions.append(
+                f"El sector cuenta con <strong>{fnum(int(_emp_last['empreses']))}</strong> empresas ({int(_emp_last['any'])}), "
+                f"un <strong>{fpct(_emp_var)}</strong> respecto al ano anterior."
+            )
+
+# 3. Productivitat
+if not df_prod.empty and "productivitat_va_hora" in df_prod.columns:
+    _prod_rows = df_prod.dropna(subset=["productivitat_va_hora"])
+    if len(_prod_rows) >= 2:
+        _prod_last = _prod_rows.iloc[-1]
+        _prod_first = _prod_rows.iloc[0]
+        _prod_var = (_prod_last["productivitat_va_hora"] / _prod_first["productivitat_va_hora"] - 1) * 100
+        if _ca:
+            _conclusions.append(
+                f"La productivitat (VA/hora) ha variat un <strong>{fpct(_prod_var, 1)}</strong> "
+                f"entre {int(_prod_first['any'])} i {int(_prod_last['any'])}, situant-se en "
+                f"<strong>{fnum(_prod_last['productivitat_va_hora'], 1)} EUR/hora</strong>."
+            )
+        else:
+            _conclusions.append(
+                f"La productividad (VA/hora) ha variado un <strong>{fpct(_prod_var, 1)}</strong> "
+                f"entre {int(_prod_first['any'])} y {int(_prod_last['any'])}, situandose en "
+                f"<strong>{fnum(_prod_last['productivitat_va_hora'], 1)} EUR/hora</strong>."
+            )
+
+# 4. E-commerce
+if not df_ecommerce.empty and "ecommerce_cnae47_eur" in df_ecommerce.columns:
+    _ec = df_ecommerce.dropna(subset=["ecommerce_cnae47_eur"]).sort_values("any")
+    if len(_ec) >= 2:
+        _ec_last = _ec.iloc[-1]
+        _ec_first = _ec.iloc[0]
+        _ec_mult = _ec_last["ecommerce_cnae47_eur"] / _ec_first["ecommerce_cnae47_eur"]
+        if _ca:
+            _conclusions.append(
+                f"L'e-commerce del CNAE 47 ha multiplicat el seu volum per <strong>x{fnum(_ec_mult, 1)}</strong> "
+                f"des de {int(_ec_first['any'])}, fins a <strong>{fnum(_ec_last['ecommerce_cnae47_eur']/1e9, 1)} Md EUR</strong> ({int(_ec_last['any'])})."
+            )
+        else:
+            _conclusions.append(
+                f"El e-commerce del CNAE 47 ha multiplicado su volumen por <strong>x{fnum(_ec_mult, 1)}</strong> "
+                f"desde {int(_ec_first['any'])}, hasta <strong>{fnum(_ec_last['ecommerce_cnae47_eur']/1e9, 1)} Md EUR</strong> ({int(_ec_last['any'])})."
+            )
+
+# 5. Europa
+if not df_europa.empty and "pes_cnae47" in df_europa.columns:
+    _eu_es = df_europa[df_europa["pais_codi"] == "ES"].sort_values("any")
+    _eu_avg = df_europa[df_europa["pais_codi"] == "EU27_2020"].sort_values("any")
+    if not _eu_es.empty and not _eu_avg.empty:
+        _eu_es_last = _eu_es.iloc[-1]
+        _eu_avg_last = _eu_avg.iloc[-1]
+        _es_pct = _eu_es_last["pes_cnae47"] * 100
+        _eu_pct = _eu_avg_last["pes_cnae47"] * 100
+        _diff = _es_pct - _eu_pct
+        if _ca:
+            _pos = "per sobre" if _diff > 0 else "per sota"
+            _conclusions.append(
+                f"Espanya destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> del seu PIB al comerc al detall, "
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} pp {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+            )
+        else:
+            _pos = "por encima" if _diff > 0 else "por debajo"
+            _conclusions.append(
+                f"Espana destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> de su PIB al comercio minorista, "
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} pp {_pos}</strong> de la media UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+            )
+
+# 6. Territori
+if not df_territori.empty and "pes_cnae47_pib" in df_territori.columns:
+    _terr = df_territori[df_territori["territori"] != "espanya"].dropna(subset=["pes_cnae47_pib"])
+    if not _terr.empty:
+        _terr_yr = _terr["any"].max()
+        _terr_yr_data = _terr[_terr["any"] == _terr_yr]
+        _t_top = _terr_yr_data.nlargest(1, "pes_cnae47_pib").iloc[0]
+        _t_bot = _terr_yr_data.nsmallest(1, "pes_cnae47_pib").iloc[0]
+        if _ca:
+            _conclusions.append(
+                f"El pes territorial del retail varia entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"de {_t_top['territori']} i el <strong>{fpct(_t_bot['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"de {_t_bot['territori']} ({int(_terr_yr)})."
+            )
+        else:
+            _conclusions.append(
+                f"El peso territorial del retail varia entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"de {_t_top['territori']} y el <strong>{fpct(_t_bot['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"de {_t_bot['territori']} ({int(_terr_yr)})."
+            )
+
+if _conclusions:
+    st.subheader("Principals conclusions" if _ca else "Principales conclusiones")
+    _last_update_path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "last_update.txt")
+    if os.path.exists(_last_update_path):
+        with open(_last_update_path) as f:
+            _upd = f.read().strip()
+        st.caption(f"{'Ultima actualitzacio' if _ca else 'Ultima actualizacion'}: {_upd}")
+    for c in _conclusions:
+        st.markdown(f"- {c}", unsafe_allow_html=True)
+
+# ─── DESCARREGA EXCEL ─────────────────────────────────────────
+
+st.divider()
+st.subheader("Descarrega de dades" if _ca else "Descarga de datos")
+st.markdown(
+    ("Descarrega un fitxer Excel amb totes les dades i grafics de l'observatori."
+     if _ca else
+     "Descarga un archivo Excel con todos los datos y graficos del observatorio.")
+)
+
+
+def _build_excel():
+    buf = BytesIO()
+    wb = None
+    try:
+        import xlsxwriter
+        wb = xlsxwriter.Workbook(buf, {"in_memory": True, "nan_inf_to_errors": True})
+    except ImportError:
+        return None
+
+    hdr_fmt = wb.add_format({"bold": True, "bg_color": "#0055a4", "font_color": "white",
+                              "border": 1, "font_name": "Calibri", "font_size": 11})
+    cell_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11})
+    num_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "#,##0"})
+    pct_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "0.00%"})
+    dec_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "#,##0.0"})
+
+    def _write_header(ws, cols, row=0):
+        for c, name in enumerate(cols):
+            ws.write(row, c, name, hdr_fmt)
+
+    # --- 1. PIB i VAB ---
+    if not df_pib.empty:
+        ws = wb.add_worksheet("PIB i VAB")
+        cols = ["Any", "VAB nominal (M EUR)", "VAB real (M EUR)", "Pes s/ PIB"]
+        _write_header(ws, cols)
+        rows_pib = df_pib.sort_values("any")
+        for i, (_, r) in enumerate(rows_pib.iterrows(), 1):
+            ws.write(i, 0, int(r["any"]), cell_fmt)
+            ws.write(i, 1, r.get("vab_cnae47_corrents"), num_fmt)
+            ws.write(i, 2, r.get("vab_cnae47_constants"), num_fmt)
+            ws.write(i, 3, r.get("pes_cnae47"), pct_fmt)
+        n = len(rows_pib)
+        ws.set_column(0, 0, 8)
+        ws.set_column(1, 2, 20)
+        ws.set_column(3, 3, 14)
+
+        chart = wb.add_chart({"type": "line"})
+        chart.add_series({"name": "VAB nominal", "categories": ["PIB i VAB", 1, 0, n, 0],
+                          "values": ["PIB i VAB", 1, 1, n, 1], "line": {"color": "#0055a4", "width": 2.5}})
+        chart.add_series({"name": "VAB real", "categories": ["PIB i VAB", 1, 0, n, 0],
+                          "values": ["PIB i VAB", 1, 2, n, 2], "line": {"color": "#c0392b", "width": 2.5}})
+        chart.set_title({"name": "VAB CNAE 47 (M EUR)"})
+        chart.set_x_axis({"name": "Any"})
+        chart.set_y_axis({"name": "M EUR"})
+        chart.set_size({"width": 620, "height": 380})
+        chart.set_legend({"position": "bottom"})
+        ws.insert_chart("F2", chart)
+
+    # --- 2. Empreses ---
+    if not df_empreses.empty:
+        ws = wb.add_worksheet("Empreses")
+        cols = ["Territori", "Any", "Empreses", "Poblacio", "Empreses/1.000 hab."]
+        _write_header(ws, cols)
+        rows_emp = df_empreses.sort_values(["territori", "any"])
+        for i, (_, r) in enumerate(rows_emp.iterrows(), 1):
+            ws.write(i, 0, r["territori"], cell_fmt)
+            ws.write(i, 1, int(r["any"]), cell_fmt)
+            ws.write(i, 2, int(r["empreses"]) if pd.notna(r["empreses"]) else None, num_fmt)
+            ws.write(i, 3, int(r["poblacio"]) if pd.notna(r.get("poblacio")) else None, num_fmt)
+            ws.write(i, 4, r.get("empreses_per_1000hab"), dec_fmt)
+        ws.set_column(0, 0, 28)
+        ws.set_column(1, 1, 8)
+        ws.set_column(2, 4, 18)
+
+        esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
+        if len(esp) >= 2:
+            ws2_name = "Empreses_ES"
+            ws2 = wb.add_worksheet(ws2_name)
+            _write_header(ws2, ["Any", "Empreses"])
+            for i, (_, r) in enumerate(esp.iterrows(), 1):
+                ws2.write(i, 0, int(r["any"]), cell_fmt)
+                ws2.write(i, 1, int(r["empreses"]), num_fmt)
+            ne = len(esp)
+            chart = wb.add_chart({"type": "line"})
+            chart.add_series({"name": "Empreses Espanya", "categories": [ws2_name, 1, 0, ne, 0],
+                              "values": [ws2_name, 1, 1, ne, 1], "line": {"color": "#0055a4", "width": 2.5}})
+            chart.set_title({"name": "Empreses CNAE 47 - Espanya"})
+            chart.set_size({"width": 620, "height": 380})
+            chart.set_legend({"position": "none"})
+            ws2.insert_chart("D2", chart)
+            ws2.set_column(0, 0, 8)
+            ws2.set_column(1, 1, 14)
+
+    # --- 3. Productivitat ---
+    if not df_prod.empty:
+        ws = wb.add_worksheet("Productivitat")
+        cols = ["Any", "Personal ocupat", "Hores treballades", "Productivitat (EUR/h)",
+                "Quota salarial", "Cost laboral/ocupat"]
+        _write_header(ws, cols)
+        rows_p = df_prod.sort_values("any")
+        for i, (_, r) in enumerate(rows_p.iterrows(), 1):
+            ws.write(i, 0, int(r["any"]), cell_fmt)
+            ws.write(i, 1, r.get("personal_ocupat"), num_fmt)
+            ws.write(i, 2, r.get("hores_treballades"), num_fmt)
+            ws.write(i, 3, r.get("productivitat_va_hora"), dec_fmt)
+            ws.write(i, 4, r.get("quota_salarial"), pct_fmt)
+            ws.write(i, 5, r.get("cost_laboral_per_ocupat"), num_fmt)
+        np_ = len(rows_p)
+        ws.set_column(0, 0, 8)
+        ws.set_column(1, 5, 22)
+
+        chart = wb.add_chart({"type": "line"})
+        chart.add_series({"name": "Productivitat (EUR/h)", "categories": ["Productivitat", 1, 0, np_, 0],
+                          "values": ["Productivitat", 1, 3, np_, 3], "line": {"color": "#0055a4", "width": 2.5}})
+        chart.set_title({"name": "Productivitat VA/hora (EUR)"})
+        chart.set_size({"width": 620, "height": 380})
+        chart.set_legend({"position": "none"})
+        ws.insert_chart("H2", chart)
+
+    # --- 4. E-commerce ---
+    if not df_ecommerce.empty:
+        ws = wb.add_worksheet("E-commerce")
+        cols = ["Any", "E-commerce total (EUR)", "E-commerce CNAE 47 (EUR)", "Pes CNAE 47"]
+        _write_header(ws, cols)
+        rows_ec = df_ecommerce.sort_values("any")
+        for i, (_, r) in enumerate(rows_ec.iterrows(), 1):
+            ws.write(i, 0, int(r["any"]), cell_fmt)
+            ws.write(i, 1, r.get("ecommerce_total_eur"), num_fmt)
+            ws.write(i, 2, r.get("ecommerce_cnae47_eur"), num_fmt)
+            ws.write(i, 3, r.get("pes_cnae47_ecommerce"), pct_fmt)
+        nec = len(rows_ec)
+        ws.set_column(0, 0, 8)
+        ws.set_column(1, 2, 24)
+        ws.set_column(3, 3, 14)
+
+        chart = wb.add_chart({"type": "column"})
+        chart.add_series({"name": "E-commerce CNAE 47", "categories": ["E-commerce", 1, 0, nec, 0],
+                          "values": ["E-commerce", 1, 2, nec, 2], "fill": {"color": "#0055a4"}})
+        chart.set_title({"name": "E-commerce CNAE 47 (EUR)"})
+        chart.set_size({"width": 620, "height": 380})
+        chart.set_legend({"position": "none"})
+        ws.insert_chart("F2", chart)
+
+    # --- 5. Territori ---
+    if not df_territori.empty:
+        ws = wb.add_worksheet("Territori CCAA")
+        cols = ["Territori", "Any", "Locals", "Personal ocupat", "VAB estimat (EUR)",
+                "VAB Eurostat (EUR)", "Pes CNAE 47/PIB"]
+        _write_header(ws, cols)
+        rows_t = df_territori.sort_values(["territori", "any"])
+        for i, (_, r) in enumerate(rows_t.iterrows(), 1):
+            ws.write(i, 0, r["territori"], cell_fmt)
+            ws.write(i, 1, int(r["any"]), cell_fmt)
+            ws.write(i, 2, r.get("locals"), num_fmt)
+            ws.write(i, 3, r.get("personal_ocupat"), num_fmt)
+            ws.write(i, 4, r.get("vab_estimat"), num_fmt)
+            ws.write(i, 5, r.get("vab_eurostat"), num_fmt)
+            ws.write(i, 6, r.get("pes_cnae47_pib"), pct_fmt)
+        ws.set_column(0, 0, 28)
+        ws.set_column(1, 1, 8)
+        ws.set_column(2, 6, 20)
+
+        terr_last = df_territori[
+            (df_territori["territori"] != "espanya") &
+            df_territori["pes_cnae47_pib"].notna()
+        ]
+        if not terr_last.empty:
+            yr_max = terr_last["any"].max()
+            tdata = terr_last[terr_last["any"] == yr_max].sort_values("pes_cnae47_pib", ascending=False)
+            ws2_name = "Pes CCAA"
+            ws2 = wb.add_worksheet(ws2_name)
+            _write_header(ws2, ["CCAA", "Pes CNAE 47/PIB"])
+            for i, (_, r) in enumerate(tdata.iterrows(), 1):
+                ws2.write(i, 0, r["territori"], cell_fmt)
+                ws2.write(i, 1, r["pes_cnae47_pib"], pct_fmt)
+            nt = len(tdata)
+            ws2.set_column(0, 0, 28)
+            ws2.set_column(1, 1, 18)
+
+            chart = wb.add_chart({"type": "bar"})
+            chart.add_series({"name": f"Pes CNAE 47/PIB ({int(yr_max)})",
+                              "categories": [ws2_name, 1, 0, nt, 0],
+                              "values": [ws2_name, 1, 1, nt, 1],
+                              "fill": {"color": "#0055a4"}})
+            chart.set_title({"name": f"Pes del comerc al detall sobre el PIB ({int(yr_max)})"})
+            chart.set_size({"width": 700, "height": 480})
+            chart.set_legend({"position": "none"})
+            chart.set_y_axis({"reverse": True})
+            ws2.insert_chart("D2", chart)
+
+    # --- 6. Europa ---
+    if not df_europa.empty:
+        ws = wb.add_worksheet("Europa")
+        cols = ["Pais", "Codi", "Any", "VAB CNAE 47 (M EUR)", "VAB total (M EUR)", "Pes CNAE 47"]
+        _write_header(ws, cols)
+        rows_eu = df_europa.sort_values(["pais", "any"])
+        for i, (_, r) in enumerate(rows_eu.iterrows(), 1):
+            ws.write(i, 0, r.get("pais", ""), cell_fmt)
+            ws.write(i, 1, r.get("pais_codi", ""), cell_fmt)
+            ws.write(i, 2, int(r["any"]), cell_fmt)
+            ws.write(i, 3, r.get("vab_meur"), num_fmt)
+            ws.write(i, 4, r.get("vab_total_meur"), num_fmt)
+            ws.write(i, 5, r.get("pes_cnae47"), pct_fmt)
+        ws.set_column(0, 0, 18)
+        ws.set_column(1, 1, 8)
+        ws.set_column(2, 2, 8)
+        ws.set_column(3, 5, 22)
+
+    wb.close()
+    buf.seek(0)
+    return buf
+
+
+_excel_buf = _build_excel()
+if _excel_buf:
+    st.download_button(
+        label="Descarregar Excel" if _ca else "Descargar Excel",
+        data=_excel_buf,
+        file_name="observatori_comerc_detall.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+else:
+    st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
 
 # ─── META ─────────────────────────────────────────────────────
 

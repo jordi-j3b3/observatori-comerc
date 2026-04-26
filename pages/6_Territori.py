@@ -143,8 +143,20 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             margin=dict(l=200, r=100, t=50, b=50),
         )
         st.plotly_chart(fig_pes, use_container_width=True)
-        source("Eurostat + INE. Estimacio hibrida propia" if _ca
-               else "Eurostat + INE. Estimacion hibrida propia")
+        if _ca:
+            source(
+                "Eurostat (comptabilitat regional G-I, <i>nama_10r_3gva</i> + VAB G47 nacional, <i>nama_10_a64</i>) "
+                "i INE (xifra de negoci CNAE 47 per CCAA, taula 76817). "
+                "Metode: distribucio proporcional hibrida (mitjana de quotes G-I i XN) "
+                "restringida al total nacional Eurostat"
+            )
+        else:
+            source(
+                "Eurostat (contabilidad regional G-I, <i>nama_10r_3gva</i> + VAB G47 nacional, <i>nama_10_a64</i>) "
+                "e INE (cifra de negocio CNAE 47 por CCAA, tabla 76817). "
+                "Metodo: distribucion proporcional hibrida (media de cuotas G-I y XN) "
+                "restringida al total nacional Eurostat"
+            )
 
         # Insight pes/PIB
         _top1 = d_pes.iloc[-1]
