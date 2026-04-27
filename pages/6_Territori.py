@@ -316,8 +316,28 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
         margin=dict(l=200, r=100, t=50, b=50),
     )
     st.plotly_chart(fig_sal, use_container_width=True)
-    source("INE, Enquesta Estructural d'Empreses. Calcul propi" if _ca
-           else "INE, Encuesta Estructural de Empresas. Calculo propio")
+
+    if _ca:
+        st.caption(
+            "**Nota:** Aquesta xifra divideix la massa total de sous i salaris entre el nombre de persones "
+            "ocupades (incloent-hi temps parcial). El comerç al detall té una elevada taxa de parcialitat "
+            "(~30% dels ocupats), de manera que la mitjana per persona pot quedar per sota de l'SMI a jornada "
+            "completa sense que això impliqui cap incompliment legal. "
+            "A més, \"sous i salaris\" exclou les cotitzacions socials a càrrec de l'empresa (~23% del cost "
+            "laboral total). Vegeu l'apartat 4 de Metodologia per a una explicació detallada."
+        )
+    else:
+        st.caption(
+            "**Nota:** Esta cifra divide la masa total de sueldos y salarios entre el número de personas "
+            "ocupadas (incluyendo tiempo parcial). El comercio minorista tiene una elevada tasa de parcialidad "
+            "(~30% de los ocupados), de modo que la media por persona puede quedar por debajo del SMI a jornada "
+            "completa sin que ello implique ningún incumplimiento legal. "
+            "Además, \"sueldos y salarios\" excluye las cotizaciones sociales a cargo de la empresa (~23% del coste "
+            "laboral total). Véase el apartado 4 de Metodología para una explicación detallada."
+        )
+
+    source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
+           else "INE, Encuesta Estructural de Empresas. Cálculo propio")
 
     # Insight salari
     if not d_sal.empty:
@@ -326,21 +346,19 @@ if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.column
         _s_diff = _s_top["sal_med"] - _s_bot["sal_med"]
         if _ca:
             _txt_sal = (
-                f"El salari mitja del sector varia entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
+                f"El salari mitjà del sector varia entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
                 f"({_s_bot['territori']}) i <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
-                f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
-                "Les CCAA amb salaris mes alts coincideixen generalment amb les de major cost de vida "
-                "i concentració de grans empreses. Cal recordar que aquesta xifra inclou sous bruts "
-                "i cotitzacions socials a carrec de l'empresa, no el salari net del treballador."
+                f"({_s_top['territori']}), una diferència de <strong>{fnum(_s_diff)} EUR</strong>. "
+                "Les CCAA amb salaris més alts coincideixen generalment amb les de major cost de vida "
+                "i concentració de grans empreses."
             )
         else:
             _txt_sal = (
-                f"El salario medio del sector varia entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
+                f"El salario medio del sector varía entre <strong>{fnum(_s_bot['sal_med'])} EUR</strong> "
                 f"({_s_bot['territori']}) y <strong>{fnum(_s_top['sal_med'])} EUR</strong> "
                 f"({_s_top['territori']}), una diferencia de <strong>{fnum(_s_diff)} EUR</strong>. "
-                "Las CCAA con salarios mas altos coinciden generalmente con las de mayor coste de vida "
-                "y concentración de grandes empresas. Cabe recordar que esta cifra incluye sueldos brutos "
-                "y cotizaciones sociales a cargo de la empresa, no el salario neto del trabajador."
+                "Las CCAA con salarios más altos coinciden generalmente con las de mayor coste de vida "
+                "y concentración de grandes empresas."
             )
         insight(_txt_sal)
 

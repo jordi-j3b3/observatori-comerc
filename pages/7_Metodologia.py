@@ -77,8 +77,67 @@ if st.session_state.lang == "ca":
     a càrrec de l'empresa i altres costos laborals. No equival al salari net del treballador.
     """)
 
+    # ── Salari mitjà per ocupat ──
+    st.subheader("4. Salari mitjà per ocupat per CCAA: interpretació i limitacions")
+    st.markdown("""
+    **Indicador:** `Sous i salaris / Personal ocupat` per a cada CCAA.
+
+    **Font:** INE, Estadística Estructural d'Empreses (EEE), Taula 76817 — Sector Comerç, CNAE 47.
+
+    **Què mesura:** La despesa mitjana en sous i salaris per cada persona ocupada al sector del comerç
+    al detall, desglossada per comunitat autònoma.
+
+    **Per què algunes CCAA mostren valors inferiors a l'SMI?**
+
+    Aquesta xifra **no és comparable directament amb el Salari Mínim Interprofessional (SMI)**
+    per tres raons:
+
+    1. **Inclou treballadors a temps parcial.** El comerç al detall té una de les taxes de parcialitat
+       més altes de l'economia (~30% dels ocupats segons l'EPA). El denominador (`personal ocupat`)
+       compta caps, no equivalents a jornada completa (EJC). Un treballador a mitja jornada compta
+       com a 1 persona però cobra proporcionalment a les seves hores. L'SMI s'aplica pro rata
+       al temps parcial, de manera que un treballador a mitja jornada pot cobrar legalment la meitat de l'SMI anual.
+
+    2. **"Sous i salaris" exclou les cotitzacions socials a càrrec de l'empresa.** La variable
+       `Sueldos y salarios` de l'EEE recull exclusivament la retribució bruta. Les cotitzacions
+       a la Seguretat Social, formació professional i altres càrregues patronals (~23% del cost
+       laboral total) queden fora. La variable que les inclou és `Gastos de personal`, disponible
+       a nivell nacional però no regionalitzada per CCAA.
+
+    3. **Efecte composició per CCAA.** Les comunitats amb menor cost de vida tendeixen a tenir
+       una proporció més alta de contractes a temps parcial i de comerç de proximitat (menys
+       grans superfícies), cosa que empeny la mitjana per persona a la baixa.
+
+    **Verificació amb dades nacionals:**
+
+    A nivell nacional, on disposem d'hores treballades (EEE Taula 36194), podem calcular el salari per hora:
+
+    | Indicador (2023) | Valor |
+    |---|---|
+    | Sous i salaris / Hores treballades | **13,26 EUR/hora** |
+    | SMI per hora (ref. 1.756 h/any jornada completa) | **8,61 EUR/hora** |
+    | Salari equivalent a jornada completa (13,26 × 1.756) | **~23.285 EUR/any** |
+    | Hores mitjanes per treballador al sector | **1.240 h/any** (70,6% d'una jornada completa) |
+
+    El salari per hora del sector és un **54% superior a l'SMI per hora**. La mitjana per persona
+    és baixa perquè reflecteix jornades reduïdes, no salaris insuficients.
+
+    **Fonts complementàries per contrastar:**
+    - **INE, Enquesta Anual d'Estructura Salarial (EAES):** Salari mitjà brut del sector Comerç (secció G):
+      24.137 EUR/any (2023). Jornada completa: 32.168 EUR; temps parcial: 13.775 EUR.
+    - **INE, EPA:** Taxa de parcialitat al sector Comerç (secció G): ~15% (2023). Al detall (CNAE 47)
+      la xifra és superior per la prevalença de contractes de cap de setmana i mitja jornada.
+    - **SEPE, Observatorio de las Ocupaciones:** Informes sectorials anuals sobre contractació
+      al comerç minorista per tipus de jornada i CCAA.
+
+    **Limitació important:** La Taula 76817 de l'EEE no publica hores treballades per CCAA,
+    de manera que no és possible calcular un salari per hora regionalitzat. L'indicador
+    `sous/ocupat` és la millor aproximació disponible, però cal interpretar-lo amb les precaucions
+    descrites.
+    """)
+
     # ── Empreses i densitat ──
-    st.subheader("4. Empreses i densitat comercial")
+    st.subheader("5. Empreses i densitat comercial")
     st.markdown("""
     **Fonts d'empreses (combinació de 3 taules INE):**
     - **Taula 39372:** CCAA + Nacional, CNAE a 3 dígits (2020-últim any). Font principal per a dades recents.
@@ -102,7 +161,7 @@ if st.session_state.lang == "ca":
     """)
 
     # ── Territori ──
-    st.subheader("5. Estimacio del VAB CNAE 47 per CCAA (metode hibrid)")
+    st.subheader("6. Estimació del VAB CNAE 47 per CCAA (mètode híbrid)")
     st.markdown("""
     **Problema:** La Comptabilitat Regional de l'INE no desglossa el VAB al nivell del CNAE 47
     (comerç al detall). Per tant, cal estimar-lo.
@@ -135,32 +194,32 @@ if st.session_state.lang == "ca":
     """)
 
     # ── Ecommerce ──
-    st.subheader("6. Comerç electrònic")
+    st.subheader("7. Comerç electrònic")
     st.markdown("""
     **Font:** CNMC (Comissió Nacional dels Mercats i la Competència), dades trimestrals de comerç electrònic.
 
     **Agregació:** Les dades trimestrals s'agreguen a nivell anual (suma dels 4 trimestres).
 
     **Any parcial:** Si l'últim any disponible mostra un volum total inferior al 85% de l'any anterior,
-    es considera que les dades son d'un any incomplet (la CNMC publica amb retard)
-    i es mostra una nota d'advertencia.
+    es considera que les dades són d'un any incomplet (la CNMC publica amb retard)
+    i es mostra una nota d'advertència.
 
     **Pes CNAE 47** = `Volum e-commerce CNAE 47 / Volum total e-commerce x 100`.
     """)
 
     # ── Europa ──
-    st.subheader("7. Comparativa europea")
+    st.subheader("8. Comparativa europea")
     st.markdown("""
     **Font:** Eurostat, Comptes Nacionals (taula `nama_10_a64`).
 
-    **Pes CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` per a cada pais.
+    **Pes CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` per a cada país.
 
-    **Paisos inclosos:** Tots els disponibles a Eurostat amb dades per al CNAE G47, incloent
-    l'agregat UE-27 com a referencia. Espanya es destaca visualment per facilitar la comparacio.
+    **Països inclosos:** Tots els disponibles a Eurostat amb dades per al CNAE G47, incloent
+    l'agregat UE-27 com a referència. Espanya es destaca visualment per facilitar la comparació.
     """)
 
     # ── Periodicitat ──
-    st.subheader("8. Periodicitat d'actualitzacio")
+    st.subheader("9. Periodicitat d'actualització")
     st.markdown("""
     L'Observatori s'actualitza de forma **trimestral** (gener, abril, juliol i octubre) mitjançant
     un procés automatitzat (GitHub Actions) que:
@@ -217,7 +276,7 @@ else:
 
     **Interpretación de la divergencia:**
     - Si VA/hora crece más que Cifra de Negocio/hora → **mejora de márgenes** (el sector retiene más valor neto).
-    - Si Cifra de Negocio/hora crece más → **compresión de márgenes** (más facturación però menos valor retenido).
+    - Si Cifra de Negocio/hora crece más → **compresión de márgenes** (más facturación pero menos valor retenido).
     """)
 
     st.subheader("3. Distribución del Valor Añadido: cuota salarial y excedente bruto")
@@ -235,7 +294,66 @@ else:
     a cargo de la empresa y otros costes laborales. No equivale al salario neto del trabajador.
     """)
 
-    st.subheader("4. Empresas y densidad comercial")
+    # ── Salario medio por ocupado ──
+    st.subheader("4. Salario medio por ocupado por CCAA: interpretación y limitaciones")
+    st.markdown("""
+    **Indicador:** `Sueldos y salarios / Personal ocupado` para cada CCAA.
+
+    **Fuente:** INE, Estadística Estructural de Empresas (EEE), Tabla 76817 — Sector Comercio, CNAE 47.
+
+    **Qué mide:** El gasto medio en sueldos y salarios por cada persona ocupada en el sector del comercio
+    minorista, desglosado por comunidad autónoma.
+
+    **¿Por qué algunas CCAA muestran valores inferiores al SMI?**
+
+    Esta cifra **no es comparable directamente con el Salario Mínimo Interprofesional (SMI)**
+    por tres razones:
+
+    1. **Incluye trabajadores a tiempo parcial.** El comercio minorista tiene una de las tasas de parcialidad
+       más altas de la economía (~30% de los ocupados según la EPA). El denominador (`personal ocupado`)
+       cuenta personas, no equivalentes a jornada completa (EJC). Un trabajador a media jornada cuenta
+       como 1 persona pero cobra proporcionalmente a sus horas. El SMI se aplica pro rata
+       al tiempo parcial, de modo que un trabajador a media jornada puede cobrar legalmente la mitad del SMI anual.
+
+    2. **"Sueldos y salarios" excluye las cotizaciones sociales a cargo de la empresa.** La variable
+       `Sueldos y salarios` de la EEE recoge exclusivamente la retribución bruta. Las cotizaciones
+       a la Seguridad Social, formación profesional y otras cargas patronales (~23% del coste
+       laboral total) quedan fuera. La variable que las incluye es `Gastos de personal`, disponible
+       a nivel nacional pero no regionalizada por CCAA.
+
+    3. **Efecto composición por CCAA.** Las comunidades con menor coste de vida tienden a tener
+       una proporción más alta de contratos a tiempo parcial y de comercio de proximidad (menos
+       grandes superficies), lo que empuja la media por persona a la baja.
+
+    **Verificación con datos nacionales:**
+
+    A nivel nacional, donde disponemos de horas trabajadas (EEE Tabla 36194), podemos calcular el salario por hora:
+
+    | Indicador (2023) | Valor |
+    |---|---|
+    | Sueldos y salarios / Horas trabajadas | **13,26 EUR/hora** |
+    | SMI por hora (ref. 1.756 h/año jornada completa) | **8,61 EUR/hora** |
+    | Salario equivalente a jornada completa (13,26 x 1.756) | **~23.285 EUR/año** |
+    | Horas medias por trabajador en el sector | **1.240 h/año** (70,6% de una jornada completa) |
+
+    El salario por hora del sector es un **54% superior al SMI por hora**. La media por persona
+    es baja porque refleja jornadas reducidas, no salarios insuficientes.
+
+    **Fuentes complementarias para contrastar:**
+    - **INE, Encuesta Anual de Estructura Salarial (EAES):** Salario medio bruto del sector Comercio (sección G):
+      24.137 EUR/año (2023). Jornada completa: 32.168 EUR; tiempo parcial: 13.775 EUR.
+    - **INE, EPA:** Tasa de parcialidad en el sector Comercio (sección G): ~15% (2023). En el minorista (CNAE 47)
+      la cifra es superior por la prevalencia de contratos de fin de semana y media jornada.
+    - **SEPE, Observatorio de las Ocupaciones:** Informes sectoriales anuales sobre contratación
+      en el comercio minorista por tipo de jornada y CCAA.
+
+    **Limitación importante:** La Tabla 76817 de la EEE no publica horas trabajadas por CCAA,
+    de modo que no es posible calcular un salario por hora regionalizado. El indicador
+    `sueldos/ocupado` es la mejor aproximación disponible, pero debe interpretarse con las precauciones
+    descritas.
+    """)
+
+    st.subheader("5. Empresas y densidad comercial")
     st.markdown("""
     **Fuentes de empresas (combinación de 3 tablas INE):**
     - **Tabla 39372:** CCAA + Nacional, CNAE a 3 dígitos (2020-último año). Fuente principal para datos recientes.
@@ -258,7 +376,7 @@ else:
     del directorio de empresas) más que una destrucción real de tejido empresarial.
     """)
 
-    st.subheader("5. Estimacion del VAB CNAE 47 por CCAA (metodo hibrido)")
+    st.subheader("6. Estimación del VAB CNAE 47 por CCAA (método híbrido)")
     st.markdown("""
     **Problema:** La Contabilidad Regional del INE no desglosa el VAB al nivel del CNAE 47
     (comercio minorista). Por tanto, es necesario estimarlo.
@@ -290,7 +408,7 @@ else:
     corrige parcialmente este sesgo.
     """)
 
-    st.subheader("6. Comercio electrónico")
+    st.subheader("7. Comercio electrónico")
     st.markdown("""
     **Fuente:** CNMC (Comision Nacional de los Mercados y la Competencia), datos trimestrales de comercio electronico.
 
@@ -303,17 +421,17 @@ else:
     **Peso CNAE 47** = `Volumen e-commerce CNAE 47 / Volumen total e-commerce x 100`.
     """)
 
-    st.subheader("7. Comparativa europea")
+    st.subheader("8. Comparativa europea")
     st.markdown("""
     **Fuente:** Eurostat, Cuentas Nacionales (tabla `nama_10_a64`).
 
-    **Peso CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` para cada pais.
+    **Peso CNAE 47 sobre PIB** = `VAB CNAE G47 / PIB total x 100` para cada país.
 
-    **Paises incluidos:** Todos los disponibles en Eurostat con datos para el CNAE G47, incluyendo
-    el agregado UE-27 como referencia. Espana se destaca visualmente para facilitar la comparacion.
+    **Países incluidos:** Todos los disponibles en Eurostat con datos para el CNAE G47, incluyendo
+    el agregado UE-27 como referencia. España se destaca visualmente para facilitar la comparación.
     """)
 
-    st.subheader("8. Periodicidad de actualizacion")
+    st.subheader("9. Periodicidad de actualización")
     st.markdown("""
     El Observatorio se actualiza de forma **trimestral** (enero, abril, julio y octubre) mediante
     un proceso automatizado (GitHub Actions) que:
