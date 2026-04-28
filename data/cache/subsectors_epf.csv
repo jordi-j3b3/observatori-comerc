@@ -1,0 +1,118 @@
+codi_coicop,any,despesa_per_llar,nom
+00,2016,28199.88,Total despesa
+00,2017,28730.72,Total despesa
+00,2018,28939.51,Total despesa
+00,2019,29028.0,Total despesa
+00,2020,25905.2,Total despesa
+00,2021,27361.3,Total despesa
+00,2022,27779.26,Total despesa
+00,2023,28040.59,Total despesa
+00,2024,28597.95,Total despesa
+01,2016,4124.05,Alimentos y bebidas no alcohólicas
+01,2017,4060.69,Alimentos y bebidas no alcohólicas
+01,2018,4106.92,Alimentos y bebidas no alcohólicas
+01,2019,4125.3,Alimentos y bebidas no alcohólicas
+01,2020,4300.55,Alimentos y bebidas no alcohólicas
+01,2021,4455.29,Alimentos y bebidas no alcohólicas
+01,2022,4182.78,Alimentos y bebidas no alcohólicas
+01,2023,3968.05,Alimentos y bebidas no alcohólicas
+01,2024,3885.27,Alimentos y bebidas no alcohólicas
+02,2016,535.59,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2017,527.24,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2018,499.66,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2019,493.13,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2020,482.77,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2021,470.44,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2022,434.73,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2023,398.65,"Bebidas alcohólicas, tabaco y estupefacientes"
+02,2024,363.6,"Bebidas alcohólicas, tabaco y estupefacientes"
+03,2016,1451.41,Vestido y calzado
+03,2017,1508.98,Vestido y calzado
+03,2018,1445.14,Vestido y calzado
+03,2019,1386.54,Vestido y calzado
+03,2020,977.33,Vestido y calzado
+03,2021,1102.91,Vestido y calzado
+03,2022,1139.49,Vestido y calzado
+03,2023,1205.68,Vestido y calzado
+03,2024,1296.3,Vestido y calzado
+04,2016,8737.72,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2017,8683.86,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2018,8938.52,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2019,9131.43,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2020,9331.0,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2021,9270.41,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2022,9161.19,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2023,9472.07,"Vivienda, agua, electricidad, gas y otros combustibles"
+04,2024,9828.41,"Vivienda, agua, electricidad, gas y otros combustibles"
+05,2016,1255.84,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2017,1314.39,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2018,1350.29,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2019,1303.21,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2020,1140.79,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2021,1239.44,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2022,1175.58,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2023,1172.61,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+05,2024,1119.34,"Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar"
+06,2016,968.66,Sanidad
+06,2017,974.89,Sanidad
+06,2018,1000.37,Sanidad
+06,2019,1027.64,Sanidad
+06,2020,978.09,Sanidad
+06,2021,1157.19,Sanidad
+06,2022,1158.84,Sanidad
+06,2023,1152.18,Sanidad
+06,2024,1232.87,Sanidad
+07,2016,3267.9,Transporte
+07,2017,3527.56,Transporte
+07,2018,3535.05,Transporte
+07,2019,3588.73,Transporte
+07,2020,2610.72,Transporte
+07,2021,2872.98,Transporte
+07,2022,3042.96,Transporte
+07,2023,3061.06,Transporte
+07,2024,3116.16,Transporte
+08,2016,1041.3,Información y comunicaciones
+08,2017,1077.07,Información y comunicaciones
+08,2018,1084.59,Información y comunicaciones
+08,2019,1068.12,Información y comunicaciones
+08,2020,1111.26,Información y comunicaciones
+08,2021,1151.34,Información y comunicaciones
+08,2022,1149.27,Información y comunicaciones
+08,2023,1087.24,Información y comunicaciones
+08,2024,1166.65,Información y comunicaciones
+09,2016,1434.65,"Actividades recreativas, deporte y cultura"
+09,2017,1483.64,"Actividades recreativas, deporte y cultura"
+09,2018,1468.04,"Actividades recreativas, deporte y cultura"
+09,2019,1484.39,"Actividades recreativas, deporte y cultura"
+09,2020,945.95,"Actividades recreativas, deporte y cultura"
+09,2021,1089.51,"Actividades recreativas, deporte y cultura"
+09,2022,1272.15,"Actividades recreativas, deporte y cultura"
+09,2023,1332.98,"Actividades recreativas, deporte y cultura"
+09,2024,1463.27,"Actividades recreativas, deporte y cultura"
+10,2016,399.05,Servicios de educación
+10,2017,410.27,Servicios de educación
+10,2018,452.45,Servicios de educación
+10,2019,467.6,Servicios de educación
+10,2020,422.28,Servicios de educación
+10,2021,417.88,Servicios de educación
+10,2022,434.09,Servicios de educación
+10,2023,457.42,Servicios de educación
+10,2024,505.06,Servicios de educación
+11,2016,2779.08,Restaurantes y servicios de alojamiento
+11,2017,2946.09,Restaurantes y servicios de alojamiento
+11,2018,2836.13,Restaurantes y servicios de alojamiento
+11,2019,2775.99,Restaurantes y servicios de alojamiento
+11,2020,1636.31,Restaurantes y servicios de alojamiento
+11,2021,2099.54,Restaurantes y servicios de alojamiento
+11,2022,2529.3,Restaurantes y servicios de alojamiento
+11,2023,2677.28,Restaurantes y servicios de alojamiento
+11,2024,2594.8,Restaurantes y servicios de alojamiento
+12,2016,1181.29,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2017,1224.48,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2018,1231.69,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2019,1199.23,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2020,1003.27,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2021,1063.57,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2022,1128.38,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2023,1115.92,"Cuidado personal, protección social, y bienes y servicios diversos"
+12,2024,1077.35,"Cuidado personal, protección social, y bienes y servicios diversos"

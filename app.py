@@ -34,9 +34,11 @@ pg = st.navigation([
             title="E-commerce"),
     st.Page("pages/6_Territori.py",
             title="Territori" if _ca else "Territorio"),
-    st.Page("pages/6_Europa.py",
+    st.Page("pages/7_Europa.py",
             title="Europa"),
-    st.Page("pages/7_Metodologia.py",
+    st.Page("pages/9_Subsectors.py",
+            title="Subsectors" if _ca else "Subsectores"),
+    st.Page("pages/8_Metodologia.py",
             title="Metodologia" if _ca else "Metodología"),
 ])
 
@@ -44,8 +46,9 @@ pg = st.navigation([
 
 with st.sidebar:
     st.markdown(
+        '<a href="https://www.j3b3.com" target="_blank" rel="noopener">'
         '<img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" '
-        'alt="J3B3 Consulting" style="width:160px; margin-bottom:0.5rem;">',
+        'alt="J3B3 Consulting" style="width:160px; margin-bottom:0.5rem;"></a>',
         unsafe_allow_html=True,
     )
     st.divider()

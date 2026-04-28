@@ -463,6 +463,192 @@ def fetch_eee_comercio_ccaa():
     return df
 
 
+# ─── SUBSECTORS CNAE 47 (DIRCE + EAS) i COICOP (EPF) ───────────
+
+CNAE_47_SUBSECTORS = {
+    "471": "Establecimientos no especializados",
+    "472": "Alimentación, bebidas y tabaco",
+    "473": "Combustibles",
+    "474": "Equipos TIC",
+    "475": "Articles d'us domestic",
+    "476": "Cultura i recreatius",
+    "477": "Vestit, calcat i altres",
+    "478": "Mercadillos",
+    "479": "Venda no establerta (online)",
+}
+
+# Noms exactes a l'API INE - per fer matching contra les series d'EAS (T=76818)
+CNAE_47_API_NAMES = {
+    "471": "Comercio al por menor en establecimientos no especializados",
+    "472": "Comercio al por menor de productos alimenticios, bebidas y tabaco en establecimientos especializados",
+    "473": "Comercio al por menor de combustible para la automoción en establecimientos especializados",
+    "474": "Comercio al por menor de equipos para las tecnologías de la información y las comunicaciones en establecimientos especializados",
+    "475": "Comercio al por menor de otros artículos de uso doméstico en establecimientos especializados",
+    "476": "Comercio al por menor de artículos culturales y recreativos en establecimientos especializados",
+    "477": "Comercio al por menor de otros artículos en establecimientos especializados",
+    "478": "Comercio al por menor en puestos de venta y mercadillos",
+    "479": "Comercio al por menor no realizado ni en establecimientos, ni en puestos de venta ni en mercadillos",
+    "47":  "Comercio al por menor, excepto de vehículos de motor y motocicletas",
+}
+
+COICOP_GROUPS = {
+    "01": "Alimentos y bebidas no alcohólicas",
+    "02": "Bebidas alcohólicas, tabaco y estupefacientes",
+    "03": "Vestido y calzado",
+    "04": "Vivienda, agua, electricidad, gas y otros combustibles",
+    "05": "Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar",
+    "06": "Sanidad",
+    "07": "Transporte",
+    "08": "Información y comunicaciones",
+    "09": "Actividades recreativas, deporte y cultura",
+    "10": "Servicios de educación",
+    "11": "Restaurantes y servicios de alojamiento",
+    "12": "Cuidado personal, protección social, y bienes y servicios diversos",
+}
+
+
+def fetch_dirce_subsectors():
+    """
+    Taula 73019: Empreses per condicio juridica, grups CNAE 2009 (3 digits) i estrato.
+    Filtra series 'Nacional. Total. Total. 47X' per obtenir total empreses per
+    cada subsector CNAE 47 (3 digits). Inclou tambe CNAE 47 total.
+    Retorna: codi (471-479, 47), any, empreses.
+    """
+    data = _fetch_table(73019, nult=15)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    results = []
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        # Format: "Nacional. Total. Total. 47X Comercio..."
+        if not nombre.startswith("Nacional. Total. Total."):
+            continue
+        rest = nombre.replace("Nacional. Total. Total.", "").strip()
+        # Extreure codi CNAE (primer token numeric)
+        tokens = rest.split(" ", 1)
+        if not tokens or not tokens[0].rstrip(".").isdigit():
+            continue
+        codi = tokens[0].rstrip(".")
+        # Nomes 47 i 47X (3 digits)
+        if codi != "47" and not (len(codi) == 3 and codi.startswith("47")):
+            continue
+
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is not None and any_ is not None:
+                results.append({"codi": codi, "any": int(any_), "empreses": int(val)})
+
+    return pd.DataFrame(results)
+
+
+def fetch_eas_subsectors():
+    """
+    Taula 76818: EEE Comercio - Magnituds CNAE 47 a 3-4 digits (Total Nacional).
+    Extreu les magnituds principals per cada subsector CNAE 47 (3 digits) i
+    el total CNAE 47 mitjancant matching exacte per nom.
+    Retorna columnes: codi, any, xifra_negoci, valor_afegit, personal_ocupat,
+    inversio (en EUR i persones).
+    Unitats originals INE: milers EUR (xifra/VA/inversio), persones.
+    """
+    data = _fetch_table(76818, nult=10)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    MAGNITUDS = {
+        "Cifra de negocios": "xifra_negoci",
+        "Valor añadido a coste de los factores": "valor_afegit",
+        "Personal ocupado": "personal_ocupat",
+        "Inversión en activos materiales": "inversio",
+        "Número de empresas": "n_empreses_eas",
+    }
+    NAME_TO_CODI = {v: k for k, v in CNAE_47_API_NAMES.items()}
+
+    results = {}
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        if not nombre.startswith("Total Nacional."):
+            continue
+
+        # Identificar magnitud
+        magnitud = None
+        for key, col in MAGNITUDS.items():
+            if f". {key}." in nombre:
+                magnitud = col
+                break
+        if not magnitud:
+            continue
+
+        # Identificar CNAE per matching exacte de nom (entre magnitud i "Dato base")
+        # Format: "Total Nacional. {magnitud}. {NOM_CNAE}. Dato base."
+        try:
+            after_mag = nombre.split(f". {[k for k, v in MAGNITUDS.items() if v == magnitud][0]}.", 1)[1]
+            nom_cnae = after_mag.rsplit(". Dato base", 1)[0].strip()
+        except (IndexError, KeyError):
+            continue
+
+        codi = NAME_TO_CODI.get(nom_cnae)
+        if codi is None:
+            continue
+
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is None or any_ is None:
+                continue
+            key = (codi, int(any_))
+            if key not in results:
+                results[key] = {"codi": codi, "any": int(any_)}
+            results[key][magnitud] = val
+
+    df = pd.DataFrame(list(results.values()))
+    if df.empty:
+        return df
+
+    # Convertir milers EUR -> EUR
+    for col in ["xifra_negoci", "valor_afegit", "inversio"]:
+        if col in df.columns:
+            df[col] = df[col] * 1000
+
+    return df.sort_values(["codi", "any"]).reset_index(drop=True)
+
+
+def fetch_epf_coicop():
+    """
+    Taula 75003: EPF - Despesa per grups COICOP 2 digits. Preus constants.
+    Filtra "Dato base. Gasto total. Gasto medio por hogar. Precios constantes."
+    Retorna: codi_coicop (01-12), any, despesa_per_llar (EUR/llar/any).
+    """
+    data = _fetch_table(75003, nult=10)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    NAME_TO_COICOP = {v: k for k, v in COICOP_GROUPS.items()}
+
+    results = []
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        # Format: "{NOM_GRUP}. Dato base. Gasto total. Gasto medio por hogar. Precios constantes."
+        if "Dato base. Gasto total. Gasto medio por hogar. Precios constantes" not in nombre:
+            continue
+        nom_grup = nombre.split(". Dato base.", 1)[0].strip()
+        if nom_grup == "Índice general":
+            codi = "00"
+        else:
+            codi = NAME_TO_COICOP.get(nom_grup)
+            if codi is None:
+                continue
+
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is not None and any_ is not None:
+                results.append({"codi_coicop": codi, "any": int(any_), "despesa_per_llar": float(val)})
+
+    return pd.DataFrame(results).sort_values(["codi_coicop", "any"]).reset_index(drop=True)
+
+
 if __name__ == "__main__":
     print("Testejant API INE...")
 

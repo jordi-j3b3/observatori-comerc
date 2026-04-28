@@ -218,8 +218,85 @@ if st.session_state.lang == "ca":
     l'agregat UE-27 com a referència. Espanya es destaca visualment per facilitar la comparació.
     """)
 
+    # ── Subsectors i mapeig COICOP ↔ CNAE ──
+    st.subheader("9. Subsectors CNAE 47 i mapeig demanda ↔ oferta")
+    st.markdown("""
+    **Fonts utilitzades a la pàgina Subsectors:**
+    - **DIRCE (Taula 73019):** nombre d'empreses per subsector CNAE 47 a 3 dígits.
+    - **EAS Comerç (Taula 76818):** xifra de negoci, valor afegit, personal ocupat i inversió per subsector. Inclou totes les empreses CNAE 47 (e-commerce pur de CNAE 479 i vendes online d'establiments tradicionals classificades al subsector principal de l'empresa).
+    - **EPF (Taula 75003):** despesa mitjana per llar a preus constants, per categoria COICOP-2 dígits.
+
+    **Exclusió del CNAE 473 (Combustibles per a l'automoció):**
+    Aquest subsector té una dinàmica atípica dins del comerç al detall (preus regulats per components fiscals,
+    volatilitat lligada al mercat energètic global, marges reduïts i estables). S'exclou de l'anàlisi
+    per no distorsionar les comparacions entre subsectors retail genuïns. La suma agregada dels subsectors
+    mostrats no és exactament igual al total CNAE 47 oficial, ni per aquesta exclusió ni per els
+    arrodoniments estadístics que aplica l'INE entre nivells de la jerarquia CNAE (gap habitual del 0,5–1%).
+
+    **Mapeig COICOP (demanda) ↔ CNAE 47 (oferta):**
+
+    Permet llegir conjuntament què compren les famílies (EPF) i a través de quins subsectors
+    de comerç es canalitza aquesta despesa (EAS/DIRCE). El mapeig és **orientatiu**: alguns béns
+    es venen també per canals fora del comerç al detall (majorista, importació directa, etc.).
+
+    | COICOP (demanda) | CNAE 47 (oferta) |
+    |---|---|
+    | 01 Aliments i begudes no alc. | 471 (no especialitzats) + 472 (especialitzada alim.) |
+    | 02 Begudes alc., tabac | 472 (estancs i begudes) |
+    | 03 Vestit i calçat | 477 (4771 vestit + 4772 calçat) |
+    | 05 Mobles i articles llar | 475 (electrodomèstics, parament) |
+    | 06 Sanitat | 477 (4773 farmàcies, dins 477) |
+    | 08 Informació i comunicacions | 474 (equips TIC) |
+    | 09 Oci, cultura i esport | 476 (llibreries, jugueteries, esports) |
+    | 12 Cura personal | 477 (4775 cosmètics, dins 477) |
+
+    **Categories COICOP no incloses al retail:**
+    - 04 Habitatge i energia (subministraments)
+    - 07 Transport (carburant està a 473, exclòs; resta no és retail)
+    - 10 Educació
+    - 11 Restauració i allotjament
+
+    **Coincidència amb altres apartats:**
+    - El **Personal ocupat** del CNAE 47 a la pàgina Subsectors (T=76818) coincideix exactament
+      amb el de la pàgina Productivitat (T=36194), perquè ambdues taules surten de l'EAS Comerç.
+    - La **Xifra de negoci** i el **VA** a la pàgina Subsectors es mostren a **preus corrents**
+      (no deflactats), mentre que la pàgina Productivitat treballa a **preus constants**. Per
+      comparar, cal aplicar el deflactor IPC.
+
+    **Per què el CNAE 479 NO coincideix amb el volum d'e-commerce (CNMC)?**
+
+    Són **dues mètriques diferents que no s'haurien de comparar literalment**. Mesuren coses
+    diferents amb metodologies independents:
+
+    | Concepte | CNMC (pàgina E-commerce) | CNAE 479 (pàgina Subsectors) |
+    |---|---|---|
+    | Font primària | Processadors de pagament espanyols | Enquesta INE a empreses |
+    | Què mesura | Volum de transaccions online | Facturació d'empreses "no establertes" |
+    | Inclou compres a plataformes estrangeres | Sí (Amazon DE, AliExpress, Temu...) | No (només empreses fiscalment a Espanya) |
+    | Inclou vendes online de tradicionals | Sí (Carrefour, El Corte Inglés, Decathlon online) | No (van al subsector principal: 471, 476...) |
+    | Classificació | Per sector del comerciant (CNMC) | Per CNAE oficial (INE) |
+    | Cobertura | Pure-play + tradicionals + estrangers | Només pure-play + venda directa + vending |
+
+    **Comparativa numèrica (M EUR):**
+
+    | Any | CNMC CNAE 47 | EAS CNAE 479 | Ratio |
+    |---|---|---|---|
+    | 2018 | 9.735 | 8.178 | 84% |
+    | 2020 | 17.958 | 11.545 | 64% |
+    | 2022 | 20.356 | 15.182 | 75% |
+    | 2024 | 25.739 | 17.181 | 67% |
+
+    La bretxa creix amb el temps perquè els grans retailers tradicionals han desenvolupat
+    canals online importants (que CNMC capta però CNAE 479 no), i perquè el comerç internacional
+    online (marketplaces estrangers) creix a un ritme superior.
+
+    **Lectura conjunta:** la CNMC capta el volum **total de comerç electrònic des del costat
+    del consumidor**; el CNAE 479 capta el segment d'empreses **purament digitals des del
+    costat oferta empresarial**. Cap és "millor": són lents complementàries del mateix fenomen.
+    """)
+
     # ── Periodicitat ──
-    st.subheader("9. Periodicitat d'actualització")
+    st.subheader("10. Periodicitat d'actualització")
     st.markdown("""
     L'Observatori s'actualitza de forma **trimestral** (gener, abril, juliol i octubre) mitjançant
     un procés automatitzat (GitHub Actions) que:
@@ -431,7 +508,85 @@ else:
     el agregado UE-27 como referencia. España se destaca visualmente para facilitar la comparación.
     """)
 
-    st.subheader("9. Periodicidad de actualización")
+    st.subheader("9. Subsectores CNAE 47 y mapeo demanda ↔ oferta")
+    st.markdown("""
+    **Fuentes utilizadas en la página Subsectores:**
+    - **DIRCE (Tabla 73019):** número de empresas por subsector CNAE 47 a 3 dígitos.
+    - **EAS Comercio (Tabla 76818):** cifra de negocios, valor añadido, personal ocupado e inversión por subsector. Incluye todas las empresas CNAE 47 (e-commerce puro de CNAE 479 y ventas online de establecimientos tradicionales clasificadas en el subsector principal de la empresa).
+    - **EPF (Tabla 75003):** gasto medio por hogar a precios constantes, por categoría COICOP-2 dígitos.
+
+    **Exclusión del CNAE 473 (Combustibles para automoción):**
+    Este subsector tiene una dinámica atípica dentro del comercio minorista (precios regulados por
+    componentes fiscales, volatilidad ligada al mercado energético global, márgenes reducidos y
+    estables). Se excluye del análisis para no distorsionar las comparaciones entre subsectores
+    retail genuinos. La suma agregada de los subsectores mostrados no es exactamente igual al total
+    CNAE 47 oficial, ni por esta exclusión ni por los redondeos estadísticos que aplica el INE entre
+    niveles de la jerarquía CNAE (gap habitual del 0,5–1%).
+
+    **Mapeo COICOP (demanda) ↔ CNAE 47 (oferta):**
+
+    Permite leer conjuntamente qué compran las familias (EPF) y a través de qué subsectores de
+    comercio se canaliza ese gasto (EAS/DIRCE). El mapeo es **orientativo**: algunos bienes se
+    venden también por canales fuera del comercio minorista (mayorista, importación directa, etc.).
+
+    | COICOP (demanda) | CNAE 47 (oferta) |
+    |---|---|
+    | 01 Alimentos y bebidas no alc. | 471 (no especializados) + 472 (especializada alim.) |
+    | 02 Bebidas alc., tabaco | 472 (estancos y bebidas) |
+    | 03 Vestido y calzado | 477 (4771 vestido + 4772 calzado) |
+    | 05 Muebles y artículos hogar | 475 (electrodomésticos, menaje) |
+    | 06 Sanidad | 477 (4773 farmacias, dentro de 477) |
+    | 08 Información y comunicaciones | 474 (equipos TIC) |
+    | 09 Ocio, cultura y deporte | 476 (librerías, jugueterías, deportes) |
+    | 12 Cuidado personal | 477 (4775 cosméticos, dentro de 477) |
+
+    **Categorías COICOP no incluidas en el retail:**
+    - 04 Vivienda y energía (suministros)
+    - 07 Transporte (carburante está en 473, excluido; el resto no es retail)
+    - 10 Educación
+    - 11 Restauración y alojamiento
+
+    **Coincidencia con otros apartados:**
+    - El **Personal ocupado** del CNAE 47 en la página Subsectores (T=76818) coincide exactamente
+      con el de la página Productividad (T=36194), porque ambas tablas provienen de la EAS Comercio.
+    - La **Cifra de negocios** y el **VA** en la página Subsectores se muestran a **precios
+      corrientes** (sin deflactar), mientras que la página Productividad trabaja a **precios
+      constantes**. Para comparar, aplicar el deflactor IPC.
+
+    **¿Por qué el CNAE 479 NO coincide con el volumen de e-commerce (CNMC)?**
+
+    Son **dos métricas diferentes que no deberían compararse literalmente**. Miden cosas
+    distintas con metodologías independientes:
+
+    | Concepto | CNMC (página E-commerce) | CNAE 479 (página Subsectores) |
+    |---|---|---|
+    | Fuente primaria | Procesadores de pago españoles | Encuesta INE a empresas |
+    | Qué mide | Volumen de transacciones online | Facturación de empresas "no establecidas" |
+    | Incluye compras en plataformas extranjeras | Sí (Amazon DE, AliExpress, Temu...) | No (solo empresas fiscalmente en España) |
+    | Incluye ventas online de tradicionales | Sí (Carrefour, El Corte Inglés, Decathlon online) | No (van al subsector principal: 471, 476...) |
+    | Clasificación | Por sector del comerciante (CNMC) | Por CNAE oficial (INE) |
+    | Cobertura | Pure-play + tradicionales + extranjeros | Solo pure-play + venta directa + vending |
+
+    **Comparativa numérica (M EUR):**
+
+    | Año | CNMC CNAE 47 | EAS CNAE 479 | Ratio |
+    |---|---|---|---|
+    | 2018 | 9.735 | 8.178 | 84% |
+    | 2020 | 17.958 | 11.545 | 64% |
+    | 2022 | 20.356 | 15.182 | 75% |
+    | 2024 | 25.739 | 17.181 | 67% |
+
+    La brecha crece con el tiempo porque los grandes retailers tradicionales han desarrollado
+    canales online importantes (que CNMC capta pero CNAE 479 no), y porque el comercio
+    internacional online (marketplaces extranjeros) crece a un ritmo superior.
+
+    **Lectura conjunta:** la CNMC capta el volumen **total de comercio electrónico desde el
+    lado del consumidor**; el CNAE 479 capta el segmento de empresas **puramente digitales
+    desde el lado oferta empresarial**. Ninguna es "mejor": son lentes complementarias del
+    mismo fenómeno.
+    """)
+
+    st.subheader("10. Periodicidad de actualización")
     st.markdown("""
     El Observatorio se actualiza de forma **trimestral** (enero, abril, julio y octubre) mediante
     un proceso automatizado (GitHub Actions) que:

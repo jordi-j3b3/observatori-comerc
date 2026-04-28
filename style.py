@@ -296,12 +296,14 @@ def inject_css():
 
 
 def page_header():
-    """Mostra la capçalera J3B3 + OBSERVATORI a qualsevol pàgina."""
+    """Mostra la capçalera J3B3 + OBSERVATORI a qualsevol pàgina. Logo enllaça a j3b3.com."""
     lang = st.session_state.get("lang", "ca")
     badge = "OBSERVATORI" if lang == "ca" else "OBSERVATORIO"
     st.markdown(f"""
     <div class="j3b3-header">
-        <img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" alt="J3B3 Consulting">
+        <a href="https://www.j3b3.com" target="_blank" rel="noopener" style="display:inline-flex; align-items:center;">
+            <img src="https://www.j3b3.com/wp-content/uploads/2025/04/logo-j3b3-new.svg" alt="J3B3 Consulting">
+        </a>
         <span class="j3b3-badge">{badge}</span>
     </div>
     """, unsafe_allow_html=True)

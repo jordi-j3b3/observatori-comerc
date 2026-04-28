@@ -826,6 +826,56 @@ def process_eee_ccaa():
     return df
 
 
+def process_subsectors():
+    """
+    Processa subsectors CNAE 47:
+      - DIRCE (T=73019): empreses per subsector 471-479
+      - EAS (T=76818): xifra negoci, VA, personal, inversio per subsector
+      - EPF (T=75003): despesa familiar per categoria COICOP
+
+    Genera tres CSVs separats al cache (subsectors_dirce, subsectors_eas, subsectors_epf).
+    Cada font te schemas diferents - es deixa la combinacio a la pagina de visualitzacio.
+    """
+    # ── DIRCE ──
+    print("  Font 1: DIRCE (T=73019)")
+    try:
+        df_dirce = ine.fetch_dirce_subsectors()
+        if not df_dirce.empty:
+            df_dirce["nom"] = df_dirce["codi"].map(ine.CNAE_47_SUBSECTORS).fillna("CNAE 47 total")
+            save_cache(df_dirce, "subsectors_dirce")
+            print(f"  DIRCE: {len(df_dirce)} files, anys {df_dirce['any'].min()}-{df_dirce['any'].max()}")
+        else:
+            print("  DIRCE: sense dades, mantenint cache")
+    except Exception as e:
+        print(f"  Error DIRCE: {e}")
+
+    # ── EAS ──
+    print("  Font 2: EAS / EEE Comercio (T=76818)")
+    try:
+        df_eas = ine.fetch_eas_subsectors()
+        if not df_eas.empty:
+            df_eas["nom"] = df_eas["codi"].map(ine.CNAE_47_SUBSECTORS).fillna("CNAE 47 total")
+            save_cache(df_eas, "subsectors_eas")
+            print(f"  EAS: {len(df_eas)} files, anys {df_eas['any'].min()}-{df_eas['any'].max()}")
+        else:
+            print("  EAS: sense dades, mantenint cache")
+    except Exception as e:
+        print(f"  Error EAS: {e}")
+
+    # ── EPF ──
+    print("  Font 3: EPF (T=75003)")
+    try:
+        df_epf = ine.fetch_epf_coicop()
+        if not df_epf.empty:
+            df_epf["nom"] = df_epf["codi_coicop"].map(ine.COICOP_GROUPS).fillna("Total despesa")
+            save_cache(df_epf, "subsectors_epf")
+            print(f"  EPF: {len(df_epf)} files, anys {df_epf['any'].min()}-{df_epf['any'].max()}")
+        else:
+            print("  EPF: sense dades, mantenint cache")
+    except Exception as e:
+        print(f"  Error EPF: {e}")
+
+
 def save_last_update():
     """Desa la data i hora de l'última actualització."""
     from datetime import datetime
@@ -859,7 +909,10 @@ def process_all():
     print("\n6. EEE Comercio per CCAA:")
     process_eee_ccaa()
 
-    print("\n7. Registrant data actualitzacio:")
+    print("\n7. Subsectors CNAE 47 (DIRCE + EAS + EPF):")
+    process_subsectors()
+
+    print("\n8. Registrant data actualitzacio:")
     save_last_update()
 
     print("\nProcessament complet!")
