@@ -509,65 +509,41 @@ with tab3:
             delta_color_brut = "#27ae60" if delta_marge_brut >= 0 else "#c0392b"
             delta_arrow = "▲" if delta_marge_brut >= 0 else "▼"
 
-            if _ca:
-                hero_label = "Marge brut comercial"
-                hero_sub = f"Any {any_last}"
-                hero_explain = (
-                    f"De cada 100 € venuts, <strong>{mb_last:.1f} €</strong> ".replace(".", ",")
-                    + f"són marge brut (després de pagar la mercaderia comprada per revendre). "
-                    f"Els altres <strong>{100 - mb_last:.1f} €</strong> ".replace(".", ",")
-                    + "són cost de la mercaderia."
-                )
-                hero_compute_lbl = "Càlcul"
-                hero_compute = "(Vendes − Cost de mercaderia venuda) / Vendes"
-                pp_lbl = "pp vs"
-            else:
-                hero_label = "Margen bruto comercial"
-                hero_sub = f"Año {any_last}"
-                hero_explain = (
-                    f"De cada 100 € vendidos, <strong>{mb_last:.1f} €</strong> ".replace(".", ",")
-                    + f"son margen bruto (tras pagar la mercancía comprada para revender). "
-                    f"Los otros <strong>{100 - mb_last:.1f} €</strong> ".replace(".", ",")
-                    + "son coste de la mercancía."
-                )
-                hero_compute_lbl = "Cálculo"
-                hero_compute = "(Ventas − Coste de mercancía vendida) / Ventas"
-                pp_lbl = "pp vs"
-
             mb_value_str = f"{mb_last:.1f}".replace(".", ",")
             delta_str = f"{abs(delta_marge_brut):.1f}".replace(".", ",")
 
-            st.markdown(
-                f"""
-<div style="background: linear-gradient(135deg, #fff5e6 0%, #ffeacc 100%);
-            border: 1px solid #f5cda3; border-left: 5px solid #e67e22;
-            border-radius: 8px; padding: 24px 28px; margin: 8px 0 20px 0;
-            box-shadow: 0 2px 12px rgba(230, 126, 34, 0.10);">
-    <div style="font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600;
-                letter-spacing: 2px; text-transform: uppercase; color: #b35900; margin-bottom: 6px;">
-        {hero_sub}
-    </div>
-    <div style="display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;">
-        <div>
-            <div style="font-family: 'DM Serif Display', serif; font-size: 1.3rem;
-                        color: #1a1a1a; margin-bottom: 4px;">{hero_label}</div>
-            <div style="font-family: 'DM Serif Display', serif; font-size: 3.6rem;
-                        line-height: 1; color: #e67e22; font-weight: 400;">{mb_value_str}%</div>
-        </div>
-        <div style="font-family: 'DM Sans', sans-serif; font-size: 14px;
-                    color: {delta_color_brut}; font-weight: 600; padding-bottom: 8px;">
-            {delta_arrow} {delta_str} {pp_lbl} {any_first}
-        </div>
-    </div>
-    <div style="font-family: 'DM Sans', sans-serif; font-size: 0.95rem; line-height: 1.6;
-                color: #1a1a1a; margin-top: 14px; padding-top: 14px;
-                border-top: 1px solid rgba(230, 126, 34, 0.2);">{hero_explain}</div>
-    <div style="font-family: 'DM Sans', sans-serif; font-size: 12px; font-style: italic;
-                color: #999; margin-top: 10px;">{hero_compute_lbl}: {hero_compute}</div>
-</div>
-                """,
-                unsafe_allow_html=True,
-            )
+            with st.container(border=True):
+                col_num, col_txt = st.columns([1, 2])
+                with col_num:
+                    st.markdown(
+                        f"<div style='font-family:DM Sans,sans-serif;font-size:11px;"
+                        f"font-weight:600;letter-spacing:2px;text-transform:uppercase;"
+                        f"color:#b35900;margin-bottom:4px;'>"
+                        f"{'Any' if _ca else 'Año'} {any_last}</div>"
+                        f"<div style='font-size:3.4rem;line-height:1;color:#e67e22;"
+                        f"font-weight:700;font-family:DM Serif Display,serif;'>{mb_value_str}%</div>"
+                        f"<div style='font-size:14px;color:{delta_color_brut};font-weight:600;"
+                        f"margin-top:8px;'>{delta_arrow} {delta_str} pp vs {any_first}</div>",
+                        unsafe_allow_html=True,
+                    )
+                with col_txt:
+                    st.markdown(
+                        f"### {'Marge brut comercial' if _ca else 'Margen bruto comercial'}"
+                    )
+                    if _ca:
+                        st.markdown(
+                            f"De cada 100 € venuts, **{mb_value_str} €** són marge brut "
+                            f"(després de pagar la mercaderia comprada per revendre). "
+                            f"Els altres **{100 - mb_last:.1f} €** són cost de la mercaderia.".replace(".", ",")
+                        )
+                        st.caption("Càlcul: (Vendes − Cost de mercaderia venuda) / Vendes")
+                    else:
+                        st.markdown(
+                            f"De cada 100 € vendidos, **{mb_value_str} €** son margen bruto "
+                            f"(tras pagar la mercancía comprada para revender). "
+                            f"Los otros **{100 - mb_last:.1f} €** son coste de la mercancía.".replace(".", ",")
+                        )
+                        st.caption("Cálculo: (Ventas − Coste de mercancía vendida) / Ventas")
 
             st.caption(
                 "Indicadors complementaris (anàlisi més detallada):" if _ca
