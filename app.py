@@ -38,6 +38,8 @@ pg = st.navigation([
             title="Europa"),
     st.Page("pages/9_Subsectors.py",
             title="Subsectors" if _ca else "Subsectores"),
+    st.Page("pages/A_Municipis.py",
+            title="Municipis" if _ca else "Municipios"),
     st.Page("pages/8_Metodologia.py",
             title="Metodologia" if _ca else "Metodología"),
 ])

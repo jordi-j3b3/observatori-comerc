@@ -850,6 +850,86 @@ def process_eee_ccaa():
     return df
 
 
+def process_municipal():
+    """
+    Combina dades municipals de 3 fonts INE per construir un index relatiu de
+    capacitat comercial municipal:
+      - DIRCE municipal T=4721 (empreses Total + sector G-I)
+      - Atlas Renda T=30896 (renda neta mitjana per llar)
+      - Padron T=33167 (poblacio per municipi)
+
+    AVIS: l'index NO es VAB CNAE 47 estricte (impossible amb dades publiques).
+    Es una proxy d'activitat comercial+associada per municipi (G-I inclou
+    transport i hostaleria).
+
+    Genera CSV: municipal.csv amb columnes:
+      municipi, any_dirce, total_empreses, empreses_g_i, any_renda,
+      renda_llar, any_pob, poblacio, gi_per_1000hab, despesa_potencial,
+      index_capacitat (0-100, normalitzat)
+    """
+    print("  Font 1: DIRCE municipal (T=4721)")
+    try:
+        df_emp = ine.fetch_empreses_municipal()
+        df_emp = df_emp.rename(columns={"any": "any_dirce"})
+        print(f"  Empreses: {len(df_emp)} municipis")
+    except Exception as e:
+        print(f"  Error: {e}")
+        df_emp = pd.DataFrame()
+
+    # NOTA: Atlas Renda esta fragmentat en ~52 taules INE (1 per provincia).
+    # Saltat al MVP per evitar fer 52 crides API. Pendent per a futura iteracio.
+    df_renda = pd.DataFrame()
+
+    print("  Font 2: Padron (T=33167)")
+    try:
+        df_pob = ine.fetch_poblacio_municipal()
+        print(f"  Poblacio: {len(df_pob)} municipis")
+    except Exception as e:
+        print(f"  Error: {e}")
+        df_pob = pd.DataFrame()
+
+    if df_emp.empty:
+        print("  Sense dades d'empreses, abortant")
+        return pd.DataFrame()
+
+    # Merge per nom de municipi (basic match - alguns no coincidiran per accents/format)
+    df = df_emp.copy()
+    if not df_renda.empty:
+        df = df.merge(df_renda, on="municipi", how="left")
+    if not df_pob.empty:
+        df = df.merge(df_pob, on="municipi", how="left")
+
+    # Indicadors derivats
+    if "empreses_g_i" in df.columns and "poblacio" in df.columns:
+        mask = df["poblacio"].notna() & (df["poblacio"] > 0)
+        df.loc[mask, "gi_per_1000hab"] = df.loc[mask, "empreses_g_i"] / df.loc[mask, "poblacio"] * 1000
+
+    # Index de capacitat comercial: combinacio normalitzada de:
+    #   - empreses G-I absolutes (escala) — log scale
+    #   - densitat (qualitat per habitant) — escala lineal
+    # Pesos: 50% escala + 50% densitat
+    # Filtre: nomes municipis amb poblacio >= 5.000 hab. (eviten falsos positius
+    # per duplicats de noms com "Sada", "Mieres", "Cieza", etc.)
+    if "empreses_g_i" in df.columns and "gi_per_1000hab" in df.columns:
+        mask = (df["empreses_g_i"].notna() & df["gi_per_1000hab"].notna()
+                & (df["empreses_g_i"] > 0) & (df["poblacio"] >= 5000))
+        sub = df.loc[mask].copy()
+        if not sub.empty:
+            import numpy as np
+            log_emp = np.log10(sub["empreses_g_i"])
+            dens = sub["gi_per_1000hab"]
+            # Normalitzar 0-100
+            def norm(x):
+                rng = x.max() - x.min()
+                return (x - x.min()) / rng * 100 if rng > 0 else x * 0
+            score = (norm(log_emp) + norm(dens)) / 2
+            df.loc[mask, "index_capacitat"] = score.values
+
+    save_cache(df, "municipal")
+    print(f"  Municipal: {len(df)} files, {df['index_capacitat'].notna().sum() if 'index_capacitat' in df.columns else 0} amb index complet")
+    return df
+
+
 def process_subsectors():
     """
     Processa subsectors CNAE 47:

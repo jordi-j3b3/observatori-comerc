@@ -302,6 +302,149 @@ def fetch_eee_comercio():
     return df
 
 
+def fetch_empreses_municipal():
+    """
+    Taula 4721: Empresas por municipio y actividad principal.
+    NOMES te granularitat de seccio CNAE (G-I conjunta), no de divisio (47).
+    Extreu per cada municipi: nombre Total d'empreses i empreses sector G-I
+    (Comerc al por mayor i menor + reparacio vehicles + transport + hostaleria).
+    Retorna: municipi, any, total_empreses, empreses_g_i.
+    """
+    data = _fetch_table(4721, nult=1)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    SECTOR_GI = "Comercio al por mayor y al por menor; reparación de vehículos de motor y motocicletas; transporte y almacenamiento; hostelería"
+
+    mun_data = {}
+    for s in data:
+        nom = s.get("Nombre", "")
+        if not nom.endswith(". Empresas. "):
+            continue
+        rest = nom[:-len(". Empresas. ")]
+        parts = rest.rsplit(". ", 1)
+        if len(parts) != 2:
+            continue
+        prefix, sector = parts
+        if not prefix.endswith("Total de empresas"):
+            continue
+        municipi = prefix.replace(". Total. Total de empresas", "").strip()
+        if not municipi or municipi.startswith("Total Nacional"):
+            continue
+
+        if sector == "Total CNAE":
+            col = "total_empreses"
+        elif sector == SECTOR_GI:
+            col = "empreses_g_i"
+        else:
+            continue
+
+        obs = s.get("Data", [])
+        if not obs:
+            continue
+        val = obs[0].get("Valor")
+        any_ = obs[0].get("Anyo")
+        if val is None:
+            continue
+
+        # Si ja existeix l'entrada (homonim), conservem la del municipi mes gran
+        # (resolucio simple per duplicats com Sada Navarra vs Sada A Coruna)
+        if municipi not in mun_data:
+            mun_data[municipi] = {"municipi": municipi, "any": int(any_)}
+        existing = mun_data[municipi].get(col)
+        new_val = int(val)
+        if existing is None or new_val > existing:
+            mun_data[municipi][col] = new_val
+
+    df = pd.DataFrame(list(mun_data.values()))
+    return df
+
+
+def fetch_renda_municipal():
+    """
+    Taula 30896: Atlas Distribucio Renda - Indicadors renda mitjana i mediana
+    per municipi. Extreu nomes la renda neta media per llar (mes informativa
+    per estimar capacitat de consum agregada).
+    Retorna: municipi, any, renda_llar.
+    """
+    data = _fetch_table(30896, nult=1)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    rows = []
+    for s in data:
+        nom = s.get("Nombre", "")
+        # Format: "{municipi}. Dato base. Renta neta media por hogar. "
+        if "Dato base. Renta neta media por hogar" not in nom:
+            continue
+        municipi = nom.split(".")[0].strip()
+        if not municipi:
+            continue
+        obs = s.get("Data", [])
+        if not obs:
+            continue
+        val = obs[0].get("Valor")
+        any_ = obs[0].get("Anyo")
+        if val is None:
+            continue
+        rows.append({
+            "municipi": municipi,
+            "any_renda": int(any_),
+            "renda_llar": float(val),
+        })
+
+    return pd.DataFrame(rows)
+
+
+def fetch_poblacio_municipal():
+    """
+    Taula 33167: Cifras oficiales del Padron per municipi (any nacional).
+    Versio simplificada: extreu poblacio total per municipi de la T=33167.
+    Si no funciona, recurrir a T=29005.
+    Retorna: municipi, any, poblacio.
+    """
+    # Provem T=33167 primer
+    for tid in [33167, 29005, 2855]:
+        try:
+            data = _fetch_table(tid, nult=1)
+            if not isinstance(data, list) or not data:
+                continue
+
+            rows = []
+            for s in data:
+                nom = s.get("Nombre", "")
+                # Buscar series amb "Total habitantes" o "Total. Total."
+                if "Total habitantes" not in nom and "Personas. Total" not in nom:
+                    continue
+                # Filtrar nomes municipis (evitar provincies, ccaa, nacional)
+                if "Total Nacional" in nom or " provincia" in nom.lower():
+                    continue
+
+                municipi = nom.split(".")[0].strip()
+                if not municipi or municipi == "Total":
+                    continue
+
+                obs = s.get("Data", [])
+                if not obs:
+                    continue
+                val = obs[0].get("Valor")
+                any_ = obs[0].get("Anyo")
+                if val is None:
+                    continue
+                rows.append({
+                    "municipi": municipi,
+                    "any_pob": int(any_),
+                    "poblacio": int(val),
+                })
+
+            if rows:
+                return pd.DataFrame(rows).drop_duplicates(subset="municipi")
+        except Exception:
+            continue
+
+    return pd.DataFrame()
+
+
 def fetch_eee_pyl():
     """
     Taula 36199: EEE Sector Comercio - Cuenta de resultados (P&L).
