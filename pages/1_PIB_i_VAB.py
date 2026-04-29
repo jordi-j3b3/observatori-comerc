@@ -138,7 +138,7 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
             )
             if gap > 10:
                 txt += (
-                    f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> punts entre ambdues xifres "
+                    f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> entre ambdues xifres "
                     f"és l'<strong>efecte acumulat de la inflació</strong>: una part important del creixement aparent "
                     f"és simplement pujada de preus. "
                 )
@@ -156,7 +156,7 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
             )
             if gap > 10:
                 txt += (
-                    f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> puntos entre ambas cifras "
+                    f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> entre ambas cifras "
                     f"es el <strong>efecto acumulado de la inflación</strong>: una parte importante del crecimiento aparente "
                     f"es simplemente subida de precios. "
                 )

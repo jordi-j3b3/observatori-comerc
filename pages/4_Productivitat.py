@@ -379,7 +379,7 @@ with tab2:
                 )
                 if var_qs < -2:
                     txt_dist += (
-                        f"La caiguda de <strong>{fpct(abs(var_qs), 1, sign=False)} punts</strong> indica que "
+                        f"La caiguda de <strong>{fpct(abs(var_qs), 1, sign=False)}</strong> indica que "
                         f"l'excedent brut (beneficis + amortitzacions) ha crescut més que la remuneració: "
                         f"el sector <strong>reté més valor per als propietaris</strong> en detriment dels salaris relatius. "
                         f"Això és coherent amb la concentració empresarial: les grans cadenes generen més excedent "
@@ -387,7 +387,7 @@ with tab2:
                     )
                 elif var_qs > 2:
                     txt_dist += (
-                        f"L'augment de <strong>{fpct(abs(var_qs), 1, sign=False)} punts</strong> indica que "
+                        f"L'augment de <strong>{fpct(abs(var_qs), 1, sign=False)}</strong> indica que "
                         f"els salaris han absorbit una proporció creixent del valor generat: "
                         f"els <strong>treballadors capten més valor</strong>, cosa que pot reflectir millores salarials "
                         f"o reducció de marges empresarials."
@@ -408,7 +408,7 @@ with tab2:
                 )
                 if var_qs < -2:
                     txt_dist += (
-                        f"La caída de <strong>{fpct(abs(var_qs), 1, sign=False)} puntos</strong> indica que "
+                        f"La caída de <strong>{fpct(abs(var_qs), 1, sign=False)}</strong> indica que "
                         f"el excedente bruto (beneficios + amortizaciones) ha crecido más que la remuneración: "
                         f"el sector <strong>retiene más valor para los propietarios</strong> en detrimento de los salarios relativos. "
                         f"Esto es coherente con la concentración empresarial: las grandes cadenas generan más excedente "
@@ -416,7 +416,7 @@ with tab2:
                     )
                 elif var_qs > 2:
                     txt_dist += (
-                        f"El aumento de <strong>{fpct(abs(var_qs), 1, sign=False)} puntos</strong> indica que "
+                        f"El aumento de <strong>{fpct(abs(var_qs), 1, sign=False)}</strong> indica que "
                         f"los salarios han absorbido una proporción creciente del valor generado: "
                         f"los <strong>trabajadores captan más valor</strong>, lo que puede reflejar mejoras salariales "
                         f"o reducción de márgenes empresariales."
@@ -523,7 +523,7 @@ with tab3:
                         f"<div style='font-size:3.4rem;line-height:1;color:#e67e22;"
                         f"font-weight:700;font-family:DM Serif Display,serif;'>{mb_value_str}%</div>"
                         f"<div style='font-size:14px;color:{delta_color_brut};font-weight:600;"
-                        f"margin-top:8px;'>{delta_arrow} {delta_str} pp vs {any_first}</div>",
+                        f"margin-top:8px;'>{delta_arrow} {delta_str}% vs {any_first}</div>",
                         unsafe_allow_html=True,
                     )
                 with col_txt:
@@ -730,7 +730,7 @@ with tab3:
                     f"important del sector. Aquest marge brut és <strong>estructuralment estable</strong> "
                     f"per al retail espanyol "
                     + (f"(va passar del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variació de "
-                       f"<strong>{fpct(mb_delta, 1)}</strong> punts en {any_last - any_first} anys), "
+                       f"<strong>{fpct(mb_delta, 1)}</strong> en {any_last - any_first} anys), "
                        f"reflectint el fet que els marges entre cost i preu de venda de la mercaderia "
                        f"són una variable difícil de moure: depèn del poder de negociació amb proveïdors, "
                        f"del posicionament de marca i de la categoria de producte.")
@@ -790,7 +790,7 @@ with tab3:
                     f"más importante del sector. Este margen bruto es <strong>estructuralmente "
                     f"estable</strong> en el retail español "
                     + (f"(pasó del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variación de "
-                       f"<strong>{fpct(mb_delta, 1)}</strong> puntos en {any_last - any_first} años), "
+                       f"<strong>{fpct(mb_delta, 1)}</strong> en {any_last - any_first} años), "
                        f"reflejando que los márgenes entre coste y precio de venta de la mercancía "
                        f"son una variable difícil de mover: depende del poder de negociación con "
                        f"proveedores, del posicionamiento de marca y de la categoría de producto.")

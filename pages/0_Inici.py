@@ -238,13 +238,13 @@ if not df_europa.empty and "pes_cnae47" in df_europa.columns:
             _pos = "per sobre" if _diff > 0 else "per sota"
             _conclusions.append(
                 f"Espanya destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> del seu PIB al comerç al detall, "
-                f"<strong>{fpct(abs(_diff), 2, sign=False)} pp {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 2, sign=False)})."
             )
         else:
             _pos = "por encima" if _diff > 0 else "por debajo"
             _conclusions.append(
                 f"Espana destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> de su PIB al comercio minorista, "
-                f"<strong>{fpct(abs(_diff), 2, sign=False)} pp {_pos}</strong> de la media UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la media UE-27 ({fpct(_eu_pct, 2, sign=False)})."
             )
 
 # 6. Territori

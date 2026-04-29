@@ -194,7 +194,7 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
                     f"<strong>{fpct(eu_pes - es_pes, 2)} per sota</strong> de la mitjana europea ({fpct(eu_pes, 2, sign=False)}). "
                 )
             txt += (
-                f"La tendència mostra una variació de <strong>{fpct(es_trend, 2)} pp</strong> des de "
+                f"La tendència mostra una variació de <strong>{fpct(es_trend, 2)}</strong> des de "
                 f"{int(es_hist.iloc[0]['any'])}. "
             )
             if es_trend < -0.2:
@@ -219,7 +219,7 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
                     f"<strong>{fpct(eu_pes - es_pes, 2)} por debajo</strong> de la media europea ({fpct(eu_pes, 2, sign=False)}). "
                 )
             txt += (
-                f"La tendencia muestra una variación de <strong>{fpct(es_trend, 2)} pp</strong> desde "
+                f"La tendencia muestra una variación de <strong>{fpct(es_trend, 2)}</strong> desde "
                 f"{int(es_hist.iloc[0]['any'])}. "
             )
             if es_trend < -0.2:

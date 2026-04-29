@@ -176,7 +176,7 @@ if "ecommerce_cnae47_eur" in df.columns and "pes_cnae47_ecommerce" in df.columns
             f"El comerç electrònic del CNAE 47 ha multiplicat el seu volum per <strong>x{fnum(multiplicador)}</strong> "
             f"en {n_years} anys, amb un CAGR del <strong>{fpct(cagr_ec)}</strong>. "
             f"El pes del detall sobre el total d'e-commerce "
-            f"ha passat del {fpct(pes_first, 1, sign=False)} al {fpct(pes_last, 1, sign=False)} ({fpct(pes_var)} pp). "
+            f"ha passat del {fpct(pes_first, 1, sign=False)} al {fpct(pes_last, 1, sign=False)} ({fpct(pes_var)})."
         )
         if pes_var < 0:
             txt += (
@@ -196,7 +196,7 @@ if "ecommerce_cnae47_eur" in df.columns and "pes_cnae47_ecommerce" in df.columns
             f"El comercio electrónico del CNAE 47 ha multiplicado su volumen por <strong>x{fnum(multiplicador)}</strong> "
             f"en {n_years} años, con un CAGR del <strong>{fpct(cagr_ec)}</strong>. "
             f"El peso del minorista sobre el total de e-commerce "
-            f"ha pasado del {fpct(pes_first, 1, sign=False)} al {fpct(pes_last, 1, sign=False)} ({fpct(pes_var)} pp). "
+            f"ha pasado del {fpct(pes_first, 1, sign=False)} al {fpct(pes_last, 1, sign=False)} ({fpct(pes_var)})."
         )
         if pes_var < 0:
             txt += (
