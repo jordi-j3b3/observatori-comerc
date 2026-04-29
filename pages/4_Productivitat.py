@@ -511,7 +511,7 @@ with tab3:
 
             if _ca:
                 hero_label = "Marge brut comercial"
-                hero_sub = f"({any_last}) — la xifra més rellevant per a un comerciant"
+                hero_sub = f"Any {any_last}"
                 hero_explain = (
                     f"De cada 100 € venuts, <strong>{mb_last:.1f} €</strong> ".replace(".", ",")
                     + f"són marge brut (després de pagar la mercaderia comprada per revendre). "
@@ -523,7 +523,7 @@ with tab3:
                 pp_lbl = "pp vs"
             else:
                 hero_label = "Margen bruto comercial"
-                hero_sub = f"({any_last}) — la cifra más relevante para un comerciante"
+                hero_sub = f"Año {any_last}"
                 hero_explain = (
                     f"De cada 100 € vendidos, <strong>{mb_last:.1f} €</strong> ".replace(".", ",")
                     + f"son margen bruto (tras pagar la mercancía comprada para revender). "
