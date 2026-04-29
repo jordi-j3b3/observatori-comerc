@@ -302,6 +302,64 @@ def fetch_eee_comercio():
     return df
 
 
+def fetch_eee_pyl():
+    """
+    Taula 36199: EEE Sector Comercio - Cuenta de resultados (P&L).
+    Magnituds addicionals al T=36194 que permeten calcular el marge brut comptable:
+      - cogs: Consumo de bienes y servicios para reventa (= cost de mercaderia venuda)
+      - serveis_exteriors: Gastos en servicios exteriores (lloguers, energia, serveis externs)
+      - sueldos_salaris: Sueldos y salarios (sense cotitzacions)
+    Filtra nomes la serie agregada del CNAE 47 (Total Nacional).
+    Unitats originals: milers EUR.
+    """
+    data = _fetch_table(36199, nult=10)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    MAGNITUDS = {
+        "Consumo de bienes y servicios para reventa": "cogs",
+        "Gastos en servicios exteriores": "serveis_exteriors",
+        "Sueldos y salarios": "sueldos_salaris",
+        "Cifra de negocios": "xifra_negoci_pyl",
+    }
+
+    results = {}
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        if "Total Nacional" not in nombre:
+            continue
+        if "Comercio al por menor, excepto" not in nombre:
+            continue
+
+        col = None
+        for key, c in MAGNITUDS.items():
+            if f". {key}." in nombre:
+                col = c
+                break
+        if not col:
+            continue
+
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is None or any_ is None:
+                continue
+            if any_ not in results:
+                results[any_] = {"any": int(any_)}
+            results[any_][col] = val
+
+    df = pd.DataFrame(list(results.values()))
+    if df.empty:
+        return df
+
+    # Convertir milers EUR -> EUR
+    for col in ["cogs", "serveis_exteriors", "sueldos_salaris", "xifra_negoci_pyl"]:
+        if col in df.columns:
+            df[col] = df[col] * 1000
+
+    return df.sort_values("any").reset_index(drop=True)
+
+
 def fetch_poblacio():
     """
     Població per CCAA i Nacional.

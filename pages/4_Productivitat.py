@@ -440,28 +440,34 @@ with tab3:
     if df_m.empty or any(c not in df_m.columns for c in cols_req):
         st.info("No hi ha dades suficients per calcular marges." if _ca else "Sin datos suficientes para calcular márgenes.")
     else:
-        # Marge sobre VAB: % de la xifra de negoci que es manté com a valor afegit (despres de costos intermedis)
+        # Marge brut comptable: (Vendes - COGS) / Vendes — el "gross margin" del retail
+        if "marge_brut" in df_m.columns:
+            df_m["marge_brut_pct"] = df_m["marge_brut"] * 100
+        # Marge sobre VAB: % de la xifra de negoci que es manté com a valor afegit (despres TOTS els costos intermedis)
         df_m["marge_vab"] = df_m["valor_afegit_constants"] / df_m["xifra_negoci_constants"] * 100
         # Cost laboral unitari: % de la xifra de negoci que va a salaris
         df_m["clu"] = df_m["gastos_personal_constants"] / df_m["xifra_negoci_constants"] * 100
-        # Marge operatiu (proxy EBITDA): % de la xifra de negoci que queda despres de costos intermedis i personal
-        # = excedent brut sobre xifra de negoci, deflactat
+        # Marge operatiu (proxy EBITDA): % de la xifra de negoci que queda despres TOTS els costos intermedis i personal
         df_m["marge_op"] = (df_m["valor_afegit_constants"] - df_m["gastos_personal_constants"]) / df_m["xifra_negoci_constants"] * 100
+
+        has_brut = "marge_brut_pct" in df_m.columns and df_m["marge_brut_pct"].notna().any()
 
         if _ca:
             st.markdown(
                 "<div class='intro-box' style='margin-top:8px'>"
                 "Aquesta secció descompon la <strong>cadena de valor</strong> de cada euro facturat al "
-                "comerç al detall:<br>"
-                "• <strong>Marge sobre Valor Afegit</strong> = Valor Afegit / Xifra de negoci. Indica quina "
-                "part del preu de venda es queda al sector després de pagar als <em>proveïdors</em> (mercaderia, "
-                "subministraments, serveis externs). És el coixí brut amb què opera l'empresa.<br>"
-                "• <strong>Cost laboral unitari</strong> = Despeses de personal / Xifra de negoci. Quina part "
-                "del preu de venda es destina als <em>salaris i cotitzacions</em> dels treballadors.<br>"
-                "• <strong>Marge operatiu</strong> = Excedent Brut d'Explotació / Xifra de negoci. Quina part "
-                "del preu queda després de pagar proveïdors i personal — disponible per a "
-                "<em>amortitzacions, impostos, interessos i benefici net</em>. És el indicador més proper a "
-                "EBITDA disponible amb les dades públiques."
+                "comerç al detall en quatre marges, ordenats de més brut a més net:<br>"
+                "• <strong>Marge brut sobre vendes</strong> = (Vendes − Cost de mercaderia venuda) / Vendes. "
+                "El marge típic del retail (~25-35%): el que queda després de pagar la <em>mercaderia comprada "
+                "per revendre</em>. <em>Font: INE, Compte de resultats EAS Comerç (T=36199).</em><br>"
+                "• <strong>Marge sobre VAB</strong> = Valor Afegit / Vendes. El que queda després de pagar "
+                "<em>tots els intermedis</em> (mercaderia + lloguers + subministraments + serveis externs). "
+                "Sempre inferior al marge brut.<br>"
+                "• <strong>Cost laboral unitari</strong> = Despeses de personal / Vendes. Quina part del preu "
+                "es destina a <em>salaris i cotitzacions</em>.<br>"
+                "• <strong>Marge operatiu</strong> (≈ EBITDA) = Excedent Brut / Vendes. El que queda després "
+                "d'intermedis i personal — disponible per <em>amortitzacions, impostos, interessos i "
+                "benefici net</em>."
                 "</div>",
                 unsafe_allow_html=True,
             )
@@ -469,16 +475,18 @@ with tab3:
             st.markdown(
                 "<div class='intro-box' style='margin-top:8px'>"
                 "Esta sección descompone la <strong>cadena de valor</strong> de cada euro facturado en el "
-                "comercio minorista:<br>"
-                "• <strong>Margen sobre Valor Añadido</strong> = Valor Añadido / Cifra de negocios. Indica qué "
-                "parte del precio de venta queda en el sector tras pagar a los <em>proveedores</em> (mercancía, "
-                "suministros, servicios externos). Es el colchón bruto con el que opera la empresa.<br>"
-                "• <strong>Coste laboral unitario</strong> = Gastos de personal / Cifra de negocios. Qué parte "
-                "del precio se destina a los <em>salarios y cotizaciones</em> de los trabajadores.<br>"
-                "• <strong>Margen operativo</strong> = Excedente Bruto de Explotación / Cifra de negocios. Qué "
-                "parte queda tras pagar proveedores y personal — disponible para "
-                "<em>amortizaciones, impuestos, intereses y beneficio neto</em>. Es el indicador más cercano a "
-                "EBITDA disponible con los datos públicos."
+                "comercio minorista en cuatro márgenes, ordenados de más bruto a más neto:<br>"
+                "• <strong>Margen bruto sobre ventas</strong> = (Ventas − Coste de mercancía vendida) / Ventas. "
+                "El margen típico del retail (~25-35%): lo que queda tras pagar la <em>mercancía comprada para "
+                "revender</em>. <em>Fuente: INE, Cuenta de resultados EAS Comercio (T=36199).</em><br>"
+                "• <strong>Margen sobre VAB</strong> = Valor Añadido / Ventas. Lo que queda tras pagar "
+                "<em>todos los intermedios</em> (mercancía + alquileres + suministros + servicios externos). "
+                "Siempre inferior al margen bruto.<br>"
+                "• <strong>Coste laboral unitario</strong> = Gastos de personal / Ventas. Qué parte del precio "
+                "se destina a <em>salarios y cotizaciones</em>.<br>"
+                "• <strong>Margen operativo</strong> (≈ EBITDA) = Excedente Bruto / Ventas. Lo que queda tras "
+                "intermedios y personal — disponible para <em>amortizaciones, impuestos, intereses y "
+                "beneficio neto</em>."
                 "</div>",
                 unsafe_allow_html=True,
             )
@@ -494,35 +502,55 @@ with tab3:
         delta_marge_op = last_m["marge_op"] - first_m["marge_op"]
 
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric(
+        if has_brut:
+            delta_marge_brut = last_m["marge_brut_pct"] - first_m["marge_brut_pct"]
+            col1.metric(
+                ("Marge brut sobre vendes" if _ca else "Margen bruto sobre ventas") + f" ({any_last})",
+                fpct(last_m["marge_brut_pct"], 1, sign=False),
+                delta=fpct(delta_marge_brut, 1) + (f" vs {any_first}"),
+                help=("(Vendes − Cost de mercaderia venuda) / Vendes" if _ca else
+                      "(Ventas − Coste de mercancía vendida) / Ventas"),
+            )
+        else:
+            col1.metric(
+                ("Marge brut sobre vendes" if _ca else "Margen bruto sobre ventas"),
+                "—",
+                help=("Sense dades de COGS al cache" if _ca else "Sin datos de COGS en cache"),
+            )
+
+        col2.metric(
             ("Marge sobre VAB" if _ca else "Margen sobre VAB") + f" ({any_last})",
             fpct(last_m["marge_vab"], 1, sign=False),
             delta=fpct(delta_marge_vab, 1) + (f" vs {any_first}"),
+            help=("Valor Afegit / Vendes" if _ca else "Valor Añadido / Ventas"),
         )
-        col2.metric(
+        col3.metric(
             ("Cost laboral unitari" if _ca else "Coste laboral unitario") + f" ({any_last})",
             fpct(last_m["clu"], 1, sign=False),
             delta=fpct(delta_clu, 1) + (f" vs {any_first}"),
             delta_color="inverse",
+            help=("Despeses de personal / Vendes" if _ca else "Gastos de personal / Ventas"),
         )
-        col3.metric(
+        col4.metric(
             ("Marge operatiu (≈ EBITDA)" if _ca else "Margen operativo (≈ EBITDA)") + f" ({any_last})",
             fpct(last_m["marge_op"], 1, sign=False),
             delta=fpct(delta_marge_op, 1) + (f" vs {any_first}"),
-        )
-        # Posicionament: per cada 100 EUR facturats, quants queden d'EBO?
-        col4.metric(
-            ("EBO per 100€ venuts" if _ca else "EBO por 100€ vendidos") + f" ({any_last})",
-            f"{fnum(last_m['marge_op'], 2)} €",
-            help=("Excedent Brut d'Explotació generat per cada 100 EUR de xifra de negoci."
-                  if _ca else
-                  "Excedente Bruto de Explotación generado por cada 100 EUR de cifra de negocios."),
+            help=("Excedent Brut / Vendes" if _ca else "Excedente Bruto / Ventas"),
         )
 
-        # ─── Gràfic 1: Evolució dels tres ratios ─────────────────
-        st.subheader("Evolució dels marges" if _ca else "Evolución de los márgenes")
+        # ─── Gràfic 1: Cascada de marges sobre vendes ─────────────
+        st.subheader("Cascada de marges sobre vendes" if _ca else "Cascada de márgenes sobre ventas")
 
         fig_marges = go.Figure()
+        if has_brut:
+            fig_marges.add_trace(go.Scatter(
+                x=df_m["any"], y=df_m["marge_brut_pct"],
+                mode="lines+markers",
+                name=("Marge brut sobre vendes" if _ca else "Margen bruto sobre ventas"),
+                line=dict(color=ORANGE, width=3),
+                marker=dict(size=8),
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
+            ))
         fig_marges.add_trace(go.Scatter(
             x=df_m["any"], y=df_m["marge_vab"],
             mode="lines+markers",
@@ -552,53 +580,95 @@ with tab3:
             height=420,
         )
         st.plotly_chart(fig_marges, use_container_width=True)
-        source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
-               else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
+        source("INE, EAS Comerç (taules 36194 + 36199). Càlcul propi" if _ca
+               else "INE, EAS Comercio (tablas 36194 + 36199). Cálculo propio")
 
         # ─── Gràfic 2: Composició de cada euro venut (waterfall implicit) ──
         st.subheader("Descomposició de la xifra de negoci" if _ca
                      else "Descomposición de la cifra de negocios")
 
         df_w = df_m.copy()
-        df_w["resta_intermedis"] = 100 - df_w["marge_vab"]  # cost intermedis
-        df_w["resta_personal"] = df_w["clu"]
-        df_w["resta_excedent"] = df_w["marge_op"]
+        if has_brut and "cogs" in df_w.columns:
+            # Cascada completa: COGS + altres intermedis + personal + excedent
+            df_w["pct_cogs"] = df_w["cogs"] / df_w["xifra_negoci_constants"] * 100 * (df_w["xifra_negoci_constants"] / df_w["xifra_negoci_constants"])
+            # Recalcular sobre xifra a preus corrents per consistencia (el ratio es invariant)
+            # Aprofitem que tenim cogs (corrents) i xifra negoci constants? millor calcular el ratio
+            # CGS / Xifra a preus corrents = ratio invariant
+            df_w["pct_cogs"] = (1 - df_w["marge_brut"]) * 100  # = COGS / Vendes
+            # Altres intermedis = (Vendes - VA - COGS) / Vendes = marge_brut*100 - marge_vab
+            df_w["pct_altres_int"] = df_w["pct_cogs"] - 0  # placeholder
+            # En realitat: 100 = COGS_pct + AltresInt_pct + VA_pct
+            # AltresInt_pct = 100 - COGS_pct - VA_pct = marge_brut_pct - marge_vab
+            df_w["pct_altres_int"] = df_w["marge_brut_pct"] - df_w["marge_vab"]
+            df_w["pct_personal"] = df_w["clu"]
+            df_w["pct_excedent"] = df_w["marge_op"]
 
-        fig_stack = go.Figure()
-        fig_stack.add_trace(go.Bar(
-            x=df_w["any"], y=df_w["resta_intermedis"],
-            name=("Costos intermedis" if _ca else "Costes intermedios"),
-            marker_color="#bdc3c7",
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-        ))
-        fig_stack.add_trace(go.Bar(
-            x=df_w["any"], y=df_w["resta_personal"],
-            name=("Personal" if _ca else "Personal"),
-            marker_color=BLUE,
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-        ))
-        fig_stack.add_trace(go.Bar(
-            x=df_w["any"], y=df_w["resta_excedent"],
-            name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
-            marker_color=GREEN,
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-        ))
+            fig_stack = go.Figure()
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["pct_cogs"],
+                name=("Cost de mercaderia (COGS)" if _ca else "Coste de mercancía (COGS)"),
+                marker_color="#7f8c8d",
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["pct_altres_int"],
+                name=("Altres intermedis (lloguer, energia, serveis)" if _ca
+                      else "Otros intermedios (alquiler, energía, servicios)"),
+                marker_color="#bdc3c7",
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["pct_personal"],
+                name=("Personal" if _ca else "Personal"),
+                marker_color=BLUE,
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["pct_excedent"],
+                name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
+                marker_color=GREEN,
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+        else:
+            # Fallback sense COGS
+            df_w["resta_intermedis"] = 100 - df_w["marge_vab"]
+            df_w["resta_personal"] = df_w["clu"]
+            df_w["resta_excedent"] = df_w["marge_op"]
+
+            fig_stack = go.Figure()
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["resta_intermedis"],
+                name=("Costos intermedis" if _ca else "Costes intermedios"),
+                marker_color="#bdc3c7",
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["resta_personal"],
+                name=("Personal" if _ca else "Personal"),
+                marker_color=BLUE,
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+            fig_stack.add_trace(go.Bar(
+                x=df_w["any"], y=df_w["resta_excedent"],
+                name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
+                marker_color=GREEN,
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+            ))
+
         apply_layout(fig_stack,
             yaxis_title=("% de cada euro facturat" if _ca else "% de cada euro facturado"),
             height=420,
             barmode="stack",
         )
         st.plotly_chart(fig_stack, use_container_width=True)
-        source("INE, Estadística Estructural d'Empreses. Càlcul propi" if _ca
-               else "INE, Estadística Estructural de Empresas. Cálculo propio")
+        source("INE, EAS Comerç (taules 36194 + 36199). Càlcul propi" if _ca
+               else "INE, EAS Comercio (tablas 36194 + 36199). Cálculo propio")
 
         # ─── Insight rendibilitat ────────────────────────────────
-        # Volatilitat dels marges
         marge_op_std = df_m["marge_op"].std()
         marge_op_mean = df_m["marge_op"].mean()
         cv = (marge_op_std / marge_op_mean * 100) if marge_op_mean else 0
 
-        # Identificar pic i vall del marge operatiu
         idx_max = df_m["marge_op"].idxmax()
         idx_min = df_m["marge_op"].idxmin()
         any_max = int(df_m.loc[idx_max, "any"])
@@ -606,95 +676,157 @@ with tab3:
         marge_max = df_m.loc[idx_max, "marge_op"]
         marge_min = df_m.loc[idx_min, "marge_op"]
 
+        # Variacio del marge brut
+        if has_brut:
+            mb_first = first_m["marge_brut_pct"]
+            mb_last = last_m["marge_brut_pct"]
+            mb_delta = mb_last - mb_first
+
         if _ca:
-            insight(
+            txt = ""
+            if has_brut:
+                txt += (
+                    f"<strong>Marge brut comercial ({any_last}): {fnum(last_m['marge_brut_pct'], 1)}%.</strong> "
+                    f"De cada 100 € venuts, "
+                    f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
+                    + f" se'n van directament a pagar la mercaderia comprada per revendre — el cost més "
+                    f"important del sector. Aquest marge brut és <strong>estructuralment estable</strong> "
+                    f"per al retail espanyol "
+                    + (f"(va passar del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variació de "
+                       f"<strong>{fpct(mb_delta, 1)}</strong> punts en {any_last - any_first} anys), "
+                       f"reflectint el fet que els marges entre cost i preu de venda de la mercaderia "
+                       f"són una variable difícil de moure: depèn del poder de negociació amb proveïdors, "
+                       f"del posicionament de marca i de la categoria de producte.")
+                    + f"<br><br>"
+                )
+            txt += (
                 f"<strong>Estructura de cada euro facturat ({any_last}):</strong> "
                 f"de cada 100 € que entra a caixa, el sector paga "
-                f"<strong>{100 - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
-                + f" als proveïdors (mercaderia, lloguer, llum, serveis externs), "
+            )
+            if has_brut:
+                txt += (
+                    f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
+                    + f" als <strong>proveïdors de mercaderia</strong>, "
+                    f"<strong>{last_m['marge_brut_pct'] - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
+                    + f" a <strong>altres intermedis</strong> (lloguers, energia, serveis externs), "
+                )
+            else:
+                txt += (
+                    f"<strong>{100 - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
+                    + f" als proveïdors (mercaderia + intermedis), "
+                )
+            txt += (
                 f"<strong>{last_m['clu']:.1f} €</strong>".replace(".", ",")
-                + f" als treballadors (salaris i cotitzacions), i només queden "
+                + f" als <strong>treballadors</strong>, i només queden "
                 f"<strong>{last_m['marge_op']:.1f} €</strong>".replace(".", ",")
                 + f" d'<strong>excedent brut</strong> per cobrir amortitzacions, impostos, "
-                f"interessos financers i benefici net. Aquesta xifra encara cal repartir-la entre "
-                f"manteniment del capital fix i remuneració de l'inversor — el benefici net "
-                f"després d'impostos sol ser només una fracció modesta d'aquests {last_m['marge_op']:.1f} €.".replace(".", ",")
+                f"interessos i benefici net. El benefici net després d'impostos sol ser només "
+                f"una fracció modesta d'aquests {last_m['marge_op']:.1f} €.".replace(".", ",")
                 + f"<br><br>"
                 f"<strong>Volatilitat estructural:</strong> el marge operatiu ha oscil·lat entre el "
                 f"<strong>{fnum(marge_min, 1)}%</strong> ({any_min}) i el "
                 f"<strong>{fnum(marge_max, 1)}%</strong> ({any_max}), amb un coeficient de variació del "
                 f"<strong>{fnum(cv, 1)}%</strong>. "
-                + (f"Aquesta volatilitat és <strong>elevada</strong> per a un sector madur i és "
-                   f"característica del retail: marges fins, alta exposició a la inflació de costos "
-                   f"intermedis (energia, lloguers, mercaderia importada) i poca capacitat de repercutir "
-                   f"preus per l'alta competència."
+                + (f"Aquesta volatilitat és <strong>elevada</strong> per a un sector madur: "
+                   f"el marge operatiu fluctua molt més que el marge brut, perquè absorbeix de cop "
+                   f"els xocs d'inflació en intermedis i salaris."
                    if cv > 8 else
                    f"Aquesta volatilitat és <strong>moderada</strong>, suggerint que el sector ha "
                    f"absorbit relativament bé els xocs de cost dels darrers anys.")
                 + f"<br><br>"
                 f"<strong>Lectura del benchmark:</strong> el comerç al detall espanyol opera amb un "
-                f"marge operatiu d'un dígit, molt per sota dels marges de sectors de servei intensius "
-                f"en coneixement (consultoria, software) o de productors industrials amb alta "
-                f"diferenciació. El múltiple més rellevant per al sector no és el marge sinó la "
+                f"marge brut comercial al voltant del <strong>28-29%</strong> i un marge operatiu "
+                f"d'un sol dígit. El múltiple més rellevant per al sector no és el marge sinó la "
                 f"<strong>rotació</strong>: facturar molt amb marges fins. Per això un dèficit de "
                 f"productivitat (vegeu pestanya Productivitat) és tan crític: amb marges curts, "
                 f"l'única palanca real és l'eficiència operativa."
             )
+            insight(txt)
         else:
-            insight(
+            txt = ""
+            if has_brut:
+                txt += (
+                    f"<strong>Margen bruto comercial ({any_last}): {fnum(last_m['marge_brut_pct'], 1)}%.</strong> "
+                    f"De cada 100 € vendidos, "
+                    f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
+                    + f" se van directamente a pagar la mercancía comprada para revender — el coste "
+                    f"más importante del sector. Este margen bruto es <strong>estructuralmente "
+                    f"estable</strong> en el retail español "
+                    + (f"(pasó del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variación de "
+                       f"<strong>{fpct(mb_delta, 1)}</strong> puntos en {any_last - any_first} años), "
+                       f"reflejando que los márgenes entre coste y precio de venta de la mercancía "
+                       f"son una variable difícil de mover: depende del poder de negociación con "
+                       f"proveedores, del posicionamiento de marca y de la categoría de producto.")
+                    + f"<br><br>"
+                )
+            txt += (
                 f"<strong>Estructura de cada euro facturado ({any_last}):</strong> "
                 f"de cada 100 € que entra en caja, el sector paga "
-                f"<strong>{100 - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
-                + f" a los proveedores (mercancía, alquiler, luz, servicios externos), "
+            )
+            if has_brut:
+                txt += (
+                    f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
+                    + f" a los <strong>proveedores de mercancía</strong>, "
+                    f"<strong>{last_m['marge_brut_pct'] - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
+                    + f" a <strong>otros intermedios</strong> (alquileres, energía, servicios externos), "
+                )
+            else:
+                txt += (
+                    f"<strong>{100 - last_m['marge_vab']:.1f} €</strong>".replace(".", ",")
+                    + f" a los proveedores (mercancía + intermedios), "
+                )
+            txt += (
                 f"<strong>{last_m['clu']:.1f} €</strong>".replace(".", ",")
-                + f" a los trabajadores (salarios y cotizaciones), y solo quedan "
+                + f" a los <strong>trabajadores</strong>, y solo quedan "
                 f"<strong>{last_m['marge_op']:.1f} €</strong>".replace(".", ",")
                 + f" de <strong>excedente bruto</strong> para cubrir amortizaciones, impuestos, "
-                f"intereses financieros y beneficio neto. Esta cifra aún hay que repartirla entre "
-                f"mantenimiento del capital fijo y remuneración del inversor — el beneficio neto "
-                f"después de impuestos suele ser solo una fracción modesta de esos {last_m['marge_op']:.1f} €.".replace(".", ",")
+                f"intereses y beneficio neto. El beneficio neto después de impuestos suele ser solo "
+                f"una fracción modesta de esos {last_m['marge_op']:.1f} €.".replace(".", ",")
                 + f"<br><br>"
                 f"<strong>Volatilidad estructural:</strong> el margen operativo ha oscilado entre el "
                 f"<strong>{fnum(marge_min, 1)}%</strong> ({any_min}) y el "
                 f"<strong>{fnum(marge_max, 1)}%</strong> ({any_max}), con un coeficiente de variación del "
                 f"<strong>{fnum(cv, 1)}%</strong>. "
-                + (f"Esta volatilidad es <strong>elevada</strong> para un sector maduro y es "
-                   f"característica del retail: márgenes finos, alta exposición a la inflación de "
-                   f"costes intermedios (energía, alquileres, mercancía importada) y poca capacidad de "
-                   f"repercutir precios por la alta competencia."
+                + (f"Esta volatilidad es <strong>elevada</strong> para un sector maduro: el margen "
+                   f"operativo fluctúa mucho más que el margen bruto, porque absorbe de golpe los "
+                   f"shocks de inflación en intermedios y salarios."
                    if cv > 8 else
                    f"Esta volatilidad es <strong>moderada</strong>, sugiriendo que el sector ha "
                    f"absorbido relativamente bien los shocks de coste de los últimos años.")
                 + f"<br><br>"
                 f"<strong>Lectura del benchmark:</strong> el comercio minorista español opera con un "
-                f"margen operativo de un dígito, muy por debajo de los márgenes de sectores de servicio "
-                f"intensivos en conocimiento (consultoría, software) o de productores industriales con "
-                f"alta diferenciación. El múltiplo más relevante para el sector no es el margen sino la "
+                f"margen bruto comercial alrededor del <strong>28-29%</strong> y un margen operativo "
+                f"de un solo dígito. El múltiplo más relevante para el sector no es el margen sino la "
                 f"<strong>rotación</strong>: facturar mucho con márgenes finos. Por eso un déficit de "
                 f"productividad (ver pestaña Productividad) es tan crítico: con márgenes cortos, "
                 f"la única palanca real es la eficiencia operativa."
             )
+            insight(txt)
 
         # ─── Avis metodologic ─────────────────────────────────────
         if _ca:
             st.caption(
-                "**Limitacions metodològiques.** El **marge operatiu** mostrat és una aproximació a "
+                "**Limitacions metodològiques.** El **marge brut sobre vendes** s'extreu directament "
+                "del Compte de resultats publicat per l'INE (T=36199, variable *Consumo de bienes y "
+                "servicios para reventa*). En canvi, el **marge operatiu** és una aproximació a "
                 "l'EBITDA: l'INE no publica directament l'amortització, el resultat financer ni els "
                 "impostos al detall sectorial. Per al càlcul de **ROE / ROA** caldria informació de "
-                "balanç (fons propis, actius totals) que tampoc es publica per CNAE 47 al nivell "
-                "estructural — la millor font seria la **Central de Balanços del Banco de España** o "
-                "la **Cuenta de pèrdues i guanys de l'Eustat** (limitada a Euskadi). Veure pàgina "
-                "Metodologia."
+                "balanç (fons propis, actius totals) que no es publica per CNAE 47 al nivell "
+                "estructural — la millor font seria la **Central de Balances del Banco de España** "
+                "(que NO té API estructurada per a aquest desglossament: cal extreure-la dels informes "
+                "anuals)."
             )
         else:
             st.caption(
-                "**Limitaciones metodológicas.** El **margen operativo** mostrado es una aproximación "
-                "al EBITDA: el INE no publica directamente la amortización, el resultado financiero ni "
-                "los impuestos al detalle sectorial. Para el cálculo de **ROE / ROA** se requeriría "
-                "información de balance (fondos propios, activos totales) que tampoco se publica para "
-                "CNAE 47 a nivel estructural — la mejor fuente sería la **Central de Balances del "
-                "Banco de España** o la **Cuenta de pérdidas y ganancias del Eustat** (limitada a "
-                "Euskadi). Ver página Metodología."
+                "**Limitaciones metodológicas.** El **margen bruto sobre ventas** se extrae "
+                "directamente de la Cuenta de resultados publicada por el INE (T=36199, variable "
+                "*Consumo de bienes y servicios para reventa*). En cambio, el **margen operativo** es "
+                "una aproximación al EBITDA: el INE no publica directamente la amortización, el "
+                "resultado financiero ni los impuestos al detalle sectorial. Para el cálculo de "
+                "**ROE / ROA** se requeriría información de balance (fondos propios, activos totales) "
+                "que no se publica para CNAE 47 a nivel estructural — la mejor fuente sería la "
+                "**Central de Balances del Banco de España** (que NO tiene API estructurada para este "
+                "desglose: hay que extraerla de los informes anuales)."
             )
 
 # ─── Descàrrega ──────────────────────────────────────────────

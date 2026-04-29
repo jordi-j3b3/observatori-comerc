@@ -336,9 +336,31 @@ def fetch_productivitat_from_api():
         if "xifra_negoci_constants" in df.columns and "hores_treballades" in df.columns:
             df["productivitat_xn_hora"] = df["xifra_negoci_constants"] / df["hores_treballades"]
 
+        # ── Afegir dades de Resultats d'explotacio (T=36199) ──
+        try:
+            df_pyl = ine.fetch_eee_pyl()
+            if not df_pyl.empty:
+                # Merge per any (mantenim columnes existents si hi ha conflicte)
+                cols_pyl = [c for c in ["cogs", "serveis_exteriors", "sueldos_salaris"]
+                            if c in df_pyl.columns]
+                df = df.merge(df_pyl[["any"] + cols_pyl], on="any", how="left")
+                print(f"  Resultats d'explotacio (T=36199): {len(df_pyl)} anys integrats")
+        except Exception as e:
+            print(f"  Error obtenint T=36199: {e}")
+
         # Deflactar gastos de personal
         if "gastos_personal" in df.columns and "ipc_mitjana" in df.columns:
             df["gastos_personal_constants"] = df["gastos_personal"] / deflactor
+
+        # Deflactar COGS i serveis exteriors per fer ratios consistents en preus constants
+        if "cogs" in df.columns and "ipc_mitjana" in df.columns:
+            df["cogs_constants"] = df["cogs"] / deflactor
+        if "serveis_exteriors" in df.columns and "ipc_mitjana" in df.columns:
+            df["serveis_exteriors_constants"] = df["serveis_exteriors"] / deflactor
+
+        # Marge brut comptable: (Vendes - COGS) / Vendes (a preus corrents = ratio invariant)
+        if "cogs" in df.columns and "xifra_negoci" in df.columns:
+            df["marge_brut"] = (df["xifra_negoci"] - df["cogs"]) / df["xifra_negoci"]
 
         # Distribucio del VAB: quota salarial i excedent brut
         if "gastos_personal" in df.columns and "valor_afegit" in df.columns:
@@ -355,7 +377,9 @@ def fetch_productivitat_from_api():
                        "productivitat_va_hora", "productivitat_xn_hora",
                        "gastos_personal", "gastos_personal_constants",
                        "quota_salarial", "excedent_brut",
-                       "cost_laboral_per_ocupat", "cost_laboral_hora"]
+                       "cost_laboral_per_ocupat", "cost_laboral_hora",
+                       "cogs", "cogs_constants", "serveis_exteriors",
+                       "serveis_exteriors_constants", "marge_brut"]
         cols_disponibles = [c for c in cols_finals if c in df.columns]
         df = df[cols_disponibles]
 
