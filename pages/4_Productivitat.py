@@ -519,7 +519,7 @@ with tab3:
             )
 
         col2.metric(
-            ("Marge sobre VAB" if _ca else "Margen sobre VAB") + f" ({any_last})",
+            ("Valor Afegit sobre vendes" if _ca else "Valor Añadido sobre ventas") + f" ({any_last})",
             fpct(last_m["marge_vab"], 1, sign=False),
             delta=fpct(delta_marge_vab, 1) + (f" vs {any_first}"),
             help=("Valor Afegit / Vendes" if _ca else "Valor Añadido / Ventas"),
@@ -554,7 +554,7 @@ with tab3:
         fig_marges.add_trace(go.Scatter(
             x=df_m["any"], y=df_m["marge_vab"],
             mode="lines+markers",
-            name=("Marge sobre VAB" if _ca else "Margen sobre VAB"),
+            name=("Valor Afegit sobre vendes" if _ca else "Valor Añadido sobre ventas"),
             line=dict(color=PURPLE, width=2.8),
             marker=dict(size=7),
             hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
