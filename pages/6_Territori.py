@@ -7,6 +7,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
+                   load_geojson_spain_ccaa, canaries_inset_layers,
                    fnum, fpct, apply_layout,
                    PURPLE, PURPLE_LIGHT, RED, PALETTE)
 
@@ -47,9 +48,7 @@ def load_data():
 
 @st.cache_data
 def load_geojson():
-    p = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
-    with open(p, "r") as f:
-        return json.load(f)
+    return load_geojson_spain_ccaa(with_canaries_inset=True)
 
 df_eee = load_data()
 
@@ -218,9 +217,21 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             hovertemplate="<b>%{text}</b><br>Pes CNAE 47: %{z:.2f}%<extra></extra>",
         ))
         fig_map.update_layout(
-            map=dict(style="white-bg", center=dict(lat=39.5, lon=-3.5), zoom=4.8),
+            map=dict(
+                style="white-bg",
+                center=dict(lat=38.7, lon=-4.0),
+                zoom=4.55,
+                layers=canaries_inset_layers(),
+            ),
             height=700, margin=dict(l=0, r=0, t=10, b=10),
             dragmode=False,
+            annotations=[dict(
+                text="<b>CANÀRIES</b>" if _ca else "<b>CANARIAS</b>",
+                xref="paper", yref="paper",
+                x=0.18, y=0.18,
+                showarrow=False,
+                font=dict(size=10, color="#0055a4", family="DM Sans, sans-serif"),
+            )],
         )
         st.plotly_chart(fig_map, use_container_width=True,
                         config={"scrollZoom": False, "doubleClick": False, "displayModeBar": False})

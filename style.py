@@ -386,6 +386,55 @@ def source(text):
     st.markdown(f'<div class="source-label">{lbl}: {text}{extra}</div>', unsafe_allow_html=True)
 
 
+# ─── MAPES: GEOJSON AMB INSET CANARIES ────────────────────────
+
+# Coordenades del rectangle del inset (calculades amb les Canaries traslladades
+# al sud-oest del mapa peninsular per evitar problemes d'escala estil meteorologic)
+CANARIES_INSET_BOUNDS = {
+    "lon_min": -13.0, "lon_max": -7.0,
+    "lat_min": 33.7,  "lat_max": 36.3,
+}
+
+def load_geojson_spain_ccaa(with_canaries_inset=True):
+    """Carrega el GeoJSON de CCAA. Si with_canaries_inset=True, retorna la
+    versio amb les Canaries traslladades a un requadre al SO del mapa."""
+    import json
+    base = os.path.dirname(__file__)
+    fname = "spain_ccaa_inset.geojson" if with_canaries_inset else "spain_ccaa.geojson"
+    with open(os.path.join(base, "data", "geo", fname), "r") as f:
+        return json.load(f)
+
+
+def canaries_inset_layers():
+    """Retorna les capes mapbox per dibuixar el requadre i l'etiqueta CANARIES
+    al voltant de l'inset traslladat. Per usar com a `map_layers=...` al
+    `update_layout` d'un fig Plotly amb Choroplethmap."""
+    b = CANARIES_INSET_BOUNDS
+    # Marge addicional al voltant del inset
+    pad = 0.3
+    lon_min = b["lon_min"] - pad
+    lon_max = b["lon_max"] + pad
+    lat_min = b["lat_min"] - pad
+    lat_max = b["lat_max"] + pad
+    rectangle = [
+        [lon_min, lat_min], [lon_max, lat_min],
+        [lon_max, lat_max], [lon_min, lat_max],
+        [lon_min, lat_min],
+    ]
+    return [
+        {
+            "sourcetype": "geojson",
+            "type": "line",
+            "source": {
+                "type": "Feature",
+                "geometry": {"type": "LineString", "coordinates": rectangle},
+            },
+            "color": "rgba(0,85,164,0.55)",
+            "line": {"width": 1.2},
+        }
+    ]
+
+
 def cagr(first_val, last_val, years):
     """Calcula la taxa de creixement anual compost (CAGR)."""
     if first_val <= 0 or years <= 0:

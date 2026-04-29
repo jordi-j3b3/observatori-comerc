@@ -193,13 +193,11 @@ if "empreses_per_1000hab" in df_esp.columns:
 
 # ─── GeoJSON (compartit per mapa DIRCE i mapa EEE) ──────────
 
-import json
+from style import load_geojson_spain_ccaa, canaries_inset_layers
 
 @st.cache_data
 def load_geojson():
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "geo", "spain_ccaa.geojson")
-    with open(path, "r") as f:
-        return json.load(f)
+    return load_geojson_spain_ccaa(with_canaries_inset=True)
 
 geojson = load_geojson()
 
@@ -272,12 +270,20 @@ if not df_ccaa.empty:
         fig_map.update_layout(
             map=dict(
                 style="white-bg",
-                center=dict(lat=39.5, lon=-3.5),
-                zoom=4.8,
+                center=dict(lat=38.7, lon=-4.0),
+                zoom=4.55,
+                layers=canaries_inset_layers(),
             ),
             height=800,
             margin=dict(l=0, r=0, t=10, b=10),
             dragmode=False,
+            annotations=[dict(
+                text="<b>CANÀRIES</b>" if _ca else "<b>CANARIAS</b>",
+                xref="paper", yref="paper",
+                x=0.18, y=0.18,
+                showarrow=False,
+                font=dict(size=10, color="#0055a4", family="DM Sans, sans-serif"),
+            )],
         )
         st.plotly_chart(fig_map, use_container_width=True,
                         config={"scrollZoom": False, "doubleClick": False, "displayModeBar": False})
