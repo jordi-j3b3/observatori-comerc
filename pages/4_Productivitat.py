@@ -538,8 +538,8 @@ with tab3:
             help=("Excedent Brut / Vendes" if _ca else "Excedente Bruto / Ventas"),
         )
 
-        # ─── Gràfic 1: Cascada de marges sobre vendes ─────────────
-        st.subheader("Cascada de marges sobre vendes" if _ca else "Cascada de márgenes sobre ventas")
+        # ─── Gràfic 1: Evolució dels marges sobre vendes ─────────
+        st.subheader("Evolució dels marges sobre vendes" if _ca else "Evolución de los márgenes sobre ventas")
 
         fig_marges = go.Figure()
         if has_brut:
@@ -589,7 +589,7 @@ with tab3:
 
         df_w = df_m.copy()
         if has_brut and "cogs" in df_w.columns:
-            # Cascada completa: COGS + altres intermedis + personal + excedent
+            # Descomposicio completa: COGS + altres intermedis + personal + excedent
             df_w["pct_cogs"] = df_w["cogs"] / df_w["xifra_negoci_constants"] * 100 * (df_w["xifra_negoci_constants"] / df_w["xifra_negoci_constants"])
             # Recalcular sobre xifra a preus corrents per consistencia (el ratio es invariant)
             # Aprofitem que tenim cogs (corrents) i xifra negoci constants? millor calcular el ratio
