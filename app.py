@@ -2,6 +2,7 @@
 Observatori del Comerç Minorista a Espanya (CNAE 47)
 Punt d'entrada: navegació amb títols traduïts.
 """
+import os
 import streamlit as st
 
 st.set_page_config(
@@ -17,9 +18,13 @@ t = setup_lang(show_selector=True)
 
 _ca = st.session_state.lang == "ca"
 
+# Pagines NOMES locals (no es publiquen al Streamlit Cloud).
+# Per veure-les en local: `OBSERVATORI_LOCAL=1 streamlit run app.py`
+LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
+
 # ─── NAVEGACIÓ AMB TÍTOLS TRADUÏTS ──────────────────────────────
 
-pg = st.navigation([
+_pages = [
     st.Page("pages/0_Inici.py",
             title="Inici" if _ca else "Inicio", default=True),
     st.Page("pages/1_PIB_i_VAB.py",
@@ -38,11 +43,16 @@ pg = st.navigation([
             title="Europa"),
     st.Page("pages/9_Subsectors.py",
             title="Subsectors" if _ca else "Subsectores"),
-    st.Page("pages/A_Municipis.py",
-            title="Municipis" if _ca else "Municipios"),
-    st.Page("pages/8_Metodologia.py",
-            title="Metodologia" if _ca else "Metodología"),
-])
+]
+
+if LOCAL_ONLY:
+    _pages.append(st.Page("pages/A_Municipis.py",
+                          title="Municipis (local)" if _ca else "Municipios (local)"))
+
+_pages.append(st.Page("pages/8_Metodologia.py",
+                      title="Metodologia" if _ca else "Metodología"))
+
+pg = st.navigation(_pages)
 
 # ─── SIDEBAR BRANDING ───────────────────────────────────────────
 
