@@ -391,7 +391,7 @@ def source(text):
 # Coordenades del rectangle del inset (calculades amb les Canaries traslladades
 # al sud-oest del mapa peninsular per evitar problemes d'escala estil meteorologic)
 CANARIES_INSET_BOUNDS = {
-    "lon_min": -13.0, "lon_max": -7.0,
+    "lon_min": -11.6, "lon_max": -5.7,
     "lat_min": 33.7,  "lat_max": 36.3,
 }
 

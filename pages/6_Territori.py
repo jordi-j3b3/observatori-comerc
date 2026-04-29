@@ -228,7 +228,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             annotations=[dict(
                 text="<b>CANÀRIES</b>" if _ca else "<b>CANARIAS</b>",
                 xref="paper", yref="paper",
-                x=0.18, y=0.18,
+                x=0.28, y=0.18,
                 showarrow=False,
                 font=dict(size=10, color="#0055a4", family="DM Sans, sans-serif"),
             )],
