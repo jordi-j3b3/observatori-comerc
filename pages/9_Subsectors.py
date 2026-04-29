@@ -151,7 +151,7 @@ DEMAND_CNAE_LABELS = {
     },
 }
 
-# Mapeig COICOP -> CNAE 47 (categories de despesa familiar canalitzades pel comerc al detall)
+# Mapeig COICOP -> CNAE 47 (categories de despesa familiar que es compren al comerc al detall)
 COICOP_TO_CNAE = {
     "01": ["471", "472"],  # Aliments → no especialitzats + alimentacio especialitzada
     "02": ["472"],         # Begudes alc., tabac → estanc + begudes
@@ -731,7 +731,7 @@ with tab3:
         first_year = int(df_epf["any"].min())
         retail_codis = list(COICOP_TO_CNAE.keys())
 
-        # Filtrar nomes categories de despesa que canalitzen pel CNAE 47
+        # Filtrar nomes categories de despesa que es compren al CNAE 47
         df_last = df_epf[df_epf["any"] == last_year].copy()
         df_groups = df_last[df_last["codi_coicop"].isin(retail_codis)].copy()
         # Etiquetes alineades amb els subsectors CNAE de les altres pestanyes
@@ -748,25 +748,25 @@ with tab3:
 
         if _ca:
             st.caption(
-                "Es mostren només les categories de despesa familiar que es canalitzen a través del "
-                "**comerç al detall (CNAE 47)**. Es deixen fora les categories que no passen pel "
-                "comerç minorista (habitatge, transport, restauració, educació). Les etiquetes "
+                "Es mostren només les categories de despesa de les llars que es compren al "
+                "**comerç al detall (CNAE 47)**. Es deixen fora les categories que no es compren "
+                "al comerç minorista (habitatge, transport, restauració, educació). Les etiquetes "
                 "utilitzen el mateix nom de subsector que les pestanyes Estructura empresarial i "
                 "Activitat per facilitar la lectura comparada. Veure el mapeig detallat a la pàgina "
                 "Metodologia."
             )
         else:
             st.caption(
-                "Se muestran solo las categorías de gasto familiar que se canalizan a través del "
-                "**comercio al detalle (CNAE 47)**. Se dejan fuera las categorías que no pasan por el "
-                "comercio minorista (vivienda, transporte, restauración, educación). Las etiquetas "
-                "utilizan el mismo nombre de subsector que las pestañas Estructura empresarial y "
-                "Actividad para facilitar la lectura comparada. Ver el mapeo detallado en la página "
-                "Metodología."
+                "Se muestran solo las categorías de gasto de los hogares que se compran en el "
+                "**comercio al detalle (CNAE 47)**. Se dejan fuera las categorías que no se compran "
+                "en el comercio minorista (vivienda, transporte, restauración, educación). Las "
+                "etiquetas utilizan el mismo nombre de subsector que las pestañas Estructura "
+                "empresarial y Actividad para facilitar la lectura comparada. Ver el mapeo detallado "
+                "en la página Metodología."
             )
 
         st.subheader(
-            f"{'Despesa anual de la llar canalitzada pel comerç al detall' if _ca else 'Gasto anual del hogar canalizado por el comercio al detalle'} ({last_year})"
+            f"{'Despesa anual de la llar al comerç al detall' if _ca else 'Gasto anual del hogar en el comercio al detalle'} ({last_year})"
         )
 
         df_groups = df_groups.sort_values("despesa_per_llar", ascending=True)
@@ -802,7 +802,7 @@ with tab3:
         source("INE, Enquesta de Pressupostos Familiars, taula 75003. Càlcul propi" if _ca
                else "INE, Encuesta de Presupuestos Familiares, tabla 75003. Cálculo propio")
 
-        # KPIs: despesa canalitzada vs total llar, evolucio
+        # KPIs: despesa al comerc al detall vs total llar, evolucio
         df_total = df_last[df_last["codi_coicop"] == "00"]
         despesa_retail = df_groups["despesa_per_llar"].sum()
         despesa_total = df_total.iloc[0]["despesa_per_llar"] if not df_total.empty else None
@@ -817,7 +817,7 @@ with tab3:
 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric(
-            f"{'Despesa via comerç al detall' if _ca else 'Gasto vía comercio al detalle'} ({last_year})",
+            f"{'Despesa al comerç al detall' if _ca else 'Gasto en el comercio al detalle'} ({last_year})",
             fnum(despesa_retail) + " €",
         )
         col2.metric(
@@ -825,7 +825,7 @@ with tab3:
             (fnum(despesa_total) + " €") if despesa_total else "—",
         )
         col3.metric(
-            f"{'% canalitzat pel comerç al detall' if _ca else '% canalizado por el comercio al detalle'}",
+            f"{'% al comerç al detall' if _ca else '% en el comercio al detalle'}",
             fpct(quota_retail, 1, sign=False),
             delta=fpct(delta_quota, 1) + (f" vs {first_year}"),
             delta_color="normal",
@@ -911,7 +911,7 @@ with tab3:
         if _ca:
             insight(
                 f"Les llars espanyoles dediquen <strong>{fnum(despesa_retail)} €/any</strong> a categories "
-                f"que es canalitzen pel comerç al detall, un <strong>{fpct(quota_retail, 1, sign=False)}</strong> "
+                f"que es compren al comerç al detall, un <strong>{fpct(quota_retail, 1, sign=False)}</strong> "
                 f"de la seva despesa total ({fnum(despesa_total) if despesa_total else '—'} €). "
                 f"Aquest pes ha {('augmentat' if delta_quota >= 0 else 'disminuït')} "
                 f"<strong>{fpct(abs(delta_quota), 1, sign=False)}</strong> punts respecte al {first_year}, "
@@ -950,7 +950,7 @@ with tab3:
         else:
             insight(
                 f"Los hogares españoles dedican <strong>{fnum(despesa_retail)} €/año</strong> a categorías "
-                f"que se canalizan por el comercio al detalle, un <strong>{fpct(quota_retail, 1, sign=False)}</strong> "
+                f"que se compran en el comercio al detalle, un <strong>{fpct(quota_retail, 1, sign=False)}</strong> "
                 f"de su gasto total ({fnum(despesa_total) if despesa_total else '—'} €). "
                 f"Este peso ha {('aumentado' if delta_quota >= 0 else 'disminuido')} "
                 f"<strong>{fpct(abs(delta_quota), 1, sign=False)}</strong> puntos respecto a {first_year}, "
@@ -990,7 +990,7 @@ with tab3:
 
 # ─── Descàrrega ──────────────────────────────────────────────
 
-with st.expander("Descarregar dades" if _ca else "Descargar datos"):
+with st.expander("Descàrrega de dades" if _ca else "Descarga de datos"):
     if not df_dirce.empty:
         st.markdown(
             "**Estructura empresarial** (empreses per subsector — Directori Central d'Empreses)"

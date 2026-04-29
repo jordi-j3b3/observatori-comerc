@@ -236,7 +236,7 @@ if st.session_state.lang == "ca":
     **Mapeig COICOP (demanda) ↔ CNAE 47 (oferta):**
 
     Permet llegir conjuntament què compren les famílies (EPF) i a través de quins subsectors
-    de comerç es canalitza aquesta despesa (EAS/DIRCE). El mapeig és **orientatiu**: alguns béns
+    de comerç es compra aquesta despesa (EAS/DIRCE). El mapeig és **orientatiu**: alguns béns
     es venen també per canals fora del comerç al detall (majorista, importació directa, etc.).
 
     | COICOP (demanda) | CNAE 47 (oferta) |
@@ -526,7 +526,7 @@ else:
     **Mapeo COICOP (demanda) ↔ CNAE 47 (oferta):**
 
     Permite leer conjuntamente qué compran las familias (EPF) y a través de qué subsectores de
-    comercio se canaliza ese gasto (EAS/DIRCE). El mapeo es **orientativo**: algunos bienes se
+    comercio se compra ese gasto (EAS/DIRCE). El mapeo es **orientativo**: algunos bienes se
     venden también por canales fuera del comercio minorista (mayorista, importación directa, etc.).
 
     | COICOP (demanda) | CNAE 47 (oferta) |

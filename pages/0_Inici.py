@@ -75,9 +75,9 @@ with col3:
         any_ = int(last["any"])
         any_prev = int(prev["any"])
         delta = fpct(((val / prev["personal_ocupat"]) - 1) * 100)
-        st.metric(t("kpi_ocupació"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
+        st.metric(t("kpi_ocupacio"), fnum(val), delta, help=f"{any_} (var. {any_prev}–{any_})")
     else:
-        st.metric(t("kpi_ocupació"), "—")
+        st.metric(t("kpi_ocupacio"), "—")
 
 with col4:
     if not df_prod.empty and "productivitat_va_hora" in df_prod.columns:
@@ -269,19 +269,35 @@ if not df_territori.empty and "pes_cnae47_pib" in df_territori.columns:
             )
 
 if _conclusions:
-    st.subheader("Principals conclusions" if _ca else "Principales conclusiones")
+    _eyebrow = "Resum executiu" if _ca else "Resumen ejecutivo"
+    _title = "Principals conclusions" if _ca else "Principales conclusiones"
+    _upd_lbl = "Última actualització" if _ca else "Última actualización"
+
     _last_update_path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "last_update.txt")
+    _upd_html = ""
     if os.path.exists(_last_update_path):
         with open(_last_update_path) as f:
             _upd = f.read().strip()
-        st.caption(f"{'Ultima actualitzacio' if _ca else 'Ultima actualizacion'}: {_upd}")
-    for c in _conclusions:
-        st.markdown(f"- {c}", unsafe_allow_html=True)
+        _upd_html = f'<div class="conclusions-update">{_upd_lbl}: {_upd}</div>'
+
+    _items_html = "".join(f"<li>{c}</li>" for c in _conclusions)
+
+    st.markdown(
+        f"""
+        <div class="conclusions-block">
+            <div class="conclusions-eyebrow">{_eyebrow}</div>
+            <h3>{_title}</h3>
+            {_upd_html}
+            <ul>{_items_html}</ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ─── DESCARREGA EXCEL ─────────────────────────────────────────
 
 st.divider()
-st.subheader("Descarrega de dades" if _ca else "Descarga de datos")
+st.subheader("Descàrrega de dades" if _ca else "Descarga de datos")
 st.markdown(
     ("Descarrega un fitxer Excel amb totes les dades i grafics de l'observatori."
      if _ca else

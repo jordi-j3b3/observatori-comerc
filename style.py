@@ -237,6 +237,55 @@ def inject_css():
             color: #555;
         }
 
+        /* Conclusions block (Inici) */
+        .conclusions-block {
+            background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%);
+            border: 1px solid #d8e2f0;
+            border-left: 4px solid #0055a4;
+            border-radius: 6px;
+            padding: 28px 32px;
+            margin: 24px 0 24px 0;
+            box-shadow: 0 2px 8px rgba(0, 85, 164, 0.06);
+        }
+        .conclusions-block .conclusions-eyebrow {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #0055a4;
+            margin-bottom: 8px;
+        }
+        .conclusions-block h3 {
+            font-family: 'DM Serif Display', serif !important;
+            font-weight: 400 !important;
+            font-size: 1.6rem !important;
+            color: #0a0a0a !important;
+            margin: 0 0 12px 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .conclusions-block .conclusions-update {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+        .conclusions-block ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .conclusions-block li {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        .conclusions-block li strong {
+            color: #0055a4;
+        }
+
         /* Font de dades */
         .source-label {
             font-family: 'DM Sans', sans-serif;
