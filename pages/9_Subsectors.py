@@ -919,7 +919,7 @@ with tab3:
                 f"despeses no comercialitzables (lloguer, energia, oci fora de la llar). "
                 f"<br><br>"
                 f"L'<strong>alimentació</strong> ({fnum(cat_top['despesa_per_llar'])} €/any) concentra "
-                f"el gruix de la despesa retail per llar i és estructuralment estable per la seva naturalesa "
+                f"el gruix de la despesa al comerç al detall per llar i és estructuralment estable per la seva naturalesa "
                 f"de bé bàsic. La categoria amb més dinamisme és <strong>{cat_winner['label']}</strong> "
                 f"({fpct(cat_winner['var_pct'])} entre {first_year} i {last_year}), reflectint canvis "
                 f"de patrons de consum. <strong>{cat_loser['label']}</strong> mostra la pitjor evolució "

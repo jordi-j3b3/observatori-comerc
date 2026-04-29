@@ -257,13 +257,13 @@ if not df_territori.empty and "pes_cnae47_pib" in df_territori.columns:
         _t_bot = _terr_yr_data.nsmallest(1, "pes_cnae47_pib").iloc[0]
         if _ca:
             _conclusions.append(
-                f"El pes territorial del retail varia entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"El pes territorial del comerç al detall varia entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
                 f"de {_t_top['territori']} i el <strong>{fpct(_t_bot['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
                 f"de {_t_bot['territori']} ({int(_terr_yr)})."
             )
         else:
             _conclusions.append(
-                f"El peso territorial del retail varia entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
+                f"El peso territorial del comercio minorista varía entre el <strong>{fpct(_t_top['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
                 f"de {_t_top['territori']} y el <strong>{fpct(_t_bot['pes_cnae47_pib']*100, 1, sign=False)}</strong> "
                 f"de {_t_bot['territori']} ({int(_terr_yr)})."
             )
@@ -508,16 +508,32 @@ def _build_excel():
     return buf
 
 
-_excel_buf = _build_excel()
-if _excel_buf:
-    st.download_button(
-        label="Descarregar Excel" if _ca else "Descargar Excel",
-        data=_excel_buf,
-        file_name="observatori_comerc_detall.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-else:
-    st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
+col_dl1, col_dl2 = st.columns(2)
+with col_dl1:
+    _excel_buf = _build_excel()
+    if _excel_buf:
+        st.download_button(
+            label=("Descarregar Excel (totes les dades)" if _ca
+                   else "Descargar Excel (todos los datos)"),
+            data=_excel_buf,
+            file_name="observatori_comerc_detall.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    else:
+        st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
+
+with col_dl2:
+    _info_path = os.path.join(os.path.dirname(__file__), "..", "data", "static", "infografia_q1_2026.html")
+    if os.path.exists(_info_path):
+        with open(_info_path, "rb") as f:
+            _info_bytes = f.read()
+        st.download_button(
+            label=("Descarregar infografia Q1 2026 (HTML)" if _ca
+                   else "Descargar infografía Q1 2026 (HTML)"),
+            data=_info_bytes,
+            file_name="comerc_minorista_espana_Q1_2026.html",
+            mime="text/html",
+        )
 
 # ─── META ─────────────────────────────────────────────────────
 

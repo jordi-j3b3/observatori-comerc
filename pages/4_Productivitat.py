@@ -458,11 +458,12 @@ with tab3:
                 "Aquesta secció descompon la <strong>cadena de valor</strong> de cada euro facturat al "
                 "comerç al detall en quatre marges, ordenats de més brut a més net:<br>"
                 "• <strong>Marge brut sobre vendes</strong> = (Vendes − Cost de mercaderia venuda) / Vendes. "
-                "El marge típic del retail (~25-35%): el que queda després de pagar la <em>mercaderia comprada "
-                "per revendre</em>. <em>Font: INE, Compte de resultats EAS Comerç (T=36199).</em><br>"
-                "• <strong>Marge sobre VAB</strong> = Valor Afegit / Vendes. El que queda després de pagar "
-                "<em>tots els intermedis</em> (mercaderia + lloguers + subministraments + serveis externs). "
-                "Sempre inferior al marge brut.<br>"
+                "El marge típic del comerç al detall (~25-35%): el que queda després de pagar la "
+                "<em>mercaderia comprada per revendre</em>. <em>Font: INE, Compte de resultats de "
+                "l'Enquesta Estructural d'Empreses Sector Comerç (taula 36199).</em><br>"
+                "• <strong>Valor Afegit sobre vendes</strong> = Valor Afegit / Vendes. El que queda "
+                "després de pagar <em>tots els intermedis</em> (mercaderia + lloguers + subministraments "
+                "+ serveis externs). Sempre inferior al marge brut.<br>"
                 "• <strong>Cost laboral unitari</strong> = Despeses de personal / Vendes. Quina part del preu "
                 "es destina a <em>salaris i cotitzacions</em>.<br>"
                 "• <strong>Marge operatiu</strong> (≈ EBITDA) = Excedent Brut / Vendes. El que queda després "
@@ -477,11 +478,12 @@ with tab3:
                 "Esta sección descompone la <strong>cadena de valor</strong> de cada euro facturado en el "
                 "comercio minorista en cuatro márgenes, ordenados de más bruto a más neto:<br>"
                 "• <strong>Margen bruto sobre ventas</strong> = (Ventas − Coste de mercancía vendida) / Ventas. "
-                "El margen típico del retail (~25-35%): lo que queda tras pagar la <em>mercancía comprada para "
-                "revender</em>. <em>Fuente: INE, Cuenta de resultados EAS Comercio (T=36199).</em><br>"
-                "• <strong>Margen sobre VAB</strong> = Valor Añadido / Ventas. Lo que queda tras pagar "
-                "<em>todos los intermedios</em> (mercancía + alquileres + suministros + servicios externos). "
-                "Siempre inferior al margen bruto.<br>"
+                "El margen típico del comercio minorista (~25-35%): lo que queda tras pagar la "
+                "<em>mercancía comprada para revender</em>. <em>Fuente: INE, Cuenta de resultados de la "
+                "Encuesta Estructural de Empresas Sector Comercio (tabla 36199).</em><br>"
+                "• <strong>Valor Añadido sobre ventas</strong> = Valor Añadido / Ventas. Lo que queda "
+                "tras pagar <em>todos los intermedios</em> (mercancía + alquileres + suministros + "
+                "servicios externos). Siempre inferior al margen bruto.<br>"
                 "• <strong>Coste laboral unitario</strong> = Gastos de personal / Ventas. Qué parte del precio "
                 "se destina a <em>salarios y cotizaciones</em>.<br>"
                 "• <strong>Margen operativo</strong> (≈ EBITDA) = Excedente Bruto / Ventas. Lo que queda tras "
@@ -617,8 +619,8 @@ with tab3:
             height=420,
         )
         st.plotly_chart(fig_marges, use_container_width=True)
-        source("INE, EAS Comerç (taules 36194 + 36199). Càlcul propi" if _ca
-               else "INE, EAS Comercio (tablas 36194 + 36199). Cálculo propio")
+        source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 
         # ─── Gràfic 2: Composició de cada euro venut (waterfall implicit) ──
         st.subheader("Descomposició de la xifra de negoci" if _ca
@@ -698,8 +700,8 @@ with tab3:
             barmode="stack",
         )
         st.plotly_chart(fig_stack, use_container_width=True)
-        source("INE, EAS Comerç (taules 36194 + 36199). Càlcul propi" if _ca
-               else "INE, EAS Comercio (tablas 36194 + 36199). Cálculo propio")
+        source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 
         # ─── Insight rendibilitat ────────────────────────────────
         marge_op_std = df_m["marge_op"].std()
@@ -728,7 +730,7 @@ with tab3:
                     f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
                     + f" se'n van directament a pagar la mercaderia comprada per revendre — el cost més "
                     f"important del sector. Aquest marge brut és <strong>estructuralment estable</strong> "
-                    f"per al retail espanyol "
+                    f"per al comerç al detall espanyol "
                     + (f"(va passar del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variació de "
                        f"<strong>{fpct(mb_delta, 1)}</strong> en {any_last - any_first} anys), "
                        f"reflectint el fet que els marges entre cost i preu de venda de la mercaderia "
@@ -788,7 +790,7 @@ with tab3:
                     f"<strong>{100 - last_m['marge_brut_pct']:.1f} €</strong>".replace(".", ",")
                     + f" se van directamente a pagar la mercancía comprada para revender — el coste "
                     f"más importante del sector. Este margen bruto es <strong>estructuralmente "
-                    f"estable</strong> en el retail español "
+                    f"estable</strong> en el comercio minorista español "
                     + (f"(pasó del {fnum(mb_first, 1)}% al {fnum(mb_last, 1)}%, una variación de "
                        f"<strong>{fpct(mb_delta, 1)}</strong> en {any_last - any_first} años), "
                        f"reflejando que los márgenes entre coste y precio de venta de la mercancía "

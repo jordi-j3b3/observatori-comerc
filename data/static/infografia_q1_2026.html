@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El comercio minorista en España · Q1 2026 · J3B3 Consulting</title>
+<style>
+  :root {
+    --navy: #1a2f4e;
+    --navy-light: #2a4570;
+    --white: #ffffff;
+    --orange: #f4801a;
+    --red: #d63c3c;
+    --green: #2e8b57;
+    --amber: #e8a020;
+    --bg: #f7f7f5;
+    --text: #1d1d1f;
+    --muted: #6b6b70;
+    --border: #e5e5e5;
+    --light-red: #fce4e4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    font-size: 16px;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--white);
+    box-shadow: 0 0 40px rgba(0,0,0,0.05);
+  }
+
+  /* STICKY HEADER */
+  header.sticky {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--navy);
+    color: var(--white);
+    padding: 14px 24px;
+    border-bottom: 3px solid var(--orange);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .logo {
+    height: 32px;
+    width: auto;
+    flex-shrink: 0;
+    display: block;
+  }
+
+  .header-text { flex: 1; min-width: 0; }
+  .header-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .header-edition {
+    font-size: 11px;
+    opacity: 0.75;
+    letter-spacing: 0.3px;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 48px 32px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .kicker {
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 36px;
+    line-height: 1.15;
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .hero .subtitle {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* KPI GRID */
+  .kpi-section {
+    padding: 32px;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--white) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .kpi-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--navy);
+    padding: 18px 14px;
+    border-radius: 2px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .kpi-card.up { border-top-color: var(--green); }
+  .kpi-card.down { border-top-color: var(--red); }
+  .kpi-card.highlight { border-top-color: var(--orange); }
+
+  .kpi-value {
+    font-family: Georgia, serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .kpi-arrow {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .kpi-arrow.up { color: var(--green); }
+  .kpi-arrow.down { color: var(--red); }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.3;
+    letter-spacing: 0.2px;
+  }
+  .kpi-delta {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .kpi-delta.up { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+
+  /* SECTIONS */
+  section.act {
+    padding: 56px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .act-number {
+    font-family: Georgia, serif;
+    font-style: italic;
+    color: var(--orange);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .act h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+  .act .intro {
+    font-size: 16px;
+    color: var(--text);
+    margin-bottom: 28px;
+    line-height: 1.65;
+  }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-title {
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .chart-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .chart-svg { display: block; width: 100%; height: auto; }
+
+  /* TOOLTIP */
+  .tooltip {
+    position: absolute;
+    background: var(--navy);
+    color: var(--white);
+    padding: 8px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip strong { color: var(--orange); display: block; font-size: 13px; margin-bottom: 2px; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    width: 14px;
+    height: 3px;
+    border-radius: 1px;
+  }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(90deg, var(--orange) 0 4px, transparent 4px 7px);
+    height: 3px;
+  }
+
+  /* CALLOUT */
+  .callout {
+    background: #fffaf3;
+    border-left: 4px solid var(--orange);
+    padding: 16px 20px;
+    margin: 24px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    border-radius: 0 2px 2px 0;
+  }
+  .callout strong { color: var(--navy); font-weight: 700; }
+  .callout .big {
+    font-family: Georgia, serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--orange);
+  }
+
+  /* MINI KPI ROW (act 3) */
+  .mini-kpi-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .mini-kpi {
+    background: var(--white);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 2px;
+  }
+  .mini-kpi-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .mini-kpi-row1 {
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .mini-kpi-arrow {
+    font-family: Georgia, serif;
+    font-size: 16px;
+    color: var(--muted);
+    margin: 4px 0;
+  }
+  .mini-kpi-row2 {
+    font-family: Georgia, serif;
+    font-size: 18px;
+    color: var(--navy);
+    font-weight: 700;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--green);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+  }
+  .badge.amber { background: var(--amber); }
+
+  .mini-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* REGIONAL BARS */
+  .regional-bars {
+    margin: 20px 0;
+  }
+  .regional-group { margin-bottom: 18px; }
+  .regional-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .regional-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 60px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .regional-name { color: var(--text); }
+  .regional-bar-track {
+    height: 18px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .regional-bar-fill {
+    height: 100%;
+    width: 0;
+    transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    border-radius: 2px;
+  }
+  .regional-bar-fill.low { background: var(--green); }
+  .regional-bar-fill.high { background: var(--red); }
+  .regional-value {
+    font-family: Georgia, serif;
+    font-weight: 700;
+    color: var(--navy);
+    font-size: 13px;
+    text-align: right;
+  }
+
+  /* ABOUT OBSERVATORIO SECTION */
+  .about-observatorio {
+    padding: 40px 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .about-inner {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+  .about-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--navy);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .about-icon svg {
+    width: 28px;
+    height: 28px;
+    fill: var(--orange);
+  }
+  .about-eyebrow {
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .about-title {
+    font-family: Georgia, serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .about-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+  .about-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 2px solid var(--orange);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  .about-link:hover {
+    color: var(--orange);
+  }
+  .about-link .arrow {
+    transition: transform 0.2s;
+  }
+  .about-link:hover .arrow {
+    transform: translateX(3px);
+  }
+
+  /* FOOTER — REDESIGNED */
+  footer {
+    background: var(--navy);
+    color: var(--white);
+    padding: 0;
+  }
+
+  /* Big CTA */
+  .footer-cta {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    padding: 48px 32px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .footer-cta::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(244, 128, 26, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .footer-cta-eyebrow {
+    color: var(--orange);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .footer-cta-title {
+    font-family: Georgia, serif;
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--white);
+    margin-bottom: 12px;
+    font-weight: 700;
+    position: relative;
+  }
+  .footer-cta-subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--orange);
+    color: var(--navy);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 14px 28px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    letter-spacing: 0.3px;
+  }
+  .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 128, 26, 0.35);
+  }
+  .cta-button .arrow {
+    transition: transform 0.2s;
+  }
+  .cta-button:hover .arrow {
+    transform: translateX(4px);
+  }
+
+  /* Footer meta block */
+  .footer-meta {
+    padding: 32px 32px 24px;
+    text-align: center;
+  }
+  .footer-meta .footer-line {
+    font-size: 12px;
+    opacity: 0.75;
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+  .footer-meta .footer-line a {
+    color: var(--orange);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(244, 128, 26, 0.4);
+    transition: border-color 0.2s;
+  }
+  .footer-meta .footer-line a:hover {
+    border-bottom-color: var(--orange);
+  }
+  .footer-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin: 8px 32px;
+  }
+  .footer-bottom {
+    padding: 18px 32px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-brand {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: var(--white);
+  }
+  .footer-brand a {
+    color: var(--orange);
+    text-decoration: none;
+    font-weight: 700;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .footer-brand a:hover {
+    border-bottom-color: var(--orange);
+  }
+  .footer-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: transparent;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    background: var(--orange);
+    color: var(--navy);
+  }
+  .btn.btn-back {
+    border-color: var(--white);
+    color: var(--white);
+  }
+  .btn.btn-back:hover {
+    background: var(--white);
+    color: var(--navy);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .hero { padding: 32px 20px 24px; }
+    .hero h1 { font-size: 26px; }
+    .kpi-section { padding: 20px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    section.act { padding: 36px 20px; }
+    .act h2 { font-size: 22px; }
+    .mini-kpi-row { grid-template-columns: 1fr; }
+    .regional-row { grid-template-columns: 90px 1fr 50px; font-size: 12px; }
+    .header-title { font-size: 12px; }
+    .about-observatorio { padding: 28px 20px; }
+    .about-inner { grid-template-columns: 1fr; gap: 14px; }
+    .footer-cta { padding: 36px 20px; }
+    .footer-cta-title { font-size: 22px; }
+    .footer-meta { padding: 24px 20px 16px; }
+    .footer-bottom { padding: 16px 20px 24px; flex-direction: column; text-align: center; }
+    .footer-divider { margin: 8px 20px; }
+  }
+
+  /* ANIMATIONS */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* SVG axis styles */
+  .axis-line { stroke: #d0d0d0; stroke-width: 1; }
+  .axis-tick { stroke: #d0d0d0; stroke-width: 1; }
+  .axis-label { fill: var(--muted); font-size: 10px; font-family: system-ui; }
+  .axis-title { fill: var(--muted); font-size: 11px; font-family: system-ui; font-weight: 600; }
+  .grid-line { stroke: #eee; stroke-width: 1; stroke-dasharray: 2,3; }
+  .data-point { cursor: pointer; transition: r 0.2s; }
+  .data-point:hover { r: 6; }
+  .annotation {
+    font-size: 10px;
+    font-family: system-ui;
+    fill: var(--navy);
+    font-style: italic;
+  }
+  .annotation-line { stroke: var(--navy); stroke-width: 1; stroke-dasharray: 2,2; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- STICKY HEADER -->
+  <header class="sticky">
+    <div class="header-inner">
+      <img class="logo" src="data:image/png;base64,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" alt="J3BTRES Consulting" />
+      <div class="header-text">
+        <div class="header-title">El comercio minorista en España</div>
+        <div class="header-edition">Q1 2026 · Datos: INE, Eurostat, CNMC</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="kicker">Análisis trimestral · Sector CNAE 47</div>
+    <h1>El comercio minorista en España: menos tiendas, los mismos trabajadores</h1>
+    <p class="subtitle">Análisis trimestral · Q1 2026 · Observatorio del Comercio Minorista · J3B3 Consulting</p>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-section">
+    <div class="kpi-grid">
+      <div class="kpi-card highlight">
+        <div class="kpi-value"><span class="kpi-num" data-value="71780" data-suffix=" M€" data-format="thousands">0 M€</span></div>
+        <div class="kpi-label">Valor añadido bruto (2023)</div>
+      </div>
+      <div class="kpi-card down">
+        <div class="kpi-value">
+          <span class="kpi-num" data-value="377471" data-format="thousands">0</span>
+          <span class="kpi-arrow down">▼</span>
+        </div>
+        <div class="kpi-label">Empresas activas (2025)</div>
+        <div class="kpi-delta down">–28,3% desde 2008</div>
+      </div>
+      <div class="kpi-card up">
+        <div class="kpi-value">
+          <span class="kpi-num" data-value="1767412" data-format="thousands">0</span>
+          <span class="kpi-arrow up">▲</span>
+        </div>
+        <div class="kpi-label">Personas ocupadas (2024)</div>
+        <div class="kpi-delta up">+1,7% desde 2018</div>
+      </div>
+      <div class="kpi-card up">
+        <div class="kpi-value">
+          <span class="kpi-num" data-value="24.65" data-suffix=" €/h" data-decimals="2">0 €/h</span>
+          <span class="kpi-arrow up">▲</span>
+        </div>
+        <div class="kpi-label">Productividad VA/hora (2024)</div>
+        <div class="kpi-delta up">+9,2% desde 2018</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT OBSERVATORIO -->
+  <div class="about-observatorio">
+    <div class="about-inner">
+      <div class="about-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18L19.82 8 12 11.82 4.18 8 12 4.18zM4 9.64l7 3.5v7.22l-7-3.5V9.64zm9 10.72v-7.22l7-3.5v7.22l-7 3.5z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="about-eyebrow">Sobre el Observatorio</div>
+        <h3 class="about-title">¿Qué es el Observatorio del Comercio Minorista?</h3>
+        <p class="about-text">El Observatorio del Comercio Minorista es la plataforma de inteligencia sectorial de J3B3 Consulting. Reúne, depura y analiza de forma continua datos del INE, Eurostat, CNMC y fuentes territoriales para ofrecer una lectura rigurosa y actualizada de la evolución del sector CNAE 47 en España. Combina indicadores estructurales (empresas, ocupación, productividad, márgenes) con seguimiento del canal digital, cuadros de mando interactivos y análisis comparativos por comunidad autónoma.</p>
+        <a class="about-link" href="https://observatorio-comercio.j3b3.com" target="_blank" rel="noopener">
+          Acceder al Observatorio <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACT 1 -->
+  <section class="act fade-in" id="act1">
+    <div class="act-number">Acto I · La desaparición silenciosa</div>
+    <h2>Casi 1 de cada 3 tiendas ha desaparecido desde 2008</h2>
+    <p class="intro">Desde el máximo de 526.294 empresas en 2008, el sector pierde negocios a un ritmo del –1,94% anual. La concentración avanza.</p>
+
+    <div class="chart-card">
+      <div class="chart-title">Evolución del número de empresas minoristas (CNAE 47)</div>
+      <div class="chart-subtitle">2008–2025 · Número de empresas activas</div>
+      <div class="chart-wrap" id="chart1-wrap">
+        <svg class="chart-svg" id="chart1" viewBox="0 0 700 360" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip1"></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="big">–148.823 empresas</span> en 17 años · <strong>CAGR: –1,94% anual</strong>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Variación acumulada 2008–2025 por comunidad autónoma (selección)</div>
+      <div class="chart-subtitle">Comparativa: comunidades menos y más afectadas</div>
+
+      <div class="regional-bars">
+        <div class="regional-group">
+          <div class="regional-group-title" style="color: var(--green);">Menos afectadas</div>
+          <div class="regional-row">
+            <div class="regional-name">Andalucía</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill low" data-pct="58"></div></div>
+            <div class="regional-value">–22,6%</div>
+          </div>
+          <div class="regional-row">
+            <div class="regional-name">Navarra</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill low" data-pct="64"></div></div>
+            <div class="regional-value">–24,8%</div>
+          </div>
+          <div class="regional-row">
+            <div class="regional-name">Cataluña</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill low" data-pct="64"></div></div>
+            <div class="regional-value">–24,8%</div>
+          </div>
+        </div>
+
+        <div class="regional-group">
+          <div class="regional-group-title" style="color: var(--red);">Más afectadas</div>
+          <div class="regional-row">
+            <div class="regional-name">País Vasco</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill high" data-pct="100"></div></div>
+            <div class="regional-value">–38,9%</div>
+          </div>
+          <div class="regional-row">
+            <div class="regional-name">Asturias</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill high" data-pct="92"></div></div>
+            <div class="regional-value">–35,7%</div>
+          </div>
+          <div class="regional-row">
+            <div class="regional-name">Galicia</div>
+            <div class="regional-bar-track"><div class="regional-bar-fill high" data-pct="89"></div></div>
+            <div class="regional-value">–34,7%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACT 2 -->
+  <section class="act fade-in" id="act2">
+    <div class="act-number">Acto II · La paradoja del empleo</div>
+    <h2>Menos empresas, pero el empleo resiste — y las jornadas se alargan</h2>
+    <p class="intro">El sector ha optado por intensificar la jornada de la plantilla existente antes de crear nuevos puestos de trabajo. La ratio de horas por trabajador ha pasado de 1.180 a 1.240 h/año.</p>
+
+    <div class="chart-card">
+      <div class="chart-title">Ocupación y horas por trabajador (2018–2024)</div>
+      <div class="chart-subtitle">Eje izquierdo: personas ocupadas · Eje derecho: horas/trabajador/año</div>
+      <div class="chart-wrap" id="chart2-wrap">
+        <svg class="chart-svg" id="chart2" viewBox="0 0 700 360" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip2"></div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--navy);"></span>Personas ocupadas</div>
+        <div class="legend-item"><span class="legend-swatch dashed"></span>Horas por trabajador/año</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>2018–2024:</strong> ocupación <span style="color:var(--green);font-weight:700;">+1,7%</span> · horas totales <span style="color:var(--orange);font-weight:700;">+6,9%</span> · El sector intensifica jornadas antes de contratar.
+    </div>
+  </section>
+
+  <!-- ACT 3 -->
+  <section class="act fade-in" id="act3">
+    <div class="act-number">Acto III · La presión sobre los márgenes</div>
+    <h2>Productividad al alza, pero márgenes bajo presión</h2>
+    <p class="intro">Con 24,65 € de valor añadido por hora trabajada, el comercio minorista se sitúa por debajo de la productividad media de la economía española. El margen sobre facturación es ajustado y volátil.</p>
+
+    <div class="mini-kpi-row">
+      <div class="mini-kpi">
+        <div class="mini-kpi-label">Productividad VA/hora</div>
+        <div class="mini-kpi-row1">2018: 22,58 €</div>
+        <div class="mini-kpi-arrow">→</div>
+        <div class="mini-kpi-row2">2024: 24,65 € <span class="badge">+9,2%</span></div>
+      </div>
+      <div class="mini-kpi">
+        <div class="mini-kpi-label">Margen s/facturación</div>
+        <div class="mini-kpi-row2" style="margin-top: 8px;">2024: 19,7% <span class="badge amber">Volátil</span></div>
+        <div class="mini-note">Mínimo reciente: 18,7% (2022)</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Margen de valor añadido sobre cifra de negocio (%)</div>
+      <div class="chart-subtitle">Evolución 2021–2024</div>
+      <div class="chart-wrap" id="chart3-wrap">
+        <svg class="chart-svg" id="chart3" viewBox="0 0 700 320" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip3"></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      Cada punto de margen equivale a <span class="big">~720 M€</span> en un sector de 71.780 M€. La inflación de 2022 costó al sector <strong>~1.400 M€ en valor añadido.</strong>
+    </div>
+  </section>
+
+  <!-- ACT 4 -->
+  <section class="act fade-in" id="act4">
+    <div class="act-number">Acto IV · El horizonte digital</div>
+    <h2>El e-commerce ×13 en 12 años — pero el comercio minorista pierde cuota digital</h2>
+    <p class="intro">El volumen online del CNAE 47 ha multiplicado por 13 desde 2013. Sin embargo, otros sectores (turismo, servicios digitales, contenidos) crecen aún más rápido en el canal online, erosionando la cuota relativa del comercio minorista.</p>
+
+    <div class="chart-card">
+      <div class="chart-title">Evolución del e-commerce minorista (CNAE 47)</div>
+      <div class="chart-subtitle">Eje izquierdo: volumen online (M€) · Eje derecho: % sobre total e-commerce España</div>
+      <div class="chart-wrap" id="chart4-wrap">
+        <svg class="chart-svg" id="chart4" viewBox="0 0 700 380" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="tooltip" id="tooltip4"></div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background:linear-gradient(180deg,var(--navy),#7ba0d4);height:10px;"></span>Volumen e-commerce CNAE 47 (M€)</div>
+        <div class="legend-item"><span class="legend-swatch dashed"></span>Peso s/ total e-commerce (%)</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="big">14.300 M€</span> online en 2024. <strong>CAGR +23,7%.</strong> El peso del CNAE 47 sobre el total del e-commerce cae del <strong>32% al 26%.</strong>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <!-- Big CTA -->
+    <div class="footer-cta">
+      <div class="footer-cta-eyebrow">Análisis interactivo</div>
+      <h3 class="footer-cta-title">Explora todos los datos en el Observatorio</h3>
+      <p class="footer-cta-subtitle">Cuadros de mando, series históricas completas y desglose territorial del comercio minorista español. Actualización trimestral.</p>
+      <a class="cta-button" href="https://observatorio-comercio.j3b3.com" target="_blank" rel="noopener">
+        Ir al Observatorio <span class="arrow">→</span>
+      </a>
+    </div>
+
+    <!-- Meta -->
+    <div class="footer-meta">
+      <div class="footer-line">Fuente: INE · Eurostat · CNMC</div>
+      <div class="footer-line">Datos completos y metodología: <a href="https://observatorio-comercio.j3b3.com" target="_blank" rel="noopener">observatorio-comercio.j3b3.com</a></div>
+      <div class="footer-line">Última actualización de datos: 24/04/2026</div>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <!-- Bottom -->
+    <div class="footer-bottom">
+      <div class="footer-brand">
+        Elaboración: <a href="https://www.j3b3.com" target="_blank" rel="noopener">J3B3 Consulting</a>
+      </div>
+      <div class="footer-actions">
+        <button class="btn" id="downloadCsv">Descargar datos (CSV)</button>
+        <button class="btn btn-back" onclick="window.scrollTo({top:0,behavior:'smooth'})">Volver al inicio ↑</button>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const DATA = {
+  empresas: [
+    {y:2008,v:526294},{y:2009,v:509000},{y:2010,v:497000},{y:2011,v:484000},
+    {y:2012,v:470000},{y:2013,v:460000},{y:2014,v:452000},{y:2015,v:445000},
+    {y:2016,v:440000},{y:2017,v:436000},{y:2018,v:432000},{y:2019,v:427000},
+    {y:2020,v:421000},{y:2021,v:415000},{y:2022,v:402000},{y:2023,v:390000},
+    {y:2024,v:383000},{y:2025,v:377471}
+  ],
+  ocupados: [
+    {y:2018,v:1734000},{y:2019,v:1755000},{y:2020,v:1620000},{y:2021,v:1690000},
+    {y:2022,v:1730000},{y:2023,v:1755000},{y:2024,v:1767412}
+  ],
+  horas: [
+    {y:2018,v:1180},{y:2019,v:1185},{y:2020,v:1100},{y:2021,v:1150},
+    {y:2022,v:1195},{y:2023,v:1220},{y:2024,v:1240}
+  ],
+  margen: [
+    {y:2021,v:20.0},{y:2022,v:18.7},{y:2023,v:19.2},{y:2024,v:19.7}
+  ],
+  ecomVol: [
+    {y:2013,v:1100},{y:2014,v:1450},{y:2015,v:2000},{y:2016,v:2700},
+    {y:2017,v:3500},{y:2018,v:4800},{y:2019,v:6000},{y:2020,v:8500},
+    {y:2021,v:11000},{y:2022,v:12500},{y:2023,v:13800},{y:2024,v:14300}
+  ],
+  ecomPct: [
+    {y:2013,v:32.4},{y:2014,v:31.5},{y:2015,v:30.8},{y:2016,v:29.5},
+    {y:2017,v:28.2},{y:2018,v:27.0},{y:2019,v:25.2},{y:2020,v:34.8},
+    {y:2021,v:33.1},{y:2022,v:29.1},{y:2023,v:27.2},{y:2024,v:26.4}
+  ]
+};
+
+/* ============================================================
+   FORMATTING HELPERS
+   ============================================================ */
+const fmtThousands = n => Math.round(n).toLocaleString('es-ES');
+const fmtDecimal = (n, d=1) => n.toFixed(d).replace('.', ',');
+const fmtEuros = n => fmtThousands(n) + ' €';
+
+/* ============================================================
+   COUNT-UP ANIMATION
+   ============================================================ */
+function animateCountUp(el) {
+  const target = parseFloat(el.dataset.value);
+  const decimals = parseInt(el.dataset.decimals || '0');
+  const suffix = el.dataset.suffix || '';
+  const format = el.dataset.format || '';
+  const duration = 1800;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = target * eased;
+
+    let display;
+    if (decimals > 0) {
+      display = fmtDecimal(current, decimals);
+    } else if (format === 'thousands') {
+      display = fmtThousands(current);
+    } else {
+      display = Math.round(current).toString();
+    }
+    el.textContent = display + suffix;
+
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ============================================================
+   INTERSECTION OBSERVERS
+   ============================================================ */
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+const kpiObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.kpi-num').forEach(animateCountUp);
+      kpiObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.4 });
+document.querySelectorAll('.kpi-section').forEach(el => kpiObserver.observe(el));
+
+const regionalObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.regional-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+      regionalObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.regional-bars').forEach(el => regionalObserver.observe(el));
+
+/* ============================================================
+   SVG CHART HELPERS
+   ============================================================ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs={}) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function showTooltip(tooltipEl, wrapEl, evt, html) {
+  tooltipEl.innerHTML = html;
+  tooltipEl.classList.add('visible');
+  const wrapRect = wrapEl.getBoundingClientRect();
+  const x = evt.clientX - wrapRect.left;
+  const y = evt.clientY - wrapRect.top;
+  const tw = tooltipEl.offsetWidth;
+  const th = tooltipEl.offsetHeight;
+  let left = x + 12;
+  if (left + tw > wrapRect.width - 8) left = x - tw - 12;
+  let top = y - th - 12;
+  if (top < 0) top = y + 12;
+  tooltipEl.style.left = left + 'px';
+  tooltipEl.style.top = top + 'px';
+}
+function hideTooltip(tooltipEl) {
+  tooltipEl.classList.remove('visible');
+}
+
+/* ============================================================
+   CHART 1 — Line chart with shaded area (empresas 2008-2025)
+   ============================================================ */
+function drawChart1() {
+  const svg = document.getElementById('chart1');
+  const wrap = document.getElementById('chart1-wrap');
+  const tip = document.getElementById('tooltip1');
+  const data = DATA.empresas;
+
+  const W = 700, H = 360;
+  const M = { top: 30, right: 30, bottom: 50, left: 70 };
+  const cw = W - M.left - M.right;
+  const ch = H - M.top - M.bottom;
+
+  const yMax = 540000, yMin = 360000;
+  const xScale = i => M.left + (i / (data.length - 1)) * cw;
+  const yScale = v => M.top + ch - ((v - yMin) / (yMax - yMin)) * ch;
+
+  // Grid lines
+  const yTicks = [380000, 420000, 460000, 500000, 540000];
+  yTicks.forEach(t => {
+    const y = yScale(t);
+    svg.appendChild(svgEl('line', {x1: M.left, y1: y, x2: M.left + cw, y2: y, class: 'grid-line'}));
+    const lbl = svgEl('text', {x: M.left - 8, y: y + 3, 'text-anchor': 'end', class: 'axis-label'});
+    lbl.textContent = fmtThousands(t);
+    svg.appendChild(lbl);
+  });
+
+  // Y-axis title
+  const yTitle = svgEl('text', {x: 18, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(-90 18 ${M.top + ch/2})`});
+  yTitle.textContent = 'Número de empresas';
+  svg.appendChild(yTitle);
+
+  // X-axis labels (every 2 years)
+  data.forEach((d, i) => {
+    if (i % 2 === 0 || i === data.length - 1) {
+      const x = xScale(i);
+      const lbl = svgEl('text', {x: x, y: H - M.bottom + 16, 'text-anchor': 'middle', class: 'axis-label'});
+      lbl.textContent = d.y;
+      svg.appendChild(lbl);
+    }
+  });
+
+  // Axis lines
+  svg.appendChild(svgEl('line', {x1: M.left, y1: M.top + ch, x2: M.left + cw, y2: M.top + ch, class: 'axis-line'}));
+
+  // Build path for line and area
+  let linePath = '';
+  let areaPath = '';
+  data.forEach((d, i) => {
+    const x = xScale(i), y = yScale(d.v);
+    if (i === 0) { linePath += `M ${x} ${y}`; areaPath += `M ${x} ${M.top + ch} L ${x} ${y}`; }
+    else { linePath += ` L ${x} ${y}`; areaPath += ` L ${x} ${y}`; }
+  });
+  areaPath += ` L ${xScale(data.length - 1)} ${M.top + ch} Z`;
+
+  // Area
+  const area = svgEl('path', {d: areaPath, fill: '#fce4e4', opacity: '0'});
+  svg.appendChild(area);
+
+  // Line
+  const line = svgEl('path', {d: linePath, fill: 'none', stroke: '#d63c3c', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'});
+  const totalLen = 2200;
+  line.style.strokeDasharray = totalLen;
+  line.style.strokeDashoffset = totalLen;
+  line.style.transition = 'stroke-dashoffset 2s ease-out';
+  svg.appendChild(line);
+
+  // Annotations
+  // 2008 peak
+  const peak = data[0];
+  const peakX = xScale(0), peakY = yScale(peak.v);
+  svg.appendChild(svgEl('circle', {cx: peakX, cy: peakY, r: 5, fill: '#1a2f4e', stroke: '#fff', 'stroke-width': '2', opacity: '0', class: 'anno-marker'}));
+  const peakLabel = svgEl('text', {x: peakX + 8, y: peakY - 8, class: 'annotation', opacity: '0'});
+  peakLabel.textContent = 'Máximo: 526.294 (2008)';
+  peakLabel.classList.add('anno-text');
+  svg.appendChild(peakLabel);
+
+  // 2025 current
+  const last = data[data.length - 1];
+  const lastX = xScale(data.length - 1), lastY = yScale(last.v);
+  svg.appendChild(svgEl('circle', {cx: lastX, cy: lastY, r: 5, fill: '#f4801a', stroke: '#fff', 'stroke-width': '2', opacity: '0', class: 'anno-marker'}));
+  const lastLabel = svgEl('text', {x: lastX - 8, y: lastY + 18, 'text-anchor': 'end', class: 'annotation', opacity: '0'});
+  lastLabel.setAttribute('fill', '#f4801a');
+  lastLabel.style.fontWeight = '700';
+  lastLabel.textContent = 'Actual: 377.471 (2025)';
+  lastLabel.classList.add('anno-text');
+  svg.appendChild(lastLabel);
+
+  // Data points (interactive)
+  data.forEach((d, i) => {
+    const cx = xScale(i), cy = yScale(d.v);
+    const dot = svgEl('circle', {cx, cy, r: 4, fill: '#fff', stroke: '#d63c3c', 'stroke-width': '2', class: 'data-point', opacity: '0'});
+    dot.addEventListener('mouseenter', (e) => {
+      showTooltip(tip, wrap, e, `<strong>${fmtThousands(d.v)} empresas</strong>Año ${d.y}`);
+    });
+    dot.addEventListener('mousemove', (e) => showTooltip(tip, wrap, e, `<strong>${fmtThousands(d.v)} empresas</strong>Año ${d.y}`));
+    dot.addEventListener('mouseleave', () => hideTooltip(tip));
+    svg.appendChild(dot);
+  });
+
+  // Animate
+  return () => {
+    requestAnimationFrame(() => {
+      line.style.strokeDashoffset = '0';
+      area.style.transition = 'opacity 1.2s ease-out 0.4s';
+      area.style.opacity = '1';
+      svg.querySelectorAll('.data-point').forEach((dot, i) => {
+        setTimeout(() => { dot.style.transition = 'opacity 0.3s'; dot.style.opacity = '1'; }, 800 + i * 30);
+      });
+      svg.querySelectorAll('.anno-marker, .anno-text').forEach(el => {
+        setTimeout(() => { el.style.transition = 'opacity 0.5s'; el.style.opacity = '1'; }, 1800);
+      });
+    });
+  };
+}
+
+/* ============================================================
+   CHART 2 — Dual-axis line chart (ocupados + horas)
+   ============================================================ */
+function drawChart2() {
+  const svg = document.getElementById('chart2');
+  const wrap = document.getElementById('chart2-wrap');
+  const tip = document.getElementById('tooltip2');
+  const ocup = DATA.ocupados, horas = DATA.horas;
+
+  const W = 700, H = 360;
+  const M = { top: 30, right: 70, bottom: 50, left: 75 };
+  const cw = W - M.left - M.right;
+  const ch = H - M.top - M.bottom;
+
+  const yLeftMax = 1820000, yLeftMin = 1580000;
+  const yRightMax = 1260, yRightMin = 1080;
+  const xScale = i => M.left + (i / (ocup.length - 1)) * cw;
+  const yLeft = v => M.top + ch - ((v - yLeftMin) / (yLeftMax - yLeftMin)) * ch;
+  const yRight = v => M.top + ch - ((v - yRightMin) / (yRightMax - yRightMin)) * ch;
+
+  // Grid + left axis labels
+  const leftTicks = [1600000, 1650000, 1700000, 1750000, 1800000];
+  leftTicks.forEach(t => {
+    const y = yLeft(t);
+    svg.appendChild(svgEl('line', {x1: M.left, y1: y, x2: M.left + cw, y2: y, class: 'grid-line'}));
+    const lbl = svgEl('text', {x: M.left - 8, y: y + 3, 'text-anchor': 'end', class: 'axis-label'});
+    lbl.setAttribute('fill', '#1a2f4e');
+    lbl.textContent = (t/1000).toFixed(0) + 'k';
+    svg.appendChild(lbl);
+  });
+
+  // Right axis labels
+  const rightTicks = [1100, 1150, 1200, 1250];
+  rightTicks.forEach(t => {
+    const y = yRight(t);
+    const lbl = svgEl('text', {x: M.left + cw + 8, y: y + 3, 'text-anchor': 'start', class: 'axis-label'});
+    lbl.setAttribute('fill', '#f4801a');
+    lbl.textContent = t + ' h';
+    svg.appendChild(lbl);
+  });
+
+  // Y titles
+  const yTitleL = svgEl('text', {x: 18, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(-90 18 ${M.top + ch/2})`});
+  yTitleL.textContent = 'Personas ocupadas';
+  yTitleL.setAttribute('fill', '#1a2f4e');
+  svg.appendChild(yTitleL);
+
+  const yTitleR = svgEl('text', {x: W - 14, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(90 ${W-14} ${M.top + ch/2})`});
+  yTitleR.textContent = 'Horas / trabajador / año';
+  yTitleR.setAttribute('fill', '#f4801a');
+  svg.appendChild(yTitleR);
+
+  // X labels
+  ocup.forEach((d, i) => {
+    const x = xScale(i);
+    const lbl = svgEl('text', {x: x, y: H - M.bottom + 16, 'text-anchor': 'middle', class: 'axis-label'});
+    lbl.textContent = d.y;
+    svg.appendChild(lbl);
+  });
+
+  svg.appendChild(svgEl('line', {x1: M.left, y1: M.top + ch, x2: M.left + cw, y2: M.top + ch, class: 'axis-line'}));
+
+  // Line 1: ocupados (navy, solid)
+  let p1 = '';
+  ocup.forEach((d, i) => {
+    const x = xScale(i), y = yLeft(d.v);
+    p1 += (i === 0 ? 'M ' : ' L ') + x + ' ' + y;
+  });
+  const line1 = svgEl('path', {d: p1, fill: 'none', stroke: '#1a2f4e', 'stroke-width': '2.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round'});
+  line1.style.strokeDasharray = '1500';
+  line1.style.strokeDashoffset = '1500';
+  line1.style.transition = 'stroke-dashoffset 1.8s ease-out';
+  svg.appendChild(line1);
+
+  // Line 2: horas (orange, dashed)
+  let p2 = '';
+  horas.forEach((d, i) => {
+    const x = xScale(i), y = yRight(d.v);
+    p2 += (i === 0 ? 'M ' : ' L ') + x + ' ' + y;
+  });
+  const line2 = svgEl('path', {d: p2, fill: 'none', stroke: '#f4801a', 'stroke-width': '2.5', 'stroke-dasharray': '6,4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0'});
+  line2.style.transition = 'opacity 1s ease-out 0.8s';
+  svg.appendChild(line2);
+
+  // Annotation at 2022 (index 4)
+  const annoX = xScale(4);
+  const annoY = yLeft(ocup[4].v) - 30;
+  const annoLine = svgEl('line', {x1: annoX, y1: yLeft(ocup[4].v) - 8, x2: annoX, y2: annoY + 4, class: 'annotation-line', opacity: '0'});
+  annoLine.classList.add('anno-elem');
+  svg.appendChild(annoLine);
+
+  // Multi-line annotation text
+  const annoBg = svgEl('rect', {x: annoX - 95, y: annoY - 28, width: 190, height: 32, fill: '#fff', stroke: '#1a2f4e', 'stroke-width': '1', rx: '2', opacity: '0'});
+  annoBg.classList.add('anno-elem');
+  svg.appendChild(annoBg);
+
+  const annoT1 = svgEl('text', {x: annoX, y: annoY - 14, 'text-anchor': 'middle', class: 'annotation', opacity: '0'});
+  annoT1.style.fontWeight = '700';
+  annoT1.textContent = 'Reforma laboral 2022:';
+  annoT1.classList.add('anno-elem');
+  svg.appendChild(annoT1);
+
+  const annoT2 = svgEl('text', {x: annoX, y: annoY - 2, 'text-anchor': 'middle', class: 'annotation', opacity: '0'});
+  annoT2.textContent = 'menos rotación, más horas';
+  annoT2.classList.add('anno-elem');
+  svg.appendChild(annoT2);
+
+  // Data points
+  ocup.forEach((d, i) => {
+    const cx = xScale(i), cy = yLeft(d.v);
+    const dot = svgEl('circle', {cx, cy, r: 4, fill: '#fff', stroke: '#1a2f4e', 'stroke-width': '2', class: 'data-point', opacity: '0'});
+    const h = horas[i];
+    dot.addEventListener('mouseenter', (e) => {
+      showTooltip(tip, wrap, e, `<strong>Año ${d.y}</strong>Ocupados: ${fmtThousands(d.v)}<br>Horas/trab.: ${h.v}`);
+    });
+    dot.addEventListener('mousemove', (e) => showTooltip(tip, wrap, e, `<strong>Año ${d.y}</strong>Ocupados: ${fmtThousands(d.v)}<br>Horas/trab.: ${h.v}`));
+    dot.addEventListener('mouseleave', () => hideTooltip(tip));
+    svg.appendChild(dot);
+  });
+
+  horas.forEach((d, i) => {
+    const cx = xScale(i), cy = yRight(d.v);
+    const dot = svgEl('circle', {cx, cy, r: 3.5, fill: '#f4801a', stroke: '#fff', 'stroke-width': '1.5', class: 'data-point', opacity: '0'});
+    svg.appendChild(dot);
+  });
+
+  return () => {
+    requestAnimationFrame(() => {
+      line1.style.strokeDashoffset = '0';
+      line2.style.opacity = '1';
+      svg.querySelectorAll('.data-point').forEach((dot, i) => {
+        setTimeout(() => { dot.style.transition = 'opacity 0.3s'; dot.style.opacity = '1'; }, 1000 + i * 40);
+      });
+      svg.querySelectorAll('.anno-elem').forEach(el => {
+        setTimeout(() => { el.style.transition = 'opacity 0.6s'; el.style.opacity = '1'; }, 1800);
+      });
+    });
+  };
+}
+
+/* ============================================================
+   CHART 3 — Bar chart (margin)
+   ============================================================ */
+function drawChart3() {
+  const svg = document.getElementById('chart3');
+  const wrap = document.getElementById('chart3-wrap');
+  const tip = document.getElementById('tooltip3');
+  const data = DATA.margen;
+
+  const W = 700, H = 320;
+  const M = { top: 40, right: 30, bottom: 50, left: 70 };
+  const cw = W - M.left - M.right;
+  const ch = H - M.top - M.bottom;
+
+  const yMax = 22, yMin = 17;
+  const yScale = v => M.top + ch - ((v - yMin) / (yMax - yMin)) * ch;
+
+  const colors = { 2021: '#2e8b57', 2022: '#d63c3c', 2023: '#e8a020', 2024: '#e8a020' };
+
+  // Grid
+  [17, 18, 19, 20, 21, 22].forEach(t => {
+    const y = yScale(t);
+    svg.appendChild(svgEl('line', {x1: M.left, y1: y, x2: M.left + cw, y2: y, class: 'grid-line'}));
+    const lbl = svgEl('text', {x: M.left - 8, y: y + 3, 'text-anchor': 'end', class: 'axis-label'});
+    lbl.textContent = t + '%';
+    svg.appendChild(lbl);
+  });
+
+  const yTitle = svgEl('text', {x: 18, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(-90 18 ${M.top + ch/2})`});
+  yTitle.textContent = '% sobre facturación';
+  svg.appendChild(yTitle);
+
+  svg.appendChild(svgEl('line', {x1: M.left, y1: M.top + ch, x2: M.left + cw, y2: M.top + ch, class: 'axis-line'}));
+
+  const barGap = 24;
+  const barW = (cw - barGap * (data.length + 1)) / data.length;
+
+  data.forEach((d, i) => {
+    const x = M.left + barGap + i * (barW + barGap);
+    const targetY = yScale(d.v);
+    const barH = (M.top + ch) - targetY;
+    const color = colors[d.y];
+
+    const bar = svgEl('rect', {
+      x: x, y: M.top + ch, width: barW, height: 0,
+      fill: color, rx: 2, class: 'data-point', 'data-final-y': targetY, 'data-final-h': barH
+    });
+    bar.style.transition = 'y 1s ease-out, height 1s ease-out';
+
+    bar.addEventListener('mouseenter', (e) => showTooltip(tip, wrap, e, `<strong>${fmtDecimal(d.v,1)}%</strong>Año ${d.y}`));
+    bar.addEventListener('mousemove', (e) => showTooltip(tip, wrap, e, `<strong>${fmtDecimal(d.v,1)}%</strong>Año ${d.y}`));
+    bar.addEventListener('mouseleave', () => hideTooltip(tip));
+
+    svg.appendChild(bar);
+
+    // Value label on top
+    const valLabel = svgEl('text', {
+      x: x + barW/2, y: targetY - 8, 'text-anchor': 'middle',
+      class: 'annotation', opacity: '0', 'font-weight': '700'
+    });
+    valLabel.setAttribute('fill', color);
+    valLabel.textContent = fmtDecimal(d.v, 1) + '%';
+    valLabel.classList.add('val-label');
+    svg.appendChild(valLabel);
+
+    // X label
+    const xLbl = svgEl('text', {x: x + barW/2, y: H - M.bottom + 18, 'text-anchor': 'middle', class: 'axis-label'});
+    xLbl.style.fontWeight = '600';
+    xLbl.style.fontSize = '12px';
+    xLbl.textContent = d.y;
+    svg.appendChild(xLbl);
+  });
+
+  return () => {
+    requestAnimationFrame(() => {
+      svg.querySelectorAll('rect.data-point').forEach((bar, i) => {
+        setTimeout(() => {
+          bar.setAttribute('y', bar.dataset.finalY);
+          bar.setAttribute('height', bar.dataset.finalH);
+        }, i * 120);
+      });
+      svg.querySelectorAll('.val-label').forEach((lbl, i) => {
+        setTimeout(() => { lbl.style.transition = 'opacity 0.4s'; lbl.style.opacity = '1'; }, 1200 + i * 100);
+      });
+    });
+  };
+}
+
+/* ============================================================
+   CHART 4 — Area + line dual axis (e-commerce)
+   ============================================================ */
+function drawChart4() {
+  const svg = document.getElementById('chart4');
+  const wrap = document.getElementById('chart4-wrap');
+  const tip = document.getElementById('tooltip4');
+  const vol = DATA.ecomVol, pct = DATA.ecomPct;
+
+  const W = 700, H = 380;
+  const M = { top: 40, right: 70, bottom: 50, left: 75 };
+  const cw = W - M.left - M.right;
+  const ch = H - M.top - M.bottom;
+
+  const yLeftMax = 16000, yLeftMin = 0;
+  const yRightMax = 40, yRightMin = 20;
+  const xScale = i => M.left + (i / (vol.length - 1)) * cw;
+  const yLeft = v => M.top + ch - ((v - yLeftMin) / (yLeftMax - yLeftMin)) * ch;
+  const yRight = v => M.top + ch - ((v - yRightMin) / (yRightMax - yRightMin)) * ch;
+
+  // Gradient definition
+  const defs = svgEl('defs');
+  const grad = svgEl('linearGradient', {id: 'areaGrad4', x1: '0', y1: '0', x2: '0', y2: '1'});
+  grad.appendChild(svgEl('stop', {offset: '0%', 'stop-color': '#1a2f4e', 'stop-opacity': '0.85'}));
+  grad.appendChild(svgEl('stop', {offset: '100%', 'stop-color': '#7ba0d4', 'stop-opacity': '0.25'}));
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+
+  // Grid + left ticks
+  [0, 4000, 8000, 12000, 16000].forEach(t => {
+    const y = yLeft(t);
+    svg.appendChild(svgEl('line', {x1: M.left, y1: y, x2: M.left + cw, y2: y, class: 'grid-line'}));
+    const lbl = svgEl('text', {x: M.left - 8, y: y + 3, 'text-anchor': 'end', class: 'axis-label'});
+    lbl.setAttribute('fill', '#1a2f4e');
+    lbl.textContent = (t/1000) + 'k M€';
+    svg.appendChild(lbl);
+  });
+
+  // Right ticks
+  [20, 25, 30, 35, 40].forEach(t => {
+    const y = yRight(t);
+    const lbl = svgEl('text', {x: M.left + cw + 8, y: y + 3, 'text-anchor': 'start', class: 'axis-label'});
+    lbl.setAttribute('fill', '#f4801a');
+    lbl.textContent = t + '%';
+    svg.appendChild(lbl);
+  });
+
+  // Y titles
+  const yTitleL = svgEl('text', {x: 18, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(-90 18 ${M.top + ch/2})`});
+  yTitleL.textContent = 'Volumen online (M€)';
+  yTitleL.setAttribute('fill', '#1a2f4e');
+  svg.appendChild(yTitleL);
+
+  const yTitleR = svgEl('text', {x: W - 14, y: M.top + ch/2, 'text-anchor': 'middle', class: 'axis-title', transform: `rotate(90 ${W-14} ${M.top + ch/2})`});
+  yTitleR.textContent = '% sobre total e-commerce';
+  yTitleR.setAttribute('fill', '#f4801a');
+  svg.appendChild(yTitleR);
+
+  // X labels
+  vol.forEach((d, i) => {
+    if (i % 2 === 0 || i === vol.length - 1) {
+      const x = xScale(i);
+      const lbl = svgEl('text', {x: x, y: H - M.bottom + 16, 'text-anchor': 'middle', class: 'axis-label'});
+      lbl.textContent = d.y;
+      svg.appendChild(lbl);
+    }
+  });
+
+  svg.appendChild(svgEl('line', {x1: M.left, y1: M.top + ch, x2: M.left + cw, y2: M.top + ch, class: 'axis-line'}));
+
+  // Area path
+  let areaPath = '';
+  vol.forEach((d, i) => {
+    const x = xScale(i), y = yLeft(d.v);
+    areaPath += (i === 0 ? `M ${x} ${M.top + ch} L ${x} ${y}` : ` L ${x} ${y}`);
+  });
+  areaPath += ` L ${xScale(vol.length - 1)} ${M.top + ch} Z`;
+
+  const area = svgEl('path', {d: areaPath, fill: 'url(#areaGrad4)', opacity: '0'});
+  area.style.transition = 'opacity 1.5s ease-out';
+  svg.appendChild(area);
+
+  // Area outline
+  let lineP = '';
+  vol.forEach((d, i) => {
+    const x = xScale(i), y = yLeft(d.v);
+    lineP += (i === 0 ? 'M ' : ' L ') + x + ' ' + y;
+  });
+  const areaLine = svgEl('path', {d: lineP, fill: 'none', stroke: '#1a2f4e', 'stroke-width': '2'});
+  areaLine.style.strokeDasharray = '2000';
+  areaLine.style.strokeDashoffset = '2000';
+  areaLine.style.transition = 'stroke-dashoffset 2s ease-out';
+  svg.appendChild(areaLine);
+
+  // Pct line (dashed orange, right axis)
+  let pctP = '';
+  pct.forEach((d, i) => {
+    const x = xScale(i), y = yRight(d.v);
+    pctP += (i === 0 ? 'M ' : ' L ') + x + ' ' + y;
+  });
+  const pctLine = svgEl('path', {d: pctP, fill: 'none', stroke: '#f4801a', 'stroke-width': '2.5', 'stroke-dasharray': '6,4', 'stroke-linecap': 'round', opacity: '0'});
+  pctLine.style.transition = 'opacity 1s ease-out 1s';
+  svg.appendChild(pctLine);
+
+  // Annotation at 2020 (index 7)
+  const annoX = xScale(7);
+  const annoY = yRight(pct[7].v) - 35;
+  const annoLine = svgEl('line', {x1: annoX, y1: yRight(pct[7].v) - 8, x2: annoX, y2: annoY + 4, class: 'annotation-line', opacity: '0'});
+  annoLine.classList.add('anno-elem-c4');
+  svg.appendChild(annoLine);
+
+  const annoBg = svgEl('rect', {x: annoX - 80, y: annoY - 18, width: 160, height: 22, fill: '#fff', stroke: '#1a2f4e', 'stroke-width': '1', rx: '2', opacity: '0'});
+  annoBg.classList.add('anno-elem-c4');
+  svg.appendChild(annoBg);
+
+  const annoT = svgEl('text', {x: annoX, y: annoY - 3, 'text-anchor': 'middle', class: 'annotation', opacity: '0'});
+  annoT.style.fontWeight = '700';
+  annoT.textContent = 'Pandemia: +50,3% interanual';
+  annoT.classList.add('anno-elem-c4');
+  svg.appendChild(annoT);
+
+  // Data points (vol)
+  vol.forEach((d, i) => {
+    const cx = xScale(i), cy = yLeft(d.v);
+    const dot = svgEl('circle', {cx, cy, r: 3.5, fill: '#fff', stroke: '#1a2f4e', 'stroke-width': '2', class: 'data-point', opacity: '0'});
+    const p = pct[i];
+    dot.addEventListener('mouseenter', (e) => showTooltip(tip, wrap, e, `<strong>Año ${d.y}</strong>Volumen: ${fmtThousands(d.v)} M€<br>Cuota: ${fmtDecimal(p.v,1)}%`));
+    dot.addEventListener('mousemove', (e) => showTooltip(tip, wrap, e, `<strong>Año ${d.y}</strong>Volumen: ${fmtThousands(d.v)} M€<br>Cuota: ${fmtDecimal(p.v,1)}%`));
+    dot.addEventListener('mouseleave', () => hideTooltip(tip));
+    svg.appendChild(dot);
+  });
+
+  // Data points (pct)
+  pct.forEach((d, i) => {
+    const cx = xScale(i), cy = yRight(d.v);
+    const dot = svgEl('circle', {cx, cy, r: 3, fill: '#f4801a', stroke: '#fff', 'stroke-width': '1.5', class: 'data-point', opacity: '0'});
+    svg.appendChild(dot);
+  });
+
+  return () => {
+    requestAnimationFrame(() => {
+      area.style.opacity = '1';
+      areaLine.style.strokeDashoffset = '0';
+      pctLine.style.opacity = '1';
+      svg.querySelectorAll('.data-point').forEach((dot, i) => {
+        setTimeout(() => { dot.style.transition = 'opacity 0.3s'; dot.style.opacity = '1'; }, 1200 + i * 30);
+      });
+      svg.querySelectorAll('.anno-elem-c4').forEach(el => {
+        setTimeout(() => { el.style.transition = 'opacity 0.6s'; el.style.opacity = '1'; }, 2200);
+      });
+    });
+  };
+}
+
+/* ============================================================
+   INIT CHARTS WITH OBSERVERS
+   ============================================================ */
+const charts = [
+  { id: 'chart1-wrap', drawn: false, draw: drawChart1, animate: null },
+  { id: 'chart2-wrap', drawn: false, draw: drawChart2, animate: null },
+  { id: 'chart3-wrap', drawn: false, draw: drawChart3, animate: null },
+  { id: 'chart4-wrap', drawn: false, draw: drawChart4, animate: null }
+];
+
+charts.forEach(c => {
+  c.animate = c.draw();
+});
+
+const chartObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const c = charts.find(c => c.id === entry.target.id);
+      if (c && !c.drawn) {
+        c.drawn = true;
+        c.animate();
+        chartObserver.unobserve(entry.target);
+      }
+    }
+  });
+}, { threshold: 0.25 });
+
+charts.forEach(c => {
+  const el = document.getElementById(c.id);
+  if (el) chartObserver.observe(el);
+});
+
+/* ============================================================
+   CSV DOWNLOAD
+   ============================================================ */
+document.getElementById('downloadCsv').addEventListener('click', () => {
+  const lines = [];
+  lines.push('Serie;Año;Valor;Unidad');
+
+  DATA.empresas.forEach(d => lines.push(`Empresas activas CNAE 47;${d.y};${d.v};empresas`));
+  DATA.ocupados.forEach(d => lines.push(`Personas ocupadas CNAE 47;${d.y};${d.v};personas`));
+  DATA.horas.forEach(d => lines.push(`Horas por trabajador/año;${d.y};${d.v};horas`));
+  DATA.margen.forEach(d => lines.push(`Margen sobre facturación;${d.y};${fmtDecimal(d.v,1)};%`));
+  DATA.ecomVol.forEach(d => lines.push(`E-commerce volumen CNAE 47;${d.y};${d.v};M€`));
+  DATA.ecomPct.forEach(d => lines.push(`Cuota CNAE 47 sobre total e-commerce;${d.y};${fmtDecimal(d.v,1)};%`));
+
+  const csv = '\uFEFF' + lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'comercio-minorista-espana-q1-2026.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+</script>
+</body>
+</html>
