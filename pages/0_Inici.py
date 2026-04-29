@@ -523,13 +523,22 @@ with col_dl1:
         st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
 
 with col_dl2:
-    _info_path = os.path.join(os.path.dirname(__file__), "..", "data", "static", "infografia_q1_2026.html")
-    if os.path.exists(_info_path):
-        with open(_info_path, "rb") as f:
+    _info_path_static = os.path.join(os.path.dirname(__file__), "..", "static", "infografia_q1_2026.html")
+    if os.path.exists(_info_path_static):
+        # Link per obrir la infografia al navegador (Streamlit static serving)
+        st.markdown(
+            f"""<a href="app/static/infografia_q1_2026.html" target="_blank" rel="noopener"
+                  style="display:inline-block; background-color:#0055a4; color:white;
+                         padding:8px 18px; border-radius:3px; text-decoration:none;
+                         font-family:'DM Sans',sans-serif; font-weight:500; font-size:14px;">
+               {('Obrir infografia Q1 2026' if _ca else 'Abrir infografía Q1 2026')} ↗
+               </a>""",
+            unsafe_allow_html=True,
+        )
+        with open(_info_path_static, "rb") as f:
             _info_bytes = f.read()
         st.download_button(
-            label=("Descarregar infografia Q1 2026 (HTML)" if _ca
-                   else "Descargar infografía Q1 2026 (HTML)"),
+            label=("Descarregar HTML" if _ca else "Descargar HTML"),
             data=_info_bytes,
             file_name="comerc_minorista_espana_Q1_2026.html",
             mime="text/html",
