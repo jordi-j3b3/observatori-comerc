@@ -151,18 +151,27 @@ DEMAND_CNAE_LABELS = {
     },
 }
 
-# Exemples especifics per a categories de despesa (sobreescriuen els de SUBSECTOR_EXAMPLES
-# quan diverses categories mapegen al mateix CNAE pare, com passa amb el 477).
+# Exemples breus per categoria de despesa (hover compacte, no tapa les barres).
 DEMAND_EXAMPLES = {
     "ca": {
-        "03": "Roba i moda (Inditex, Mango, H&M, Primark, El Corte Inglés moda), calçat i articles de cuir (Camper, Kalenji, Decimas), accessoris i complements de moda",
-        "06": "Farmàcies i parafarmàcies, ortopèdies, audiologia (GAES), articles mèdics i sanitaris",
-        "12": "Perfumeries i cosmètica (Sephora, Druni, Primor, Bodybell), drogueries i articles d'higiene personal",
+        "01": "Supermercats, hipermercats, alimentació especialitzada",
+        "02": "Vinateries, cellers, estancs",
+        "03": "Inditex, Mango, H&M, Primark, Camper, Decimas",
+        "05": "Ikea, Conforama, Leroy Merlin, parament de la llar",
+        "06": "Farmàcies, parafarmàcies, ortopèdies",
+        "08": "MediaMarkt, FNAC, Phone House, operadors telefònics",
+        "09": "Llibreries, jugueteries, Intersport, Forum Sport, Sprinter",
+        "12": "Sephora, Druni, Primor, Bodybell, drogueries",
     },
     "es": {
-        "03": "Ropa y moda (Inditex, Mango, H&M, Primark, El Corte Inglés moda), calzado y artículos de cuero (Camper, Kalenji, Decimas), accesorios y complementos de moda",
-        "06": "Farmacias y parafarmacias, ortopedias, audiología (GAES), artículos médicos y sanitarios",
-        "12": "Perfumerías y cosmética (Sephora, Druni, Primor, Bodybell), droguerías y artículos de higiene personal",
+        "01": "Supermercados, hipermercados, alimentación especializada",
+        "02": "Vinaterías, bodegas, estancos",
+        "03": "Inditex, Mango, H&M, Primark, Camper, Decimas",
+        "05": "Ikea, Conforama, Leroy Merlin, menaje del hogar",
+        "06": "Farmacias, parafarmacias, ortopedias",
+        "08": "MediaMarkt, FNAC, Phone House, operadores telefónicos",
+        "09": "Librerías, jugueterías, Intersport, Forum Sport, Sprinter",
+        "12": "Sephora, Druni, Primor, Bodybell, droguerías",
     },
 }
 
