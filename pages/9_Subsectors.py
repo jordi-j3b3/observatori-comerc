@@ -43,7 +43,7 @@ SUBSECTOR_LABELS = {
         "474": "Equips TIC",
         "475": "Articles d'ús domèstic",
         "476": "Cultura i recreatius",
-        "477": "Vestit, calçat i altres",
+        "477": "Vestit i altres",
         "478": "Mercadillos",
         "479": "E-commerce i venda directa",
     },
@@ -54,7 +54,7 @@ SUBSECTOR_LABELS = {
         "474": "Equipos TIC",
         "475": "Artículos de uso doméstico",
         "476": "Cultura y recreativos",
-        "477": "Vestido, calzado y otros",
+        "477": "Vestido y otros",
         "478": "Mercadillos",
         "479": "E-commerce y venta directa",
     },
@@ -70,7 +70,7 @@ SUBSECTOR_EXAMPLES = {
         "472": "Forns i pastisseries, carnisseries, peixateries, fruiteries, queviures, estancs, herbolaris, vinateries i cellers especialitzats",
         "474": "Botigues d'electrònica (MediaMarkt, FNAC), informàtica (PcComponentes botiga física), telefonia (Phone House), botigues d'operadors (Movistar, Vodafone, Orange)",
         "475": "Mobles i decoració (Ikea, Conforama, Maisons du Monde), il·luminació, parament de la llar, electrodomèstics blancs, ferreteries i bricolatge (Leroy Merlin, Bauhaus)",
-        "476": "Llibreries (Casa del Libro, FNAC llibres), jugueteries (Imaginarium, ToysRUs, Drim), música, esports (Decathlon, Intersport, Forum Sport), papereries i material d'oficina",
+        "476": "Llibreries (Casa del Libro, FNAC llibres), jugueteries (Imaginarium, ToysRUs, Drim), música, esports (Intersport, Forum Sport, Sprinter), papereries i material d'oficina",
         "477": "Roba i moda (Inditex, Mango, H&M, Primark), calçat (Camper, Kalenji), farmàcies, joieria i rellotgeria, cosmètica i perfumeria (Sephora, Druni), òptiques, regals, articles per a animals",
         "478": "Mercats setmanals i mercadillos a la via pública: alimentació, roba, antiguitats, encants",
         "479": "Comerç electrònic pure-play (PcComponentes, Privalia, Hawkers, Tradeinn), venda per correspondència, vending (màquines expenedores), venda a domicili (porta a porta, telefònica), subhastes presencials",
@@ -80,7 +80,7 @@ SUBSECTOR_EXAMPLES = {
         "472": "Panaderías y pastelerías, carnicerías, pescaderías, fruterías, ultramarinos, estancos, herbolarios, vinaterías y bodegas especializadas",
         "474": "Tiendas de electrónica (MediaMarkt, FNAC), informática (PcComponentes tienda física), telefonía (Phone House), tiendas de operadores (Movistar, Vodafone, Orange)",
         "475": "Muebles y decoración (Ikea, Conforama, Maisons du Monde), iluminación, menaje del hogar, electrodomésticos, ferreterías y bricolaje (Leroy Merlin, Bauhaus)",
-        "476": "Librerías (Casa del Libro, FNAC libros), jugueterías (Imaginarium, ToysRUs, Drim), música, deportes (Decathlon, Intersport, Forum Sport), papelerías y material de oficina",
+        "476": "Librerías (Casa del Libro, FNAC libros), jugueterías (Imaginarium, ToysRUs, Drim), música, deportes (Intersport, Forum Sport, Sprinter), papelerías y material de oficina",
         "477": "Ropa y moda (Inditex, Mango, H&M, Primark), calzado (Camper, Kalenji), farmacias, joyería y relojería, cosmética y perfumería (Sephora, Druni), ópticas, regalos, artículos para animales",
         "478": "Mercados semanales y mercadillos en la vía pública: alimentación, ropa, antigüedades, rastros",
         "479": "E-commerce pure-play (PcComponentes, Privalia, Hawkers, Tradeinn), venta por correspondencia, vending (máquinas expendedoras), venta a domicilio (puerta a puerta, telefónica), subastas presenciales",
@@ -797,15 +797,11 @@ with tab3:
             text=[fnum(v) + " €" for v in df_groups["despesa_per_llar"]],
             textposition="outside",
             textfont=dict(size=11),
-            customdata=df_groups[["label_demanda", "cnae_codis", "examples"]].values,
+            customdata=df_groups[["label_demanda"]].values,
             hovertemplate=(
                 "<b>%{y}</b><br>"
-                + ("<i>Categoria de despesa:</i> " if _ca else "<i>Categoría de gasto:</i> ")
+                + ("Categoria EPF: " if _ca else "Categoría EPF: ")
                 + "%{customdata[0]}<br>"
-                + ("<i>CNAE associats:</i> " if _ca else "<i>CNAE asociados:</i> ")
-                + "%{customdata[1]}<br>"
-                + f"<i>{HOVER_LBL_EX}:</i> "
-                + "%{customdata[2]}<br>"
                 + ("<b>Despesa anual</b>: " if _ca else "<b>Gasto anual</b>: ")
                 + "%{x:,.0f} €<extra></extra>"
             ).replace(",", "."),
