@@ -132,22 +132,22 @@ DEMAND_CNAE_LABELS = {
     "ca": {
         "01": "Alimentació (especialitzada + no especialitzada)",
         "02": "Alimentació, begudes i tabac",
-        "03": "Vestit, calçat i altres",
+        "03": "Vestit i calçat",
         "05": "Articles d'ús domèstic",
-        "06": "Vestit, calçat i altres (farmàcies)",
+        "06": "Farmàcies i productes sanitaris",
         "08": "Equips TIC",
         "09": "Cultura i recreatius",
-        "12": "Vestit, calçat i altres (cosmètics)",
+        "12": "Cosmètics i cura personal",
     },
     "es": {
         "01": "Alimentación (especializada + no especializada)",
         "02": "Alimentación, bebidas y tabaco",
-        "03": "Vestido, calzado y otros",
+        "03": "Vestido y calzado",
         "05": "Artículos de uso doméstico",
-        "06": "Vestido, calzado y otros (farmacias)",
+        "06": "Farmacias y productos sanitarios",
         "08": "Equipos TIC",
         "09": "Cultura y recreativos",
-        "12": "Vestido, calzado y otros (cosméticos)",
+        "12": "Cosméticos y cuidado personal",
     },
 }
 
@@ -750,19 +750,19 @@ with tab3:
             st.caption(
                 "Es mostren només les categories de despesa de les llars que es compren al "
                 "**comerç al detall (CNAE 47)**. Es deixen fora les categories que no es compren "
-                "al comerç minorista (habitatge, transport, restauració, educació). Les etiquetes "
-                "utilitzen el mateix nom de subsector que les pestanyes Estructura empresarial i "
-                "Activitat per facilitar la lectura comparada. Veure el mapeig detallat a la pàgina "
-                "Metodologia."
+                "al comerç minorista (habitatge, transport, restauració, educació). Vestit, "
+                "farmàcies i cosmètics formen part del mateix subsector CNAE 477 però es "
+                "mostren separats perquè la despesa familiar els recull en categories diferents. "
+                "Veure el mapeig detallat a la pàgina Metodologia."
             )
         else:
             st.caption(
                 "Se muestran solo las categorías de gasto de los hogares que se compran en el "
                 "**comercio al detalle (CNAE 47)**. Se dejan fuera las categorías que no se compran "
-                "en el comercio minorista (vivienda, transporte, restauración, educación). Las "
-                "etiquetas utilizan el mismo nombre de subsector que las pestañas Estructura "
-                "empresarial y Actividad para facilitar la lectura comparada. Ver el mapeo detallado "
-                "en la página Metodología."
+                "en el comercio minorista (vivienda, transporte, restauración, educación). Vestido, "
+                "farmacias y cosméticos forman parte del mismo subsector CNAE 477 pero se muestran "
+                "separados porque el gasto familiar los recoge en categorías diferentes. "
+                "Ver el mapeo detallado en la página Metodología."
             )
 
         st.subheader(
@@ -870,14 +870,20 @@ with tab3:
                 ))
             fig_evo.update_layout(
                 yaxis_title=("Despesa mitjana anual per llar (€)" if _ca else "Gasto medio anual por hogar (€)"),
-                height=450,
+                height=520,
                 font=dict(family="DM Sans, sans-serif", size=13),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=60, r=20, t=40, b=50),
+                margin=dict(l=60, r=20, t=20, b=120),
                 xaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
                 yaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.18,
+                    xanchor="center",
+                    x=0.5,
+                ),
                 hovermode="x unified",
             )
             st.plotly_chart(fig_evo, use_container_width=True)
