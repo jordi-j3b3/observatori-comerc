@@ -151,6 +151,21 @@ DEMAND_CNAE_LABELS = {
     },
 }
 
+# Exemples especifics per a categories de despesa (sobreescriuen els de SUBSECTOR_EXAMPLES
+# quan diverses categories mapegen al mateix CNAE pare, com passa amb el 477).
+DEMAND_EXAMPLES = {
+    "ca": {
+        "03": "Roba i moda (Inditex, Mango, H&M, Primark, El Corte Inglés moda), calçat i articles de cuir (Camper, Kalenji, Decimas), accessoris i complements de moda",
+        "06": "Farmàcies i parafarmàcies, ortopèdies, audiologia (GAES), articles mèdics i sanitaris",
+        "12": "Perfumeries i cosmètica (Sephora, Druni, Primor, Bodybell), drogueries i articles d'higiene personal",
+    },
+    "es": {
+        "03": "Ropa y moda (Inditex, Mango, H&M, Primark, El Corte Inglés moda), calzado y artículos de cuero (Camper, Kalenji, Decimas), accesorios y complementos de moda",
+        "06": "Farmacias y parafarmacias, ortopedias, audiología (GAES), artículos médicos y sanitarios",
+        "12": "Perfumerías y cosmética (Sephora, Druni, Primor, Bodybell), droguerías y artículos de higiene personal",
+    },
+}
+
 # Mapeig COICOP -> CNAE 47 (categories de despesa familiar que es compren al comerc al detall)
 COICOP_TO_CNAE = {
     "01": ["471", "472"],  # Aliments → no especialitzats + alimentacio especialitzada
@@ -740,11 +755,14 @@ with tab3:
         df_groups["cnae_codis"] = df_groups["codi_coicop"].map(
             lambda c: ", ".join(COICOP_TO_CNAE.get(c, []))
         )
-        df_groups["examples"] = df_groups["codi_coicop"].map(
-            lambda c: wrap_text(", ".join(
+        def _demand_examples(c):
+            override = DEMAND_EXAMPLES[LANG].get(c)
+            if override:
+                return wrap_text(override)
+            return wrap_text(", ".join(
                 SUBSECTOR_EXAMPLES[LANG].get(cnae, "") for cnae in COICOP_TO_CNAE.get(c, [])
             ).strip(", "))
-        )
+        df_groups["examples"] = df_groups["codi_coicop"].map(_demand_examples)
 
         if _ca:
             st.caption(
