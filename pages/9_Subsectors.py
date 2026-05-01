@@ -797,10 +797,10 @@ with tab3:
             text=[fnum(v) + " €" for v in df_groups["despesa_per_llar"]],
             textposition="outside",
             textfont=dict(size=11),
-            customdata=df_groups[["label_demanda"]].values,
+            customdata=df_groups[["examples"]].values,
             hovertemplate=(
                 "<b>%{y}</b><br>"
-                + ("Categoria EPF: " if _ca else "Categoría EPF: ")
+                + f"<i>{HOVER_LBL_EX}:</i> "
                 + "%{customdata[0]}<br>"
                 + ("<b>Despesa anual</b>: " if _ca else "<b>Gasto anual</b>: ")
                 + "%{x:,.0f} €<extra></extra>"
