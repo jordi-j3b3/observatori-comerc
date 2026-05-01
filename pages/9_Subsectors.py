@@ -870,19 +870,22 @@ with tab3:
                 ))
             fig_evo.update_layout(
                 yaxis_title=("Despesa mitjana anual per llar (€)" if _ca else "Gasto medio anual por hogar (€)"),
-                height=520,
+                height=460,
                 font=dict(family="DM Sans, sans-serif", size=13),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=60, r=20, t=20, b=120),
+                margin=dict(l=60, r=260, t=40, b=50),
                 xaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
                 yaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
                 legend=dict(
-                    orientation="h",
+                    orientation="v",
                     yanchor="top",
-                    y=-0.18,
-                    xanchor="center",
-                    x=0.5,
+                    y=1.0,
+                    xanchor="left",
+                    x=1.02,
+                    bgcolor="rgba(255,255,255,0.85)",
+                    bordercolor="rgba(0,0,0,0.1)",
+                    borderwidth=1,
                 ),
                 hovermode="x unified",
             )
