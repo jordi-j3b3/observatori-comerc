@@ -341,7 +341,7 @@ def inject_css():
             padding-left: 4px;
         }
 
-        /* Meta info (data actualització) */
+        /* Meta info (legacy, encara usat puntualment) */
         .meta-info {
             font-family: 'DM Sans', sans-serif;
             font-size: 13px;
@@ -349,6 +349,78 @@ def inject_css():
             border-top: 1px solid #e0e0e0;
             padding-top: 12px;
             margin-top: 30px;
+        }
+
+        /* Footer global */
+        .j3b3-footer {
+            font-family: 'DM Sans', sans-serif;
+            margin-top: 48px;
+            padding-top: 28px;
+            border-top: 1px solid #e0e0e0;
+            color: #555;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .j3b3-footer .footer-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 720px) {
+            .j3b3-footer .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+        }
+        .j3b3-footer .footer-brand-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.05rem;
+            color: #0a0a0a;
+            margin: 6px 0 6px 0;
+            line-height: 1.3;
+        }
+        .j3b3-footer .footer-brand-desc {
+            color: #666;
+            font-size: 12.5px;
+            margin: 0;
+        }
+        .j3b3-footer .footer-col-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #0055a4;
+            margin: 6px 0 10px 0;
+        }
+        .j3b3-footer ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .j3b3-footer ul li {
+            margin: 0 0 6px 0;
+        }
+        .j3b3-footer a {
+            color: #333;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s;
+        }
+        .j3b3-footer a:hover {
+            color: #0055a4;
+            border-bottom-color: #0055a4;
+        }
+        .j3b3-footer .footer-bottom {
+            border-top: 1px solid #ececec;
+            padding-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 11.5px;
+            color: #888;
+        }
+        .j3b3-footer .footer-bottom .copy strong {
+            color: #555;
+            font-weight: 600;
         }
 
         /* Logo header */
@@ -485,7 +557,10 @@ def cagr(first_val, last_val, years):
 
 
 def page_meta(sources, lang="ca"):
-    """Mostra la meta info al final de la pàgina: fonts i data d'actualització."""
+    """Footer global de cada pàgina: branding, recursos, contacte i meta info.
+
+    Manté la signatura històrica per no haver de modificar les pàgines existents.
+    """
     update_path = os.path.join(os.path.dirname(__file__), "data", "cache", "last_update.txt")
     date_str = "—"
     if os.path.exists(update_path):
@@ -498,10 +573,66 @@ def page_meta(sources, lang="ca"):
         except (IndexError, ValueError):
             date_str = raw
 
-    lbl_update = "Última actualització de dades" if lang == "ca" else "Última actualización de datos"
-    lbl_fonts = "Fonts" if lang == "ca" else "Fuentes"
+    _ca = lang == "ca"
+
+    brand_desc = ("Radiografia trimestral del comerç al detall espanyol. "
+                  "Producte propi de J3B3 Consulting."
+                  if _ca else
+                  "Radiografía trimestral del comercio minorista español. "
+                  "Producto propio de J3B3 Consulting.")
+    col_about = "Sobre" if _ca else "Sobre"
+    col_resources = "Recursos" if _ca else "Recursos"
+    col_contact = "Contacte" if _ca else "Contacto"
+    lbl_methodology = "Metodologia" if _ca else "Metodología"
+    lbl_data_dl = "Descàrrega de dades" if _ca else "Descarga de datos"
+    lbl_consulting = "J3B3 Consulting" if _ca else "J3B3 Consulting"
+    lbl_about_obs = "Sobre l'observatori" if _ca else "Sobre el observatorio"
+    lbl_email = "Correu electrònic" if _ca else "Correo electrónico"
+    lbl_sources = "Fonts" if _ca else "Fuentes"
+    lbl_update = "Última actualització" if _ca else "Última actualización"
+    lbl_license = ("Llicència CC BY 4.0 · Citació recomanada"
+                   if _ca else
+                   "Licencia CC BY 4.0 · Cita recomendada")
+    lbl_copy = "© 2026 J3B3 Consulting"
+
     st.markdown(
-        f'<div class="meta-info">{lbl_fonts}: {sources} · {lbl_update}: {date_str}</div>',
+        f"""
+        <div class="j3b3-footer">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand-title">Observatori del Comerç Minorista</div>
+                    <p class="footer-brand-desc">{brand_desc}</p>
+                </div>
+                <div>
+                    <div class="footer-col-title">{col_about}</div>
+                    <ul>
+                        <li><a href="https://www.j3b3.com" target="_blank" rel="noopener">{lbl_consulting}</a></li>
+                        <li><a href="https://www.j3b3.com/observatori-comerc" target="_blank" rel="noopener">{lbl_about_obs}</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">{col_resources}</div>
+                    <ul>
+                        <li>{lbl_methodology}</li>
+                        <li>{lbl_data_dl}</li>
+                        <li>{lbl_sources}: {sources}</li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">{col_contact}</div>
+                    <ul>
+                        <li><a href="mailto:info@j3b3.com">info@j3b3.com</a></li>
+                        <li><a href="https://www.linkedin.com/company/j3b3-consulting/" target="_blank" rel="noopener">LinkedIn</a></li>
+                        <li><a href="https://www.j3b3.com" target="_blank" rel="noopener">www.j3b3.com</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="copy"><strong>{lbl_copy}</strong> · {lbl_license}</div>
+                <div class="updated">{lbl_update}: {date_str}</div>
+            </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
