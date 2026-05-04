@@ -64,6 +64,24 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     st.divider()
+
+    _nl_title = "Butlletí trimestral" if _ca else "Boletín trimestral"
+    _nl_desc = ("Rep cada trimestre les noves dades de l'observatori."
+                if _ca else
+                "Recibe cada trimestre los nuevos datos del observatorio.")
+    _nl_cta = "Subscriu-t'hi" if _ca else "Suscríbete"
+    st.markdown(
+        f"""
+        <div style="font-family:'DM Sans',sans-serif; font-size:0.85rem; line-height:1.4; margin-bottom:8px;">
+            <div style="font-weight:600; color:#0a0a0a; margin-bottom:4px;">{_nl_title}</div>
+            <div style="color:#555;">{_nl_desc}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.page_link("pages/0_Inici.py", label=f"→ {_nl_cta}")
+
+    st.divider()
     st.caption(t("footer"))
 
 pg.run()

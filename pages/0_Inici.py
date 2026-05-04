@@ -5,7 +5,7 @@ import os, sys
 from io import BytesIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header, insight, fnum, fpct, cagr, page_meta
+from style import inject_css, setup_lang, page_header, insight, fnum, fpct, cagr, page_meta, newsletter_form
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -543,6 +543,11 @@ with col_dl2:
             file_name="comerc_minorista_espana_Q1_2026.html",
             mime="text/html",
         )
+
+# ─── BUTLLETI ─────────────────────────────────────────────────
+
+st.divider()
+newsletter_form(st.session_state.lang)
 
 # ─── META ─────────────────────────────────────────────────────
 

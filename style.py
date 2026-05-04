@@ -286,6 +286,48 @@ def inject_css():
             color: #0055a4;
         }
 
+        /* Newsletter (subscripció butlletí trimestral) */
+        .newsletter-block {
+            background: linear-gradient(180deg, #fffbf3 0%, #ffffff 100%);
+            border: 1px solid #ead9b8;
+            border-left: 4px solid #c89a3c;
+            border-radius: 6px;
+            padding: 24px 28px 12px 28px;
+            margin: 24px 0;
+            box-shadow: 0 2px 8px rgba(200, 154, 60, 0.08);
+        }
+        .newsletter-block .newsletter-eyebrow {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #c89a3c;
+            margin-bottom: 8px;
+        }
+        .newsletter-block h3 {
+            font-family: 'DM Serif Display', serif !important;
+            font-weight: 400 !important;
+            font-size: 1.5rem !important;
+            color: #0a0a0a !important;
+            margin: 0 0 8px 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .newsletter-block .newsletter-desc {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: #1a1a1a;
+            margin: 0 0 16px 0;
+        }
+        .newsletter-block .newsletter-foot {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            color: #999;
+            margin: 4px 0 0 0;
+        }
+
         /* Font de dades */
         .source-label {
             font-family: 'DM Sans', sans-serif;
@@ -460,5 +502,61 @@ def page_meta(sources, lang="ca"):
     lbl_fonts = "Fonts" if lang == "ca" else "Fuentes"
     st.markdown(
         f'<div class="meta-info">{lbl_fonts}: {sources} · {lbl_update}: {date_str}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def newsletter_form(lang="ca"):
+    """Caixa de subscripció al butlletí trimestral (MailerLite embed)."""
+    import streamlit.components.v1 as components
+
+    _ca = lang == "ca"
+    eyebrow = "Butlletí" if _ca else "Boletín"
+    title = ("Rep les actualitzacions trimestrals"
+             if _ca else "Recibe las actualizaciones trimestrales")
+    desc = ("Cada trimestre t'enviem les noves dades de l'observatori, "
+            "les conclusions destacades i breus anàlisis sectorials. "
+            "Sense spam: només l'enviament trimestral."
+            if _ca else
+            "Cada trimestre te enviamos los nuevos datos del observatorio, "
+            "las conclusiones destacadas y breves análisis sectoriales. "
+            "Sin spam: solo el envío trimestral.")
+    foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb MailerLite."
+            if _ca else
+            "Puedes darte de baja en cualquier momento. Email gestionado con MailerLite.")
+    placeholder = "Adreça electrònica" if _ca else "Correo electrónico"
+    submit_label = "Subscriu-me" if _ca else "Suscríbeme"
+    ok_title = "Gràcies!" if _ca else "¡Gracias!"
+    ok_desc = ("T'hem enviat un correu de confirmació. Cal que el confirmis "
+               "per activar la subscripció."
+               if _ca else
+               "Te hemos enviado un correo de confirmación. Debes confirmarlo "
+               "para activar la suscripción.")
+
+    st.markdown(
+        f"""
+        <div class="newsletter-block">
+            <div class="newsletter-eyebrow">{eyebrow}</div>
+            <h3>{title}</h3>
+            <p class="newsletter-desc">{desc}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    html_path = os.path.join(os.path.dirname(__file__), "assets", "newsletter_mailerlite.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        snippet = f.read()
+    snippet = (snippet
+               .replace("__SUCCESS_TITLE__", "")
+               .replace("__SUCCESS_DESC__", "")
+               .replace("__EMAIL_PLACEHOLDER__", placeholder)
+               .replace("__SUBMIT_LABEL__", submit_label)
+               .replace("__SUCCESS_OK_TITLE__", ok_title)
+               .replace("__SUCCESS_OK_DESC__", ok_desc))
+
+    components.html(snippet, height=240, scrolling=False)
+    st.markdown(
+        f'<p class="newsletter-foot">{foot}</p>',
         unsafe_allow_html=True,
     )
