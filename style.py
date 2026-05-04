@@ -506,8 +506,12 @@ def page_meta(sources, lang="ca"):
     )
 
 
-def newsletter_form(lang="ca"):
-    """Caixa de subscripció al butlletí trimestral (MailerLite embed)."""
+def newsletter_form(lang="ca", compact=False):
+    """Caixa de subscripció al butlletí trimestral (MailerLite embed).
+
+    compact=False: caixa gran amb capçalera (al peu d'Inici).
+    compact=True: només descripció breu + form (per usar dins popover).
+    """
     import streamlit.components.v1 as components
 
     _ca = lang == "ca"
@@ -521,6 +525,9 @@ def newsletter_form(lang="ca"):
             "Cada trimestre te enviamos los nuevos datos del observatorio, "
             "las conclusiones destacadas y breves análisis sectoriales. "
             "Sin spam: solo el envío trimestral.")
+    desc_compact = ("Rep cada trimestre les noves dades i conclusions de l'observatori."
+                    if _ca else
+                    "Recibe cada trimestre los nuevos datos y conclusiones del observatorio.")
     foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb MailerLite."
             if _ca else
             "Puedes darte de baja en cualquier momento. Email gestionado con MailerLite.")
@@ -533,16 +540,23 @@ def newsletter_form(lang="ca"):
                "Te hemos enviado un correo de confirmación. Debes confirmarlo "
                "para activar la suscripción.")
 
-    st.markdown(
-        f"""
-        <div class="newsletter-block">
-            <div class="newsletter-eyebrow">{eyebrow}</div>
-            <h3>{title}</h3>
-            <p class="newsletter-desc">{desc}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    if not compact:
+        st.markdown(
+            f"""
+            <div class="newsletter-block">
+                <div class="newsletter-eyebrow">{eyebrow}</div>
+                <h3>{title}</h3>
+                <p class="newsletter-desc">{desc}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f'<p style="font-family:\'DM Sans\',sans-serif; font-size:0.9rem; '
+            f'line-height:1.45; color:#1a1a1a; margin:0 0 12px 0;">{desc_compact}</p>',
+            unsafe_allow_html=True,
+        )
 
     html_path = os.path.join(os.path.dirname(__file__), "assets", "newsletter_mailerlite.html")
     with open(html_path, "r", encoding="utf-8") as f:
@@ -556,7 +570,9 @@ def newsletter_form(lang="ca"):
                .replace("__SUCCESS_OK_DESC__", ok_desc))
 
     components.html(snippet, height=240, scrolling=False)
-    st.markdown(
-        f'<p class="newsletter-foot">{foot}</p>',
-        unsafe_allow_html=True,
-    )
+    foot_style = ("font-size:11px; color:#999; font-family:'DM Sans',sans-serif; margin-top:4px;"
+                  if compact else "")
+    if compact:
+        st.markdown(f'<p style="{foot_style}">{foot}</p>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<p class="newsletter-foot">{foot}</p>', unsafe_allow_html=True)

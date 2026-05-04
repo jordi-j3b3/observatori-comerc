@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from style import inject_css, setup_lang
+from style import inject_css, setup_lang, newsletter_form
 
 inject_css()
 t = setup_lang(show_selector=True)
@@ -65,21 +65,9 @@ with st.sidebar:
     )
     st.divider()
 
-    _nl_title = "Butlletí trimestral" if _ca else "Boletín trimestral"
-    _nl_desc = ("Rep cada trimestre les noves dades de l'observatori."
-                if _ca else
-                "Recibe cada trimestre los nuevos datos del observatorio.")
-    _nl_cta = "Subscriu-t'hi" if _ca else "Suscríbete"
-    st.markdown(
-        f"""
-        <div style="font-family:'DM Sans',sans-serif; font-size:0.85rem; line-height:1.4; margin-bottom:8px;">
-            <div style="font-weight:600; color:#0a0a0a; margin-bottom:4px;">{_nl_title}</div>
-            <div style="color:#555;">{_nl_desc}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.page_link("pages/0_Inici.py", label=f"→ {_nl_cta}")
+    _nl_cta = "Butlletí trimestral" if _ca else "Boletín trimestral"
+    with st.popover(_nl_cta, use_container_width=True):
+        newsletter_form(st.session_state.lang, compact=True)
 
     st.divider()
     st.caption(t("footer"))
