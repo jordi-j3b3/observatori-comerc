@@ -315,28 +315,33 @@ def fetch_empreses_municipal():
         return pd.DataFrame()
 
     SECTOR_GI = "Comercio al por mayor y al por menor; reparación de vehículos de motor y motocicletas; transporte y almacenamiento; hostelería"
+    SUFFIX = ". Empresas. "
+
+    # INE retorna 2 formats al camp Nombre:
+    #   A: "{municipi}. Total. Total de empresas. {sector}. Empresas. "
+    #   B: "{municipi}. {sector}. Total. Total de empresas. Empresas. "
+    # El parser ha de tractar tots dos per no perdre municipis (Vic, Masnou, etc.).
+    SECTORS = {"Total CNAE": "total_empreses", SECTOR_GI: "empreses_g_i"}
+    sufixos = []
+    for sector, col in SECTORS.items():
+        sufixos.append((f". Total. Total de empresas. {sector}", col))  # format A
+        sufixos.append((f". {sector}. Total. Total de empresas", col))  # format B
 
     mun_data = {}
     for s in data:
         nom = s.get("Nombre", "")
-        if not nom.endswith(". Empresas. "):
+        if not nom.endswith(SUFFIX):
             continue
-        rest = nom[:-len(". Empresas. ")]
-        parts = rest.rsplit(". ", 1)
-        if len(parts) != 2:
-            continue
-        prefix, sector = parts
-        if not prefix.endswith("Total de empresas"):
-            continue
-        municipi = prefix.replace(". Total. Total de empresas", "").strip()
-        if not municipi or municipi.startswith("Total Nacional"):
-            continue
+        rest = nom[:-len(SUFFIX)]
 
-        if sector == "Total CNAE":
-            col = "total_empreses"
-        elif sector == SECTOR_GI:
-            col = "empreses_g_i"
-        else:
+        municipi = None
+        col = None
+        for suf, c in sufixos:
+            if rest.endswith(suf):
+                municipi = rest[:-len(suf)].strip()
+                col = c
+                break
+        if not municipi or municipi.startswith("Total Nacional"):
             continue
 
         obs = s.get("Data", [])
@@ -348,7 +353,8 @@ def fetch_empreses_municipal():
             continue
 
         # Si ja existeix l'entrada (homonim), conservem la del municipi mes gran
-        # (resolucio simple per duplicats com Sada Navarra vs Sada A Coruna)
+        # (resolucio simple per duplicats com Sada Navarra vs Sada A Coruna).
+        # Tambe cobreix el cas en que un mateix municipi vingui en format A i B.
         if municipi not in mun_data:
             mun_data[municipi] = {"municipi": municipi, "any": int(any_)}
         existing = mun_data[municipi].get(col)
