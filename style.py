@@ -569,7 +569,7 @@ def newsletter_form(lang="ca", compact=False):
                .replace("__SUCCESS_OK_TITLE__", ok_title)
                .replace("__SUCCESS_OK_DESC__", ok_desc))
 
-    components.html(snippet, height=240, scrolling=False)
+    components.html(snippet, height=160, scrolling=False)
     foot_style = ("font-size:11px; color:#999; font-family:'DM Sans',sans-serif; margin-top:4px;"
                   if compact else "")
     if compact:
