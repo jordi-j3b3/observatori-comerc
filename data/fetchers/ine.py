@@ -11,12 +11,15 @@ BASE_URL = "https://servicios.ine.es/wstempus/js/ES"
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
 
 
-def _fetch_table(table_id, nult=None, retries=3):
-    """Descarrega una taula de l'INE amb reintentos per peticions en cua."""
+def _fetch_table(table_id, nult=None, retries=3, det=None):
+    """Descarrega una taula de l'INE amb reintentos per peticions en cua.
+    det=2 retorna NombrePeriodo, Fecha i metadades de Periodo (necessari per series diaries)."""
     url = f"{BASE_URL}/DATOS_TABLA/{table_id}"
     params = {}
     if nult:
         params["nult"] = nult
+    if det:
+        params["det"] = det
 
     for attempt in range(retries):
         resp = requests.get(url, params=params, timeout=120)
@@ -854,6 +857,66 @@ def fetch_epf_coicop():
                 results.append({"codi_coicop": codi, "any": int(any_), "despesa_per_llar": float(val)})
 
     return pd.DataFrame(results).sort_values(["codi_coicop", "any"]).reset_index(drop=True)
+
+
+def fetch_cdmge():
+    """
+    Taula 37808: CDMGE — Medicion del comercio diario al por menor de grandes empresas.
+    Estadistica experimental DIARIA de l'INE. Cobreix CNAE 47 grans empreses (mostra
+    de retailers grans amb cobertura nacional). Sèrie 2019-actualitat.
+
+    Retorna 5 indicadors per dia:
+      - tasa_anual: tasa anual de vendes diaries acumulades (% vs mateix periode any anterior)
+      - tasa_mensual: tasa mensual de vendes diaries acumulades
+      - pct_sobre_mes: % diari ventas acumulades sobre total del mateix mes
+      - pct_vs_anterior_anual: % vs total mateix mes any anterior
+      - pct_vs_anterior_mensual: % vs total mes anterior
+
+    Columnes: data (date), indicador (str), valor (float).
+    """
+    data = _fetch_table(37808, nult=3000, det=2)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    INDICADOR_MAP = {
+        "Tasa anual de las ventas diarias acumuladas": "tasa_anual",
+        "Tasa mensual de las ventas diarias acumuladas": "tasa_mensual",
+        "Porcentaje diario de ventas acumuladas sobre ventas totales del mismo mes": "pct_sobre_mes",
+        "Porcentaje diario de ventas acumuladas al día i, sobre las ventas totales del mismo mes del año anterior": "pct_vs_anterior_anual",
+        "Porcentaje diario de ventas acumuladas al día i, sobre las ventas totales del mes anterior": "pct_vs_anterior_mensual",
+    }
+
+    rows = []
+    for serie in data:
+        indicador = INDICADOR_MAP.get(serie.get("Nombre", ""))
+        if not indicador:
+            continue
+        for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            if val is None:
+                continue
+            per = obs.get("Periodo") or {}
+            any_ = obs.get("Anyo")
+            dia = per.get("Dia_inicio")
+            mes = per.get("Mes_inicio")
+            if not (any_ and dia and mes):
+                continue
+            try:
+                data_str = f"{int(any_):04d}-{int(mes):02d}-{int(dia):02d}"
+            except (ValueError, TypeError):
+                continue
+            rows.append({
+                "data": data_str,
+                "indicador": indicador,
+                "valor": float(val),
+            })
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    df = df.dropna(subset=["data"]).sort_values(["indicador", "data"]).reset_index(drop=True)
+    return df
 
 
 if __name__ == "__main__":

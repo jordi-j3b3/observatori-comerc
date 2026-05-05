@@ -535,14 +535,6 @@ with col_dl2:
                </a>""",
             unsafe_allow_html=True,
         )
-        with open(_info_path_static, "rb") as f:
-            _info_bytes = f.read()
-        st.download_button(
-            label=("Descarregar HTML" if _ca else "Descargar HTML"),
-            data=_info_bytes,
-            file_name="comerc_minorista_espana_Q1_2026.html",
-            mime="text/html",
-        )
 
 # ─── BUTLLETI ─────────────────────────────────────────────────
 

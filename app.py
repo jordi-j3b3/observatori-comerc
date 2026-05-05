@@ -34,6 +34,8 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 _pages = [
     st.Page("pages/0_Inici.py",
             title="Inici" if _ca else "Inicio", default=True),
+    st.Page("pages/0a_Pols_diari.py",
+            title="Pols diari" if _ca else "Pulso diario"),
     st.Page("pages/1_PIB_i_VAB.py",
             title="PIB i VAB" if _ca else "PIB y VAB"),
     st.Page("pages/2_Empreses.py",

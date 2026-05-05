@@ -980,6 +980,39 @@ def process_subsectors():
         print(f"  Error EPF: {e}")
 
 
+def process_ipc():
+    """
+    IPC general nacional, sèrie mensual base 2021=100 (T=50902).
+    Desa data/cache/ipc.csv amb columnes (any, mes, ipc).
+    Necessari per deflactar series d'alta frequencia (com CDMGE).
+    """
+    print("  Carregant IPC mensual (taula 50902)...")
+    df = ine.fetch_ipc()
+    if df.empty:
+        print("  AVIS: cap dada IPC; mantenint cache existent")
+        return load_cache("ipc")
+    df = df.dropna(subset=["any", "mes", "ipc"])
+    df["any"] = df["any"].astype(int)
+    df["mes"] = df["mes"].astype(int)
+    df = df.sort_values(["any", "mes"]).reset_index(drop=True)
+    save_cache(df, "ipc")
+    return df
+
+
+def process_cdmge():
+    """
+    CDMGE — comerç diari grans empreses (T=37808, INE experimental).
+    Sèrie diària 2019-actualitat. 5 indicadors. Cobreix CNAE 47 grans empreses.
+    """
+    print("  Carregant CDMGE (taula 37808)...")
+    df = ine.fetch_cdmge()
+    if df.empty:
+        print("  AVIS: cap dada CDMGE; mantenint cache existent")
+        return load_cache("cdmge")
+    save_cache(df, "cdmge")
+    return df
+
+
 def save_last_update():
     """Desa la data i hora de l'última actualització."""
     from datetime import datetime
@@ -1016,7 +1049,13 @@ def process_all():
     print("\n7. Subsectors CNAE 47 (DIRCE + EAS + EPF):")
     process_subsectors()
 
-    print("\n8. Registrant data actualitzacio:")
+    print("\n8. IPC mensual (per deflactor):")
+    process_ipc()
+
+    print("\n9. CDMGE — comerc diari grans empreses:")
+    process_cdmge()
+
+    print("\n10. Registrant data actualitzacio:")
     save_last_update()
 
     print("\nProcessament complet!")

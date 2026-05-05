@@ -328,6 +328,62 @@ def inject_css():
             margin: 4px 0 0 0;
         }
 
+        /* CDMGE — Pols diari (alta freqüència, secció destacada) */
+        .cdmge-block {
+            background: linear-gradient(180deg, #fff4ec 0%, #ffffff 100%);
+            border: 1px solid #f5cbb1;
+            border-left: 4px solid #d24d2c;
+            border-radius: 6px;
+            padding: 28px 32px 24px 32px;
+            margin: 32px 0 24px 0;
+            box-shadow: 0 2px 12px rgba(210, 77, 44, 0.08);
+        }
+        .cdmge-block .cdmge-eyebrow {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #d24d2c;
+            margin-bottom: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cdmge-block .cdmge-pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #d24d2c;
+            border-radius: 50%;
+            animation: cdmgePulse 1.6s ease-in-out infinite;
+        }
+        @keyframes cdmgePulse {
+            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(210, 77, 44, 0.6); }
+            50% { opacity: 0.55; transform: scale(1.25); box-shadow: 0 0 0 6px rgba(210, 77, 44, 0); }
+        }
+        .cdmge-block h3 {
+            font-family: 'DM Serif Display', serif !important;
+            font-weight: 400 !important;
+            font-size: 1.6rem !important;
+            color: #0a0a0a !important;
+            margin: 0 0 6px 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+        .cdmge-block .cdmge-sub {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.92rem;
+            color: #555;
+            margin-bottom: 18px;
+        }
+        .cdmge-block .cdmge-asof {
+            font-size: 12px;
+            color: #999;
+            font-style: italic;
+            margin-bottom: 14px;
+        }
+
         /* Font de dades */
         .source-label {
             font-family: 'DM Sans', sans-serif;
