@@ -1,0 +1,45 @@
+name: Mantenir l'app Streamlit desperta
+
+on:
+  schedule:
+    - cron: '0 7,19 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Visit app and wake if sleeping
+        run: |
+          python <<'PY'
+          from playwright.sync_api import sync_playwright
+
+          URL = "https://observatori-comerc.streamlit.app/"
+
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page()
+              page.goto(URL, wait_until="networkidle", timeout=90000)
+
+              try:
+                  page.get_by_role(
+                      "button",
+                      name=lambda n: n and "get this app back up" in n.lower(),
+                  ).click(timeout=3000)
+                  print("Sleep banner detected; clicked wake button.")
+                  page.wait_for_load_state("networkidle", timeout=120000)
+              except Exception:
+                  print("App was already awake.")
+
+              browser.close()
+          PY
