@@ -8,7 +8,7 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/setup-python@v5
         with:
@@ -22,24 +22,29 @@ jobs:
       - name: Visit app and wake if sleeping
         run: |
           python <<'PY'
-          from playwright.sync_api import sync_playwright
+          import re
+          from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
 
           URL = "https://observatori-comerc.streamlit.app/"
+          WAKE_RE = re.compile(r"get this app back up", re.I)
 
           with sync_playwright() as p:
               browser = p.chromium.launch()
               page = browser.new_page()
-              page.goto(URL, wait_until="networkidle", timeout=90000)
+              page.goto(URL, wait_until="domcontentloaded", timeout=60000)
 
+              wake_btn = page.get_by_role("button", name=WAKE_RE)
               try:
-                  page.get_by_role(
-                      "button",
-                      name=lambda n: n and "get this app back up" in n.lower(),
-                  ).click(timeout=3000)
-                  print("Sleep banner detected; clicked wake button.")
-                  page.wait_for_load_state("networkidle", timeout=120000)
-              except Exception:
-                  print("App was already awake.")
+                  wake_btn.wait_for(state="visible", timeout=8000)
+                  print("Sleep banner detected; clicking wake button.")
+                  wake_btn.click()
+                  page.wait_for_selector(
+                      "[data-testid='stAppViewContainer']",
+                      timeout=180000,
+                  )
+                  print("App is now awake.")
+              except PWTimeout:
+                  print("No sleep banner. App was already awake.")
 
               browser.close()
           PY
