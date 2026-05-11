@@ -1,0 +1,49 @@
+name: Refresc diari CDMGE i IPC
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh CDMGE and IPC
+        run: |
+          cd $GITHUB_WORKSPACE
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from data.processor import process_cdmge, process_ipc
+          process_ipc()
+          process_cdmge()
+          "
+
+      - name: Commit if cache changed
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/cache/cdmge.csv data/cache/ipc.csv
+          if git diff --staged --quiet; then
+            echo "Sense canvis al cache CDMGE/IPC, no es fa commit."
+          else
+            git commit -m "Refresc diari CDMGE/IPC $(date +%Y-%m-%d)"
+            git pull --rebase
+            git push
+          fi
