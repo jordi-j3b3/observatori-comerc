@@ -20,7 +20,17 @@ def load_europa():
         return pd.read_csv(path)
     return pd.DataFrame()
 
+
+@st.cache_data(ttl=3600)
+def load_retail_mensual():
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "europa_retail_mensual.csv")
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    return pd.DataFrame()
+
+
 df = load_europa()
+df_m = load_retail_mensual()
 
 st.title(t("eu_title"))
 
@@ -45,9 +55,137 @@ else:
         "España se destaca en rojo para facilitar la comparación."
     )
 
+# ─── SECCIÓ MENSUAL: volum de vendes (Eurostat sts_trtu_m) ──────
+
+if not df_m.empty:
+    st.subheader("Pols mensual del comerç a Europa" if _ca
+                 else "Pulso mensual del comercio en Europa")
+
+    df_m["periode"] = df_m["periode"].astype(str)
+    darrer = df_m["periode"].max()
+    df_last = df_m[df_m["periode"] == darrer]
+
+    es_row = df_last[df_last["pais_codi"] == "ES"]
+    ea_row = df_last[df_last["pais_codi"] == "EA20"]
+    eu_row = df_last[df_last["pais_codi"] == "EU27_2020"]
+
+    c1, c2, c3, c4 = st.columns(4)
+    lbl_yoy_es = "YoY Espanya" if _ca else "YoY España"
+    lbl_yoy_ea = "YoY Eurozona" if _ca else "YoY Eurozona"
+    lbl_yoy_eu = "YoY UE-27" if _ca else "YoY UE-27"
+    lbl_idx = f"Índex Espanya ({darrer})" if _ca else f"Índice España ({darrer})"
+
+    if not es_row.empty:
+        es_yoy = es_row.iloc[0].get("yoy")
+        c1.metric(lbl_yoy_es, fpct(es_yoy, 1) if pd.notna(es_yoy) else "—",
+                  help=f"Variació interanual del volum de vendes minoristes (G47), {darrer}"
+                  if _ca else f"Variación interanual del volumen de ventas minoristas (G47), {darrer}")
+    if not ea_row.empty:
+        ea_yoy = ea_row.iloc[0].get("yoy")
+        c2.metric(lbl_yoy_ea, fpct(ea_yoy, 1) if pd.notna(ea_yoy) else "—")
+    if not eu_row.empty:
+        eu_yoy = eu_row.iloc[0].get("yoy")
+        c3.metric(lbl_yoy_eu, fpct(eu_yoy, 1) if pd.notna(eu_yoy) else "—")
+    if not es_row.empty:
+        es_idx = es_row.iloc[0]["index_volum"]
+        c4.metric(lbl_idx, fnum(es_idx, 1),
+                  help="Base 2021=100, ajustat estacional"
+                  if _ca else "Base 2021=100, ajustado estacional")
+
+    # Selector temporal
+    finestres = {
+        "24": ("Darrers 2 anys", "Últimos 2 años"),
+        "60": ("Darrers 5 anys", "Últimos 5 años"),
+        "120": ("Darrers 10 anys", "Últimos 10 años"),
+        "all": ("Tota la sèrie", "Toda la serie"),
+    }
+    finestra = st.selectbox(
+        "Període" if _ca else "Período",
+        options=list(finestres.keys()),
+        index=1,
+        format_func=lambda k: finestres[k][0 if _ca else 1],
+        key="europa_retail_finestra",
+    )
+
+    df_plot = df_m.copy()
+    df_plot["dt"] = pd.to_datetime(df_plot["periode"], format="%Y-%m", errors="coerce")
+    if finestra != "all":
+        cutoff = df_plot["dt"].max() - pd.DateOffset(months=int(finestra))
+        df_plot = df_plot[df_plot["dt"] >= cutoff]
+
+    color_m = {
+        "ES": RED, "EA20": PURPLE, "EU27_2020": "#9b59b6",
+        "DE": BLUE, "FR": GREEN, "IT": ORANGE,
+        "PT": "#8E44AD", "NL": "#16a085", "BE": "#7f8c8d",
+    }
+    width_m = {"ES": 3.2, "EA20": 2.4}
+    ordre_pl = ["EA20", "EU27_2020", "DE", "FR", "IT", "PT", "NL", "BE", "ES"]
+
+    fig_m = go.Figure()
+    for code in ordre_pl:
+        sub = df_plot[df_plot["pais_codi"] == code].sort_values("dt")
+        if sub.empty:
+            continue
+        fig_m.add_trace(go.Scatter(
+            x=sub["dt"], y=sub["index_volum"],
+            mode="lines", name=sub["pais"].iloc[0],
+            line=dict(color=color_m.get(code, "#999"),
+                      width=width_m.get(code, 1.8)),
+        ))
+    fig_m.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"),
+                    annotation_text="Base 2021=100",
+                    annotation_position="bottom right",
+                    annotation_font_size=10)
+    apply_layout(fig_m,
+        yaxis_title="Índex (2021=100)" if _ca else "Índice (2021=100)",
+        height=420,
+    )
+    st.plotly_chart(fig_m, use_container_width=True)
+
+    # Barres horitzontals: YoY mes actual
+    st.markdown(
+        f"**Variació interanual del volum de vendes — {darrer}**"
+        if _ca else
+        f"**Variación interanual del volumen de ventas — {darrer}**"
+    )
+
+    df_yoy = df_last.dropna(subset=["yoy"]).copy()
+    ordre_grup = {"ES": 0, "EA20": 1, "EU27_2020": 2}
+    df_yoy["_ord"] = df_yoy["pais_codi"].map(ordre_grup).fillna(3)
+    df_yoy = df_yoy.sort_values(["_ord", "yoy"], ascending=[True, True])
+
+    colors_yoy = [RED if c == "ES" else PURPLE if c in ("EA20", "EU27_2020") else BLUE
+                  for c in df_yoy["pais_codi"]]
+    fig_yoy = go.Figure()
+    fig_yoy.add_trace(go.Bar(
+        y=df_yoy["pais"], x=df_yoy["yoy"],
+        orientation="h",
+        marker_color=colors_yoy,
+        text=[fpct(v, 1) for v in df_yoy["yoy"]],
+        textposition="outside",
+        textfont=dict(size=11),
+    ))
+    fig_yoy.add_vline(x=0, line=dict(color="#999", width=1))
+    apply_layout(fig_yoy,
+        xaxis_title="% YoY",
+        height=max(300, len(df_yoy) * 32),
+        margin=dict(l=140, r=80, t=20, b=50),
+    )
+    st.plotly_chart(fig_yoy, use_container_width=True)
+
+    source(
+        f"Eurostat, sts_trtu_m. Volum de vendes G47, ajustat estacional. Darrera dada: {darrer}."
+        if _ca else
+        f"Eurostat, sts_trtu_m. Volumen de ventas G47, ajustado estacional. Último dato: {darrer}."
+    )
+
+    st.divider()
+
+# ─── SECCIÓ ANUAL: VAB i pes sobre PIB ──────────────────────
+
 if df.empty:
-    st.warning("No hi ha dades europees disponibles." if _ca
-               else "No hay datos europeos disponibles.")
+    st.warning("No hi ha dades europees anuals disponibles." if _ca
+               else "No hay datos europeos anuales disponibles.")
     st.stop()
 
 # ─── Selector d'any ─────────────────────────��──────────────────

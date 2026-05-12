@@ -281,6 +281,37 @@ def fetch_vab_nacional_g47():
     return df[["any", "vab_g47_meur"]].dropna()
 
 
+def fetch_retail_volume_monthly():
+    """
+    Dataset sts_trtu_m: volum de vendes mensual del comerç minorista (G47).
+    Indicador VOL_SLS (volume of sales), ajustat estacional i calendari (SCA).
+    Es retorna el nivell index (base 2021=100). La variacio interanual es
+    calcula al processor a partir d'aquest index.
+    Publicacio mensual amb retard ~45 dies.
+    """
+    countries = ["EA20", "EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "BE"]
+    params = [
+        ("nace_r2", "G47"),
+        ("indic_bt", "VOL_SLS"),
+        ("s_adj", "SCA"),
+        ("unit", "I21"),
+    ]
+    for c in countries:
+        params.append(("geo", c))
+
+    data = _fetch_eurostat("sts_trtu_m", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "periode", "TIME_PERIOD": "periode", "geo": "pais_codi"})
+    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
+    df["index_volum"] = pd.to_numeric(df["valor"], errors="coerce")
+    df = df.dropna(subset=["index_volum"])
+
+    return df[["pais", "pais_codi", "periode", "index_volum"]].reset_index(drop=True)
+
+
 if __name__ == "__main__":
     print("Testejant API Eurostat...")
 

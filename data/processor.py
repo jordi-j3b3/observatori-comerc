@@ -999,6 +999,30 @@ def process_ipc():
     return df
 
 
+def process_europa_retail_mensual():
+    """
+    Volum de vendes mensual del comerç minorista G47 per país (Eurostat sts_trtu_m).
+    Base 2021=100, ajustat estacional. Es calcula la variacio interanual (YoY).
+    Cau silenciosament al cache existent si l'API falla.
+    """
+    print("  Carregant retail mensual Eurostat (sts_trtu_m)...")
+    try:
+        df = eurostat.fetch_retail_volume_monthly()
+    except Exception as e:
+        print(f"  Error API Eurostat retail mensual: {e}")
+        return load_cache("europa_retail_mensual")
+
+    if df.empty:
+        print("  AVIS: sense dades; mantenint cache existent")
+        return load_cache("europa_retail_mensual")
+
+    df = df.sort_values(["pais_codi", "periode"]).reset_index(drop=True)
+    # Variacio interanual: index_volum vs el mateix mes de l'any anterior (12 mesos enrere)
+    df["yoy"] = df.groupby("pais_codi")["index_volum"].pct_change(periods=12) * 100
+    save_cache(df, "europa_retail_mensual")
+    return df
+
+
 def process_cdmge():
     """
     CDMGE — comerç diari grans empreses (T=37808, INE experimental).
@@ -1042,6 +1066,9 @@ def process_all():
 
     print("\n5. Europa:")
     process_europa()
+
+    print("\n5b. Europa retail mensual (Eurostat sts_trtu_m):")
+    process_europa_retail_mensual()
 
     print("\n6. EEE Comercio per CCAA:")
     process_eee_ccaa()
