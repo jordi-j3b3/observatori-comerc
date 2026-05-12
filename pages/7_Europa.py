@@ -38,20 +38,26 @@ _ca = st.session_state.lang == "ca"
 
 if _ca:
     intro(
-        "Aquesta secció posiciona el comerç al detall espanyol en el context europeu. "
-        "El <strong>pes del CNAE 47 sobre el PIB</strong> de cada país reflecteix l'estructura econòmica: "
-        "els països amb més pes del comerç al detall solen tenir economies més orientades al consum final, "
-        "mentre que els de menor pes tenen més pes industrial o de serveis avançats. "
-        "El <strong>VAB absolut</strong> indica la dimensió total del sector a cada país. "
+        "Aquesta secció posiciona el comerç al detall espanyol en el context europeu "
+        "des de dues mirades complementàries. "
+        "A dalt, el <strong>pols mensual</strong> del volum de vendes (Eurostat, base 2021=100, "
+        "ajustat estacional) permet seguir el cicle de consum gairebé en temps real i comparar "
+        "Espanya amb la mitjana de l'eurozona i la UE-27. "
+        "A continuació, la mirada <strong>estructural anual</strong> mostra el pes del CNAE 47 "
+        "sobre el PIB de cada país —indicador de l'orientació econòmica cap al consum final— "
+        "i el VAB absolut com a dimensió del sector. "
         "Espanya es destaca en vermell per facilitar la comparació."
     )
 else:
     intro(
-        "Esta sección posiciona el comercio minorista español en el contexto europeo. "
-        "El <strong>peso del CNAE 47 sobre el PIB</strong> de cada país refleja la estructura económica: "
-        "los países con más peso del comercio minorista suelen tener economías más orientadas al consumo final, "
-        "mientras que los de menor peso tienen más peso industrial o de servicios avanzados. "
-        "El <strong>VAB absoluto</strong> indica la dimensión total del sector en cada país. "
+        "Esta sección posiciona el comercio minorista español en el contexto europeo "
+        "desde dos miradas complementarias. "
+        "Arriba, el <strong>pulso mensual</strong> del volumen de ventas (Eurostat, base 2021=100, "
+        "ajustado estacional) permite seguir el ciclo de consumo casi en tiempo real y comparar "
+        "España con la media de la eurozona y la UE-27. "
+        "A continuación, la mirada <strong>estructural anual</strong> muestra el peso del CNAE 47 "
+        "sobre el PIB de cada país —indicador de la orientación económica hacia el consumo final— "
+        "y el VAB absoluto como dimensión del sector. "
         "España se destaca en rojo para facilitar la comparación."
     )
 
