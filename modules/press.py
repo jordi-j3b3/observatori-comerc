@@ -84,12 +84,10 @@ FEEDS = [
      "q=%22comercio+minorista%22+OR+%22comer%C3%A7+al+detall%22+OR+%22retail+Espa%C3%B1a%22+OR+%22distribuci%C3%B3n+comercial%22"
      "&hl=es-ES&gl=ES&ceid=ES:es",
      "multisector", "agregador", False),
-    ("google_modaes",
-     "Modaes (via Google News)",
-     "https://news.google.com/rss/search?"
-     "q=site%3Amodaes.es"
-     "&hl=es-ES&gl=ES&ceid=ES:es",
-     "moda", "sectorial", False),
+    # Modaes: omes. El feed directe te anti-bot i Google News no
+    # indexa els titulars (retorna nomes "- Modaes" buit). La cobertura
+    # de moda es manté via Alimarket non-food, Diffusion Sport i la
+    # consulta general Google News retail.
     ("google_economista",
      "El Economista (via Google News)",
      "https://news.google.com/rss/search?"
