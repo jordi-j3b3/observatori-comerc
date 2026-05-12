@@ -70,42 +70,77 @@ if not df_m.empty:
     eu_row = df_last[df_last["pais_codi"] == "EU27_2020"]
 
     c1, c2, c3, c4 = st.columns(4)
-    lbl_yoy_es = "YoY Espanya" if _ca else "YoY España"
-    lbl_yoy_ea = "YoY Eurozona" if _ca else "YoY Eurozona"
-    lbl_yoy_eu = "YoY UE-27" if _ca else "YoY UE-27"
+    help_anual = (
+        f"Variació del volum de vendes minoristes respecte al mateix mes de l'any "
+        f"anterior. Dada de {darrer}."
+        if _ca else
+        f"Variación del volumen de ventas minoristas respecto al mismo mes del "
+        f"año anterior. Dato de {darrer}."
+    )
+    lbl_es = "Espanya — vs. fa un any" if _ca else "España — vs. hace un año"
+    lbl_ea = "Eurozona — vs. fa un any" if _ca else "Eurozona — vs. hace un año"
+    lbl_eu = "UE-27 — vs. fa un any" if _ca else "UE-27 — vs. hace un año"
     lbl_idx = f"Índex Espanya ({darrer})" if _ca else f"Índice España ({darrer})"
 
     if not es_row.empty:
         es_yoy = es_row.iloc[0].get("yoy")
-        c1.metric(lbl_yoy_es, fpct(es_yoy, 1) if pd.notna(es_yoy) else "—",
-                  help=f"Variació interanual del volum de vendes minoristes (G47), {darrer}"
-                  if _ca else f"Variación interanual del volumen de ventas minoristas (G47), {darrer}")
+        c1.metric(lbl_es, fpct(es_yoy, 1) if pd.notna(es_yoy) else "—",
+                  help=help_anual)
     if not ea_row.empty:
         ea_yoy = ea_row.iloc[0].get("yoy")
-        c2.metric(lbl_yoy_ea, fpct(ea_yoy, 1) if pd.notna(ea_yoy) else "—")
+        c2.metric(lbl_ea, fpct(ea_yoy, 1) if pd.notna(ea_yoy) else "—",
+                  help=help_anual)
     if not eu_row.empty:
         eu_yoy = eu_row.iloc[0].get("yoy")
-        c3.metric(lbl_yoy_eu, fpct(eu_yoy, 1) if pd.notna(eu_yoy) else "—")
+        c3.metric(lbl_eu, fpct(eu_yoy, 1) if pd.notna(eu_yoy) else "—",
+                  help=help_anual)
     if not es_row.empty:
         es_idx = es_row.iloc[0]["index_volum"]
         c4.metric(lbl_idx, fnum(es_idx, 1),
-                  help="Base 2021=100, ajustat estacional"
-                  if _ca else "Base 2021=100, ajustado estacional")
+                  help="Volum de vendes amb base 2021=100, ajustat estacional. "
+                       "Si supera 100, les vendes són superiors a la mitjana de 2021."
+                  if _ca else
+                  "Volumen de ventas con base 2021=100, ajustado estacional. "
+                  "Si supera 100, las ventas son superiores a la media de 2021.")
 
-    # Selector temporal
+    st.write("")
+
+    # ─── Controls del gràfic ────────────────────────────────
+    cc1, cc2 = st.columns([1, 2])
+
     finestres = {
         "24": ("Darrers 2 anys", "Últimos 2 años"),
         "60": ("Darrers 5 anys", "Últimos 5 años"),
         "120": ("Darrers 10 anys", "Últimos 10 años"),
         "all": ("Tota la sèrie", "Toda la serie"),
     }
-    finestra = st.selectbox(
-        "Període" if _ca else "Período",
-        options=list(finestres.keys()),
-        index=1,
-        format_func=lambda k: finestres[k][0 if _ca else 1],
-        key="europa_retail_finestra",
-    )
+    with cc1:
+        finestra = st.selectbox(
+            "Període" if _ca else "Período",
+            options=list(finestres.keys()),
+            index=1,
+            format_func=lambda k: finestres[k][0 if _ca else 1],
+            key="europa_retail_finestra",
+        )
+
+    paisos_opcionals = ["DE", "FR", "IT", "PT", "NL", "BE"]
+    pais_lbl = {
+        "DE": "Alemanya" if _ca else "Alemania",
+        "FR": "França" if _ca else "Francia",
+        "IT": "Itàlia" if _ca else "Italia",
+        "PT": "Portugal",
+        "NL": "Països Baixos" if _ca else "Países Bajos",
+        "BE": "Bèlgica" if _ca else "Bélgica",
+    }
+    with cc2:
+        extra_sel = st.multiselect(
+            "Comparar amb altres països (opcional)" if _ca
+            else "Comparar con otros países (opcional)",
+            options=paisos_opcionals,
+            default=[],
+            format_func=lambda c: pais_lbl.get(c, c),
+            key="europa_retail_paisos",
+        )
 
     df_plot = df_m.copy()
     df_plot["dt"] = pd.to_datetime(df_plot["periode"], format="%Y-%m", errors="coerce")
@@ -114,23 +149,26 @@ if not df_m.empty:
         df_plot = df_plot[df_plot["dt"] >= cutoff]
 
     color_m = {
-        "ES": RED, "EA20": PURPLE, "EU27_2020": "#9b59b6",
+        "ES": RED, "EA20": "#34495e", "EU27_2020": "#7f8c8d",
         "DE": BLUE, "FR": GREEN, "IT": ORANGE,
-        "PT": "#8E44AD", "NL": "#16a085", "BE": "#7f8c8d",
+        "PT": "#8E44AD", "NL": "#16a085", "BE": "#95a5a6",
     }
-    width_m = {"ES": 3.2, "EA20": 2.4}
-    ordre_pl = ["EA20", "EU27_2020", "DE", "FR", "IT", "PT", "NL", "BE", "ES"]
+    # Per defecte només 3 línies (ES + dues referències agregades)
+    paisos_visibles = ["EA20", "EU27_2020"] + extra_sel + ["ES"]
 
     fig_m = go.Figure()
-    for code in ordre_pl:
+    for code in paisos_visibles:
         sub = df_plot[df_plot["pais_codi"] == code].sort_values("dt")
         if sub.empty:
             continue
+        es_destacat = (code == "ES")
         fig_m.add_trace(go.Scatter(
             x=sub["dt"], y=sub["index_volum"],
             mode="lines", name=sub["pais"].iloc[0],
-            line=dict(color=color_m.get(code, "#999"),
-                      width=width_m.get(code, 1.8)),
+            line=dict(
+                color=color_m.get(code, "#999"),
+                width=3.4 if es_destacat else 2.0,
+            ),
         ))
     fig_m.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"),
                     annotation_text="Base 2021=100",
@@ -142,11 +180,90 @@ if not df_m.empty:
     )
     st.plotly_chart(fig_m, use_container_width=True)
 
-    # Barres horitzontals: YoY mes actual
+    # ─── Insight dinàmic ────────────────────────────────────
+    if not es_row.empty and not ea_row.empty:
+        _es_yoy = es_row.iloc[0].get("yoy")
+        _ea_yoy = ea_row.iloc[0].get("yoy")
+        if pd.notna(_es_yoy) and pd.notna(_ea_yoy):
+            _spread = _es_yoy - _ea_yoy
+            _es_hist = (df_m[df_m["pais_codi"] == "ES"]
+                        .sort_values("periode")
+                        .tail(6))
+            _avg_6m = _es_hist["yoy"].dropna().mean()
+            _trend = _es_hist["yoy"].dropna().tolist()
+            _accel = (_trend[-1] - _trend[0]) if len(_trend) >= 2 else 0
+
+            if _ca:
+                verb = "creixen" if _es_yoy >= 0 else "cauen"
+                txt = (
+                    f"Al <strong>{darrer}</strong>, les vendes minoristes a Espanya "
+                    f"<strong>{verb} un {abs(_es_yoy):.1f} %</strong> respecte al mateix "
+                    f"mes de l'any anterior. "
+                )
+                if _spread >= 0.5:
+                    txt += (
+                        f"Espanya supera la mitjana de l'eurozona ({_ea_yoy:+.1f} %) "
+                        f"en <strong>{_spread:+.1f} punts</strong>, "
+                        "senyal d'un cicle de consum més dinàmic. "
+                    )
+                elif _spread <= -0.5:
+                    txt += (
+                        f"Espanya queda <strong>{abs(_spread):.1f} punts</strong> per sota "
+                        f"de l'eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                else:
+                    txt += (
+                        f"En línia amb la mitjana de l'eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                txt += (
+                    f"En els darrers 6 mesos, la variació interanual mitjana s'ha situat "
+                    f"al <strong>{_avg_6m:+.1f} %</strong>"
+                )
+                if _accel > 0.5:
+                    txt += " amb tendència accelerant."
+                elif _accel < -0.5:
+                    txt += " amb tendència desaccelerant."
+                else:
+                    txt += " sense canvis de ritme significatius."
+            else:
+                verb = "crecen" if _es_yoy >= 0 else "caen"
+                txt = (
+                    f"En <strong>{darrer}</strong>, las ventas minoristas en España "
+                    f"<strong>{verb} un {abs(_es_yoy):.1f} %</strong> respecto al mismo "
+                    f"mes del año anterior. "
+                )
+                if _spread >= 0.5:
+                    txt += (
+                        f"España supera la media de la eurozona ({_ea_yoy:+.1f} %) "
+                        f"en <strong>{_spread:+.1f} puntos</strong>, "
+                        "señal de un ciclo de consumo más dinámico. "
+                    )
+                elif _spread <= -0.5:
+                    txt += (
+                        f"España queda <strong>{abs(_spread):.1f} puntos</strong> por debajo "
+                        f"de la eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                else:
+                    txt += (
+                        f"En línea con la media de la eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                txt += (
+                    f"En los últimos 6 meses, la variación interanual media se ha situado "
+                    f"en el <strong>{_avg_6m:+.1f} %</strong>"
+                )
+                if _accel > 0.5:
+                    txt += " con tendencia acelerándose."
+                elif _accel < -0.5:
+                    txt += " con tendencia desacelerándose."
+                else:
+                    txt += " sin cambios de ritmo significativos."
+            insight(txt)
+
+    # Barres horitzontals: variació anual per país, mes actual
     st.markdown(
-        f"**Variació interanual del volum de vendes — {darrer}**"
+        f"**Comparativa per país — vendes vs. fa un any ({darrer})**"
         if _ca else
-        f"**Variación interanual del volumen de ventas — {darrer}**"
+        f"**Comparativa por país — ventas vs. hace un año ({darrer})**"
     )
 
     df_yoy = df_last.dropna(subset=["yoy"]).copy()
@@ -167,7 +284,8 @@ if not df_m.empty:
     ))
     fig_yoy.add_vline(x=0, line=dict(color="#999", width=1))
     apply_layout(fig_yoy,
-        xaxis_title="% YoY",
+        xaxis_title="% variació respecte fa un any" if _ca
+                    else "% variación respecto hace un año",
         height=max(300, len(df_yoy) * 32),
         margin=dict(l=140, r=80, t=20, b=50),
     )
