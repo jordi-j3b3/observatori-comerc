@@ -1,0 +1,190 @@
+"""Recull de premsa: agregador RSS de fonts especialitzades en comerç minorista."""
+import os
+import sys
+from datetime import datetime, timedelta, timezone
+
+import pandas as pd
+import streamlit as st
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from style import inject_css, setup_lang, page_header, page_meta  # noqa: E402
+from modules.press import fetch_press  # noqa: E402
+
+inject_css()
+t = setup_lang(show_selector=False)
+page_header()
+
+_ca = st.session_state.lang == "ca"
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _load():
+    return fetch_press()
+
+
+st.title("Recull de premsa" if _ca else "Resumen de prensa")
+st.markdown(
+    "*Notícies seleccionades de fonts sectorials, generalistes i institucionals sobre comerç al detall, distribució i consum a Espanya.*"
+    if _ca else
+    "*Noticias seleccionadas de fuentes sectoriales, generalistas e institucionales sobre comercio minorista, distribución y consumo en España.*"
+)
+
+with st.spinner("Carregant feeds…" if _ca else "Cargando feeds…"):
+    df = _load()
+
+if df.empty:
+    st.warning(
+        "No s'han pogut carregar els feeds. Torna-ho a provar més tard."
+        if _ca else
+        "No se han podido cargar los feeds. Inténtalo más tarde."
+    )
+    st.stop()
+
+# ─── FILTRES ──────────────────────────────────────────────────
+c1, c2, c3, c4 = st.columns([1, 1.4, 1.4, 2])
+
+periode_opts = {
+    "7": ("Última setmana", "Última semana"),
+    "15": ("Últims 15 dies", "Últimos 15 días"),
+    "30": ("Últims 30 dies", "Últimos 30 días"),
+    "90": ("Últims 90 dies", "Últimos 90 días"),
+    "all": ("Tot", "Todo"),
+}
+
+with c1:
+    p = st.selectbox(
+        "Període" if _ca else "Período",
+        options=list(periode_opts.keys()),
+        index=2,
+        format_func=lambda k: periode_opts[k][0 if _ca else 1],
+    )
+
+with c2:
+    fonts_opt = sorted(df["font"].unique().tolist())
+    fonts_sel = st.multiselect(
+        "Font" if _ca else "Fuente",
+        options=fonts_opt,
+        default=fonts_opt,
+    )
+
+with c3:
+    AREA_LBL_CA = {
+        "multisector": "Multisector",
+        "moda": "Moda i tèxtil",
+        "alimentacio": "Alimentació",
+        "institucional": "Institucional",
+    }
+    AREA_LBL_ES = {
+        "multisector": "Multisector",
+        "moda": "Moda y textil",
+        "alimentacio": "Alimentación",
+        "institucional": "Institucional",
+    }
+    AREA_LBL = AREA_LBL_CA if _ca else AREA_LBL_ES
+    arees_opt = [a for a in ["multisector", "moda", "alimentacio", "institucional"]
+                 if a in df["area"].unique()]
+    arees_sel = st.multiselect(
+        "Àrea" if _ca else "Área",
+        options=arees_opt,
+        default=arees_opt,
+        format_func=lambda a: AREA_LBL.get(a, a),
+    )
+
+with c4:
+    cerca = st.text_input(
+        "Cerca" if _ca else "Buscar",
+        placeholder="paraula clau…" if _ca else "palabra clave…",
+    )
+
+# ─── APLICA FILTRES ──────────────────────────────────────────
+df_f = df.copy()
+
+if p != "all":
+    cutoff = datetime.now(timezone.utc) - timedelta(days=int(p))
+    df_f = df_f[df_f["data"].notna() & (df_f["data"] >= cutoff)]
+
+if fonts_sel:
+    df_f = df_f[df_f["font"].isin(fonts_sel)]
+
+if arees_sel:
+    df_f = df_f[df_f["area"].isin(arees_sel)]
+
+if cerca.strip():
+    needle = cerca.strip().lower()
+    mask = (df_f["titol"].str.lower().str.contains(needle, na=False, regex=False) |
+            df_f["snippet"].str.lower().str.contains(needle, na=False, regex=False))
+    df_f = df_f[mask]
+
+st.caption(
+    f"{len(df_f)} notícies · actualitzat cada hora"
+    if _ca else
+    f"{len(df_f)} noticias · actualizado cada hora"
+)
+
+# ─── ESTIL ──────────────────────────────────────────────────
+st.markdown("""
+<style>
+.press-item {padding:14px 0; border-bottom:1px solid #eee;}
+.press-item:last-child {border-bottom:none;}
+.press-meta {color:#666; font-size:12px; margin-bottom:4px; font-family:'DM Sans',sans-serif;}
+.press-meta .font {font-weight:600; color:#0055a4;}
+.press-meta .badge {display:inline-block; padding:1px 6px; border-radius:3px;
+                    background:#f0f0f0; color:#555; font-size:10px; margin-left:6px;
+                    text-transform:uppercase; letter-spacing:0.5px;}
+.press-meta .badge.institucional {background:#e8f0fa; color:#0055a4;}
+.press-meta .badge.sectorial {background:#fff3e0; color:#c47200;}
+.press-meta .badge.generalista {background:#f5f5f5; color:#666;}
+.press-meta .badge.agregador {background:#f5f5f5; color:#666;}
+.press-titol a {color:#222; text-decoration:none; font-weight:600; font-size:16px;
+                font-family:'DM Sans',sans-serif; line-height:1.35;}
+.press-titol a:hover {color:#0055a4; text-decoration:underline;}
+.press-snippet {color:#555; font-size:13px; margin-top:4px; line-height:1.5;
+                font-family:'DM Sans',sans-serif;}
+</style>
+""", unsafe_allow_html=True)
+
+
+def _fmt_data(d):
+    if pd.isna(d):
+        return "—"
+    now = datetime.now(timezone.utc)
+    delta = now - d
+    if delta.days >= 1:
+        return d.strftime("%d/%m/%Y")
+    h = int(delta.total_seconds() // 3600)
+    if h >= 1:
+        return (f"fa {h} h" if _ca else f"hace {h} h")
+    m = max(1, int(delta.total_seconds() // 60))
+    return (f"fa {m} min" if _ca else f"hace {m} min")
+
+
+# ─── LLISTA ──────────────────────────────────────────────────
+MAX_ITEMS = 100
+items_to_show = df_f.head(MAX_ITEMS)
+
+for _, row in items_to_show.iterrows():
+    tipus = row["tipus"]
+    snippet = row["snippet"] if row["snippet"] else ""
+    html = (
+        f"<div class='press-item'>"
+        f"<div class='press-meta'><span class='font'>{row['font']}</span> · "
+        f"{_fmt_data(row['data'])}"
+        f"<span class='badge {tipus}'>{tipus}</span></div>"
+        f"<div class='press-titol'><a href='{row['link']}' target='_blank' rel='noopener'>{row['titol']}</a></div>"
+        f"<div class='press-snippet'>{snippet}</div>"
+        f"</div>"
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+if len(df_f) > MAX_ITEMS:
+    st.caption(
+        f"Mostrant {MAX_ITEMS} de {len(df_f)} resultats. Afina filtres per veure'n més."
+        if _ca else
+        f"Mostrando {MAX_ITEMS} de {len(df_f)} resultados. Afina filtros para ver más."
+    )
+
+st.divider()
+
+sources_str = ("Distribución Actualidad, Alimarket, Modaes, El Economista, "
+               "Cinco Días, INE, Idescat, Google News")
+page_meta(sources=sources_str, lang=st.session_state.lang)

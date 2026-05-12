@@ -52,6 +52,8 @@ _pages = [
             title="Europa"),
     st.Page("pages/9_Subsectors.py",
             title="Subsectors" if _ca else "Subsectores"),
+    st.Page("pages/B_Premsa.py",
+            title="Recull de premsa" if _ca else "Resumen de prensa"),
 ]
 
 if LOCAL_ONLY:
