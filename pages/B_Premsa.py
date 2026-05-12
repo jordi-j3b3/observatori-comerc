@@ -41,7 +41,31 @@ if df.empty:
     st.stop()
 
 # ─── FILTRES ──────────────────────────────────────────────────
-c1, c2, c3, c4 = st.columns([1, 1.4, 1.4, 2])
+# Filtre primari: tipus de font (segmentat). Filtre fi de font dins un expander.
+
+TIPUS_ORDER = ["sectorial", "generalista", "institucional", "agregador"]
+TIPUS_LBL_CA = {
+    "sectorial": "Sectorial",
+    "generalista": "Generalista",
+    "institucional": "Institucional",
+    "agregador": "Agregador",
+}
+TIPUS_LBL_ES = TIPUS_LBL_CA  # idèntic en castellà
+TIPUS_LBL = TIPUS_LBL_CA if _ca else TIPUS_LBL_ES
+
+AREA_LBL_CA = {
+    "multisector": "Multisector",
+    "moda": "Moda i tèxtil",
+    "alimentacio": "Alimentació",
+    "institucional": "Institucional",
+}
+AREA_LBL_ES = {
+    "multisector": "Multisector",
+    "moda": "Moda y textil",
+    "alimentacio": "Alimentación",
+    "institucional": "Institucional",
+}
+AREA_LBL = AREA_LBL_CA if _ca else AREA_LBL_ES
 
 periode_opts = {
     "7": ("Última setmana", "Última semana"),
@@ -50,6 +74,18 @@ periode_opts = {
     "90": ("Últims 90 dies", "Últimos 90 días"),
     "all": ("Tot", "Todo"),
 }
+
+tipus_present = [t for t in TIPUS_ORDER if t in df["tipus"].unique()]
+tipus_sel = st.pills(
+    "Tipus de font" if _ca else "Tipo de fuente",
+    options=tipus_present,
+    default=tipus_present,
+    format_func=lambda t: TIPUS_LBL.get(t, t),
+    selection_mode="multi",
+    key="press_tipus",
+)
+
+c1, c2, c3 = st.columns([1, 1.5, 2.5])
 
 with c1:
     p = st.selectbox(
@@ -60,27 +96,6 @@ with c1:
     )
 
 with c2:
-    fonts_opt = sorted(df["font"].unique().tolist())
-    fonts_sel = st.multiselect(
-        "Font" if _ca else "Fuente",
-        options=fonts_opt,
-        default=fonts_opt,
-    )
-
-with c3:
-    AREA_LBL_CA = {
-        "multisector": "Multisector",
-        "moda": "Moda i tèxtil",
-        "alimentacio": "Alimentació",
-        "institucional": "Institucional",
-    }
-    AREA_LBL_ES = {
-        "multisector": "Multisector",
-        "moda": "Moda y textil",
-        "alimentacio": "Alimentación",
-        "institucional": "Institucional",
-    }
-    AREA_LBL = AREA_LBL_CA if _ca else AREA_LBL_ES
     arees_opt = [a for a in ["multisector", "moda", "alimentacio", "institucional"]
                  if a in df["area"].unique()]
     arees_sel = st.multiselect(
@@ -90,21 +105,37 @@ with c3:
         format_func=lambda a: AREA_LBL.get(a, a),
     )
 
-with c4:
+with c3:
     cerca = st.text_input(
         "Cerca" if _ca else "Buscar",
         placeholder="paraula clau…" if _ca else "palabra clave…",
     )
 
+# Filtre fi de fonts (opcional, dins expander) — només operatiu si l'usuari hi entra.
+with st.expander("Fonts específiques (avançat)" if _ca else "Fuentes específicas (avanzado)"):
+    fonts_disponibles = sorted(
+        df[df["tipus"].isin(tipus_sel) if tipus_sel else df.index.notnull()]["font"].unique().tolist()
+    )
+    fonts_sel = st.multiselect(
+        "Selecciona fonts" if _ca else "Selecciona fuentes",
+        options=fonts_disponibles,
+        default=fonts_disponibles,
+        label_visibility="collapsed",
+        key="press_fonts",
+    )
+
 # ─── APLICA FILTRES ──────────────────────────────────────────
 df_f = df.copy()
+
+if tipus_sel:
+    df_f = df_f[df_f["tipus"].isin(tipus_sel)]
+
+if fonts_sel and set(fonts_sel) != set(fonts_disponibles):
+    df_f = df_f[df_f["font"].isin(fonts_sel)]
 
 if p != "all":
     cutoff = datetime.now(timezone.utc) - timedelta(days=int(p))
     df_f = df_f[df_f["data"].notna() & (df_f["data"] >= cutoff)]
-
-if fonts_sel:
-    df_f = df_f[df_f["font"].isin(fonts_sel)]
 
 if arees_sel:
     df_f = df_f[df_f["area"].isin(arees_sel)]

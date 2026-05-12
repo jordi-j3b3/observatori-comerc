@@ -25,6 +25,21 @@ FEEDS = [
      "https://www.distribucionactualidad.com/feed/",
      "multisector", "sectorial", False),
 
+    ("diffusion_sport",
+     "Diffusion Sport — Punt de venda",
+     "https://www.diffusionsport.com/punto-de-venta/feed/",
+     "multisector", "sectorial", False),
+
+    ("expansion_distribucion",
+     "Expansión — Distribució",
+     "https://www.expansion.com/rss/empresasdistribucion.xml",
+     "multisector", "sectorial", False),
+
+    ("la_vanguardia",
+     "La Vanguardia — Economia",
+     "https://www.lavanguardia.com/rss/economia.xml",
+     "multisector", "generalista", True),
+
     # Alimarket: un feed XML per sector; cada feed publica nomes l'ultim item.
     # Agreguem diversos sectors per cobrir comerç al detall en sentit ampli.
     ("alimarket_base",
