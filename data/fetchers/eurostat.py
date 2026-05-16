@@ -312,6 +312,106 @@ def fetch_retail_volume_monthly():
     return df[["pais", "pais_codi", "periode", "index_volum"]].reset_index(drop=True)
 
 
+# ─── BUSINESS DEMOGRAPHY (BSD) ────────────────────────────────
+# bd_size: demografia empresarial CNAE G47 anual.
+# Sèrie 2009-2023 viva, comparativa ES vs UE-27 vs grans economies.
+
+BSD_COUNTRIES = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
+
+BSD_INDIC_TOTAL = [
+    "ENT_NR",            # Nombre d'empreses
+    "ENT_BRTHR_PC",      # Taxa naixement (%)
+    "ENT_DTHR_PC",       # Taxa defunció (%)
+    "ENT_BRTHR_DTHR_PC", # Churn = rotació (%)
+    "GRW_ENT_PC",        # Creixement net població empresarial (%)
+    "EMP_NR",            # Persones ocupades
+    "SAL_NR",            # Assalariats
+]
+
+
+def fetch_bsd_total():
+    """
+    bd_size: indicadors estructurals G47 totals (sizeclas=TOTAL, age=TOTAL).
+    Retorna sèrie temporal ES + UE27 + top economies per als 7 indicadors clau.
+    """
+    params = [
+        ("nace_r2", "G47"),
+        ("age", "TOTAL"),
+        ("sizeclas", "TOTAL"),
+    ]
+    for c in BSD_COUNTRIES:
+        params.append(("geo", c))
+    for i in BSD_INDIC_TOTAL:
+        params.append(("indic_sbs", i))
+
+    data = _fetch_eurostat("bd_size", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    return df[["pais", "pais_codi", "any", "indic_sbs", "valor"]].dropna()
+
+
+def fetch_bsd_sizeclas():
+    """
+    bd_size: distribució per mida d'empresa (sizeclas 0, 1-4, 5-9, GE10) per G47.
+    Retorna ENT_NR i EMP_NR per ES + UE27.
+    """
+    params = [
+        ("nace_r2", "G47"),
+        ("age", "TOTAL"),
+        ("geo", "ES"),
+        ("geo", "EU27_2020"),
+        ("indic_sbs", "ENT_NR"),
+        ("indic_sbs", "EMP_NR"),
+    ]
+    for s in ["0", "1-4", "5-9", "GE10"]:
+        params.append(("sizeclas", s))
+
+    data = _fetch_eurostat("bd_size", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    return df[["pais", "pais_codi", "any", "indic_sbs", "sizeclas", "valor"]].dropna()
+
+
+def fetch_bsd_survival():
+    """
+    bd_size: supervivència empresarial per cohort (age Y1, Y2) per G47.
+    Indicador ENT_SRVLR_BRTH_PC = % d'empreses nascudes en l'any t-N que sobreviuen any t.
+    Y3-Y5 tenen massa buits per ES; només Y1-Y2 robustos.
+    """
+    params = [
+        ("nace_r2", "G47"),
+        ("sizeclas", "TOTAL"),
+        ("geo", "ES"),
+        ("geo", "EU27_2020"),
+        ("indic_sbs", "ENT_SRVLR_BRTH_PC"),
+    ]
+    for a in ["Y1", "Y2"]:
+        params.append(("age", a))
+
+    data = _fetch_eurostat("bd_size", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["survival_pc"] = pd.to_numeric(df["valor"], errors="coerce")
+    return df[["pais", "pais_codi", "any", "age", "survival_pc"]].dropna()
+
+
 if __name__ == "__main__":
     print("Testejant API Eurostat...")
 
@@ -326,3 +426,9 @@ if __name__ == "__main__":
     print(f"   {len(df)} registres")
     if not df.empty:
         print(df[df["pais_codi"] == "ES"].head())
+
+    print("\n3. BSD total (bd_size) G47:")
+    df = fetch_bsd_total()
+    print(f"   {len(df)} registres")
+    if not df.empty:
+        print(df[(df["pais_codi"] == "ES") & (df["any"] == 2023)])

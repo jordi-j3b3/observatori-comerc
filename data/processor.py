@@ -1037,6 +1037,57 @@ def process_cdmge():
     return df
 
 
+def process_estructura_retail():
+    """
+    Estructura empresarial CNAE 47 — Eurostat Business Demography (bd_size).
+    Genera 3 caches:
+      - estructura_retail.csv: indicadors totals (ES + UE27 + top economies, 2009-2023)
+      - estructura_retail_mida.csv: distribució per mida d'empresa (ES + UE27)
+      - estructura_retail_supervivencia.csv: % supervivència Y1-Y2 (ES + UE27)
+    Tot CNAE G47 estricte.
+    """
+    print("  Carregant Business Demography G47 (bd_size totals)...")
+    try:
+        df_total = eurostat.fetch_bsd_total()
+    except Exception as e:
+        print(f"  Error fetch_bsd_total: {e}")
+        df_total = load_cache("estructura_retail")
+
+    if df_total.empty:
+        print("  AVIS: cap dada bd_size totals; mantenint cache existent")
+    else:
+        df_total = df_total.sort_values(["pais_codi", "any", "indic_sbs"]).reset_index(drop=True)
+        save_cache(df_total, "estructura_retail")
+
+    print("  Carregant Business Demography G47 (bd_size per mida)...")
+    try:
+        df_size = eurostat.fetch_bsd_sizeclas()
+    except Exception as e:
+        print(f"  Error fetch_bsd_sizeclas: {e}")
+        df_size = load_cache("estructura_retail_mida")
+
+    if df_size.empty:
+        print("  AVIS: cap dada bd_size mida; mantenint cache existent")
+    else:
+        df_size = df_size.sort_values(["pais_codi", "any", "indic_sbs", "sizeclas"]).reset_index(drop=True)
+        save_cache(df_size, "estructura_retail_mida")
+
+    print("  Carregant Business Demography G47 (bd_size supervivència)...")
+    try:
+        df_surv = eurostat.fetch_bsd_survival()
+    except Exception as e:
+        print(f"  Error fetch_bsd_survival: {e}")
+        df_surv = load_cache("estructura_retail_supervivencia")
+
+    if df_surv.empty:
+        print("  AVIS: cap dada bd_size supervivència; mantenint cache existent")
+    else:
+        df_surv = df_surv.sort_values(["pais_codi", "any", "age"]).reset_index(drop=True)
+        save_cache(df_surv, "estructura_retail_supervivencia")
+
+    return df_total
+
+
 def save_last_update():
     """Desa la data i hora de l'última actualització."""
     from datetime import datetime
@@ -1082,7 +1133,10 @@ def process_all():
     print("\n9. CDMGE — comerc diari grans empreses:")
     process_cdmge()
 
-    print("\n10. Registrant data actualitzacio:")
+    print("\n10. Estructura empresarial G47 (Eurostat bd_size):")
+    process_estructura_retail()
+
+    print("\n11. Registrant data actualitzacio:")
     save_last_update()
 
     print("\nProcessament complet!")
