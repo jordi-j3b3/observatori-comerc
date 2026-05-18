@@ -71,8 +71,8 @@ if _ca:
         "Aquesta pàgina situa el comerç al detall espanyol en el context europeu des de quatre angles: "
         "(1) <strong>posicionament estructural</strong> per pes sobre el PIB, "
         "(2) <strong>evolució</strong> del pes per principals economies, "
-        "(3) <strong>dimensió estructural</strong> de la demografia empresarial (Eurostat bd_size, CNAE G47 estricte) i "
-        "(4) <strong>pols mensual</strong> del volum de vendes (Eurostat sts_trtu_m, base 2021=100, ajustat estacional). "
+        "(3) <strong>dimensió estructural</strong> de la demografia empresarial i "
+        "(4) <strong>pols mensual</strong> del volum de vendes. "
         "Espanya es destaca en vermell per facilitar la comparació."
     )
 else:
@@ -80,8 +80,8 @@ else:
         "Esta página sitúa el comercio minorista español en el contexto europeo desde cuatro ángulos: "
         "(1) <strong>posicionamiento estructural</strong> por peso sobre el PIB, "
         "(2) <strong>evolución</strong> del peso por principales economías, "
-        "(3) <strong>dimensión estructural</strong> de la demografía empresarial (Eurostat bd_size, CNAE G47 estricto) y "
-        "(4) <strong>pulso mensual</strong> del volumen de ventas (Eurostat sts_trtu_m, base 2021=100, ajustado estacional). "
+        "(3) <strong>dimensión estructural</strong> de la demografía empresarial y "
+        "(4) <strong>pulso mensual</strong> del volumen de ventas. "
         "España se destaca en rojo para facilitar la comparación."
     )
 
