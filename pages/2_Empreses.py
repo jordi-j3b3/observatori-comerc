@@ -15,6 +15,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, lectura_vigent_box,
+                   minilectura, nom_ccaa_editorial,
                    source, page_meta, fnum, fpct, cagr, apply_layout,
                    load_geojson_spain_ccaa, canaries_inset_layers,
                    PURPLE, PURPLE_LIGHT, RED, GREEN, PALETTE)
@@ -141,6 +142,142 @@ def generar_lectura_vigent_empreses(df):
     }
 
 
+# ─── Patró editorial Z · Nivell 2 (subtítols de gràfic) ────────
+
+def generar_subtitol_evolucio_empreses(df):
+    """Subtítol del gràfic d'evolució nacional, adaptatiu al règim actual.
+
+    Reutilitza la lògica de classificar_regim() ja existent a través d'un
+    recàlcul lleuger de les variables estructurals.
+    """
+    df_esp = (df[df["territori"] == "espanya"]
+              .sort_values("any").reset_index(drop=True).copy())
+    if len(df_esp) < 3:
+        return "Evolución del tejido empresarial del CNAE 47"
+
+    last_emp = int(df_esp.iloc[-1]["empreses"])
+    prev_emp = int(df_esp.iloc[-2]["empreses"])
+    yoy_pct = (last_emp / prev_emp - 1) * 100
+
+    streak = 1
+    for i in range(len(df_esp) - 2, 0, -1):
+        prev_yoy = (df_esp.iloc[i]["empreses"]
+                    / df_esp.iloc[i - 1]["empreses"] - 1) * 100
+        if (prev_yoy < 0) == (yoy_pct < 0):
+            streak += 1
+        else:
+            break
+
+    df_esp["yoy_pct"] = df_esp["empreses"].pct_change() * 100
+    pic_idx = df_esp["empreses"].idxmax()
+    pic_any = int(df_esp.iloc[pic_idx]["any"])
+    pic_emp = int(df_esp.iloc[pic_idx]["empreses"])
+    acumulada_pct = (last_emp / pic_emp - 1) * 100
+    acumulada_abs = last_emp - pic_emp
+    post_pic = df_esp.iloc[pic_idx + 1:]
+    anys_neg = int((post_pic["yoy_pct"] < 0).sum())
+    anys_pos = int((post_pic["yoy_pct"] > 0).sum())
+
+    regim = classificar_regim(acumulada_pct, anys_neg, anys_pos, yoy_pct, streak)
+
+    if regim == "contraccio_estructural":
+        return (f"Caída sostenida desde {pic_any}, con "
+                f"{fnum(abs(acumulada_abs))} empresas menos acumuladas")
+    elif regim == "inflexio":
+        return (f"Recuperación incipiente tras {anys_neg} años de pérdidas "
+                f"desde {pic_any}")
+    elif regim == "estabilitzacio":
+        return (f"Estabilización del tejido tras la contracción iniciada "
+                f"en {pic_any}")
+    elif regim == "recuperacio_consolidada":
+        return f"Crecimiento sostenido del tejido empresarial desde {pic_any}"
+    elif regim == "creixement_puntual":
+        return (f"Repunte anual dentro de una trayectoria de caída desde "
+                f"{pic_any}")
+    return "Evolución del tejido empresarial del CNAE 47"
+
+
+def generar_subtitol_mapa_empreses(mode, last_year):
+    """Subtítol DESCRIPTIU del mapa, adaptatiu al mode (no interpretatiu).
+
+    El mode és un selector de l'usuari; el subtítol confirma què està veient.
+    La interpretació la fa la mini-lectura just sota.
+    """
+    if mode == "density":
+        return (f"Densidad comercial por CCAA en {last_year} "
+                f"(empresas por 1.000 habitantes)")
+    return (f"Distribución del tejido empresarial por CCAA en {last_year} "
+            f"(número de empresas)")
+
+
+# ─── Patró editorial Z · Nivell 3 (mini-lectura del mapa) ──────
+
+def generar_minilectura_mapa_empreses(df, mode, last_year):
+    """Mini-lectura interpretativa del mapa, adaptativa al mode.
+
+    Mode "absolute": top-3 i % concentració.
+    Mode "density":
+      - ratio < 1.3: homogeneïtat alta
+      - ratio >= 1.3 + bottom_ccaa al top-3 absolut: frase de tensió
+        (concentra molts pero registra densitat baixa)
+      - ratio >= 1.3 + bottom_ccaa NO al top-3: fallback genèric
+    """
+    df_ccaa = df[df["territori"] != "espanya"]
+    df_last = df_ccaa[df_ccaa["any"] == last_year]
+
+    if mode == "absolute":
+        df_sort = (df_last.sort_values("empreses", ascending=False)
+                          .reset_index(drop=True))
+        total = df_sort["empreses"].sum()
+        top3 = [nom_ccaa_editorial(x)
+                for x in df_sort.head(3)["territori"].tolist()]
+        pct_top3 = df_sort.head(3)["empreses"].sum() / total * 100
+        pct_s = f"{pct_top3:.1f}".replace(".", ",")
+        if pct_top3 >= 50:
+            return (f"{top3[0]}, {top3[1]} y {top3[2]} concentran el "
+                    f"{pct_s} % del tejido empresarial del CNAE 47 en "
+                    f"{last_year}, una concentración estructural elevada.")
+        return (f"{top3[0]}, {top3[1]} y {top3[2]} concentran el {pct_s} % "
+                f"del tejido empresarial del CNAE 47 en {last_year}, una "
+                f"distribución consistente con el peso poblacional y "
+                f"económico de las grandes áreas metropolitanas.")
+
+    # Mode density
+    df_d = (df_last.dropna(subset=["empreses_per_1000hab"])
+                   .sort_values("empreses_per_1000hab", ascending=False)
+                   .reset_index(drop=True))
+    if df_d.empty:
+        return ""
+
+    top_raw = df_d.iloc[0]["territori"]
+    bottom_raw = df_d.iloc[-1]["territori"]
+    top_ccaa = nom_ccaa_editorial(top_raw)
+    bottom_ccaa = nom_ccaa_editorial(bottom_raw)
+    valor_top = df_d.iloc[0]["empreses_per_1000hab"]
+    valor_bottom = df_d.iloc[-1]["empreses_per_1000hab"]
+    ratio = valor_top / valor_bottom
+    top_s = f"{valor_top:.1f}".replace(".", ",")
+    bot_s = f"{valor_bottom:.1f}".replace(".", ",")
+    ratio_s = f"{ratio:.1f}".replace(".", ",")
+
+    if ratio < 1.3:
+        return (f"En {last_year}, la densidad comercial es notablemente "
+                f"homogénea entre CCAA: el rango va de {top_s} a {bot_s} "
+                f"empresas/1.000 hab., un diferencial moderado.")
+
+    # ratio >= 1.3: comprovar si bottom_raw és al top-3 absolut
+    top3_abs_raw = (df_last.sort_values("empreses", ascending=False)
+                           .head(3)["territori"].tolist())
+    if bottom_raw in top3_abs_raw:
+        return (f"En {last_year}, {bottom_ccaa} concentra el mayor número "
+                f"de empresas pero registra la densidad comercial más baja "
+                f"de España ({bot_s} empresas/1.000 hab.), frente a las "
+                f"{top_s} de {top_ccaa}.")
+    return (f"En {last_year}, la densidad comercial oscila entre {top_s} "
+            f"empresas/1.000 hab. en {top_ccaa} y {bot_s} en {bottom_ccaa}, "
+            f"con un diferencial de {ratio_s}× entre ambos extremos.")
+
+
 # ─── Capçalera ─────────────────────────────────────────────────
 
 st.title(t("emp_title"))
@@ -225,9 +362,26 @@ if len(df_esp) >= 2:
     )
 
 
+# ─── Helper local: subtítol estilitzat sota un st.subheader ───
+
+def _subtitol_grafic(text):
+    """Subtítol descriptiu o interpretatiu sota el títol estable d'un gràfic.
+
+    Estil: italica, color #666, font 13px, marge negatiu superior per pegar
+    visualment al subheader, marge inferior 14px abans del gràfic.
+    """
+    st.markdown(
+        f'<div style="color:#666; font-size:13px; font-style:italic; '
+        f'font-family:\'DM Sans\',sans-serif; '
+        f'margin:-12px 0 14px 4px;">{text}</div>',
+        unsafe_allow_html=True,
+    )
+
+
 # ─── Gràfic nacional · Evolució empreses ───────────────────────
 
-st.subheader(t("emp_evolution"))
+st.subheader("Empreses CNAE 47 · Espanya" if _ca else "Empresas CNAE 47 · España")
+_subtitol_grafic(generar_subtitol_evolucio_empreses(df))
 
 fig_evol = go.Figure()
 fig_evol.add_trace(go.Scatter(
@@ -244,10 +398,10 @@ source("INE, Directori Central d'Empreses (DIRCE)" if _ca
        else "INE, Directorio Central de Empresas (DIRCE)")
 
 
-# ─── Mapa CCAA · Densitat comercial (amb toggle mètrica) ──────
+# ─── Mapa CCAA · Distribució territorial (amb toggle mètrica) ──
 
-st.subheader(("Densitat comercial per CCAA" if _ca
-              else "Densidad comercial por CCAA"))
+st.subheader("Distribució territorial · CCAA" if _ca
+             else "Distribución territorial · CCAA")
 
 if not df_ccaa.empty:
     _anys_ccaa = sorted(df_ccaa["any"].dropna().unique())
@@ -271,6 +425,9 @@ if not df_ccaa.empty:
             horizontal=True,
             key="emp_map_metric",
         )
+
+    # Subtítol descriptiu adaptatiu al mode (dins del bloc, post-selectors)
+    _subtitol_grafic(generar_subtitol_mapa_empreses(_map_metric, int(any_sel)))
 
     df_map = df_ccaa[df_ccaa["any"] == any_sel].copy()
 
@@ -335,6 +492,9 @@ if not df_ccaa.empty:
                             "displayModeBar": False})
     source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
            else "INE, DIRCE y Padrón Municipal. Cálculo propio")
+
+    # Mini-lectura interpretativa, adaptativa al mode seleccionat
+    minilectura(generar_minilectura_mapa_empreses(df, _map_metric, int(any_sel)))
 
 
 # ─── Expander · Veure més detall ───────────────────────────────

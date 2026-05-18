@@ -556,6 +556,44 @@ def intro(text):
     st.markdown(f'<div class="intro-box">{text}</div>', unsafe_allow_html=True)
 
 
+# ─── Helpers editorials reutilitzables ──────────────────────────
+
+NOMS_CCAA_EDITORIALS = {
+    "Madrid (Comunidad de)": "Madrid",
+    "Balears (Illes)": "Baleares",
+    "Rioja (La)": "La Rioja",
+    "Asturias (Principado de)": "Asturias",
+    "Navarra (Comunidad Foral de)": "Navarra",
+    "Murcia (Región de)": "Murcia",
+    "Castilla - La Mancha": "Castilla-La Mancha",
+}
+
+
+def nom_ccaa_editorial(s):
+    """Format editorial dels noms de CCAA per a textos generats.
+
+    Mapeja noms literals del CSV (que mantenen la denominació institucional
+    oficial) a versions netes per a frases narratives. Aplicar només a textos;
+    CSVs, mapes, taules i etiquetes de gràfics mantenen els noms literals.
+    """
+    return NOMS_CCAA_EDITORIALS.get(s, s)
+
+
+def minilectura(text):
+    """Paràgraf gris discret sota un gràfic. Nivell 3 del patró editorial Z.
+
+    Observació analítica curta (15-25 paraules) sense caixa ni border.
+    Color #888, font 14px, line-height 1.5. Marge superior 12px respecte al
+    gràfic, marge inferior 24px respecte al següent element.
+    """
+    st.markdown(
+        f'<div style="color:#888; font-size:14px; line-height:1.5; '
+        f'font-family:\'DM Sans\',sans-serif; '
+        f'margin:12px 4px 24px 4px;">{text}</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def lectura_vigent_box(titol, data_referencia,
                       autor="Observatorio del Comercio · J3B3 Consulting",
                       eyebrow="LECTURA VIGENTE"):
