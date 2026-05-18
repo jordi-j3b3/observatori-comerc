@@ -26,5 +26,5 @@ st.info(
 )
 
 st.caption(
-    "Jordi Bacaria · J3B3 Consulting"
+    "Observatorio del Comercio · J3B3 Consulting"
 )

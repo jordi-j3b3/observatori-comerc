@@ -54,13 +54,16 @@ _ca = st.session_state.lang == "ca"
 _tesi = load_tesi()
 _tesi_titol = None
 _tesi_data = None
-_tesi_autor = "Jordi Bacaria"
+_tesi_autor = "Observatorio del Comercio · J3B3 Consulting"
 _tesi_enllac = ""
 
 if _tesi:
     _tesi_titol = _tesi.get("titol", "").strip()
     _tesi_data_str = _tesi.get("data_publicacio", "").strip()
-    _tesi_autor = _tesi.get("autor", "Jordi Bacaria").strip() or "Jordi Bacaria"
+    _tesi_autor = (
+        _tesi.get("autor", "Observatorio del Comercio · J3B3 Consulting").strip()
+        or "Observatorio del Comercio · J3B3 Consulting"
+    )
     _tesi_enllac = _tesi.get("enllac_pulso", "").strip()
     try:
         _tesi_data = date.fromisoformat(_tesi_data_str)
@@ -96,7 +99,7 @@ if _tesi_titol and not _tesi_obsoleta:
                 {_tesi_titol}
             </div>
             <div style="color:#666; font-size:12px;">
-                {_tesi_autor} · J3B3 Consulting · {_tesi_data_fmt}
+                {_tesi_autor} · {_tesi_data_fmt}
             </div>
             {_link_html}
         </div>
@@ -721,7 +724,7 @@ st.markdown(
     """
     <div style="text-align:right; color:#888; font-size:12px;
                 font-family:'DM Sans',sans-serif; margin-top:12px;">
-        Jordi Bacaria · J3B3 Consulting
+        Observatorio del Comercio · J3B3 Consulting
     </div>
     """,
     unsafe_allow_html=True,

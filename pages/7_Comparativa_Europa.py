@@ -52,7 +52,7 @@ def lectura_placeholder():
                     font-family:'DM Sans',sans-serif;">
             <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
                         text-transform:uppercase; color:#f0a500; margin-bottom:6px;">
-                LECTURA · Jordi Bacaria · J3B3 Consulting
+                LECTURA · Observatorio del Comercio · J3B3 Consulting
             </div>
             <div style="color:#555; font-size:14px; font-style:italic;">
                 [{txt}]
