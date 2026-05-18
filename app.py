@@ -76,16 +76,9 @@ p_ec = st.Page(
     "pages/5_Ecommerce.py",
     title="E-commerce",
 )
-# Provisional fins al Bloc C: Europa + Estructura UE separades
 p_europa = st.Page(
-    "pages/7_Europa.py",
-    title=("Comparativa Europa (conjuntural)" if _ca
-           else "Comparativa Europa (coyuntural)"),
-)
-p_estructura_ue = st.Page(
-    "pages/C_Estructura_UE.py",
-    title=("Comparativa Europa (estructural)" if _ca
-           else "Comparativa Europa (estructural)"),
+    "pages/7_Comparativa_Europa.py",
+    title=("Comparativa Europa" if _ca else "Comparativa Europa"),
 )
 
 # DETALL
@@ -112,7 +105,7 @@ p_premsa = st.Page(
 nav = {
     SEC_HOME: [p_inici],
     SEC_LECTURAS: [p_lecturas],
-    SEC_RADIO: [p_pols, p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa, p_estructura_ue],
+    SEC_RADIO: [p_pols, p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
     SEC_DETALL: [p_subs, p_terr],
     SEC_RECURSOS: [p_metod, p_premsa],
 }
