@@ -1,7 +1,10 @@
-"""Pàgina d'inici: KPIs, introducció i conclusions dinàmiques."""
+"""Pàgina d'inici: tesi vigent, KPIs, Pols diari condensat, conclusions, butlletí."""
+import json
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import os, sys
+from datetime import datetime, date, timedelta
 from io import BytesIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -19,18 +22,109 @@ def load_data(name):
         return pd.read_csv(path)
     return pd.DataFrame()
 
+@st.cache_data(ttl=3600)
+def load_tesi():
+    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tesi_vigent.json")
+    if not os.path.exists(p):
+        return None
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
 df_pib = load_data("pib_vab")
 df_empreses = load_data("empreses")
 df_prod = load_data("productivitat")
 df_ecommerce = load_data("ecommerce")
 df_europa = load_data("europa_vab")
 df_territori = load_data("eee_ccaa")
+df_cdmge = load_data("cdmge")
 
 # ─── HEADER ────────────────────────────────────────────────────
 
 page_header()
 st.title(t("app_title"))
 st.markdown(f"*{t('app_subtitle')}*")
+
+_ca = st.session_state.lang == "ca"
+
+# ─── TESI VIGENT ───────────────────────────────────────────────
+
+_tesi = load_tesi()
+_tesi_titol = None
+_tesi_data = None
+_tesi_autor = "Jordi Bacaria"
+_tesi_enllac = ""
+
+if _tesi:
+    _tesi_titol = _tesi.get("titol", "").strip()
+    _tesi_data_str = _tesi.get("data_publicacio", "").strip()
+    _tesi_autor = _tesi.get("autor", "Jordi Bacaria").strip() or "Jordi Bacaria"
+    _tesi_enllac = _tesi.get("enllac_pulso", "").strip()
+    try:
+        _tesi_data = date.fromisoformat(_tesi_data_str)
+    except (TypeError, ValueError):
+        _tesi_data = None
+
+# Fallback si no hi ha fitxer o té més de 10 dies
+_avui = date.today()
+_tesi_obsoleta = (_tesi_data is None) or ((_avui - _tesi_data).days > 10)
+
+if _tesi_titol and not _tesi_obsoleta:
+    _tesi_data_fmt = _tesi_data.strftime("%d/%m/%Y")
+    _link_html = ""
+    if _tesi_enllac:
+        _link_lbl = "Llegir el Pulso complet →" if _ca else "Leer el Pulso completo →"
+        _link_html = (
+            f'<div style="margin-top:10px;"><a href="{_tesi_enllac}" target="_blank" '
+            f'rel="noopener" style="color:#0055a4; text-decoration:none; font-size:13px; '
+            f'font-weight:600;">{_link_lbl}</a></div>'
+        )
+    _eyebrow = "Tesi vigent" if _ca else "Tesis vigente"
+    st.markdown(
+        f"""
+        <div style="background:#f5f7fb; border-left:4px solid #0055a4;
+                    padding:18px 22px; margin:18px 0 28px; border-radius:3px;
+                    font-family:'DM Sans',sans-serif;">
+            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+                        text-transform:uppercase; color:#0055a4; margin-bottom:8px;">
+                {_eyebrow}
+            </div>
+            <div style="color:#222; font-size:18px; font-weight:500; line-height:1.5;
+                        margin-bottom:8px;">
+                {_tesi_titol}
+            </div>
+            <div style="color:#666; font-size:12px;">
+                {_tesi_autor} · J3B3 Consulting · {_tesi_data_fmt}
+            </div>
+            {_link_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    # Fallback neutre: sense tesi vigent disponible
+    _eyebrow = "Tesi vigent" if _ca else "Tesis vigente"
+    _fb = ("La tesi vigent es publicarà aquí cada dilluns. Aviat disponible."
+           if _ca else
+           "La tesis vigente se publicará aquí cada lunes. Próximamente disponible.")
+    st.markdown(
+        f"""
+        <div style="background:#fafafa; border-left:4px solid #ccc;
+                    padding:14px 18px; margin:18px 0 28px; border-radius:3px;
+                    font-family:'DM Sans',sans-serif;">
+            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+                        text-transform:uppercase; color:#999; margin-bottom:6px;">
+                {_eyebrow}
+            </div>
+            <div style="color:#777; font-size:14px; font-style:italic;">
+                {_fb}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ─── KPIs ──────────────────────────────────────────────────────
 
@@ -92,11 +186,115 @@ with col4:
     else:
         st.metric(t("kpi_productivitat"), "—")
 
-# ─── INTRODUCCIO ──────────────────────────────────────────────
+# ─── POLS DIARI CONDENSAT ──────────────────────────────────────
+
+st.markdown("---")
+
+if not df_cdmge.empty and "indicador" in df_cdmge.columns:
+    _df = df_cdmge.copy()
+    _df["data"] = pd.to_datetime(_df["data"], errors="coerce")
+    _ta = (_df[_df["indicador"] == "tasa_anual"]
+           .dropna(subset=["data", "valor"])
+           .sort_values("data")
+           .reset_index(drop=True))
+
+    if len(_ta) > 30:
+        _last_dt = _ta["data"].max()
+        _last_val = float(_ta.iloc[-1]["valor"])
+        _avg_30 = float(_ta.tail(30)["valor"].mean())
+        _avg_90 = float(_ta.tail(90)["valor"].mean())
+
+        # Finestra 12 mesos amb MM30
+        _cutoff = _last_dt - pd.Timedelta(days=365)
+        _plot = _ta[_ta["data"] >= _cutoff].copy()
+        _plot["mm30"] = _plot["valor"].rolling(window=30, min_periods=8).mean()
+
+        _eyebrow = ("Pols diari · darrers 12 mesos" if _ca
+                    else "Pulso diario · últimos 12 meses")
+        _sub_lbl = ("Variació anual de vendes diàries (grans empreses, mitjana mòbil 30 dies)"
+                    if _ca else
+                    "Variación anual de ventas diarias (grandes empresas, media móvil 30 días)")
+
+        st.markdown(
+            f"""
+            <div style="margin:6px 0 4px;">
+                <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+                            text-transform:uppercase; color:#d24d2c;">
+                    {_eyebrow}
+                </div>
+                <div style="font-size:13px; color:#666; margin-top:2px;">
+                    {_sub_lbl}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        _fig = go.Figure()
+        _fig.add_trace(go.Scatter(
+            x=_plot["data"], y=_plot["mm30"],
+            mode="lines",
+            line=dict(color="#d24d2c", width=2.6),
+            fill="tozeroy",
+            fillcolor="rgba(210, 77, 44, 0.10)",
+            hovertemplate="%{x|%d/%m/%Y}: %{y:+.1f}%<extra></extra>",
+            showlegend=False,
+        ))
+        _fig.add_hline(y=0, line_dash="solid", line_color="#888", line_width=1)
+        _fig.update_layout(
+            height=240,
+            margin=dict(l=10, r=10, t=10, b=20),
+            yaxis_title="",
+            xaxis_title="",
+            hovermode="x unified",
+            plot_bgcolor="white",
+        )
+        _fig.update_yaxes(gridcolor="#eee", zeroline=False, ticksuffix="%")
+        _fig.update_xaxes(gridcolor="#f5f5f5")
+        st.plotly_chart(_fig, use_container_width=True,
+                        config={"displayModeBar": False})
+
+        # Lectura curta automàtica (3-4 línies)
+        _signe = ("creixement" if _avg_30 > 0 else
+                  ("contracció" if _avg_30 < 0 else "estabilitat")) if _ca else \
+                 ("crecimiento" if _avg_30 > 0 else
+                  ("contracción" if _avg_30 < 0 else "estabilidad"))
+        _accel = _avg_30 - _avg_90
+        if abs(_accel) < 0.5:
+            _dir = ("estable respecte del trimestre anterior" if _ca
+                    else "estable respecto al trimestre anterior")
+        elif _accel > 0:
+            _dir = ("accelerant respecte del trimestre anterior" if _ca
+                    else "acelerando respecto al trimestre anterior")
+        else:
+            _dir = ("desaccelerant respecte del trimestre anterior" if _ca
+                    else "desacelerando respecto al trimestre anterior")
+
+        if _ca:
+            _txt = (
+                f"Les vendes diàries de les grans empreses retail mostren un **{_signe} interanual** "
+                f"del **{_avg_30:+.1f}%** (mitjana 30 dies), {_dir}. "
+                f"Darrera dada disponible: {_last_dt.strftime('%d/%m/%Y')}."
+            )
+        else:
+            _txt = (
+                f"Las ventas diarias de las grandes empresas retail muestran un **{_signe} interanual** "
+                f"del **{_avg_30:+.1f}%** (media 30 días), {_dir}. "
+                f"Último dato disponible: {_last_dt.strftime('%d/%m/%Y')}."
+            )
+        st.markdown(_txt)
+
+        # Botó cap al Pols diari complet
+        st.page_link(
+            "pages/0a_Pols_diari.py",
+            label=("Veure el detall del Pols diari →" if _ca
+                   else "Ver el detalle del Pulso diario →"),
+            icon=None,
+        )
+
+# ─── INTRODUCCIO ───────────────────────────────────────────────
 
 st.divider()
-
-_ca = st.session_state.lang == "ca"
 
 if _ca:
     st.markdown("""
@@ -156,7 +354,6 @@ if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns and "vab_cnae47_
         _pib_yr = int(_pib_last["any"])
         _pib_n = _pib_yr - int(_pib_first["any"])
         _cagr_real = cagr(_pib_first["vab_cnae47_constants"], _pib_last["vab_cnae47_constants"], _pib_n)
-        _var_last = ((_pib_last["vab_cnae47_corrents"] / _pib_rows.iloc[-2]["vab_cnae47_corrents"]) - 1) * 100
         if _ca:
             _conclusions.append(
                 f"El VAB nominal del CNAE 47 es de <strong>{fnum(_pib_last['vab_cnae47_corrents'])} M EUR</strong> ({_pib_yr}), "
@@ -294,15 +491,12 @@ if _conclusions:
         unsafe_allow_html=True,
     )
 
-# ─── DESCARREGA EXCEL ─────────────────────────────────────────
+# ─── BUTLLETI ─────────────────────────────────────────────────
 
 st.divider()
-st.subheader("Descàrrega de dades" if _ca else "Descarga de datos")
-st.markdown(
-    ("Descarrega un fitxer Excel amb totes les dades i grafics de l'observatori."
-     if _ca else
-     "Descarga un archivo Excel con todos los datos y graficos del observatorio.")
-)
+newsletter_form(st.session_state.lang)
+
+# ─── BOTÓ DESCÀRREGA EXCEL (al peu) ───────────────────────────
 
 
 def _build_excel():
@@ -508,38 +702,30 @@ def _build_excel():
     return buf
 
 
-col_dl1, col_dl2 = st.columns(2)
-with col_dl1:
-    _excel_buf = _build_excel()
-    if _excel_buf:
-        st.download_button(
-            label=("Descarregar Excel (totes les dades)" if _ca
-                   else "Descargar Excel (todos los datos)"),
-            data=_excel_buf,
-            file_name="observatori_comerc_detall.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
-    else:
-        st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
-
-with col_dl2:
-    _info_path_static = os.path.join(os.path.dirname(__file__), "..", "static", "infografia_q1_2026.html")
-    if os.path.exists(_info_path_static):
-        # Link per obrir la infografia al navegador (Streamlit static serving)
-        st.markdown(
-            f"""<a href="app/static/infografia_q1_2026.html" target="_blank" rel="noopener"
-                  style="display:inline-block; background-color:#0055a4; color:white;
-                         padding:8px 18px; border-radius:3px; text-decoration:none;
-                         font-family:'DM Sans',sans-serif; font-weight:500; font-size:14px;">
-               {('Obrir infografia Q1 2026' if _ca else 'Abrir infografía Q1 2026')} ↗
-               </a>""",
-            unsafe_allow_html=True,
-        )
-
-# ─── BUTLLETI ─────────────────────────────────────────────────
-
 st.divider()
-newsletter_form(st.session_state.lang)
+_excel_buf = _build_excel()
+if _excel_buf:
+    st.download_button(
+        label=("Descarregar Excel amb totes les dades" if _ca
+               else "Descargar Excel con todos los datos"),
+        data=_excel_buf,
+        file_name="observatori_comerc_detall.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+else:
+    st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
+
+# ─── SIGNATURA JBJ ─────────────────────────────────────────────
+
+st.markdown(
+    """
+    <div style="text-align:right; color:#888; font-size:12px;
+                font-family:'DM Sans',sans-serif; margin-top:12px;">
+        Jordi Bacaria · J3B3 Consulting
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ─── META ─────────────────────────────────────────────────────
 
