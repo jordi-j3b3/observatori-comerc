@@ -275,4 +275,47 @@ Servidor local actiu a `http://localhost:8765` (executat amb
 
 ---
 
-*Fi de la verificació Fase 1. Servidor local actiu per a revisió visual.*
+## Fix 4 — Fallback tesi vigent
+
+Verificat el 2026-05-18 (després d'aplicar Fix 6, amb el JSON contenint la tesi real del Pulso 1).
+
+### Lògica verificada
+
+`pages/0_Inici.py` carrega `data/cache/tesi_vigent.json` via `load_tesi()` (cache 1h). La lògica de presentació té dos camins:
+
+- **Mostra tesi**: si `_tesi_titol` és no-buit **i** `_tesi_obsoleta == False`.
+- **Mostra fallback neutre**: si el fitxer no existeix, no és parsejable, o `data_publicacio` és invàlida o > 10 dies vs `date.today()`.
+
+L'helper local `_safe_str(value, default)` afegit al Fix 6 gestiona `null` del JSON sense excepcions a tots els camps (`titol`, `data_publicacio`, `autor`, `enllac_pulso`).
+
+### Resultat dels 3 casos demanats
+
+Verificat per simulació Python (mateixa lògica que el codi de la home), amb manipulació real del fitxer (rename, restore, edició de la data, restauració). El JSON original es restaura sense pèrdua al final.
+
+| Cas | Estat fitxer | `data_publicacio` | Resultat | Esperat |
+|---|---|---|---|---|
+| **A** — Fitxer no existeix | Renombrat fora | (n/a) | **FALLBACK** ("Próximamente disponible") | FALLBACK |
+| **B** — Data antiga (> 10 dies) | Present | 2026-04-01 (47 dies enrere) | **FALLBACK** | FALLBACK |
+| **C** — Recent (avui) | Present (Pulso 1 real) | 2026-05-18 | **TESI** ("El retail español crece +4,1%...") | TESI |
+
+### Casos extra verificats
+
+| Cas | Detall | Resultat | Comentari |
+|---|---|---|---|
+| **D** — JSON corrupte | Contingut `{ malformat: ` | FALLBACK | `json.JSONDecodeError` capturada a `load_tesi()` |
+| **E** — `enllac_pulso: null` (cas actual del Pulso 1) | Valor JSON `null` (Python `None`) | `_safe_str(None) == ""` | Sense link renderitzat. Cap `AttributeError` sobre `None.strip()`. |
+
+### Validació runtime
+
+- HTTP `/inici` → `200 OK` amb la tesi real renderitzada (verificat al Fix 6).
+- Cap entrada `error/exception/traceback` al log de Streamlit.
+
+### Conclusió Fix 4
+
+**Cap canvi de codi addicional necessari.** La lògica de fallback és correcta i defensiva. El comportament és l'esperat als 3 casos demanats + 2 casos límit detectats.
+
+L'única millora indirecta s'ha aplicat al Fix 6 (helper `_safe_str` per a `null` del JSON), que va resoldre un `AttributeError` potencial sobre `None.strip()` quan `enllac_pulso: null`.
+
+---
+
+*Fi de la verificació Fase 1 + Fixes tècnics. Servidor local accessible per a revisió visual.*
