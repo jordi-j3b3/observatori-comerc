@@ -1,6 +1,6 @@
 """
 Observatori del Comerç Minorista a Espanya (CNAE 47)
-Punt d'entrada: navegació amb títols traduïts.
+Punt d'entrada: navegació jeràrquica HOME / LECTURAS / RADIOGRAFIA / DETALL / RECURSOS.
 """
 import os
 import streamlit as st
@@ -29,43 +29,104 @@ _ca = st.session_state.lang == "ca"
 # Per veure-les en local: `OBSERVATORI_LOCAL=1 streamlit run app.py`
 LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
-# ─── NAVEGACIÓ AMB TÍTOLS TRADUÏTS ──────────────────────────────
+# ─── NAVEGACIÓ JERÀRQUICA AMB TÍTOLS TRADUÏTS ──────────────────
 
-_pages = [
-    st.Page("pages/0_Inici.py",
-            title="Inici" if _ca else "Inicio", default=True),
-    st.Page("pages/0a_Pols_diari.py",
-            title="Pols diari" if _ca else "Pulso diario"),
-    st.Page("pages/1_PIB_i_VAB.py",
-            title="PIB i VAB" if _ca else "PIB y VAB"),
-    st.Page("pages/2_Empreses.py",
-            title="Empreses" if _ca else "Empresas"),
-    st.Page("pages/3_Ocupació.py",
-            title="Ocupació" if _ca else "Empleo"),
-    st.Page("pages/4_Productivitat.py",
-            title="Productivitat" if _ca else "Productividad"),
-    st.Page("pages/5_Ecommerce.py",
-            title="E-commerce"),
-    st.Page("pages/6_Territori.py",
-            title="Territori" if _ca else "Territorio"),
-    st.Page("pages/7_Europa.py",
-            title="Europa"),
-    st.Page("pages/9_Subsectors.py",
-            title="Subsectors" if _ca else "Subsectores"),
-    st.Page("pages/B_Premsa.py",
-            title="Recull de premsa" if _ca else "Resumen de prensa"),
-    st.Page("pages/C_Estructura_UE.py",
-            title="Estructura UE" if _ca else "Estructura UE"),
-]
+# Etiquetes de seccions (capçaleres del sidebar)
+SEC_HOME = "Inicio" if not _ca else "Inici"
+SEC_LECTURAS = "Lecturas" if not _ca else "Lectures"
+SEC_RADIO = "Radiografía" if not _ca else "Radiografia"
+SEC_DETALL = "Detalle" if not _ca else "Detall"
+SEC_RECURSOS = "Recursos"
 
+# HOME
+p_inici = st.Page(
+    "pages/0_Inici.py",
+    title=("Inici" if _ca else "Inicio"),
+    default=True,
+)
+
+# LECTURAS (placeholder Fase 2)
+p_lecturas = st.Page(
+    "pages/L_Lecturas.py",
+    title=("Pulso de la setmana" if _ca else "Pulso de la semana"),
+)
+
+# RADIOGRAFIA — comença amb Pols diari (conjuntural diari), segueixen sèries anuals
+p_pols = st.Page(
+    "pages/0a_Pols_diari.py",
+    title=("Pols diari" if _ca else "Pulso diario"),
+)
+p_pib = st.Page(
+    "pages/1_PIB_i_VAB.py",
+    title=("PIB i VAB" if _ca else "PIB y VAB"),
+)
+p_emp = st.Page(
+    "pages/2_Empreses.py",
+    title=("Empreses" if _ca else "Empresas"),
+)
+p_ocu = st.Page(
+    "pages/3_Ocupació.py",
+    title=("Ocupació" if _ca else "Empleo"),
+)
+p_prod = st.Page(
+    "pages/4_Productivitat.py",
+    title=("Productivitat" if _ca else "Productividad"),
+)
+p_ec = st.Page(
+    "pages/5_Ecommerce.py",
+    title="E-commerce",
+)
+# Provisional fins al Bloc C: Europa + Estructura UE separades
+p_europa = st.Page(
+    "pages/7_Europa.py",
+    title=("Comparativa Europa (conjuntural)" if _ca
+           else "Comparativa Europa (coyuntural)"),
+)
+p_estructura_ue = st.Page(
+    "pages/C_Estructura_UE.py",
+    title=("Comparativa Europa (estructural)" if _ca
+           else "Comparativa Europa (estructural)"),
+)
+
+# DETALL
+p_subs = st.Page(
+    "pages/9_Subsectors.py",
+    title=("Subsectors" if _ca else "Subsectores"),
+)
+p_terr = st.Page(
+    "pages/6_Territori.py",
+    title=("Territori" if _ca else "Territorio"),
+)
+
+# RECURSOS
+p_metod = st.Page(
+    "pages/8_Metodologia.py",
+    title=("Metodologia" if _ca else "Metodología"),
+)
+p_premsa = st.Page(
+    "pages/B_Premsa.py",
+    title=("Recull de premsa" if _ca else "Resumen de prensa"),
+)
+
+# Construcció del diccionari de navegació
+nav = {
+    SEC_HOME: [p_inici],
+    SEC_LECTURAS: [p_lecturas],
+    SEC_RADIO: [p_pols, p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa, p_estructura_ue],
+    SEC_DETALL: [p_subs, p_terr],
+    SEC_RECURSOS: [p_metod, p_premsa],
+}
+
+# A_Municipis.py només es publica si OBSERVATORI_LOCAL=1.
+# Es manté al disc però fora del routing per defecte.
 if LOCAL_ONLY:
-    _pages.append(st.Page("pages/A_Municipis.py",
-                          title="Municipis (local)" if _ca else "Municipios (local)"))
+    p_municipis = st.Page(
+        "pages/A_Municipis.py",
+        title=("Municipis (local)" if _ca else "Municipios (local)"),
+    )
+    nav[SEC_DETALL].append(p_municipis)
 
-_pages.append(st.Page("pages/8_Metodologia.py",
-                      title="Metodologia" if _ca else "Metodología"))
-
-pg = st.navigation(_pages)
+pg = st.navigation(nav)
 
 # ─── SIDEBAR BRANDING ───────────────────────────────────────────
 
@@ -79,7 +140,7 @@ with st.sidebar:
 
     st.divider()
 
-    # Secció Recursos
+    # Secció Recursos (peu del sidebar)
     _lbl_recursos = "Recursos" if _ca else "Recursos"
     _lbl_about = "Sobre l'observatori" if _ca else "Sobre el observatorio"
     _lbl_consulting = "J3B3 Consulting"
