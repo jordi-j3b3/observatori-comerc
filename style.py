@@ -100,18 +100,22 @@ def _load_translations():
 
 
 def setup_lang(show_selector=True):
-    """Configura l'idioma: inicialitza session_state i retorna funció t()."""
+    """Configura l'idioma: inicialitza session_state i retorna funció t().
+
+    Per defecte: castellà (es). El selector ca/es es manté visible al header.
+    """
     TRANS = _load_translations()
     if "lang" not in st.session_state:
-        st.session_state.lang = "ca"
+        st.session_state.lang = "es"
 
     if show_selector:
         with st.sidebar:
-            lang_options = {"Català": "ca", "Castellano": "es"}
+            # Ordre: Castellano primer (default), Català segon
+            lang_options = {"Castellano": "es", "Català": "ca"}
             selected = st.selectbox(
                 "Idioma",
                 list(lang_options.keys()),
-                index=0 if st.session_state.lang == "ca" else 1,
+                index=0 if st.session_state.lang == "es" else 1,
             )
             st.session_state.lang = lang_options[selected]
 
@@ -516,7 +520,7 @@ def inject_css():
 
 def page_header():
     """Mostra la capçalera J3B3 + OBSERVATORI a qualsevol pàgina. Logo enllaça a j3b3.com."""
-    lang = st.session_state.get("lang", "ca")
+    lang = st.session_state.get("lang", "es")
     badge = "OBSERVATORI" if lang == "ca" else "OBSERVATORIO"
     st.markdown(f"""
     <div class="j3b3-header">
@@ -530,7 +534,7 @@ def page_header():
 
 def insight(text):
     """Mostra un bloc d'insight/conclusió."""
-    title = "Anàlisi" if st.session_state.get("lang", "ca") == "ca" else "Análisis"
+    title = "Anàlisi" if st.session_state.get("lang", "es") == "ca" else "Análisis"
     st.markdown(f"""
     <div class="insight-box">
         <div class="insight-title">{title}</div>
@@ -546,7 +550,7 @@ def intro(text):
 
 def source(text):
     """Mostra la font de dades sota un gràfic, amb link a metodologia si escau."""
-    lang = st.session_state.get("lang", "ca")
+    lang = st.session_state.get("lang", "es")
     lbl = "Font" if lang == "ca" else "Fuente"
     if "Càlcul propi" in text or "Cálculo propio" in text:
         meto_lbl = "Veure metodologia" if lang == "ca" else "Ver metodología"
@@ -612,7 +616,7 @@ def cagr(first_val, last_val, years):
     return ((last_val / first_val) ** (1 / years) - 1) * 100
 
 
-def page_meta(sources, lang="ca"):
+def page_meta(sources, lang="es"):
     """Footer global de cada pàgina: branding, recursos, contacte i meta info.
 
     Manté la signatura històrica per no haver de modificar les pàgines existents.
@@ -693,7 +697,7 @@ def page_meta(sources, lang="ca"):
     )
 
 
-def newsletter_form(lang="ca", compact=False):
+def newsletter_form(lang="es", compact=False):
     """Caixa de subscripció al butlletí trimestral (MailerLite embed).
 
     compact=False: caixa gran amb capçalera (al peu d'Inici).
