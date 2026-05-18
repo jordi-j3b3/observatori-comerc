@@ -171,6 +171,14 @@ def inject_css():
             color: #FFFFFF !important;
         }
 
+        /* Ocultar el botó "View less"/"View more" del nav del sidebar.
+           Streamlit 1.50 té el text hardcoded al bundle JS sense suport de
+           traducció. Amb 5 seccions distribuïdes (HOME, LECTURAS, RADIOGRAFIA,
+           DETALL, RECURSOS) el col·lapse no fa falta. */
+        [data-testid="stSidebarNavViewButton"] {
+            display: none !important;
+        }
+
         /* Botons */
         .stDownloadButton button {
             background-color: #0055a4;
