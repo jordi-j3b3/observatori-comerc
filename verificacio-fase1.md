@@ -318,4 +318,71 @@ L'única millora indirecta s'ha aplicat al Fix 6 (helper `_safe_str` per a `null
 
 ---
 
-*Fi de la verificació Fase 1 + Fixes tècnics. Servidor local accessible per a revisió visual.*
+## Recuperació lògica de LECTURA a Comparativa Europa
+
+Aplicat el 2026-05-18 després dels 6 fixes tècnics.
+
+### Què s'ha fet
+
+Els placeholders LECTURA grocs dels fitxers originals `pages/7_Europa.py` i
+`pages/C_Estructura_UE.py` contenien 6 lectures generades dinàmicament via
+`insight()` a partir dels CSVs vigents. Aquesta lògica s'havia perdut al
+crear `pages/7_Comparativa_Europa.py` durant la Fase 1.
+
+Trasllat de les 6 lectures al fitxer fusionat, mantenint el mecanisme
+(f-strings + `if/elif` segons signe/llindar, sense templates externs).
+Les lectures es regeneren a cada càrrega i s'actualitzen automàticament
+amb cada cicle trimestral.
+
+### Mapeig final per bloc
+
+| Bloc | Lectura | Variables clau | Cache font |
+|---|---|---|---|
+| **1** Posicionament estructural | `insight()` real (pes ES vs UE) | `_es_pes`, `_eu_pes` derivat | `europa_vab.csv` |
+| **2** Evolució del posicionament | **Placeholder groc** "[Lectura pendiente]" | — | — |
+| **3.1** Distribució per mida d'empresa | `insight()` real (atomització) | `pct_auto_es/ue`, `pct_ge10_es/ue` | `estructura_retail_mida.csv` |
+| **3.2** Naixement vs defunció | `insight()` real (rotació, saldo net) | `_es_brth/dth`, `_ue_brth/dth`, `_es_net`, `_ue_net` | `estructura_retail.csv` |
+| **3.3** Mida mitjana per país | `insight()` real (concentració) | `_es_v` (EMP/ENT), `_ue_v`, `_diff_pct` | `estructura_retail.csv` |
+| **3.4** Supervivència Y1/Y2 | `insight()` real (entorn competitiu) | `_es_y1`, `_ue_y1`, `_diff` | `estructura_retail_supervivencia.csv` |
+| **4** Pols mensual europeu | `insight()` real (cicle ES vs Eurozona) | `_es_yoy`, `_ea_yoy`, `_spread`, `_avg_6m`, `_accel` | `europa_retail_mensual.csv` |
+
+**Resultat final:** 6 blocs amb LECTURA automàtica + 1 bloc amb placeholder
+neutre. Asimetria intencional: el placeholder groc destaca visualment al
+Bloc 2 que la lectura encara cal redactar.
+
+### Decisió sobre la lectura del Bloc 1
+
+L'`insight()` original de `7_Europa.py:430-492` combinava dues parts:
+
+- Part A — pes ES vs UE (mateix any de referència).
+- Part B — variació de pes des de l'any inicial (`es_trend`).
+
+Aquestes dues parts són **clarament tallables** (paràgrafs separats, sense
+entrellaçament sintàctic). Aplicant el matís del brief, s'ha tret la Part B
+del Bloc 1 perquè parla de tendència temporal (territori conceptual del
+Bloc 2 — Evolució del posicionament). El Bloc 2 manté placeholder fins que
+Jordi decideixi si redactar lectura pròpia o reincorporar la lògica de
+tendència del codi original.
+
+### Estètica
+
+- Lectures reals: helper `insight()` original (caixa estilitzada blava amb
+  títol "Anàlisi / Análisis") — coherència amb la resta de pàgines
+  analítiques del repo.
+- Sota cada `insight()`: caption discreta nova `firma_lectura()` —
+  italica, 11px, gris #888, alineada a la dreta, text
+  "Observatorio del Comercio · J3B3 Consulting" (sense data).
+- Bloc 2 amb placeholder: caixa groga `lectura_placeholder()` reescrita —
+  text neutre "[Lectura pendiente]" en castellà, sense nom propi.
+
+### Verificació runtime
+
+- Compile OK (Python `py_compile`).
+- HTTP `/comparativa-europa` → `200 OK`.
+- Cap entrada `error/exception/traceback` al log.
+- Les lectures llegeixen variables vives dels CSVs (no text literal): si
+  Eurostat publica un nou trimestre, les xifres canvien automàticament.
+
+---
+
+*Fi de la verificació Fase 1 + fixes tècnics + recuperació de LECTURA.*

@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, intro, source, page_meta,
+from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, apply_layout,
                    PURPLE, PURPLE_LIGHT, RED, BLUE, GREEN, ORANGE, GRAY)
 
@@ -39,26 +39,41 @@ df_total = _load_csv("estructura_retail")        # anual: indicadors estructural
 df_mida = _load_csv("estructura_retail_mida")    # anual: per mida d'empresa
 df_surv = _load_csv("estructura_retail_supervivencia")  # anual: supervivència Y1/Y2
 
-# ─── Helper: caixa de placeholder LECTURA ──────────────────────
+# ─── Helpers de presentació LECTURA ────────────────────────────
 
 def lectura_placeholder():
-    """Bloc visualment destacat per a una lectura interpretativa pendent."""
-    txt = ("Pendent — text per redactar (Jordi)" if _ca
-           else "Pendiente — texto por redactar (Jordi)")
+    """Caixa groga per a blocs sense lectura encara redactada.
+
+    Text neutre en castellà, sense signatura. Asimetria intencional vs els
+    blocs amb lectura automàtica via insight() — destaca visualment que falta
+    contingut.
+    """
     st.markdown(
-        f"""
+        """
         <div style="background:#fff8e1; border-left:4px solid #f0a500;
                     padding:14px 18px; margin:8px 0 24px; border-radius:3px;
                     font-family:'DM Sans',sans-serif;">
             <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
                         text-transform:uppercase; color:#f0a500; margin-bottom:6px;">
-                LECTURA · Observatorio del Comercio · J3B3 Consulting
+                LECTURA
             </div>
             <div style="color:#555; font-size:14px; font-style:italic;">
-                [{txt}]
+                [Lectura pendiente]
             </div>
         </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def firma_lectura():
+    """Signatura corporativa discreta sota cada insight() de lectura real."""
+    st.markdown(
+        '<div style="text-align:right; color:#888; font-size:11px; '
+        'font-style:italic; font-family:\'DM Sans\',sans-serif; '
+        'margin-top:-8px; margin-bottom:24px;">'
+        'Observatorio del Comercio · J3B3 Consulting'
+        '</div>',
         unsafe_allow_html=True,
     )
 
@@ -155,7 +170,56 @@ if not df_europa.empty and "pes_cnae47" in df_europa.columns:
     source("Eurostat, Comptes Nacionals (nama_10_a64)" if _ca
            else "Eurostat, Cuentas Nacionales (nama_10_a64)")
 
-lectura_placeholder()
+    # ─── Lectura: posicionament ES vs UE-27 ─────────────────
+    # Nota: la part de tendència temporal (variació pes des de l'any inicial)
+    # s'ha tret aquí — pertany conceptualment al Bloc 2 (Evolució del
+    # posicionament), que de moment manté placeholder fins que Jordi redacti
+    # lectura pròpia.
+    if not es_data.empty and not eu_data.empty:
+        _es_pes = es_data.iloc[0]["pes_cnae47"] * 100
+        _eu_pes = eu_data.iloc[0]["pes_cnae47"] * 100
+        if _ca:
+            _txt = (
+                f"Espanya destina un <strong>{fpct(_es_pes, 2, sign=False)}</strong> "
+                f"del seu PIB al comerç al detall, "
+            )
+            if _es_pes > _eu_pes:
+                _txt += (
+                    f"<strong>{fpct(_es_pes - _eu_pes, 2)} per sobre</strong> "
+                    f"de la mitjana europea ({fpct(_eu_pes, 2, sign=False)}). "
+                    "Això pot reflectir una estructura econòmica amb més pes del "
+                    "consum final i una menor industrialització relativa comparada "
+                    "amb països com Alemanya. El pes superior també s'explica per "
+                    "la importància del turisme, que impulsa el consum al detall "
+                    "especialment en zones costaneres i urbanes."
+                )
+            else:
+                _txt += (
+                    f"<strong>{fpct(_eu_pes - _es_pes, 2)} per sota</strong> "
+                    f"de la mitjana europea ({fpct(_eu_pes, 2, sign=False)})."
+                )
+        else:
+            _txt = (
+                f"España destina un <strong>{fpct(_es_pes, 2, sign=False)}</strong> "
+                f"de su PIB al comercio minorista, "
+            )
+            if _es_pes > _eu_pes:
+                _txt += (
+                    f"<strong>{fpct(_es_pes - _eu_pes, 2)} por encima</strong> "
+                    f"de la media europea ({fpct(_eu_pes, 2, sign=False)}). "
+                    "Esto puede reflejar una estructura económica con más peso "
+                    "del consumo final y una menor industrialización relativa "
+                    "comparada con países como Alemania. El peso superior también "
+                    "se explica por la importancia del turismo, que impulsa el "
+                    "consumo minorista especialmente en zonas costeras y urbanas."
+                )
+            else:
+                _txt += (
+                    f"<strong>{fpct(_eu_pes - _es_pes, 2)} por debajo</strong> "
+                    f"de la media europea ({fpct(_eu_pes, 2, sign=False)})."
+                )
+        insight(_txt)
+        firma_lectura()
 
 # ═══════════════════════════════════════════════════════════════
 # BLOC 2 — EVOLUCIÓ DEL POSICIONAMENT
@@ -283,7 +347,40 @@ else:
             fig_size.update_xaxes(range=[0, 100])
             st.plotly_chart(fig_size, use_container_width=True)
             source(f"Eurostat <i>bd_size</i> ({darrer_any})")
-    lectura_placeholder()
+
+            # ─── Lectura: atomització ES vs UE-27 ───────────
+            pct_auto_es = df_size[(df_size["sizeclas"] == "0") &
+                                  (df_size["pais_codi"] == "ES")]["pct"].sum()
+            pct_auto_ue = df_size[(df_size["sizeclas"] == "0") &
+                                  (df_size["pais_codi"] == "EU27_2020")]["pct"].sum()
+            pct_ge10_es = df_size[(df_size["sizeclas"] == "GE10") &
+                                  (df_size["pais_codi"] == "ES")]["pct"].sum()
+            pct_ge10_ue = df_size[(df_size["sizeclas"] == "GE10") &
+                                  (df_size["pais_codi"] == "EU27_2020")]["pct"].sum()
+            if _ca:
+                _txt = (
+                    f"El comerç al detall espanyol és <strong>més atomitzat</strong> "
+                    f"que la mitjana europea: un {fpct(pct_auto_es, 1, sign=False)} "
+                    f"d'empreses sense assalariats vs {fpct(pct_auto_ue, 1, sign=False)} "
+                    f"a la UE-27. Al tram alt, les empreses amb 10 o més assalariats "
+                    f"representen el {fpct(pct_ge10_es, 1, sign=False)} a Espanya vs "
+                    f"{fpct(pct_ge10_ue, 1, sign=False)} europeu. Aquesta major "
+                    f"atomització afecta la productivitat, la capacitat d'inversió "
+                    f"i l'eficiència negociadora amb proveïdors."
+                )
+            else:
+                _txt = (
+                    f"El comercio minorista español es <strong>más atomizado</strong> "
+                    f"que la media europea: un {fpct(pct_auto_es, 1, sign=False)} "
+                    f"de empresas sin asalariados vs {fpct(pct_auto_ue, 1, sign=False)} "
+                    f"en la UE-27. En el tramo alto, las empresas con 10 o más "
+                    f"asalariados representan el {fpct(pct_ge10_es, 1, sign=False)} en "
+                    f"España vs {fpct(pct_ge10_ue, 1, sign=False)} europeo. Esta mayor "
+                    f"atomización afecta la productividad, la capacidad de inversión "
+                    f"y la eficiencia negociadora con proveedores."
+                )
+            insight(_txt)
+            firma_lectura()
 
     # ── 3.2 Naixement vs defunció per 8 països ───────────────
     st.subheader("3.2 " + ("Naixement vs defunció (8 països)" if _ca
@@ -316,7 +413,58 @@ else:
         )
         st.plotly_chart(fig_br, use_container_width=True)
         source(f"Eurostat <i>bd_size</i> ({darrer_any})")
-    lectura_placeholder()
+
+        # ─── Lectura: rotació ES vs UE-27 ───────────────────
+        _es_brth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_BRTHR_PC"].iloc[0]
+                    if "ENT_BRTHR_PC" in df_disp.columns else None)
+        _es_dth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_DTHR_PC"].iloc[0]
+                   if "ENT_DTHR_PC" in df_disp.columns else None)
+        _ue_brth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_BRTHR_PC"].iloc[0]
+                    if "ENT_BRTHR_PC" in df_disp.columns else None)
+        _ue_dth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_DTHR_PC"].iloc[0]
+                   if "ENT_DTHR_PC" in df_disp.columns else None)
+        if _es_brth is not None and _es_dth is not None:
+            _es_net = _es_brth - _es_dth
+            if _ca:
+                _txt = (
+                    f"A Espanya, la taxa de naixement empresarial al CNAE 47 "
+                    f"({fpct(_es_brth, 1, sign=False)}) queda <strong>per sota</strong> "
+                    f"de la taxa de defunció ({fpct(_es_dth, 1, sign=False)}), amb un "
+                    f"saldo net negatiu de {fpct(_es_net, 1)} punts. "
+                )
+                if _ue_brth is not None and _ue_dth is not None:
+                    _ue_net = _ue_brth - _ue_dth
+                    _txt += (
+                        f"A la UE-27, el saldo net és {fpct(_ue_net, 1)} punts "
+                        f"(naixement {fpct(_ue_brth, 1, sign=False)} vs defunció "
+                        f"{fpct(_ue_dth, 1, sign=False)}). "
+                    )
+                _txt += (
+                    "Una taxa de defunció superior a la de naixement de manera "
+                    "sostinguda apunta cap a <strong>consolidació sectorial</strong>: "
+                    "el sector està perdent empreses netament."
+                )
+            else:
+                _txt = (
+                    f"En España, la tasa de nacimiento empresarial del CNAE 47 "
+                    f"({fpct(_es_brth, 1, sign=False)}) queda <strong>por debajo</strong> "
+                    f"de la tasa de defunción ({fpct(_es_dth, 1, sign=False)}), con un "
+                    f"saldo neto negativo de {fpct(_es_net, 1)} puntos. "
+                )
+                if _ue_brth is not None and _ue_dth is not None:
+                    _ue_net = _ue_brth - _ue_dth
+                    _txt += (
+                        f"En la UE-27, el saldo neto es {fpct(_ue_net, 1)} puntos "
+                        f"(nacimiento {fpct(_ue_brth, 1, sign=False)} vs defunción "
+                        f"{fpct(_ue_dth, 1, sign=False)}). "
+                    )
+                _txt += (
+                    "Una tasa de defunción superior a la de nacimiento de manera "
+                    "sostenida apunta a <strong>consolidación sectorial</strong>: "
+                    "el sector está perdiendo empresas netamente."
+                )
+            insight(_txt)
+            firma_lectura()
 
     # ── 3.3 Mida mitjana (ocupats/empresa) per país ──────────
     st.subheader("3.3 " + ("Mida mitjana d'empresa (ocupats per empresa)" if _ca
@@ -353,7 +501,36 @@ else:
         )
         st.plotly_chart(fig_mm, use_container_width=True)
         source(f"Eurostat <i>bd_size</i> ({darrer_any})")
-    lectura_placeholder()
+
+        # ─── Lectura: mida mitjana ES vs UE-27 ──────────────
+        _es_mm = df_mm[df_mm["pais_codi"] == "ES"]["mida_mitjana"]
+        _ue_mm = df_mm[df_mm["pais_codi"] == "EU27_2020"]["mida_mitjana"]
+        if not _es_mm.empty and not _ue_mm.empty:
+            _es_v = _es_mm.iloc[0]
+            _ue_v = _ue_mm.iloc[0]
+            _diff_pct = (_es_v / _ue_v - 1) * 100
+            if _ca:
+                _txt = (
+                    f"Cada empresa retail espanyola dóna feina de mitjana a "
+                    f"<strong>{fnum(_es_v, 1)} persones</strong>, davant les "
+                    f"{fnum(_ue_v, 1)} de la mitjana UE-27 "
+                    f"({fpct(_diff_pct, 1)} respecte a la UE). "
+                    "Aquesta mètrica és un indicador agregat de la concentració "
+                    "empresarial: valors més alts indiquen una estructura dominada "
+                    "per grans cadenes."
+                )
+            else:
+                _txt = (
+                    f"Cada empresa retail española da trabajo en promedio a "
+                    f"<strong>{fnum(_es_v, 1)} personas</strong>, frente a las "
+                    f"{fnum(_ue_v, 1)} de la media UE-27 "
+                    f"({fpct(_diff_pct, 1)} respecto a la UE). "
+                    "Esta métrica es un indicador agregado de la concentración "
+                    "empresarial: valores más altos indican una estructura dominada "
+                    "por grandes cadenas."
+                )
+            insight(_txt)
+            firma_lectura()
 
     # ── 3.4 Supervivència Y1 / Y2 ES vs UE-27 ────────────────
     st.subheader("3.4 " + ("Supervivència empresarial Y1 / Y2" if _ca
@@ -394,7 +571,38 @@ else:
             )
             st.plotly_chart(fig_s, use_container_width=True)
             source(f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)})")
-    lectura_placeholder()
+
+            # ─── Lectura: supervivència Y1 ES vs UE-27 ──────
+            _y1_es = df_s_lst[(df_s_lst["age"] == "Y1") &
+                              (df_s_lst["pais_codi"] == "ES")]["survival_pc"]
+            _y1_ue = df_s_lst[(df_s_lst["age"] == "Y1") &
+                              (df_s_lst["pais_codi"] == "EU27_2020")]["survival_pc"]
+            if not _y1_es.empty and not _y1_ue.empty:
+                _es_y1 = _y1_es.iloc[0]
+                _ue_y1 = _y1_ue.iloc[0]
+                _diff = _ue_y1 - _es_y1
+                if _ca:
+                    _txt = (
+                        f"De cada 100 noves empreses retail creades a Espanya, "
+                        f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviuen al primer "
+                        f"any</strong>, davant les {fpct(_ue_y1, 1, sign=False)} de la "
+                        f"mitjana UE-27 (diferencial de {fpct(_diff, 1)} punts). "
+                        "Una taxa de supervivència més baixa pot reflectir un entorn "
+                        "competitiu més dur, barreres d'entrada més baixes (més "
+                        "empreses fràgils que ho proven) o suport menor al primer any."
+                    )
+                else:
+                    _txt = (
+                        f"De cada 100 nuevas empresas retail creadas en España, "
+                        f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviven al primer "
+                        f"año</strong>, frente a las {fpct(_ue_y1, 1, sign=False)} de "
+                        f"la media UE-27 (diferencial de {fpct(_diff, 1)} puntos). "
+                        "Una tasa de supervivencia más baja puede reflejar un entorno "
+                        "competitivo más duro, barreras de entrada más bajas (más "
+                        "empresas frágiles que lo intentan) o menor apoyo al primer año."
+                    )
+                insight(_txt)
+                firma_lectura()
 
 # ═══════════════════════════════════════════════════════════════
 # BLOC 4 — POLS MENSUAL EUROPEU
@@ -535,7 +743,85 @@ else:
         f"Eurostat sts_trtu_m. Volumen de ventas G47, ajustado estacional. Último dato: {darrer}."
     )
 
-lectura_placeholder()
+    # ─── Lectura: cicle de consum ES vs Eurozona ────────────
+    if not es_row.empty and not ea_row.empty:
+        _es_yoy = es_row.iloc[0].get("yoy")
+        _ea_yoy = ea_row.iloc[0].get("yoy")
+        if pd.notna(_es_yoy) and pd.notna(_ea_yoy):
+            _spread = _es_yoy - _ea_yoy
+            _es_hist = (df_mens[df_mens["pais_codi"] == "ES"]
+                        .sort_values("periode")
+                        .tail(6))
+            _avg_6m = _es_hist["yoy"].dropna().mean()
+            _trend = _es_hist["yoy"].dropna().tolist()
+            _accel = (_trend[-1] - _trend[0]) if len(_trend) >= 2 else 0
+
+            if _ca:
+                _verb = "creixen" if _es_yoy >= 0 else "cauen"
+                _txt = (
+                    f"Al <strong>{darrer}</strong>, les vendes minoristes a Espanya "
+                    f"<strong>{_verb} un {abs(_es_yoy):.1f} %</strong> respecte al "
+                    f"mateix mes de l'any anterior. "
+                )
+                if _spread >= 0.5:
+                    _txt += (
+                        f"Espanya supera la mitjana de l'eurozona ({_ea_yoy:+.1f} %) "
+                        f"en <strong>{_spread:+.1f} punts</strong>, senyal d'un cicle "
+                        "de consum més dinàmic. "
+                    )
+                elif _spread <= -0.5:
+                    _txt += (
+                        f"Espanya queda <strong>{abs(_spread):.1f} punts</strong> per "
+                        f"sota de l'eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                else:
+                    _txt += (
+                        f"En línia amb la mitjana de l'eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                _txt += (
+                    f"En els darrers 6 mesos, la variació interanual mitjana s'ha "
+                    f"situat al <strong>{_avg_6m:+.1f} %</strong>"
+                )
+                if _accel > 0.5:
+                    _txt += " amb tendència accelerant."
+                elif _accel < -0.5:
+                    _txt += " amb tendència desaccelerant."
+                else:
+                    _txt += " sense canvis de ritme significatius."
+            else:
+                _verb = "crecen" if _es_yoy >= 0 else "caen"
+                _txt = (
+                    f"En <strong>{darrer}</strong>, las ventas minoristas en España "
+                    f"<strong>{_verb} un {abs(_es_yoy):.1f} %</strong> respecto al "
+                    f"mismo mes del año anterior. "
+                )
+                if _spread >= 0.5:
+                    _txt += (
+                        f"España supera la media de la eurozona ({_ea_yoy:+.1f} %) "
+                        f"en <strong>{_spread:+.1f} puntos</strong>, señal de un "
+                        "ciclo de consumo más dinámico. "
+                    )
+                elif _spread <= -0.5:
+                    _txt += (
+                        f"España queda <strong>{abs(_spread):.1f} puntos</strong> por "
+                        f"debajo de la eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                else:
+                    _txt += (
+                        f"En línea con la media de la eurozona ({_ea_yoy:+.1f} %). "
+                    )
+                _txt += (
+                    f"En los últimos 6 meses, la variación interanual media se ha "
+                    f"situado en el <strong>{_avg_6m:+.1f} %</strong>"
+                )
+                if _accel > 0.5:
+                    _txt += " con tendencia acelerándose."
+                elif _accel < -0.5:
+                    _txt += " con tendencia desacelerándose."
+                else:
+                    _txt += " sin cambios de ritmo significativos."
+            insight(_txt)
+            firma_lectura()
 
 # ─── Descàrrega + nota metodològica al peu ─────────────────────
 
