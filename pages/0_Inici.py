@@ -57,14 +57,20 @@ _tesi_data = None
 _tesi_autor = "Observatorio del Comercio · J3B3 Consulting"
 _tesi_enllac = ""
 
+def _safe_str(value, default=""):
+    """Retorna value.strip() si és str, default altrament. Gestiona null/None del JSON."""
+    if isinstance(value, str):
+        return value.strip()
+    return default
+
 if _tesi:
-    _tesi_titol = _tesi.get("titol", "").strip()
-    _tesi_data_str = _tesi.get("data_publicacio", "").strip()
+    _tesi_titol = _safe_str(_tesi.get("titol"))
+    _tesi_data_str = _safe_str(_tesi.get("data_publicacio"))
     _tesi_autor = (
-        _tesi.get("autor", "Observatorio del Comercio · J3B3 Consulting").strip()
+        _safe_str(_tesi.get("autor"), "Observatorio del Comercio · J3B3 Consulting")
         or "Observatorio del Comercio · J3B3 Consulting"
     )
-    _tesi_enllac = _tesi.get("enllac_pulso", "").strip()
+    _tesi_enllac = _safe_str(_tesi.get("enllac_pulso"))
     try:
         _tesi_data = date.fromisoformat(_tesi_data_str)
     except (TypeError, ValueError):
