@@ -556,6 +556,41 @@ def intro(text):
     st.markdown(f'<div class="intro-box">{text}</div>', unsafe_allow_html=True)
 
 
+def lectura_vigent_box(titol, data_referencia,
+                      autor="Observatorio del Comercio · J3B3 Consulting",
+                      eyebrow="LECTURA VIGENTE"):
+    """Caixa visual de Lectura Vigent a les pàgines de dades.
+
+    Mateixa estètica que la caixa Tesi vigent de la home (border-left blau J3B3,
+    fons gris suau, eyebrow uppercase, títol gran amb tensió interpretativa,
+    signatura corporativa discreta a sota).
+
+    Reutilitzable per a totes les pàgines de dades. El text del titol es genera
+    a la pàgina (lògica condicional adaptativa segons signe i magnitud de les
+    dades vigents) i passa aquí com a string.
+    """
+    st.markdown(
+        f"""
+        <div style="background:#f5f7fb; border-left:4px solid #0055a4;
+                    padding:18px 22px; margin:18px 0 28px; border-radius:3px;
+                    font-family:'DM Sans',sans-serif;">
+            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+                        text-transform:uppercase; color:#0055a4; margin-bottom:8px;">
+                {eyebrow}
+            </div>
+            <div style="color:#222; font-size:18px; font-weight:500; line-height:1.5;
+                        margin-bottom:8px;">
+                {titol}
+            </div>
+            <div style="color:#666; font-size:12px;">
+                {autor} · {data_referencia}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def source(text):
     """Mostra la font de dades sota un gràfic, amb link a metodologia si escau."""
     lang = st.session_state.get("lang", "es")
