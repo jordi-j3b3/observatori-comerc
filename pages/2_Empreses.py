@@ -39,6 +39,26 @@ def load_data():
 df = load_data()
 
 
+# ─── Classificació de règim (helper compartit) ─────────────────
+
+def classificar_regim(acumulada_pct, anys_neg, anys_pos, yoy_pct, streak):
+    """Classifica el règim actual del fenomen estructural d'empreses.
+
+    Utilitzada per generar_subtitol_evolucio_empreses(). Mantinguda com a
+    funció separada per a reutilització i claredat. La lògica equivalent
+    també està inline a generar_lectura_vigent_empreses() pel pilot.
+    """
+    if yoy_pct > 0 and streak >= 3:
+        return "recuperacio_consolidada" if acumulada_pct >= 0 else "inflexio"
+    if acumulada_pct < -3 and abs(yoy_pct) < 0.5:
+        return "estabilitzacio"
+    if anys_neg > anys_pos and (anys_neg + anys_pos) >= 5:
+        return "contraccio_estructural"
+    if yoy_pct > 0 and streak < 3:
+        return "creixement_puntual"
+    return "altres"
+
+
 # ─── Generació de la Lectura Vigent ────────────────────────────
 
 def generar_lectura_vigent_empreses(df):
