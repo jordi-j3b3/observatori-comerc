@@ -8,7 +8,7 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    load_geojson_spain_ccaa, canaries_inset_layers,
-                   fnum, fpct, apply_layout,
+                   fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, PALETTE)
 
 inject_css()
@@ -299,53 +299,57 @@ if "xifra_negoci" in d_derived.columns and "personal_ocupat" in d_derived.column
 # ─── Salari mitjà per CCAA ───────────────────────────────────
 
 if "sous_salaris" in d_derived.columns and "personal_ocupat" in d_derived.columns:
-    d_derived["sal_med"] = d_derived["sous_salaris"] / d_derived["personal_ocupat"]
+    _lbl_sal_exp = ("Veure salari mitjà per CCAA"
+                    if _ca else
+                    "Ver salario medio por CCAA")
+    with highlight_expander(_lbl_sal_exp, expanded=False):
+        d_derived["sal_med"] = d_derived["sous_salaris"] / d_derived["personal_ocupat"]
 
-    st.subheader(f"{t('eee_ccaa_sal_med')} ({int(any_sel)})")
-    d_sal = d_derived.dropna(subset=["sal_med"]).sort_values("sal_med", ascending=True)
+        st.subheader(f"{t('eee_ccaa_sal_med')} ({int(any_sel)})")
+        d_sal = d_derived.dropna(subset=["sal_med"]).sort_values("sal_med", ascending=True)
 
-    fig_sal = go.Figure()
-    fig_sal.add_trace(go.Bar(
-        y=d_sal["territori"], x=d_sal["sal_med"],
-        orientation="h", marker_color=PURPLE_LIGHT,
-        text=[f"{fnum(v)} EUR" for v in d_sal["sal_med"]],
-        textposition="outside", textfont=dict(size=11),
-    ))
+        fig_sal = go.Figure()
+        fig_sal.add_trace(go.Bar(
+            y=d_sal["territori"], x=d_sal["sal_med"],
+            orientation="h", marker_color=PURPLE_LIGHT,
+            text=[f"{fnum(v)} EUR" for v in d_sal["sal_med"]],
+            textposition="outside", textfont=dict(size=11),
+        ))
 
-    esp_s = df_esp[df_esp["any"] == any_sel]
-    if not esp_s.empty and "sous_salaris" in esp_s.columns:
-        sal_esp = esp_s["sous_salaris"].values[0] / esp_s["personal_ocupat"].values[0]
-        fig_sal.add_vline(
-            x=sal_esp, line_dash="dash", line_color=RED, line_width=2,
-            annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(sal_esp)} EUR",
-            annotation_position="top right",
+        esp_s = df_esp[df_esp["any"] == any_sel]
+        if not esp_s.empty and "sous_salaris" in esp_s.columns:
+            sal_esp = esp_s["sous_salaris"].values[0] / esp_s["personal_ocupat"].values[0]
+            fig_sal.add_vline(
+                x=sal_esp, line_dash="dash", line_color=RED, line_width=2,
+                annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(sal_esp)} EUR",
+                annotation_position="top right",
+            )
+
+        apply_layout(fig_sal,
+            xaxis_title="EUR / ocupat" if _ca else "EUR / ocupado",
+            height=max(450, len(d_sal) * 32 + 100),
+            margin=dict(l=200, r=100, t=50, b=50),
         )
+        st.plotly_chart(fig_sal, use_container_width=True)
 
-    apply_layout(fig_sal,
-        xaxis_title="EUR / ocupat" if _ca else "EUR / ocupado",
-        height=max(450, len(d_sal) * 32 + 100),
-        margin=dict(l=200, r=100, t=50, b=50),
-    )
-    st.plotly_chart(fig_sal, use_container_width=True)
-
-    if _ca:
-        st.caption(
-            "**Nota:** Aquesta xifra divideix la massa total de sous i salaris entre el nombre de persones "
-            "ocupades (incloent-hi temps parcial). El comerç al detall té una elevada taxa de parcialitat "
-            "(~30% dels ocupats), de manera que la mitjana per persona pot quedar per sota de l'SMI a jornada "
-            "completa sense que això impliqui cap incompliment legal. "
-            "A més, \"sous i salaris\" exclou les cotitzacions socials a càrrec de l'empresa (~23% del cost "
-            "laboral total). Vegeu l'apartat 4 de Metodologia per a una explicació detallada."
-        )
-    else:
-        st.caption(
-            "**Nota:** Esta cifra divide la masa total de sueldos y salarios entre el número de personas "
-            "ocupadas (incluyendo tiempo parcial). El comercio minorista tiene una elevada tasa de parcialidad "
-            "(~30% de los ocupados), de modo que la media por persona puede quedar por debajo del SMI a jornada "
-            "completa sin que ello implique ningún incumplimiento legal. "
-            "Además, \"sueldos y salarios\" excluye las cotizaciones sociales a cargo de la empresa (~23% del coste "
-            "laboral total). Véase el apartado 4 de Metodología para una explicación detallada."
-        )
+        if _ca:
+            st.caption(
+                "**Nota:** Aquesta xifra divideix la massa total de sous i salaris entre el nombre de persones "
+                "ocupades (incloent-hi temps parcial). El comerç al detall té una elevada taxa de parcialitat "
+                "(~30% dels ocupats), de manera que la mitjana per persona pot quedar per sota de l'SMI a jornada "
+                "completa sense que això impliqui cap incompliment legal. "
+                "A més, \"sous i salaris\" exclou les cotitzacions socials a càrrec de l'empresa (~23% del cost "
+                "laboral total). Vegeu l'apartat 4 de Metodologia per a una explicació detallada."
+            )
+        else:
+            st.caption(
+                "**Nota:** Esta cifra divide la masa total de sueldos y salarios entre el número de personas "
+                "ocupadas (incluyendo tiempo parcial). El comercio minorista tiene una elevada tasa de parcialidad "
+                "(~30% de los ocupados), de modo que la media por persona puede quedar por debajo del SMI a jornada "
+                "completa sin que ello implique ningún incumplimiento legal. "
+                "Además, \"sueldos y salarios\" excluye las cotizaciones sociales a cargo de la empresa (~23% del coste "
+                "laboral total). Véase el apartado 4 de Metodología para una explicación detallada."
+            )
 
     source("INE, Enquesta Estructural d'Empreses. Càlcul propi" if _ca
            else "INE, Encuesta Estructural de Empresas. Cálculo propio")
