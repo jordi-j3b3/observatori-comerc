@@ -117,27 +117,50 @@ if len(df_esp) > 1:
 
 if not df_esp.empty and len(df_esp) > 1:
     peak = df_esp.loc[df_esp["empreses"].idxmax()]
+    # Detectar dinàmicament el signe de la variació: si total_var < 0,
+    # el sector ha PERDUT empreses (destrucció neta). Si > 0, ha guanyat.
+    _decreix = total_var < 0
     if _ca:
+        diff_lbl = "menys" if _decreix else "més"
+        cagr_lbl = "destrucció neta" if _decreix else "creació neta"
+        tendencia = (
+            "La tendència reflecteix la concentració del sector i la pressió del "
+            "comerç electrònic. Malgrat la reducció del nombre d'empreses, la "
+            "dimensió mitjana creix: les empreses supervivents absorbeixen quota "
+            "de mercat i guanyen escala operativa."
+            if _decreix else
+            "L'expansió del nombre d'empreses és coherent amb la recuperació del "
+            "consum i l'aparició de nous formats de proximitat, e-commerce pur i "
+            "franquícies emergents."
+        )
         txt = (
             f"El comerç al detall espanyol comptava amb <strong>{fnum(last_esp['empreses'])} empreses</strong> "
-            f"el {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} menys</strong> que el {int(first_esp['any'])} "
-            f"({fpct(pct_var)}). "
+            f"el {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} {diff_lbl}</strong> "
+            f"que el {int(first_esp['any'])} ({fpct(pct_var)}). "
             f"El màxim es va registrar el {int(peak['any'])} amb {fnum(peak['empreses'])} empreses. "
-            f"Això suposa una destrucció neta anual mitjana (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
-            f"La tendència reflecteix la concentració del sector i la pressió del comerç electrònic. "
-            f"Malgrat la reducció del nombre d'empreses, la dimensió mitjana creix: les empreses "
-            f"supervivents absorbeixen quota de mercat i guanyen escala operativa."
+            f"Això suposa una {cagr_lbl} anual mitjana (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
+            f"{tendencia}"
         )
     else:
+        diff_lbl = "menos" if _decreix else "más"
+        cagr_lbl = "destrucción neta" if _decreix else "creación neta"
+        tendencia = (
+            "La tendencia refleja la concentración del sector y la presión del "
+            "comercio electrónico. Pese a la reducción del número de empresas, "
+            "la dimensión media crece: las empresas supervivientes absorben cuota "
+            "de mercado y ganan escala operativa."
+            if _decreix else
+            "La expansión del número de empresas es coherente con la recuperación "
+            "del consumo y la aparición de nuevos formatos de proximidad, e-commerce "
+            "puro y franquicias emergentes."
+        )
         txt = (
             f"El comercio minorista español contaba con <strong>{fnum(last_esp['empreses'])} empresas</strong> "
-            f"en {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} menos</strong> que en {int(first_esp['any'])} "
-            f"({fpct(pct_var)}). "
+            f"en {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} {diff_lbl}</strong> "
+            f"que en {int(first_esp['any'])} ({fpct(pct_var)}). "
             f"El máximo se registró en {int(peak['any'])} con {fnum(peak['empreses'])} empresas. "
-            f"Esto supone una destrucción neta anual media (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
-            f"La tendencia refleja la concentración del sector y la presión del comercio electrónico. "
-            f"Pese a la reducción del número de empresas, la dimensión media crece: las empresas "
-            f"supervivientes absorben cuota de mercado y ganan escala operativa."
+            f"Esto supone una {cagr_lbl} anual media (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
+            f"{tendencia}"
         )
     insight(txt)
 
@@ -171,26 +194,47 @@ if "empreses_per_1000hab" in df_esp.columns:
             d_first = df_dens.iloc[0]["empreses_per_1000hab"]
             d_last = df_dens.iloc[-1]["empreses_per_1000hab"]
             var_dens = ((d_last / d_first) - 1) * 100
+            _dens_baixa = var_dens < 0
             if _ca:
-                insight(
-                    f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
-                    f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
-                    f"una caiguda del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
-                    f"Això reflecteix un doble efecte: la destrucció d'empreses i el creixement de la població, "
-                    f"que junts redueixen la proximitat del comerç al ciutadà. "
-                    f"La pèrdua de densitat comercial impacta especialment en àrees rurals i barris perifèrics, "
-                    f"on el comerç de proximitat té un paper social més enllà del purament econòmic."
-                )
+                if _dens_baixa:
+                    insight(
+                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"una caiguda del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
+                        f"Això reflecteix un doble efecte: la destrucció d'empreses i el creixement de la població, "
+                        f"que junts redueixen la proximitat del comerç al ciutadà. "
+                        f"La pèrdua de densitat comercial impacta especialment en àrees rurals i barris perifèrics, "
+                        f"on el comerç de proximitat té un paper social més enllà del purament econòmic."
+                    )
+                else:
+                    insight(
+                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"un augment del <strong>{fpct(var_dens, 1, sign=False)}</strong>. "
+                        f"L'increment del comerç per habitant pot reflectir l'arribada de nous formats de "
+                        f"proximitat, franquícies i e-commerce purs, o bé una estabilització poblacional "
+                        f"acompanyada de creació empresarial neta."
+                    )
             else:
-                insight(
-                    f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
-                    f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
-                    f"una caída del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
-                    f"Esto refleja un doble efecto: la destrucción de empresas y el crecimiento de la población, "
-                    f"que juntos reducen la proximidad del comercio al ciudadano. "
-                    f"La pérdida de densidad comercial impacta especialmente en áreas rurales y barrios periféricos, "
-                    f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
-                )
+                if _dens_baixa:
+                    insight(
+                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"una caída del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
+                        f"Esto refleja un doble efecto: la destrucción de empresas y el crecimiento de la población, "
+                        f"que juntos reducen la proximidad del comercio al ciudadano. "
+                        f"La pérdida de densidad comercial impacta especialmente en áreas rurales y barrios periféricos, "
+                        f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
+                    )
+                else:
+                    insight(
+                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"un aumento del <strong>{fpct(var_dens, 1, sign=False)}</strong>. "
+                        f"El incremento del comercio por habitante puede reflejar la llegada de nuevos "
+                        f"formatos de proximidad, franquicias y e-commerce puros, o bien una estabilización "
+                        f"poblacional acompañada de creación empresarial neta."
+                    )
 
 # ─── GeoJSON (compartit per mapa DIRCE i mapa EEE) ──────────
 

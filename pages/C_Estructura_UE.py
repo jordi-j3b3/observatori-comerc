@@ -397,22 +397,45 @@ if not df_surv.empty:
         if not y1_es.empty and not y1_ue.empty:
             es_y1 = y1_es.iloc[0]
             ue_y1 = y1_ue.iloc[0]
-            diff = ue_y1 - es_y1
+            diff = ue_y1 - es_y1  # > 0 si Espanya sobreviu MENYS que la UE
+            _es_sobreviu_menys = diff > 0
             if _ca:
+                if _es_sobreviu_menys:
+                    lectura = (
+                        "Una taxa de supervivència més baixa pot reflectir un entorn "
+                        "competitiu més dur, barreres d'entrada més baixes (més empreses "
+                        "fràgils que ho proven) o suport menor al primer any."
+                    )
+                else:
+                    lectura = (
+                        "Una taxa de supervivència més alta indica un entorn d'entrada "
+                        "més selectiu o un teixit empresarial amb projectes més robustos "
+                        "des de l'inici. També pot reflectir més suport institucional "
+                        "i finançament al primer any d'activitat."
+                    )
                 txt = (
                     f"De cada 100 noves empreses retail creades a Espanya, <strong>{fpct(es_y1, 1, sign=False)} "
                     f"sobreviuen al primer any</strong>, davant les {fpct(ue_y1, 1, sign=False)} de la mitjana UE-27 "
-                    f"(diferencial de {fpct(diff, 1)} punts). "
-                    "Una taxa de supervivència més baixa pot reflectir un entorn competitiu més dur, "
-                    "barreres d'entrada més baixes (més empreses fràgils que ho proven) o suport menor al primer any."
+                    f"(diferencial de {fpct(diff, 1)} punts). {lectura}"
                 )
             else:
+                if _es_sobreviu_menys:
+                    lectura = (
+                        "Una tasa de supervivencia más baja puede reflejar un entorno "
+                        "competitivo más duro, barreras de entrada más bajas (más empresas "
+                        "frágiles que lo intentan) o menor apoyo al primer año."
+                    )
+                else:
+                    lectura = (
+                        "Una tasa de supervivencia más alta indica un entorno de entrada "
+                        "más selectivo o un tejido empresarial con proyectos más robustos "
+                        "desde el inicio. También puede reflejar mayor apoyo institucional "
+                        "y financiación en el primer año de actividad."
+                    )
                 txt = (
                     f"De cada 100 nuevas empresas retail creadas en España, <strong>{fpct(es_y1, 1, sign=False)} "
                     f"sobreviven al primer año</strong>, frente a las {fpct(ue_y1, 1, sign=False)} de la media UE-27 "
-                    f"(diferencial de {fpct(diff, 1)} puntos). "
-                    "Una tasa de supervivencia más baja puede reflejar un entorno competitivo más duro, "
-                    "barreras de entrada más bajas (más empresas frágiles que lo intentan) o menor apoyo al primer año."
+                    f"(diferencial de {fpct(diff, 1)} puntos). {lectura}"
                 )
             insight(txt)
 
