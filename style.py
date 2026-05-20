@@ -819,6 +819,15 @@ def inject_css():
             background: #1a1a1a !important;
             border: 1px solid #2a2a2a !important;
         }
+        /* Logo J3B3 al top del sidebar — invertir a blanc perquè el SVG
+           original és blau marca i quedaria invisible sobre el sidebar blau */
+        [data-testid="stSidebar"] [data-testid="stLogo"],
+        [data-testid="stSidebar"] [data-testid="stSidebarLogo"],
+        [data-testid="stSidebar"] [data-testid="stLogo"] img,
+        [data-testid="stSidebar"] [data-testid="stSidebarLogo"] img,
+        [data-testid="stSidebar"] img[src*="logo"] {
+            filter: brightness(0) invert(1) !important;
+        }
         /* Icones Material Symbols — preservar font icònica.
            Streamlit utilitza 'Material Symbols Rounded'/'Outlined' per
            a icones de col·lapse, expansió, navegació, etc. Els spans
