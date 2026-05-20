@@ -16,7 +16,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout,
+                   fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, BLUE, GREEN, ORANGE, GRAY)
 
 inject_css()
@@ -355,227 +355,232 @@ else:
             insight(_txt)
             firma_lectura()
 
-    # ── 3.2 Naixement vs defunció per 8 països ───────────────
-    st.subheader("3.2 " + ("Naixement vs defunció (8 països)" if _ca
-                           else "Nacimiento vs defunción (8 países)"))
+    # ── 3.2-3.4 Sub-blocs secundaris de dimensió estructural ──
+    _lbl_estr_exp = ("Veure més anàlisi estructural (naixement, mida, supervivència)"
+                     if _ca else
+                     "Ver más análisis estructural (nacimiento, tamaño, supervivencia)")
+    with highlight_expander(_lbl_estr_exp, expanded=False):
+        # ── 3.2 Naixement vs defunció per 8 països ───────────────
+        st.subheader("3.2 " + ("Naixement vs defunció (8 països)" if _ca
+                               else "Nacimiento vs defunción (8 países)"))
 
-    if not df_lst.empty:
-        PAIS_ORDER = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
-        df_disp = df_lst.set_index("pais_codi").reindex(PAIS_ORDER).reset_index()
+        if not df_lst.empty:
+            PAIS_ORDER = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
+            df_disp = df_lst.set_index("pais_codi").reindex(PAIS_ORDER).reset_index()
 
-        fig_br = go.Figure()
-        fig_br.add_trace(go.Bar(
-            x=df_disp["pais"], y=df_disp.get("ENT_BRTHR_PC", pd.Series()),
-            name=("Taxa naixement" if _ca else "Tasa nacimiento"),
-            marker_color=GREEN,
-            text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_BRTHR_PC", pd.Series())],
-            textposition="outside",
-        ))
-        fig_br.add_trace(go.Bar(
-            x=df_disp["pais"], y=df_disp.get("ENT_DTHR_PC", pd.Series()),
-            name=("Taxa defunció" if _ca else "Tasa defunción"),
-            marker_color=RED,
-            text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_DTHR_PC", pd.Series())],
-            textposition="outside",
-        ))
-        apply_layout(fig_br,
-            barmode="group",
-            yaxis_title="%",
-            height=400,
-            margin=dict(l=50, r=20, t=30, b=80),
-        )
-        st.plotly_chart(fig_br, use_container_width=True)
-        source(f"Eurostat <i>bd_size</i> ({darrer_any})")
-
-        # ─── Lectura: rotació ES vs UE-27 ───────────────────
-        _es_brth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_BRTHR_PC"].iloc[0]
-                    if "ENT_BRTHR_PC" in df_disp.columns else None)
-        _es_dth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_DTHR_PC"].iloc[0]
-                   if "ENT_DTHR_PC" in df_disp.columns else None)
-        _ue_brth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_BRTHR_PC"].iloc[0]
-                    if "ENT_BRTHR_PC" in df_disp.columns else None)
-        _ue_dth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_DTHR_PC"].iloc[0]
-                   if "ENT_DTHR_PC" in df_disp.columns else None)
-        if _es_brth is not None and _es_dth is not None:
-            _es_net = _es_brth - _es_dth
-            if _ca:
-                _txt = (
-                    f"A Espanya, la taxa de naixement empresarial al CNAE 47 "
-                    f"({fpct(_es_brth, 1, sign=False)}) queda <strong>per sota</strong> "
-                    f"de la taxa de defunció ({fpct(_es_dth, 1, sign=False)}), amb un "
-                    f"saldo net negatiu de {fpct(_es_net, 1)} punts. "
-                )
-                if _ue_brth is not None and _ue_dth is not None:
-                    _ue_net = _ue_brth - _ue_dth
-                    _txt += (
-                        f"A la UE-27, el saldo net és {fpct(_ue_net, 1)} punts "
-                        f"(naixement {fpct(_ue_brth, 1, sign=False)} vs defunció "
-                        f"{fpct(_ue_dth, 1, sign=False)}). "
-                    )
-                _txt += (
-                    "Una taxa de defunció superior a la de naixement de manera "
-                    "sostinguda apunta cap a <strong>consolidació sectorial</strong>: "
-                    "el sector està perdent empreses netament."
-                )
-            else:
-                _txt = (
-                    f"En España, la tasa de nacimiento empresarial del CNAE 47 "
-                    f"({fpct(_es_brth, 1, sign=False)}) queda <strong>por debajo</strong> "
-                    f"de la tasa de defunción ({fpct(_es_dth, 1, sign=False)}), con un "
-                    f"saldo neto negativo de {fpct(_es_net, 1)} puntos. "
-                )
-                if _ue_brth is not None and _ue_dth is not None:
-                    _ue_net = _ue_brth - _ue_dth
-                    _txt += (
-                        f"En la UE-27, el saldo neto es {fpct(_ue_net, 1)} puntos "
-                        f"(nacimiento {fpct(_ue_brth, 1, sign=False)} vs defunción "
-                        f"{fpct(_ue_dth, 1, sign=False)}). "
-                    )
-                _txt += (
-                    "Una tasa de defunción superior a la de nacimiento de manera "
-                    "sostenida apunta a <strong>consolidación sectorial</strong>: "
-                    "el sector está perdiendo empresas netamente."
-                )
-            insight(_txt)
-            firma_lectura()
-
-    # ── 3.3 Mida mitjana (ocupats/empresa) per país ──────────
-    st.subheader("3.3 " + ("Mida mitjana d'empresa (ocupats per empresa)" if _ca
-                           else "Tamaño medio de empresa (ocupados por empresa)"))
-
-    if not df_lst.empty and "ENT_NR" in df_lst.columns and "EMP_NR" in df_lst.columns:
-        df_lst2 = df_lst.copy()
-        df_lst2["mida_mitjana"] = df_lst2["EMP_NR"] / df_lst2["ENT_NR"]
-        PAIS_ORDER = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
-        df_mm = df_lst2.set_index("pais_codi").reindex(PAIS_ORDER).reset_index()
-        df_mm = df_mm.dropna(subset=["mida_mitjana"]).sort_values("mida_mitjana", ascending=True)
-
-        colors_mm = []
-        for code in df_mm["pais_codi"]:
-            if code == "ES":
-                colors_mm.append(PURPLE)
-            elif code == "EU27_2020":
-                colors_mm.append(RED)
-            else:
-                colors_mm.append(PURPLE_LIGHT)
-
-        fig_mm = go.Figure()
-        fig_mm.add_trace(go.Bar(
-            y=df_mm["pais"], x=df_mm["mida_mitjana"],
-            orientation="h",
-            marker_color=colors_mm,
-            text=[f"{v:.1f}" for v in df_mm["mida_mitjana"]],
-            textposition="outside",
-        ))
-        apply_layout(fig_mm,
-            xaxis_title=("Ocupats / empresa" if _ca else "Ocupados / empresa"),
-            height=350,
-            margin=dict(l=130, r=80, t=30, b=50),
-        )
-        st.plotly_chart(fig_mm, use_container_width=True)
-        source(f"Eurostat <i>bd_size</i> ({darrer_any})")
-
-        # ─── Lectura: mida mitjana ES vs UE-27 ──────────────
-        _es_mm = df_mm[df_mm["pais_codi"] == "ES"]["mida_mitjana"]
-        _ue_mm = df_mm[df_mm["pais_codi"] == "EU27_2020"]["mida_mitjana"]
-        if not _es_mm.empty and not _ue_mm.empty:
-            _es_v = _es_mm.iloc[0]
-            _ue_v = _ue_mm.iloc[0]
-            _diff_pct = (_es_v / _ue_v - 1) * 100
-            if _ca:
-                _txt = (
-                    f"Cada empresa retail espanyola dóna feina de mitjana a "
-                    f"<strong>{fnum(_es_v, 1)} persones</strong>, davant les "
-                    f"{fnum(_ue_v, 1)} de la mitjana UE-27 "
-                    f"({fpct(_diff_pct, 1)} respecte a la UE). "
-                    "Aquesta mètrica és un indicador agregat de la concentració "
-                    "empresarial: valors més alts indiquen una estructura dominada "
-                    "per grans cadenes."
-                )
-            else:
-                _txt = (
-                    f"Cada empresa retail española da trabajo en promedio a "
-                    f"<strong>{fnum(_es_v, 1)} personas</strong>, frente a las "
-                    f"{fnum(_ue_v, 1)} de la media UE-27 "
-                    f"({fpct(_diff_pct, 1)} respecto a la UE). "
-                    "Esta métrica es un indicador agregado de la concentración "
-                    "empresarial: valores más altos indican una estructura dominada "
-                    "por grandes cadenas."
-                )
-            insight(_txt)
-            firma_lectura()
-
-    # ── 3.4 Supervivència Y1 / Y2 ES vs UE-27 ────────────────
-    st.subheader("3.4 " + ("Supervivència empresarial Y1 / Y2" if _ca
-                           else "Supervivencia empresarial Y1 / Y2"))
-
-    if not df_surv.empty:
-        AGE_LBL_CA = {"Y1": "1 any després del naixement", "Y2": "2 anys després del naixement"}
-        AGE_LBL_ES = {"Y1": "1 año después del nacimiento", "Y2": "2 años después del nacimiento"}
-        age_lbl = AGE_LBL_CA if _ca else AGE_LBL_ES
-
-        surv_max_any = df_surv["any"].max()
-        df_s_lst = df_surv[df_surv["any"] == surv_max_any].copy()
-        if df_s_lst.empty:
-            df_s_lst = df_surv.sort_values("any").groupby(["pais_codi", "age"]).tail(1)
-
-        if not df_s_lst.empty:
-            fig_s = go.Figure()
-            for age in ["Y1", "Y2"]:
-                d_age = df_s_lst[df_s_lst["age"] == age].sort_values("pais_codi")
-                if d_age.empty:
-                    continue
-                fig_s.add_trace(go.Bar(
-                    x=[d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(),
-                       d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum()],
-                    y=["UE-27", "Espanya" if _ca else "España"],
-                    name=age_lbl[age],
-                    orientation="h",
-                    marker_color=PURPLE if age == "Y1" else PURPLE_LIGHT,
-                    text=[fpct(d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(), 1, sign=False),
-                          fpct(d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum(), 1, sign=False)],
-                    textposition="outside",
-                ))
-            apply_layout(fig_s,
+            fig_br = go.Figure()
+            fig_br.add_trace(go.Bar(
+                x=df_disp["pais"], y=df_disp.get("ENT_BRTHR_PC", pd.Series()),
+                name=("Taxa naixement" if _ca else "Tasa nacimiento"),
+                marker_color=GREEN,
+                text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_BRTHR_PC", pd.Series())],
+                textposition="outside",
+            ))
+            fig_br.add_trace(go.Bar(
+                x=df_disp["pais"], y=df_disp.get("ENT_DTHR_PC", pd.Series()),
+                name=("Taxa defunció" if _ca else "Tasa defunción"),
+                marker_color=RED,
+                text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_DTHR_PC", pd.Series())],
+                textposition="outside",
+            ))
+            apply_layout(fig_br,
                 barmode="group",
-                xaxis_title="%",
-                height=320,
-                margin=dict(l=80, r=80, t=30, b=50),
+                yaxis_title="%",
+                height=400,
+                margin=dict(l=50, r=20, t=30, b=80),
             )
-            st.plotly_chart(fig_s, use_container_width=True)
-            source(f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)})")
+            st.plotly_chart(fig_br, use_container_width=True)
+            source(f"Eurostat <i>bd_size</i> ({darrer_any})")
 
-            # ─── Lectura: supervivència Y1 ES vs UE-27 ──────
-            _y1_es = df_s_lst[(df_s_lst["age"] == "Y1") &
-                              (df_s_lst["pais_codi"] == "ES")]["survival_pc"]
-            _y1_ue = df_s_lst[(df_s_lst["age"] == "Y1") &
-                              (df_s_lst["pais_codi"] == "EU27_2020")]["survival_pc"]
-            if not _y1_es.empty and not _y1_ue.empty:
-                _es_y1 = _y1_es.iloc[0]
-                _ue_y1 = _y1_ue.iloc[0]
-                _diff = _ue_y1 - _es_y1
+            # ─── Lectura: rotació ES vs UE-27 ───────────────────
+            _es_brth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_BRTHR_PC"].iloc[0]
+                        if "ENT_BRTHR_PC" in df_disp.columns else None)
+            _es_dth = (df_disp[df_disp["pais_codi"] == "ES"]["ENT_DTHR_PC"].iloc[0]
+                       if "ENT_DTHR_PC" in df_disp.columns else None)
+            _ue_brth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_BRTHR_PC"].iloc[0]
+                        if "ENT_BRTHR_PC" in df_disp.columns else None)
+            _ue_dth = (df_disp[df_disp["pais_codi"] == "EU27_2020"]["ENT_DTHR_PC"].iloc[0]
+                       if "ENT_DTHR_PC" in df_disp.columns else None)
+            if _es_brth is not None and _es_dth is not None:
+                _es_net = _es_brth - _es_dth
                 if _ca:
                     _txt = (
-                        f"De cada 100 noves empreses retail creades a Espanya, "
-                        f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviuen al primer "
-                        f"any</strong>, davant les {fpct(_ue_y1, 1, sign=False)} de la "
-                        f"mitjana UE-27 (diferencial de {fpct(_diff, 1)} punts). "
-                        "Una taxa de supervivència més baixa pot reflectir un entorn "
-                        "competitiu més dur, barreres d'entrada més baixes (més "
-                        "empreses fràgils que ho proven) o suport menor al primer any."
+                        f"A Espanya, la taxa de naixement empresarial al CNAE 47 "
+                        f"({fpct(_es_brth, 1, sign=False)}) queda <strong>per sota</strong> "
+                        f"de la taxa de defunció ({fpct(_es_dth, 1, sign=False)}), amb un "
+                        f"saldo net negatiu de {fpct(_es_net, 1)} punts. "
+                    )
+                    if _ue_brth is not None and _ue_dth is not None:
+                        _ue_net = _ue_brth - _ue_dth
+                        _txt += (
+                            f"A la UE-27, el saldo net és {fpct(_ue_net, 1)} punts "
+                            f"(naixement {fpct(_ue_brth, 1, sign=False)} vs defunció "
+                            f"{fpct(_ue_dth, 1, sign=False)}). "
+                        )
+                    _txt += (
+                        "Una taxa de defunció superior a la de naixement de manera "
+                        "sostinguda apunta cap a <strong>consolidació sectorial</strong>: "
+                        "el sector està perdent empreses netament."
                     )
                 else:
                     _txt = (
-                        f"De cada 100 nuevas empresas retail creadas en España, "
-                        f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviven al primer "
-                        f"año</strong>, frente a las {fpct(_ue_y1, 1, sign=False)} de "
-                        f"la media UE-27 (diferencial de {fpct(_diff, 1)} puntos). "
-                        "Una tasa de supervivencia más baja puede reflejar un entorno "
-                        "competitivo más duro, barreras de entrada más bajas (más "
-                        "empresas frágiles que lo intentan) o menor apoyo al primer año."
+                        f"En España, la tasa de nacimiento empresarial del CNAE 47 "
+                        f"({fpct(_es_brth, 1, sign=False)}) queda <strong>por debajo</strong> "
+                        f"de la tasa de defunción ({fpct(_es_dth, 1, sign=False)}), con un "
+                        f"saldo neto negativo de {fpct(_es_net, 1)} puntos. "
+                    )
+                    if _ue_brth is not None and _ue_dth is not None:
+                        _ue_net = _ue_brth - _ue_dth
+                        _txt += (
+                            f"En la UE-27, el saldo neto es {fpct(_ue_net, 1)} puntos "
+                            f"(nacimiento {fpct(_ue_brth, 1, sign=False)} vs defunción "
+                            f"{fpct(_ue_dth, 1, sign=False)}). "
+                        )
+                    _txt += (
+                        "Una tasa de defunción superior a la de nacimiento de manera "
+                        "sostenida apunta a <strong>consolidación sectorial</strong>: "
+                        "el sector está perdiendo empresas netamente."
                     )
                 insight(_txt)
                 firma_lectura()
+
+        # ── 3.3 Mida mitjana (ocupats/empresa) per país ──────────
+        st.subheader("3.3 " + ("Mida mitjana d'empresa (ocupats per empresa)" if _ca
+                               else "Tamaño medio de empresa (ocupados por empresa)"))
+
+        if not df_lst.empty and "ENT_NR" in df_lst.columns and "EMP_NR" in df_lst.columns:
+            df_lst2 = df_lst.copy()
+            df_lst2["mida_mitjana"] = df_lst2["EMP_NR"] / df_lst2["ENT_NR"]
+            PAIS_ORDER = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
+            df_mm = df_lst2.set_index("pais_codi").reindex(PAIS_ORDER).reset_index()
+            df_mm = df_mm.dropna(subset=["mida_mitjana"]).sort_values("mida_mitjana", ascending=True)
+
+            colors_mm = []
+            for code in df_mm["pais_codi"]:
+                if code == "ES":
+                    colors_mm.append(PURPLE)
+                elif code == "EU27_2020":
+                    colors_mm.append(RED)
+                else:
+                    colors_mm.append(PURPLE_LIGHT)
+
+            fig_mm = go.Figure()
+            fig_mm.add_trace(go.Bar(
+                y=df_mm["pais"], x=df_mm["mida_mitjana"],
+                orientation="h",
+                marker_color=colors_mm,
+                text=[f"{v:.1f}" for v in df_mm["mida_mitjana"]],
+                textposition="outside",
+            ))
+            apply_layout(fig_mm,
+                xaxis_title=("Ocupats / empresa" if _ca else "Ocupados / empresa"),
+                height=350,
+                margin=dict(l=130, r=80, t=30, b=50),
+            )
+            st.plotly_chart(fig_mm, use_container_width=True)
+            source(f"Eurostat <i>bd_size</i> ({darrer_any})")
+
+            # ─── Lectura: mida mitjana ES vs UE-27 ──────────────
+            _es_mm = df_mm[df_mm["pais_codi"] == "ES"]["mida_mitjana"]
+            _ue_mm = df_mm[df_mm["pais_codi"] == "EU27_2020"]["mida_mitjana"]
+            if not _es_mm.empty and not _ue_mm.empty:
+                _es_v = _es_mm.iloc[0]
+                _ue_v = _ue_mm.iloc[0]
+                _diff_pct = (_es_v / _ue_v - 1) * 100
+                if _ca:
+                    _txt = (
+                        f"Cada empresa retail espanyola dóna feina de mitjana a "
+                        f"<strong>{fnum(_es_v, 1)} persones</strong>, davant les "
+                        f"{fnum(_ue_v, 1)} de la mitjana UE-27 "
+                        f"({fpct(_diff_pct, 1)} respecte a la UE). "
+                        "Aquesta mètrica és un indicador agregat de la concentració "
+                        "empresarial: valors més alts indiquen una estructura dominada "
+                        "per grans cadenes."
+                    )
+                else:
+                    _txt = (
+                        f"Cada empresa retail española da trabajo en promedio a "
+                        f"<strong>{fnum(_es_v, 1)} personas</strong>, frente a las "
+                        f"{fnum(_ue_v, 1)} de la media UE-27 "
+                        f"({fpct(_diff_pct, 1)} respecto a la UE). "
+                        "Esta métrica es un indicador agregado de la concentración "
+                        "empresarial: valores más altos indican una estructura dominada "
+                        "por grandes cadenas."
+                    )
+                insight(_txt)
+                firma_lectura()
+
+        # ── 3.4 Supervivència Y1 / Y2 ES vs UE-27 ────────────────
+        st.subheader("3.4 " + ("Supervivència empresarial Y1 / Y2" if _ca
+                               else "Supervivencia empresarial Y1 / Y2"))
+
+        if not df_surv.empty:
+            AGE_LBL_CA = {"Y1": "1 any després del naixement", "Y2": "2 anys després del naixement"}
+            AGE_LBL_ES = {"Y1": "1 año después del nacimiento", "Y2": "2 años después del nacimiento"}
+            age_lbl = AGE_LBL_CA if _ca else AGE_LBL_ES
+
+            surv_max_any = df_surv["any"].max()
+            df_s_lst = df_surv[df_surv["any"] == surv_max_any].copy()
+            if df_s_lst.empty:
+                df_s_lst = df_surv.sort_values("any").groupby(["pais_codi", "age"]).tail(1)
+
+            if not df_s_lst.empty:
+                fig_s = go.Figure()
+                for age in ["Y1", "Y2"]:
+                    d_age = df_s_lst[df_s_lst["age"] == age].sort_values("pais_codi")
+                    if d_age.empty:
+                        continue
+                    fig_s.add_trace(go.Bar(
+                        x=[d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(),
+                           d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum()],
+                        y=["UE-27", "Espanya" if _ca else "España"],
+                        name=age_lbl[age],
+                        orientation="h",
+                        marker_color=PURPLE if age == "Y1" else PURPLE_LIGHT,
+                        text=[fpct(d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(), 1, sign=False),
+                              fpct(d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum(), 1, sign=False)],
+                        textposition="outside",
+                    ))
+                apply_layout(fig_s,
+                    barmode="group",
+                    xaxis_title="%",
+                    height=320,
+                    margin=dict(l=80, r=80, t=30, b=50),
+                )
+                st.plotly_chart(fig_s, use_container_width=True)
+                source(f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)})")
+
+                # ─── Lectura: supervivència Y1 ES vs UE-27 ──────
+                _y1_es = df_s_lst[(df_s_lst["age"] == "Y1") &
+                                  (df_s_lst["pais_codi"] == "ES")]["survival_pc"]
+                _y1_ue = df_s_lst[(df_s_lst["age"] == "Y1") &
+                                  (df_s_lst["pais_codi"] == "EU27_2020")]["survival_pc"]
+                if not _y1_es.empty and not _y1_ue.empty:
+                    _es_y1 = _y1_es.iloc[0]
+                    _ue_y1 = _y1_ue.iloc[0]
+                    _diff = _ue_y1 - _es_y1
+                    if _ca:
+                        _txt = (
+                            f"De cada 100 noves empreses retail creades a Espanya, "
+                            f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviuen al primer "
+                            f"any</strong>, davant les {fpct(_ue_y1, 1, sign=False)} de la "
+                            f"mitjana UE-27 (diferencial de {fpct(_diff, 1)} punts). "
+                            "Una taxa de supervivència més baixa pot reflectir un entorn "
+                            "competitiu més dur, barreres d'entrada més baixes (més "
+                            "empreses fràgils que ho proven) o suport menor al primer any."
+                        )
+                    else:
+                        _txt = (
+                            f"De cada 100 nuevas empresas retail creadas en España, "
+                            f"<strong>{fpct(_es_y1, 1, sign=False)} sobreviven al primer "
+                            f"año</strong>, frente a las {fpct(_ue_y1, 1, sign=False)} de "
+                            f"la media UE-27 (diferencial de {fpct(_diff, 1)} puntos). "
+                            "Una tasa de supervivencia más baja puede reflejar un entorno "
+                            "competitivo más duro, barreras de entrada más bajas (más "
+                            "empresas frágiles que lo intentan) o menor apoyo al primer año."
+                        )
+                    insight(_txt)
+                    firma_lectura()
 
 # ═══════════════════════════════════════════════════════════════
 # BLOC 4 — POLS MENSUAL EUROPEU
