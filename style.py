@@ -690,19 +690,25 @@ def inject_css():
             box-shadow: none !important;
         }
 
-        /* Sidebar — tipografia editorial sobre fons negre */
-        [data-testid="stSidebar"] *,
-        [data-testid="stSidebarContent"] * {
-            font-family: 'Inter', sans-serif !important;
+        /* Sidebar — tipografia editorial sobre fons negre.
+           IMPORTANT: NO usar selector universal (*) perquè les icones de
+           Material Symbols (keyboard_double_arrow_left, expand_more...)
+           usen la font 'Material Symbols Outlined' per renderitzar-se
+           com a glyphs. Si els hi forcem Inter, surt el text literal. */
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] div,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] button {
+            font-family: 'Inter', sans-serif;
         }
-        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a,
-        [data-testid="stSidebar"] nav a,
-        [data-testid="stSidebar"] li {
-            font-family: 'Archivo Narrow', sans-serif !important;
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a span,
+        [data-testid="stSidebar"] nav a span,
+        [data-testid="stSidebar"] li span {
+            font-family: 'Archivo Narrow', sans-serif;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0;
-            font-size: 0.92rem !important;
+            font-size: 0.92rem;
         }
         [data-testid="stSidebar"] h1,
         [data-testid="stSidebar"] h2,
@@ -724,6 +730,27 @@ def inject_css():
         [data-testid="stSidebar"] .stSelectbox > div > div {
             background: #1a1a1a !important;
             border: 1px solid #2a2a2a !important;
+        }
+        /* Icones Material Symbols — preservar font icònica.
+           Streamlit utilitza 'Material Symbols Rounded'/'Outlined' per
+           a icones de col·lapse, expansió, navegació, etc. Els spans
+           tenen classes/atributs específics. Forcem la font icònica
+           amb especificitat alta. */
+        [data-testid="stSidebar"] [class*="material-symbols"],
+        [data-testid="stSidebar"] [class*="material-icons"],
+        [data-testid="stSidebar"] [class*="MaterialSymbols"],
+        [data-testid="stSidebar"] [data-testid="stIconMaterial"],
+        [data-testid="stSidebar"] [data-baseweb="icon"] span,
+        [class*="material-symbols"],
+        [class*="material-icons"],
+        [data-testid="stIconMaterial"] {
+            font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+            font-weight: normal !important;
+            font-style: normal !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            line-height: 1 !important;
+            font-feature-settings: 'liga';
         }
 
         /* Background general de la pàgina + container */
