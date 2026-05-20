@@ -719,26 +719,22 @@ def inject_css():
             border-bottom: 1px solid #d0d0d0 !important;
             margin: 8px 0 16px 0 !important;
         }
-        /* Cos del contingut expandit — alinea al marge esquerre, sense
-           indentació tipus 'caixa'. Cobertura agressiva de tots els wrappers
-           interns que Streamlit pot afegir entre details/summary i el contingut. */
+        /* Cos del contingut expandit — respir moderat (no caixa, no enganxat).
+           Padding lateral lleuger perquè els títols i gràfics no toquin el
+           marge de la pàgina, mantenint l'alineació visual editorial. */
         [data-testid="stExpanderDetails"],
         [data-testid="stExpander"] [data-testid="stExpanderDetails"],
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] > div,
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] > div > div,
-        [data-testid="stExpander"] [data-testid="stExpanderDetails"] .stMarkdown,
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] .stVerticalBlock,
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] [data-testid="stVerticalBlock"],
         [data-testid="stExpander"] details > div:not(summary),
         [data-testid="stExpander"] details > div > div {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
         }
         [data-testid="stExpanderDetails"] {
-            padding-top: 8px !important;
-            padding-bottom: 12px !important;
+            padding: 16px 16px 16px 16px !important;
         }
         /* Eliminar markers natius del details (carret arrodonit del browser) */
         [data-testid="stExpander"] summary::-webkit-details-marker,
