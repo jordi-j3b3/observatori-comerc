@@ -207,11 +207,9 @@ def inject_css():
         [data-testid="stMetric"] {
             background: #ffffff !important;
             border-radius: 0 !important;
-            padding: 12px 16px !important;
-            border-left: 3px solid #0a0a0a !important;
-            border-right: none;
-            border-top: none;
-            border-bottom: none;
+            padding: 12px 16px 12px 0 !important;
+            border: none !important;
+            border-top: 1px solid #0a0a0a !important;
             box-shadow: none !important;
         }
         [data-testid="stMetricLabel"],
@@ -318,12 +316,13 @@ def inject_css():
         /* Dividers */
         hr { border-color: #d0d0d0 !important; }
 
-        /* Cards de mètriques: filet negre lateral curt, sense fons gris */
+        /* Cards de mètriques: filet superior fi, sense rampa lateral */
         [data-testid="stMetric"] {
             background-color: #ffffff;
             border-radius: 0;
-            padding: 14px 16px;
-            border-left: 3px solid #0a0a0a;
+            padding: 14px 16px 12px 0;
+            border: none;
+            border-top: 1px solid #0a0a0a;
         }
 
         /* Insight box — fons blanc, filet gruixut superior negre + accent groc */
@@ -370,7 +369,7 @@ def inject_css():
         .conclusions-block {
             background: #ffffff;
             border: none;
-            border-top: 6px solid #0a0a0a;
+            border-top: 3px solid #0a0a0a;
             border-radius: 0;
             padding: 28px 0 24px 0;
             margin: 24px 0;
@@ -424,7 +423,7 @@ def inject_css():
         .newsletter-block {
             background: #ffffff;
             border: none;
-            border-top: 4px solid #0a0a0a;
+            border-top: 2px solid #0a0a0a;
             border-bottom: 1px solid #d0d0d0;
             border-radius: 0;
             padding: 24px 0 16px 0;
@@ -473,7 +472,7 @@ def inject_css():
         .cdmge-block {
             background: #ffffff;
             border: none;
-            border-top: 4px solid #0a0a0a;
+            border-top: 2px solid #0a0a0a;
             border-bottom: 1px solid #d0d0d0;
             border-radius: 0;
             padding: 26px 0 20px 0;
@@ -972,7 +971,7 @@ def lectura_vigent_box(titol, data_referencia,
     """
     st.markdown(
         f"""
-        <div style="background:#ffffff; border-top:4px solid #0a0a0a;
+        <div style="background:#ffffff; border-top:2px solid #0a0a0a;
                     padding:20px 0 18px 0; margin:18px 0 28px;
                     border-bottom:1px solid #d0d0d0;
                     font-family:'Inter',sans-serif;">

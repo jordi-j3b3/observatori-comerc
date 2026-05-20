@@ -47,7 +47,7 @@ PULSO_CSS = """
 
 .pulso-issue {
     padding: 56px 0 72px 0;
-    border-top: 8px solid #0a0a0a;
+    border-top: 3px solid #0a0a0a;
     margin-top: 32px;
 }
 .pulso-issue:first-of-type { margin-top: 16px; }

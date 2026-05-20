@@ -93,18 +93,19 @@ if _tesi_titol and not _tesi_obsoleta:
     _eyebrow = "Tesi vigent" if _ca else "Tesis vigente"
     st.markdown(
         f"""
-        <div style="background:#ffffff; border-left:4px solid #0a0a0a;
-                    padding:18px 22px; margin:18px 0 28px; border-radius:0;
+        <div style="background:#ffffff; border-top:2px solid #0a0a0a;
+                    padding:18px 0 22px 0; margin:18px 0 28px;
                     font-family:'Inter',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:0;
-                        text-transform:uppercase; color:#0a0a0a; margin-bottom:8px;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.92rem;
+                        font-weight:700; text-transform:uppercase;
+                        color:#0a0a0a; margin-bottom:10px;">
                 {_eyebrow}
             </div>
-            <div style="color:#222; font-size:18px; font-weight:500; line-height:1.5;
-                        margin-bottom:8px;">
+            <div style="color:#0a0a0a; font-size:18px; font-weight:500;
+                        line-height:1.5; margin-bottom:10px;">
                 {_tesi_titol}
             </div>
-            <div style="color:#666; font-size:12px;">
+            <div style="color:#6a6a6a; font-size:12px;">
                 {_tesi_autor} · {_tesi_data_fmt}
             </div>
             {_link_html}
@@ -120,14 +121,15 @@ else:
            "La tesis vigente se publicará aquí cada lunes. Próximamente disponible.")
     st.markdown(
         f"""
-        <div style="background:#fafafa; border-left:4px solid #ccc;
-                    padding:14px 18px; margin:18px 0 28px; border-radius:0;
+        <div style="background:#ffffff; border-top:2px solid #c0c0c0;
+                    padding:14px 0 18px 0; margin:18px 0 28px;
                     font-family:'Inter',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:0;
-                        text-transform:uppercase; color:#999; margin-bottom:6px;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.92rem;
+                        font-weight:700; text-transform:uppercase;
+                        color:#6a6a6a; margin-bottom:8px;">
                 {_eyebrow}
             </div>
-            <div style="color:#777; font-size:14px; font-style:italic;">
+            <div style="color:#6a6a6a; font-size:14px; font-style:italic;">
                 {_fb}
             </div>
         </div>
