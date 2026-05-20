@@ -128,39 +128,64 @@ def setup_lang(show_selector=True):
 # ─── CSS GLOBAL ───────────────────────────────────────────────
 
 def inject_css():
-    """Injecta CSS global a la pàgina (cridar a cada page)."""
+    """Injecta CSS global a la pàgina (cridar a cada page).
+
+    Estètica editorial alt contrast (Politico/Axios/Bloomberg Opinion):
+    Archivo Narrow per titulars, Inter per cos, Lora italic per cites,
+    IBM Plex Mono per xifres. Paleta negre/blanc/groc highlighter.
+    """
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@1,400;1,500&family=IBM+Plex+Mono:wght@500;700&display=swap');
 
         /* Tipografia global */
         html, body, [class*="css"] {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
         h1, .stMarkdown h1 {
-            font-family: 'DM Serif Display', serif !important;
-            font-weight: 400 !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
             color: #0a0a0a;
-            font-size: 2.2rem !important;
+            font-size: 2.6rem !important;
+            line-height: 1.05 !important;
+            letter-spacing: -0.5px;
         }
-        h2, h3, .stMarkdown h2, .stMarkdown h3 {
-            font-family: 'DM Serif Display', serif !important;
-            font-weight: 400 !important;
-            color: #1a1a1a;
+        h2, .stMarkdown h2 {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            color: #0a0a0a;
+            font-size: 1.9rem !important;
+            line-height: 1.1 !important;
+        }
+        h3, .stMarkdown h3 {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            color: #0a0a0a;
+            font-size: 1.4rem !important;
+            line-height: 1.15 !important;
         }
         h4, h5, h6,
         .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            color: #1a1a1a;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
+            color: #0a0a0a;
         }
 
-        /* Accent principal */
-        .stMetricValue { color: #0055a4 !important; font-weight: 700; }
+        /* Mètriques: tinta negra + mono per al valor (numèric) */
+        .stMetricValue {
+            color: #0a0a0a !important;
+            font-weight: 700 !important;
+            font-family: 'IBM Plex Mono', monospace !important;
+        }
+        .stMetricLabel {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            text-transform: uppercase;
+            color: #6a6a6a !important;
+        }
         .stMetricDelta svg { display: inline; }
 
-        /* Sidebar */
+        /* Sidebar (es manté fosc per coherència de chrome) */
         [data-testid="stSidebar"] {
             background-color: #0a0a0a;
         }
@@ -170,117 +195,124 @@ def inject_css():
         [data-testid="stSidebar"] .stSelectbox label {
             color: #FFFFFF !important;
         }
-
-        /* Ocultar el botó "View less"/"View more" del nav del sidebar.
-           Streamlit 1.50 té el text hardcoded al bundle JS sense suport de
-           traducció. Amb 5 seccions distribuïdes (HOME, LECTURAS, RADIOGRAFIA,
-           DETALL, RECURSOS) el col·lapse no fa falta. */
         [data-testid="stSidebarNavViewButton"] {
             display: none !important;
         }
 
         /* Botons */
         .stDownloadButton button {
-            background-color: #0055a4;
-            color: white;
+            background-color: #0a0a0a;
+            color: #ffffff;
             border: none;
-            border-radius: 3px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 500;
+            border-radius: 0;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
             font-size: 14px;
+            text-transform: uppercase;
         }
         .stDownloadButton button:hover {
-            background-color: #003d7a;
+            background-color: #1a1a1a;
+            box-shadow: inset 0 -3px 0 0 #f5d800;
         }
 
         /* Tabs */
         .stTabs [data-baseweb="tab"] {
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 500;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #6a6a6a;
         }
         .stTabs [aria-selected="true"] {
-            border-bottom-color: #0055a4 !important;
+            color: #0a0a0a !important;
+            border-bottom-color: #0a0a0a !important;
+            border-bottom-width: 3px !important;
         }
 
         /* Dividers */
-        hr { border-color: #e0e0e0 !important; }
+        hr { border-color: #d0d0d0 !important; }
 
-        /* Cards de mètriques */
+        /* Cards de mètriques: filet negre lateral curt, sense fons gris */
         [data-testid="stMetric"] {
-            background-color: #fcfcfc;
-            border-radius: 4px;
-            padding: 15px;
-            border-left: 3px solid #0055a4;
+            background-color: #ffffff;
+            border-radius: 0;
+            padding: 14px 16px;
+            border-left: 3px solid #0a0a0a;
         }
 
-        /* Insight box */
+        /* Insight box — fons blanc, filet gruixut superior negre + accent groc */
         .insight-box {
-            background: #f4f4f2;
-            border-left: 3px solid #0055a4;
-            border-radius: 0 4px 4px 0;
-            padding: 24px 28px;
+            background: #ffffff;
+            border-top: 3px solid #0a0a0a;
+            border-radius: 0;
+            padding: 20px 22px 18px 22px;
             margin: 16px 0 24px 0;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.97rem;
+            line-height: 1.65;
             color: #1a1a1a;
         }
         .insight-box strong {
-            color: #0055a4;
+            background: linear-gradient(180deg, transparent 0%, transparent 60%,
+                        #f5d800 60%, #f5d800 92%, transparent 92%);
+            padding: 0 2px;
         }
         .insight-box .insight-title {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 1.5px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #0055a4;
-            margin-bottom: 10px;
+            color: #0a0a0a;
+            margin-bottom: 12px;
+            letter-spacing: 0;
         }
 
-        /* Intro box */
+        /* Intro box — fons blanc, sense decoració més enllà del marge */
         .intro-box {
-            background: #f4f4f2;
-            border-radius: 4px;
-            padding: 24px 28px;
-            margin: 0 0 24px 0;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.93rem;
-            line-height: 1.7;
-            color: #555;
+            background: #ffffff;
+            border-radius: 0;
+            padding: 0 0 18px 0;
+            margin: 0 0 28px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            line-height: 1.65;
+            color: #444;
+            border-bottom: 1px solid #d0d0d0;
         }
 
-        /* Conclusions block (Inici) */
+        /* Conclusions block (Inici) — filet superior gruixut + accent groc, sense gradient */
         .conclusions-block {
-            background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%);
-            border: 1px solid #d8e2f0;
-            border-left: 4px solid #0055a4;
-            border-radius: 6px;
-            padding: 28px 32px;
-            margin: 24px 0 24px 0;
-            box-shadow: 0 2px 8px rgba(0, 85, 164, 0.06);
+            background: #ffffff;
+            border: none;
+            border-top: 6px solid #0a0a0a;
+            border-radius: 0;
+            padding: 28px 0 24px 0;
+            margin: 24px 0;
+            box-shadow: none;
         }
         .conclusions-block .conclusions-eyebrow {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 2px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #0055a4;
-            margin-bottom: 8px;
+            color: #0a0a0a;
+            margin-bottom: 10px;
+            letter-spacing: 0;
         }
         .conclusions-block h3 {
-            font-family: 'DM Serif Display', serif !important;
-            font-weight: 400 !important;
-            font-size: 1.6rem !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 2rem !important;
             color: #0a0a0a !important;
-            margin: 0 0 12px 0 !important;
+            margin: 0 0 14px 0 !important;
             padding: 0 !important;
             border: none !important;
+            line-height: 1.08 !important;
         }
         .conclusions-block .conclusions-update {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: #6a6a6a;
+            margin-bottom: 18px;
             font-style: italic;
         }
         .conclusions-block ul {
@@ -288,76 +320,87 @@ def inject_css():
             padding-left: 20px;
         }
         .conclusions-block li {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.97rem;
             line-height: 1.7;
             color: #1a1a1a;
             margin-bottom: 10px;
         }
         .conclusions-block li strong {
-            color: #0055a4;
+            background: linear-gradient(180deg, transparent 0%, transparent 60%,
+                        #f5d800 60%, #f5d800 92%, transparent 92%);
+            padding: 0 2px;
+            color: #0a0a0a;
         }
 
-        /* Newsletter (subscripció butlletí trimestral) */
+        /* Newsletter (subscripció combinada Pulso setmanal + trimestral) */
         .newsletter-block {
-            background: linear-gradient(180deg, #fffbf3 0%, #ffffff 100%);
-            border: 1px solid #ead9b8;
-            border-left: 4px solid #c89a3c;
-            border-radius: 6px;
-            padding: 24px 28px 12px 28px;
-            margin: 24px 0;
-            box-shadow: 0 2px 8px rgba(200, 154, 60, 0.08);
+            background: #ffffff;
+            border: none;
+            border-top: 4px solid #0a0a0a;
+            border-bottom: 1px solid #d0d0d0;
+            border-radius: 0;
+            padding: 24px 0 16px 0;
+            margin: 32px 0 16px 0;
+            box-shadow: none;
         }
         .newsletter-block .newsletter-eyebrow {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 2px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #c89a3c;
-            margin-bottom: 8px;
+            color: #0a0a0a;
+            margin-bottom: 10px;
+            letter-spacing: 0;
         }
         .newsletter-block h3 {
-            font-family: 'DM Serif Display', serif !important;
-            font-weight: 400 !important;
-            font-size: 1.5rem !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 1.7rem !important;
             color: #0a0a0a !important;
-            margin: 0 0 8px 0 !important;
+            margin: 0 0 12px 0 !important;
             padding: 0 !important;
             border: none !important;
+            line-height: 1.1 !important;
         }
         .newsletter-block .newsletter-desc {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.55;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.97rem;
+            line-height: 1.6;
             color: #1a1a1a;
-            margin: 0 0 16px 0;
+            margin: 0 0 20px 0;
+        }
+        .newsletter-block .newsletter-desc strong {
+            background: linear-gradient(180deg, transparent 0%, transparent 60%,
+                        #f5d800 60%, #f5d800 92%, transparent 92%);
+            padding: 0 2px;
         }
         .newsletter-block .newsletter-foot {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 11px;
-            color: #999;
+            color: #6a6a6a;
             margin: 4px 0 0 0;
         }
 
-        /* CDMGE — Pols diari (alta freqüència, secció destacada) */
+        /* CDMGE — Pols diari (alta freqüència) */
         .cdmge-block {
-            background: linear-gradient(180deg, #fff4ec 0%, #ffffff 100%);
-            border: 1px solid #f5cbb1;
-            border-left: 4px solid #d24d2c;
-            border-radius: 6px;
-            padding: 28px 32px 24px 32px;
+            background: #ffffff;
+            border: none;
+            border-top: 4px solid #0a0a0a;
+            border-bottom: 1px solid #d0d0d0;
+            border-radius: 0;
+            padding: 26px 0 20px 0;
             margin: 32px 0 24px 0;
-            box-shadow: 0 2px 12px rgba(210, 77, 44, 0.08);
+            box-shadow: none;
         }
         .cdmge-block .cdmge-eyebrow {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 0.92rem;
             font-weight: 700;
-            letter-spacing: 2px;
             text-transform: uppercase;
-            color: #d24d2c;
-            margin-bottom: 6px;
+            color: #0a0a0a;
+            margin-bottom: 8px;
+            letter-spacing: 0;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -366,66 +409,69 @@ def inject_css():
             display: inline-block;
             width: 8px;
             height: 8px;
-            background: #d24d2c;
-            border-radius: 50%;
+            background: #f5d800;
+            border-radius: 0;
             animation: cdmgePulse 1.6s ease-in-out infinite;
         }
         @keyframes cdmgePulse {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(210, 77, 44, 0.6); }
-            50% { opacity: 0.55; transform: scale(1.25); box-shadow: 0 0 0 6px rgba(210, 77, 44, 0); }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(1.25); }
         }
         .cdmge-block h3 {
-            font-family: 'DM Serif Display', serif !important;
-            font-weight: 400 !important;
-            font-size: 1.6rem !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: 1.9rem !important;
             color: #0a0a0a !important;
-            margin: 0 0 6px 0 !important;
+            margin: 0 0 8px 0 !important;
             padding: 0 !important;
             border: none !important;
+            line-height: 1.1 !important;
         }
         .cdmge-block .cdmge-sub {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.92rem;
-            color: #555;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: #444;
             margin-bottom: 18px;
+            line-height: 1.55;
         }
         .cdmge-block .cdmge-asof {
+            font-family: 'Inter', sans-serif;
             font-size: 12px;
-            color: #999;
+            color: #6a6a6a;
             font-style: italic;
             margin-bottom: 14px;
         }
 
         /* Font de dades */
         .source-label {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 12px;
             font-weight: 500;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
-            color: #999;
+            color: #6a6a6a;
             margin-top: -8px;
             margin-bottom: 20px;
-            padding-left: 4px;
+            padding-left: 0;
+            letter-spacing: 0;
         }
 
-        /* Meta info (legacy, encara usat puntualment) */
+        /* Meta info */
         .meta-info {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
             font-size: 13px;
-            color: #999;
-            border-top: 1px solid #e0e0e0;
+            color: #6a6a6a;
+            border-top: 1px solid #d0d0d0;
             padding-top: 12px;
             margin-top: 30px;
         }
 
         /* Footer global */
         .j3b3-footer {
-            font-family: 'DM Sans', sans-serif;
-            margin-top: 48px;
+            font-family: 'Inter', sans-serif;
+            margin-top: 56px;
             padding-top: 28px;
-            border-top: 1px solid #e0e0e0;
-            color: #555;
+            border-top: 3px solid #0a0a0a;
+            color: #444;
             font-size: 13px;
             line-height: 1.6;
         }
@@ -439,24 +485,26 @@ def inject_css():
             .j3b3-footer .footer-grid { grid-template-columns: 1fr; gap: 20px; }
         }
         .j3b3-footer .footer-brand-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 1.05rem;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
             color: #0a0a0a;
             margin: 6px 0 6px 0;
-            line-height: 1.3;
+            line-height: 1.2;
         }
         .j3b3-footer .footer-brand-desc {
-            color: #666;
+            color: #444;
             font-size: 12.5px;
             margin: 0;
         }
         .j3b3-footer .footer-col-title {
-            font-size: 11px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 12px;
             font-weight: 700;
-            letter-spacing: 1.5px;
             text-transform: uppercase;
-            color: #0055a4;
+            color: #0a0a0a;
             margin: 6px 0 10px 0;
+            letter-spacing: 0;
         }
         .j3b3-footer ul {
             list-style: none;
@@ -467,28 +515,30 @@ def inject_css():
             margin: 0 0 6px 0;
         }
         .j3b3-footer a {
-            color: #333;
+            color: #1a1a1a;
             text-decoration: none;
             border-bottom: 1px solid transparent;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, background 0.15s;
         }
         .j3b3-footer a:hover {
-            color: #0055a4;
-            border-bottom-color: #0055a4;
+            color: #0a0a0a;
+            background: linear-gradient(180deg, transparent 0%, transparent 70%,
+                        #f5d800 70%, #f5d800 100%);
+            border-bottom-color: transparent;
         }
         .j3b3-footer .footer-bottom {
-            border-top: 1px solid #ececec;
+            border-top: 1px solid #d0d0d0;
             padding-top: 14px;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 8px;
             font-size: 11.5px;
-            color: #888;
+            color: #6a6a6a;
         }
         .j3b3-footer .footer-bottom .copy strong {
-            color: #555;
-            font-weight: 600;
+            color: #1a1a1a;
+            font-weight: 700;
         }
 
         /* Logo header */
@@ -502,25 +552,27 @@ def inject_css():
             height: 30px;
         }
         .j3b3-badge {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 1.5px;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            color: #0055a4;
+            color: #0a0a0a;
+            letter-spacing: 0;
         }
 
         /* Expander */
         .streamlit-expanderHeader {
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 500;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
         }
 
         /* Selectbox */
         .stSelectbox > div > div {
-            border-radius: 3px;
+            border-radius: 0;
         }
         .stMultiSelect > div > div {
-            border-radius: 3px;
+            border-radius: 0;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -580,16 +632,15 @@ def nom_ccaa_editorial(s):
 
 
 def minilectura(text):
-    """Paràgraf gris discret sota un gràfic. Nivell 3 del patró editorial Z.
+    """Paràgraf gris discret sota un gràfic.
 
     Observació analítica curta (15-25 paraules) sense caixa ni border.
-    Color #888, font 14px, line-height 1.5. Marge superior 12px respecte al
-    gràfic, marge inferior 24px respecte al següent element.
+    Tipografia Inter, color gris fosc, line-height 1.5.
     """
     st.markdown(
-        f'<div style="color:#888; font-size:14px; line-height:1.5; '
-        f'font-family:\'DM Sans\',sans-serif; '
-        f'margin:12px 4px 24px 4px;">{text}</div>',
+        f'<div style="color:#6a6a6a; font-size:14px; line-height:1.55; '
+        f'font-family:\'Inter\',sans-serif; '
+        f'margin:12px 0 24px 0; font-style:italic;">{text}</div>',
         unsafe_allow_html=True,
     )
 
@@ -599,28 +650,27 @@ def lectura_vigent_box(titol, data_referencia,
                       eyebrow="LECTURA VIGENTE"):
     """Caixa visual de Lectura Vigent a les pàgines de dades.
 
-    Mateixa estètica que la caixa Tesi vigent de la home (border-left blau J3B3,
-    fons gris suau, eyebrow uppercase, títol gran amb tensió interpretativa,
-    signatura corporativa discreta a sota).
-
-    Reutilitzable per a totes les pàgines de dades. El text del titol es genera
-    a la pàgina (lògica condicional adaptativa segons signe i magnitud de les
-    dades vigents) i passa aquí com a string.
+    Estètica editorial alt contrast: filet gruixut superior negre, eyebrow
+    en Archivo Narrow uppercase sense letter-spacing forçat, titular gran
+    amb tensió interpretativa, signatura corporativa discreta a sota.
     """
     st.markdown(
         f"""
-        <div style="background:#f5f7fb; border-left:4px solid #0055a4;
-                    padding:18px 22px; margin:18px 0 28px; border-radius:3px;
-                    font-family:'DM Sans',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
-                        text-transform:uppercase; color:#0055a4; margin-bottom:8px;">
+        <div style="background:#ffffff; border-top:4px solid #0a0a0a;
+                    padding:20px 0 18px 0; margin:18px 0 28px;
+                    border-bottom:1px solid #d0d0d0;
+                    font-family:'Inter',sans-serif;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.92rem;
+                        font-weight:700; text-transform:uppercase;
+                        color:#0a0a0a; margin-bottom:10px;">
                 {eyebrow}
             </div>
-            <div style="color:#222; font-size:18px; font-weight:500; line-height:1.5;
-                        margin-bottom:8px;">
+            <div style="font-family:'Archivo Narrow',sans-serif; color:#0a0a0a;
+                        font-size:1.45rem; font-weight:700; line-height:1.2;
+                        margin-bottom:10px;">
                 {titol}
             </div>
-            <div style="color:#666; font-size:12px;">
+            <div style="color:#6a6a6a; font-size:12px;">
                 {autor} · {data_referencia}
             </div>
         </div>
@@ -635,7 +685,7 @@ def source(text):
     lbl = "Font" if lang == "ca" else "Fuente"
     if "Càlcul propi" in text or "Cálculo propio" in text:
         meto_lbl = "Veure metodologia" if lang == "ca" else "Ver metodología"
-        extra = f' · <a href="/Metodologia" target="_self" style="color:#0055a4;">{meto_lbl}</a>'
+        extra = f' · <a href="/Metodologia" target="_self" style="color:#0a0a0a; border-bottom:1px solid #0a0a0a;">{meto_lbl}</a>'
     else:
         extra = ""
     st.markdown(f'<div class="source-label">{lbl}: {text}{extra}</div>', unsafe_allow_html=True)
@@ -684,7 +734,7 @@ def canaries_inset_layers():
                 "type": "Feature",
                 "geometry": {"type": "LineString", "coordinates": rectangle},
             },
-            "color": "rgba(0,85,164,0.55)",
+            "color": "rgba(10,10,10,0.55)",
             "line": {"width": 1.2},
         }
     ]
