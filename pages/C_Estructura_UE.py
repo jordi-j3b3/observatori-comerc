@@ -11,7 +11,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout,
+                   fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, GREEN, PALETTE)
 
 inject_css()
@@ -349,95 +349,100 @@ if not df_lst.empty and "ENT_NR" in df_lst.columns and "EMP_NR" in df_lst.column
             )
         insight(txt)
 
-# ─── Supervivència ──────────────────────────────────────────
+# ─── Supervivència (secundari, dins expander) ──────────────
 
-if not df_surv.empty:
-    st.subheader("Supervivència empresarial" if _ca else "Supervivencia empresarial")
+_lbl_surv_exp = ("Veure supervivència empresarial Y1 / Y2"
+                 if _ca else
+                 "Ver supervivencia empresarial Y1 / Y2")
+with highlight_expander(_lbl_surv_exp, expanded=False):
 
-    AGE_LBL_CA = {"Y1": "1 any després del naixement", "Y2": "2 anys després del naixement"}
-    AGE_LBL_ES = {"Y1": "1 año después del nacimiento", "Y2": "2 años después del nacimiento"}
-    age_lbl = AGE_LBL_CA if _ca else AGE_LBL_ES
+    if not df_surv.empty:
+        st.subheader("Supervivència empresarial" if _ca else "Supervivencia empresarial")
 
-    # Usar el darrer any disponible per cada age
-    surv_max_any = df_surv["any"].max()
-    df_s_lst = df_surv[df_surv["any"] == surv_max_any].copy()
-    if df_s_lst.empty:
-        df_s_lst = df_surv.sort_values("any").groupby(["pais_codi", "age"]).tail(1)
+        AGE_LBL_CA = {"Y1": "1 any després del naixement", "Y2": "2 anys després del naixement"}
+        AGE_LBL_ES = {"Y1": "1 año después del nacimiento", "Y2": "2 años después del nacimiento"}
+        age_lbl = AGE_LBL_CA if _ca else AGE_LBL_ES
 
-    if not df_s_lst.empty:
-        fig_s = go.Figure()
-        for age in ["Y1", "Y2"]:
-            d_age = df_s_lst[df_s_lst["age"] == age].sort_values("pais_codi")
-            if d_age.empty:
-                continue
-            fig_s.add_trace(go.Bar(
-                x=[d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(),
-                   d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum()],
-                y=["UE-27", "Espanya" if _ca else "España"],
-                name=age_lbl[age],
-                orientation="h",
-                marker_color=PURPLE if age == "Y1" else PURPLE_LIGHT,
-                text=[fpct(d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(), 1, sign=False),
-                      fpct(d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum(), 1, sign=False)],
-                textposition="outside",
-            ))
-        apply_layout(fig_s,
-            barmode="group",
-            xaxis_title="%",
-            height=320,
-            margin=dict(l=80, r=80, t=30, b=50),
-        )
-        st.plotly_chart(fig_s, use_container_width=True)
-        source(f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)}). Càlcul propi" if _ca
-               else f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)}). Cálculo propio")
+        # Usar el darrer any disponible per cada age
+        surv_max_any = df_surv["any"].max()
+        df_s_lst = df_surv[df_surv["any"] == surv_max_any].copy()
+        if df_s_lst.empty:
+            df_s_lst = df_surv.sort_values("any").groupby(["pais_codi", "age"]).tail(1)
 
-        # Insight supervivència
-        y1_es = df_s_lst[(df_s_lst["age"] == "Y1") & (df_s_lst["pais_codi"] == "ES")]["survival_pc"]
-        y1_ue = df_s_lst[(df_s_lst["age"] == "Y1") & (df_s_lst["pais_codi"] == "EU27_2020")]["survival_pc"]
-        if not y1_es.empty and not y1_ue.empty:
-            es_y1 = y1_es.iloc[0]
-            ue_y1 = y1_ue.iloc[0]
-            diff = ue_y1 - es_y1  # > 0 si Espanya sobreviu MENYS que la UE
-            _es_sobreviu_menys = diff > 0
-            if _ca:
-                if _es_sobreviu_menys:
-                    lectura = (
-                        "Una taxa de supervivència més baixa pot reflectir un entorn "
-                        "competitiu més dur, barreres d'entrada més baixes (més empreses "
-                        "fràgils que ho proven) o suport menor al primer any."
+        if not df_s_lst.empty:
+            fig_s = go.Figure()
+            for age in ["Y1", "Y2"]:
+                d_age = df_s_lst[df_s_lst["age"] == age].sort_values("pais_codi")
+                if d_age.empty:
+                    continue
+                fig_s.add_trace(go.Bar(
+                    x=[d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(),
+                       d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum()],
+                    y=["UE-27", "Espanya" if _ca else "España"],
+                    name=age_lbl[age],
+                    orientation="h",
+                    marker_color=PURPLE if age == "Y1" else PURPLE_LIGHT,
+                    text=[fpct(d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(), 1, sign=False),
+                          fpct(d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum(), 1, sign=False)],
+                    textposition="outside",
+                ))
+            apply_layout(fig_s,
+                barmode="group",
+                xaxis_title="%",
+                height=320,
+                margin=dict(l=80, r=80, t=30, b=50),
+            )
+            st.plotly_chart(fig_s, use_container_width=True)
+            source(f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)}). Càlcul propi" if _ca
+                   else f"Eurostat <i>bd_size</i> (cohort {int(surv_max_any)}). Cálculo propio")
+
+            # Insight supervivència
+            y1_es = df_s_lst[(df_s_lst["age"] == "Y1") & (df_s_lst["pais_codi"] == "ES")]["survival_pc"]
+            y1_ue = df_s_lst[(df_s_lst["age"] == "Y1") & (df_s_lst["pais_codi"] == "EU27_2020")]["survival_pc"]
+            if not y1_es.empty and not y1_ue.empty:
+                es_y1 = y1_es.iloc[0]
+                ue_y1 = y1_ue.iloc[0]
+                diff = ue_y1 - es_y1  # > 0 si Espanya sobreviu MENYS que la UE
+                _es_sobreviu_menys = diff > 0
+                if _ca:
+                    if _es_sobreviu_menys:
+                        lectura = (
+                            "Una taxa de supervivència més baixa pot reflectir un entorn "
+                            "competitiu més dur, barreres d'entrada més baixes (més empreses "
+                            "fràgils que ho proven) o suport menor al primer any."
+                        )
+                    else:
+                        lectura = (
+                            "Una taxa de supervivència més alta indica un entorn d'entrada "
+                            "més selectiu o un teixit empresarial amb projectes més robustos "
+                            "des de l'inici. També pot reflectir més suport institucional "
+                            "i finançament al primer any d'activitat."
+                        )
+                    txt = (
+                        f"De cada 100 noves empreses retail creades a Espanya, <strong>{fpct(es_y1, 1, sign=False)} "
+                        f"sobreviuen al primer any</strong>, davant les {fpct(ue_y1, 1, sign=False)} de la mitjana UE-27 "
+                        f"(diferencial de {fpct(diff, 1)} punts). {lectura}"
                     )
                 else:
-                    lectura = (
-                        "Una taxa de supervivència més alta indica un entorn d'entrada "
-                        "més selectiu o un teixit empresarial amb projectes més robustos "
-                        "des de l'inici. També pot reflectir més suport institucional "
-                        "i finançament al primer any d'activitat."
+                    if _es_sobreviu_menys:
+                        lectura = (
+                            "Una tasa de supervivencia más baja puede reflejar un entorno "
+                            "competitivo más duro, barreras de entrada más bajas (más empresas "
+                            "frágiles que lo intentan) o menor apoyo al primer año."
+                        )
+                    else:
+                        lectura = (
+                            "Una tasa de supervivencia más alta indica un entorno de entrada "
+                            "más selectivo o un tejido empresarial con proyectos más robustos "
+                            "desde el inicio. También puede reflejar mayor apoyo institucional "
+                            "y financiación en el primer año de actividad."
+                        )
+                    txt = (
+                        f"De cada 100 nuevas empresas retail creadas en España, <strong>{fpct(es_y1, 1, sign=False)} "
+                        f"sobreviven al primer año</strong>, frente a las {fpct(ue_y1, 1, sign=False)} de la media UE-27 "
+                        f"(diferencial de {fpct(diff, 1)} puntos). {lectura}"
                     )
-                txt = (
-                    f"De cada 100 noves empreses retail creades a Espanya, <strong>{fpct(es_y1, 1, sign=False)} "
-                    f"sobreviuen al primer any</strong>, davant les {fpct(ue_y1, 1, sign=False)} de la mitjana UE-27 "
-                    f"(diferencial de {fpct(diff, 1)} punts). {lectura}"
-                )
-            else:
-                if _es_sobreviu_menys:
-                    lectura = (
-                        "Una tasa de supervivencia más baja puede reflejar un entorno "
-                        "competitivo más duro, barreras de entrada más bajas (más empresas "
-                        "frágiles que lo intentan) o menor apoyo al primer año."
-                    )
-                else:
-                    lectura = (
-                        "Una tasa de supervivencia más alta indica un entorno de entrada "
-                        "más selectivo o un tejido empresarial con proyectos más robustos "
-                        "desde el inicio. También puede reflejar mayor apoyo institucional "
-                        "y financiación en el primer año de actividad."
-                    )
-                txt = (
-                    f"De cada 100 nuevas empresas retail creadas en España, <strong>{fpct(es_y1, 1, sign=False)} "
-                    f"sobreviven al primer año</strong>, frente a las {fpct(ue_y1, 1, sign=False)} de la media UE-27 "
-                    f"(diferencial de {fpct(diff, 1)} puntos). {lectura}"
-                )
-            insight(txt)
+                insight(txt)
 
 # ─── Taula completa descarregable ──────────────────────────
 
