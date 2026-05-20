@@ -202,18 +202,75 @@ def inject_css():
             color: #0a0a0a;
         }
 
-        /* Mètriques: tinta negra + mono per al valor (numèric) */
-        .stMetricValue {
-            color: #0a0a0a !important;
-            font-weight: 700 !important;
-            font-family: 'IBM Plex Mono', monospace !important;
+        /* Mètriques editorial — fons blanc, valor en Archivo Narrow,
+           delta sense píndola arrodonida amb fons de color */
+        [data-testid="stMetric"] {
+            background: #ffffff !important;
+            border-radius: 0 !important;
+            padding: 12px 16px !important;
+            border-left: 3px solid #0a0a0a !important;
+            border-right: none;
+            border-top: none;
+            border-bottom: none;
+            box-shadow: none !important;
         }
-        .stMetricLabel {
+        [data-testid="stMetricLabel"],
+        [data-testid="stMetricLabel"] p,
+        [data-testid="stMetricLabel"] div,
+        [data-testid="stMetricLabel"] label {
             font-family: 'Archivo Narrow', sans-serif !important;
-            text-transform: uppercase;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
             color: #6a6a6a !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 0 !important;
         }
-        .stMetricDelta svg { display: inline; }
+        [data-testid="stMetricValue"],
+        [data-testid="stMetricValue"] div,
+        [data-testid="stMetricValue"] span {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            color: #0a0a0a !important;
+            font-size: 2.2rem !important;
+            line-height: 1.05 !important;
+            letter-spacing: -0.5px !important;
+        }
+        /* Delta — sense fons píndola, sense arrodoniment, només color i fletxa */
+        [data-testid="stMetricDelta"] {
+            background: transparent !important;
+            border-radius: 0 !important;
+            padding: 4px 0 0 0 !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 0.88rem !important;
+        }
+        [data-testid="stMetricDelta"] div,
+        [data-testid="stMetricDelta"] span {
+            background: transparent !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 600 !important;
+        }
+        /* Color del valor del delta: negre intens per positius, vermell pels negatius */
+        [data-testid="stMetricDeltaIcon-Up"] ~ div,
+        [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Up"] + div {
+            color: #0a0a0a !important;
+        }
+        [data-testid="stMetricDeltaIcon-Down"] ~ div,
+        [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Down"] + div {
+            color: #c0392b !important;
+        }
+        /* Icona delta — preservar font Material Symbols */
+        [data-testid="stMetricDeltaIcon-Up"],
+        [data-testid="stMetricDeltaIcon-Down"] {
+            font-family: 'Material Symbols Rounded', 'Material Symbols Outlined' !important;
+        }
+        [data-testid="stMetricDeltaIcon-Up"] svg { fill: #0a0a0a !important; }
+        [data-testid="stMetricDeltaIcon-Down"] svg { fill: #c0392b !important; }
+        /* Help icon (?) — discreta */
+        [data-testid="stMetricLabel"] [data-testid="stTooltipIcon"],
+        [data-testid="stMetric"] [data-testid="stTooltipIcon"] {
+            color: #c0c0c0 !important;
+        }
 
         /* Sidebar (es manté fosc per coherència de chrome) */
         [data-testid="stSidebar"] {
