@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout,
+                   fnum, fpct, cagr, apply_layout, highlight_expander,
                    PURPLE, RED, BLUE, ORANGE)
 
 inject_css()
@@ -115,19 +115,22 @@ if not df_prod.empty and "personal_ocupat" in df_prod.columns:
     if "hores_treballades" in df.columns and "personal_ocupat" in df.columns:
         df["hores_per_treballador"] = df["hores_treballades"] / df["personal_ocupat"]
 
-        st.subheader("Hores anuals per treballador" if _ca else "Horas anuales por trabajador")
-        fig_hpt = go.Figure()
-        fig_hpt.add_trace(go.Scatter(
-            x=df["any"], y=df["hores_per_treballador"],
-            mode="lines+markers",
-            line=dict(color=ORANGE, width=2.5),
-            marker=dict(size=6),
-        ))
-        apply_layout(fig_hpt,
-            yaxis_title=("Hores/any per treballador" if _ca else "Horas/año por trabajador"),
-            height=380)
-        st.plotly_chart(fig_hpt, use_container_width=True)
-        source("INE, EEE. Càlcul propi" if _ca else "INE, EEE. Cálculo propio")
+        _lbl_hpt_exp = ("Veure hores anuals per treballador"
+                        if _ca else
+                        "Ver horas anuales por trabajador")
+        with highlight_expander(_lbl_hpt_exp, expanded=False):
+            fig_hpt = go.Figure()
+            fig_hpt.add_trace(go.Scatter(
+                x=df["any"], y=df["hores_per_treballador"],
+                mode="lines+markers",
+                line=dict(color=ORANGE, width=2.5),
+                marker=dict(size=6),
+            ))
+            apply_layout(fig_hpt,
+                yaxis_title=("Hores/any per treballador" if _ca else "Horas/año por trabajador"),
+                height=380)
+            st.plotly_chart(fig_hpt, use_container_width=True)
+            source("INE, EEE. Càlcul propi" if _ca else "INE, EEE. Cálculo propio")
 
     # Insight
     if "hores_treballades" in df.columns and "valor_afegit_constants" in df.columns and "xifra_negoci_constants" in df.columns:
