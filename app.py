@@ -126,12 +126,9 @@ pg = st.navigation(nav)
 with st.sidebar:
     st.divider()
 
-    # Butlletí: expander en lloc de popover (millor llegibilitat, no es desplaça)
-    _nl_label = "📧 Butlletí trimestral" if _ca else "📧 Boletín trimestral"
-    with st.expander(_nl_label, expanded=False):
-        newsletter_form(st.session_state.lang, compact=True)
-
-    st.divider()
+    # Nota: el butlletí ja apareix a la home i a la pàgina Pulso amb el
+    # formulari complet. No s'embed al sidebar perquè el form de MailerLite
+    # forçava una caixa blanca al sidebar blau i feia mal a l'estètica.
 
     # Secció Recursos (peu del sidebar)
     _lbl_recursos = "Recursos" if _ca else "Recursos"
@@ -140,16 +137,18 @@ with st.sidebar:
     _lbl_contact = "Contacte" if _ca else "Contacto"
     st.markdown(
         f"""
-        <div style="font-family:'DM Sans',sans-serif; font-size:13px; line-height:1.7; padding:0 4px;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
-                        text-transform:uppercase; color:#0055a4; margin-bottom:8px;">
+        <div style="font-family:'Inter',sans-serif; font-size:13px; line-height:1.7; padding:0 4px; color:#ffffff;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.78rem;
+                        font-weight:700; letter-spacing:0;
+                        text-transform:uppercase; color:#ffffff; opacity:0.7;
+                        margin-bottom:10px;">
                 {_lbl_recursos}
             </div>
             <div><a href="https://www.j3b3.com/observatori-comerc" target="_blank"
-                    rel="noopener" style="color:#333; text-decoration:none;">→ {_lbl_about}</a></div>
+                    rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_about}</a></div>
             <div><a href="https://www.j3b3.com" target="_blank"
-                    rel="noopener" style="color:#333; text-decoration:none;">→ {_lbl_consulting}</a></div>
-            <div><a href="mailto:info@j3b3.com" style="color:#333; text-decoration:none;">→ {_lbl_contact}: info@j3b3.com</a></div>
+                    rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_consulting}</a></div>
+            <div><a href="mailto:info@j3b3.com" style="color:#ffffff; text-decoration:none;">→ {_lbl_contact}: info@j3b3.com</a></div>
         </div>
         """,
         unsafe_allow_html=True,
