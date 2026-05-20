@@ -653,27 +653,52 @@ def inject_css():
             letter-spacing: 0;
         }
 
-        /* Expander — pelat editorial */
+        /* Expander — pelat editorial (selectors agressius perquè Streamlit
+           usa diverses capes internes amb fons grisaceix per defecte) */
         .streamlit-expanderHeader,
         [data-testid="stExpander"] summary,
-        [data-testid="stExpander"] details > summary {
+        [data-testid="stExpander"] details > summary,
+        details > summary[role="button"] {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             text-transform: uppercase;
             color: #003366 !important;
             font-size: 0.95rem !important;
-            letter-spacing: 0;
-        }
-        [data-testid="stExpander"] {
-            border: none !important;
-            border-top: 1px solid #d0d0d0 !important;
-            border-bottom: 1px solid #d0d0d0 !important;
-            border-radius: 0 !important;
+            letter-spacing: 0 !important;
             background: #ffffff !important;
+            padding-left: 0 !important;
+        }
+        [data-testid="stExpander"],
+        [data-testid="stExpander"] > div,
+        [data-testid="stExpander"] > div > div,
+        [data-testid="stExpander"] details,
+        [data-testid="stExpander"] details > div,
+        [data-testid="stExpanderDetails"],
+        [data-testid="stExpanderHeader"],
+        .streamlit-expander,
+        .streamlit-expanderHeader,
+        .streamlit-expanderContent {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border-radius: 0 !important;
             box-shadow: none !important;
         }
-        [data-testid="stExpander"] details {
-            background: transparent !important;
+        /* Container exterior — només filets superior i inferior */
+        [data-testid="stExpander"] {
+            border: none !important;
+            border-top: 1px solid #003366 !important;
+            border-bottom: 1px solid #d0d0d0 !important;
+            margin: 8px 0 16px 0 !important;
+        }
+        /* Cos del contingut expandit — alinea al marge, sense padding gros */
+        [data-testid="stExpanderDetails"],
+        [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+            padding: 12px 0 16px 0 !important;
+        }
+        /* Eliminar markers natius del details (carret arrodonit del browser) */
+        [data-testid="stExpander"] summary::-webkit-details-marker,
+        [data-testid="stExpander"] summary::marker {
+            display: none !important;
         }
 
         /* Inputs (selectbox, multiselect, text, number, date) — sense arrodoniments */
