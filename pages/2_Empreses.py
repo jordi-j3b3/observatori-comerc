@@ -253,9 +253,9 @@ if not df_ccaa.empty:
             zmax=zmax,
             colorscale=[
                 [0, "#ffffff"],
-                [0.25, "#fff9b8"],
-                [0.5, "#f5d800"],
-                [0.75, "#6a6a6a"],
+                [0.25, "#dde7f0"],
+                [0.5, "#6985a8"],
+                [0.75, "#1f487a"],
                 [1, "#003366"],
             ],
             colorbar=dict(title=lbl_legend, thickness=15),

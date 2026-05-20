@@ -208,8 +208,8 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             zmin=d_map["_pct"].min() * 0.9,
             zmax=d_map["_pct"].max() * 1.05,
             colorscale=[
-                [0, "#ffffff"], [0.25, "#fff9b8"], [0.5, "#f5d800"],
-                [0.75, "#6a6a6a"], [1, "#003366"],
+                [0, "#ffffff"], [0.25, "#dde7f0"], [0.5, "#6985a8"],
+                [0.75, "#1f487a"], [1, "#003366"],
             ],
             colorbar=dict(title="% PIB", thickness=15),
             marker=dict(line=dict(width=1.5, color="white")),
