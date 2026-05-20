@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout,
+                   fnum, fpct, cagr, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, GREEN, PALETTE)
 
 inject_css()
@@ -147,7 +147,7 @@ if "empreses_per_1000hab" in df_esp.columns:
     _lbl_dens_exp = ("Veure densitat comercial (empreses / 1.000 hab.)"
                      if _ca else
                      "Ver densidad comercial (empresas / 1.000 hab.)")
-    with st.expander(_lbl_dens_exp, expanded=False):
+    with highlight_expander(_lbl_dens_exp, expanded=False):
         df_dens = df_esp.dropna(subset=["empreses_per_1000hab"])
         fig_dens = go.Figure()
         fig_dens.add_trace(go.Scatter(
@@ -365,7 +365,7 @@ if not df_ccaa.empty:
     _lbl_ccaa_exp = ("Veure anàlisi addicional per CCAA"
                      if _ca else
                      "Ver análisis adicional por CCAA")
-    with st.expander(_lbl_ccaa_exp, expanded=False):
+    with highlight_expander(_lbl_ccaa_exp, expanded=False):
         # Variació acumulada per CCAA
         first_year = df_ccaa["any"].min()
         last_year = df_ccaa["any"].max()

@@ -3,9 +3,13 @@ Estils compartits: layout Plotly, CSS global, helpers de presentació.
 Disseny editorial alt contrast: Archivo Narrow + Inter + Lora italic +
 IBM Plex Mono. Paleta negre/blanc/groc highlighter.
 """
+import contextlib
 import streamlit as st
 import os
 import json
+
+# Counter per assignar keys úniques als highlight_expander
+_highlight_expander_counter = 0
 
 # ─── COLORS ───────────────────────────────────────────────────
 # Es mantenen els noms antics (PURPLE, BLUE, PURPLE_LIGHT, ...) com a
@@ -996,6 +1000,27 @@ def insight(text):
 def intro(text):
     """Mostra un bloc introductori a l'inici de la pàgina."""
     st.markdown(f'<div class="intro-box">{text}</div>', unsafe_allow_html=True)
+
+
+@contextlib.contextmanager
+def highlight_expander(label, expanded=False):
+    """Expander destacat amb subratllat groc al header per indicar
+    contingut addicional rellevant (gràfics secundaris, anàlisi extra...).
+
+    Ús: substitueix `st.expander(...)` per `highlight_expander(...)` als
+    blocs on cal cridar l'atenció. NO usar per a expanders utilitaris
+    (download de dades, info tècnica), que han de quedar amb estil pelat.
+
+    Implementació: embolicalla l'expander dins un st.container(key=...)
+    amb una key prefix 'highlight_expander_', que el CSS scoped detecta
+    via class*="st-key-highlight_expander_" per aplicar el highlight groc.
+    """
+    global _highlight_expander_counter
+    _highlight_expander_counter += 1
+    key = f"highlight_expander_{_highlight_expander_counter}"
+    with st.container(key=key):
+        with st.expander(label, expanded=expanded):
+            yield
 
 
 # ─── Helpers editorials reutilitzables ──────────────────────────
