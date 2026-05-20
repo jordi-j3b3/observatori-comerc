@@ -387,6 +387,10 @@ if not df_ccaa.empty:
             text=[fpct(v) for v in df_var_ccaa["var_pct"]],
             textposition="outside",
             textfont=dict(size=11),
+            name="",
+            hovertemplate="<b>%{y}</b><br>" +
+                          ("Variació acumulada" if _ca else "Variación acumulada") +
+                          ": %{x:+.1f}%<extra></extra>",
         ))
         apply_layout(fig_var,
             xaxis_title=("Variació acumulada (%)" if _ca else "Variación acumulada (%)"),
