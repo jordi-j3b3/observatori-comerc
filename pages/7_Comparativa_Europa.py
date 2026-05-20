@@ -330,27 +330,44 @@ else:
                                   (df_size["pais_codi"] == "ES")]["pct"].sum()
             pct_ge10_ue = df_size[(df_size["sizeclas"] == "GE10") &
                                   (df_size["pais_codi"] == "EU27_2020")]["pct"].sum()
+            es_mes_atom = pct_auto_es > pct_auto_ue
             if _ca:
+                etiqueta = ("més atomitzat" if es_mes_atom else "menys atomitzat")
+                implicacio = (
+                    "Aquesta major atomització afecta la productivitat, la capacitat "
+                    "d'inversió i l'eficiència negociadora amb proveïdors."
+                    if es_mes_atom else
+                    "Aquesta major concentració empresarial relativa pot afavorir "
+                    "economies d'escala i poder negociador, però redueix la densitat "
+                    "de comerç de proximitat respecte la mitjana europea."
+                )
                 _txt = (
-                    f"El comerç al detall espanyol és <strong>més atomitzat</strong> "
+                    f"El comerç al detall espanyol és <strong>{etiqueta}</strong> "
                     f"que la mitjana europea: un {fpct(pct_auto_es, 1, sign=False)} "
-                    f"d'empreses sense assalariats vs {fpct(pct_auto_ue, 1, sign=False)} "
-                    f"a la UE-27. Al tram alt, les empreses amb 10 o més assalariats "
-                    f"representen el {fpct(pct_ge10_es, 1, sign=False)} a Espanya vs "
-                    f"{fpct(pct_ge10_ue, 1, sign=False)} europeu. Aquesta major "
-                    f"atomització afecta la productivitat, la capacitat d'inversió "
-                    f"i l'eficiència negociadora amb proveïdors."
+                    f"d'empreses sense assalariats a Espanya vs un "
+                    f"{fpct(pct_auto_ue, 1, sign=False)} a la UE-27. "
+                    f"Al tram alt, les empreses amb 10 o més assalariats "
+                    f"representen el {fpct(pct_ge10_es, 1, sign=False)} a Espanya vs el "
+                    f"{fpct(pct_ge10_ue, 1, sign=False)} europeu. {implicacio}"
                 )
             else:
+                etiqueta = ("más atomizado" if es_mes_atom else "menos atomizado")
+                implicacio = (
+                    "Esta mayor atomización afecta la productividad, la capacidad "
+                    "de inversión y la eficiencia negociadora con proveedores."
+                    if es_mes_atom else
+                    "Esta mayor concentración empresarial relativa puede favorecer "
+                    "economías de escala y poder negociador, pero reduce la densidad "
+                    "de comercio de proximidad respecto a la media europea."
+                )
                 _txt = (
-                    f"El comercio minorista español es <strong>más atomizado</strong> "
+                    f"El comercio minorista español es <strong>{etiqueta}</strong> "
                     f"que la media europea: un {fpct(pct_auto_es, 1, sign=False)} "
-                    f"de empresas sin asalariados vs {fpct(pct_auto_ue, 1, sign=False)} "
-                    f"en la UE-27. En el tramo alto, las empresas con 10 o más "
-                    f"asalariados representan el {fpct(pct_ge10_es, 1, sign=False)} en "
-                    f"España vs {fpct(pct_ge10_ue, 1, sign=False)} europeo. Esta mayor "
-                    f"atomización afecta la productividad, la capacidad de inversión "
-                    f"y la eficiencia negociadora con proveedores."
+                    f"de empresas sin asalariados en España vs un "
+                    f"{fpct(pct_auto_ue, 1, sign=False)} en la UE-27. "
+                    f"En el tramo alto, las empresas con 10 o más asalariados "
+                    f"representan el {fpct(pct_ge10_es, 1, sign=False)} en España vs el "
+                    f"{fpct(pct_ge10_ue, 1, sign=False)} europeo. {implicacio}"
                 )
             insight(_txt)
             firma_lectura()
