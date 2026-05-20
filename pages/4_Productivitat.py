@@ -518,12 +518,12 @@ with tab3:
                 col_num, col_txt = st.columns([1, 2])
                 with col_num:
                     st.markdown(
-                        f"<div style='font-family:DM Sans,sans-serif;font-size:11px;"
+                        f"<div style='font-family:Inter,sans-serif;font-size:11px;"
                         f"font-weight:600;letter-spacing:2px;text-transform:uppercase;"
                         f"color:#b35900;margin-bottom:4px;'>"
                         f"{'Any' if _ca else 'Año'} {any_last}</div>"
                         f"<div style='font-size:3.4rem;line-height:1;color:#e67e22;"
-                        f"font-weight:700;font-family:DM Serif Display,serif;'>{mb_value_str}%</div>"
+                        f"font-weight:700;font-family:Archivo Narrow,serif;'>{mb_value_str}%</div>"
                         f"<div style='font-size:14px;color:{delta_color_brut};font-weight:600;"
                         f"margin-top:8px;'>{delta_arrow} {delta_str}% vs {any_first}</div>",
                         unsafe_allow_html=True,

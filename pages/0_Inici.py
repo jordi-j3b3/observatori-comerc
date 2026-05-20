@@ -87,17 +87,17 @@ if _tesi_titol and not _tesi_obsoleta:
         _link_lbl = "Llegir el Pulso complet →" if _ca else "Leer el Pulso completo →"
         _link_html = (
             f'<div style="margin-top:10px;"><a href="{_tesi_enllac}" target="_blank" '
-            f'rel="noopener" style="color:#0055a4; text-decoration:none; font-size:13px; '
+            f'rel="noopener" style="color:#0a0a0a; text-decoration:none; font-size:13px; '
             f'font-weight:600;">{_link_lbl}</a></div>'
         )
     _eyebrow = "Tesi vigent" if _ca else "Tesis vigente"
     st.markdown(
         f"""
-        <div style="background:#f5f7fb; border-left:4px solid #0055a4;
+        <div style="background:#ffffff; border-left:4px solid #0a0a0a;
                     padding:18px 22px; margin:18px 0 28px; border-radius:3px;
-                    font-family:'DM Sans',sans-serif;">
+                    font-family:'Inter',sans-serif;">
             <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
-                        text-transform:uppercase; color:#0055a4; margin-bottom:8px;">
+                        text-transform:uppercase; color:#0a0a0a; margin-bottom:8px;">
                 {_eyebrow}
             </div>
             <div style="color:#222; font-size:18px; font-weight:500; line-height:1.5;
@@ -122,7 +122,7 @@ else:
         f"""
         <div style="background:#fafafa; border-left:4px solid #ccc;
                     padding:14px 18px; margin:18px 0 28px; border-radius:3px;
-                    font-family:'DM Sans',sans-serif;">
+                    font-family:'Inter',sans-serif;">
             <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
                         text-transform:uppercase; color:#999; margin-bottom:6px;">
                 {_eyebrow}
@@ -517,7 +517,7 @@ def _build_excel():
     except ImportError:
         return None
 
-    hdr_fmt = wb.add_format({"bold": True, "bg_color": "#0055a4", "font_color": "white",
+    hdr_fmt = wb.add_format({"bold": True, "bg_color": "#0a0a0a", "font_color": "white",
                               "border": 1, "font_name": "Calibri", "font_size": 11})
     cell_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11})
     num_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "#,##0"})
@@ -546,7 +546,7 @@ def _build_excel():
 
         chart = wb.add_chart({"type": "line"})
         chart.add_series({"name": "VAB nominal", "categories": ["PIB i VAB", 1, 0, n, 0],
-                          "values": ["PIB i VAB", 1, 1, n, 1], "line": {"color": "#0055a4", "width": 2.5}})
+                          "values": ["PIB i VAB", 1, 1, n, 1], "line": {"color": "#0a0a0a", "width": 2.5}})
         chart.add_series({"name": "VAB real", "categories": ["PIB i VAB", 1, 0, n, 0],
                           "values": ["PIB i VAB", 1, 2, n, 2], "line": {"color": "#c0392b", "width": 2.5}})
         chart.set_title({"name": "VAB CNAE 47 (M EUR)"})
@@ -583,7 +583,7 @@ def _build_excel():
             ne = len(esp)
             chart = wb.add_chart({"type": "line"})
             chart.add_series({"name": "Empreses Espanya", "categories": [ws2_name, 1, 0, ne, 0],
-                              "values": [ws2_name, 1, 1, ne, 1], "line": {"color": "#0055a4", "width": 2.5}})
+                              "values": [ws2_name, 1, 1, ne, 1], "line": {"color": "#0a0a0a", "width": 2.5}})
             chart.set_title({"name": "Empreses CNAE 47 - Espanya"})
             chart.set_size({"width": 620, "height": 380})
             chart.set_legend({"position": "none"})
@@ -611,7 +611,7 @@ def _build_excel():
 
         chart = wb.add_chart({"type": "line"})
         chart.add_series({"name": "Productivitat (EUR/h)", "categories": ["Productivitat", 1, 0, np_, 0],
-                          "values": ["Productivitat", 1, 3, np_, 3], "line": {"color": "#0055a4", "width": 2.5}})
+                          "values": ["Productivitat", 1, 3, np_, 3], "line": {"color": "#0a0a0a", "width": 2.5}})
         chart.set_title({"name": "Productivitat VA/hora (EUR)"})
         chart.set_size({"width": 620, "height": 380})
         chart.set_legend({"position": "none"})
@@ -635,7 +635,7 @@ def _build_excel():
 
         chart = wb.add_chart({"type": "column"})
         chart.add_series({"name": "E-commerce CNAE 47", "categories": ["E-commerce", 1, 0, nec, 0],
-                          "values": ["E-commerce", 1, 2, nec, 2], "fill": {"color": "#0055a4"}})
+                          "values": ["E-commerce", 1, 2, nec, 2], "fill": {"color": "#0a0a0a"}})
         chart.set_title({"name": "E-commerce CNAE 47 (EUR)"})
         chart.set_size({"width": 620, "height": 380})
         chart.set_legend({"position": "none"})
@@ -681,7 +681,7 @@ def _build_excel():
             chart.add_series({"name": f"Pes CNAE 47/PIB ({int(yr_max)})",
                               "categories": [ws2_name, 1, 0, nt, 0],
                               "values": [ws2_name, 1, 1, nt, 1],
-                              "fill": {"color": "#0055a4"}})
+                              "fill": {"color": "#0a0a0a"}})
             chart.set_title({"name": f"Pes del comerç al detall sobre el PIB ({int(yr_max)})"})
             chart.set_size({"width": 700, "height": 480})
             chart.set_legend({"position": "none"})
@@ -729,7 +729,7 @@ else:
 st.markdown(
     """
     <div style="text-align:right; color:#888; font-size:12px;
-                font-family:'DM Sans',sans-serif; margin-top:12px;">
+                font-family:'Inter',sans-serif; margin-top:12px;">
         Observatorio del Comercio · J3B3 Consulting
     </div>
     """,

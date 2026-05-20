@@ -894,7 +894,7 @@ with tab3:
             fig_evo.update_layout(
                 yaxis_title=("Despesa mitjana anual per llar (€)" if _ca else "Gasto medio anual por hogar (€)"),
                 height=460,
-                font=dict(family="DM Sans, sans-serif", size=13),
+                font=dict(family="Inter, sans-serif", size=13),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=60, r=260, t=40, b=50),

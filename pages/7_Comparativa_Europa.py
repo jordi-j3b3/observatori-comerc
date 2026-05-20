@@ -45,7 +45,7 @@ def firma_lectura():
     """Signatura corporativa discreta sota cada insight() de lectura real."""
     st.markdown(
         '<div style="text-align:right; color:#888; font-size:11px; '
-        'font-style:italic; font-family:\'DM Sans\',sans-serif; '
+        'font-style:italic; font-family:\'Inter\',sans-serif; '
         'margin-top:-8px; margin-bottom:24px;">'
         'Observatorio del Comercio · J3B3 Consulting'
         '</div>',
