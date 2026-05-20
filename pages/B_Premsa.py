@@ -22,7 +22,20 @@ def _load():
     return fetch_press()
 
 
-st.title("Recull de premsa" if _ca else "Resumen de prensa")
+title_col, btn_col = st.columns([5, 1])
+with title_col:
+    st.title("Recull de premsa" if _ca else "Resumen de prensa")
+with btn_col:
+    st.write("")  # spacer per alinear vertical
+    if st.button(
+        ("Actualitzar" if _ca else "Actualizar"),
+        help=("Forçar la recàrrega dels feeds (cache 1h)"
+              if _ca else "Forzar la recarga de los feeds (caché 1h)"),
+        use_container_width=True,
+    ):
+        _load.clear()
+        st.rerun()
+
 st.markdown(
     "*Notícies seleccionades de fonts sectorials, generalistes i institucionals sobre comerç al detall, distribució i consum a Espanya.*"
     if _ca else

@@ -76,14 +76,20 @@ FEEDS = [
      "Idescat — Novetats",
      "https://www.idescat.cat/novetats/?m=rss",
      "institucional", "institucional", True),
+    ("ccam_gencat",
+     "CCAM — Consorci de Comerç, Artesania i Moda (Generalitat)",
+     "https://ccam.gencat.cat/ca/actualitat/rss/index.html",
+     "institucional", "institucional", False),
 
-    # Google News com a substitut de feeds amb anti-bot (Modaes, El Economista)
+    # Google News com a substitut de feeds amb anti-bot (Modaes, El Economista,
+    # Viaempresa). Tots filtren per KEYWORDS i ANTI_KEYWORDS per evitar drift
+    # cap a temàtiques no-retail (energia, agro, etc.).
     ("google_retail",
      "Google News — Retail Espanya",
      "https://news.google.com/rss/search?"
      "q=%22comercio+minorista%22+OR+%22comer%C3%A7+al+detall%22+OR+%22retail+Espa%C3%B1a%22+OR+%22distribuci%C3%B3n+comercial%22"
      "&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "agregador", False),
+     "multisector", "agregador", True),
     # Modaes: omes. El feed directe te anti-bot i Google News no
     # indexa els titulars (retorna nomes "- Modaes" buit). La cobertura
     # de moda es manté via Alimarket non-food, Diffusion Sport i la
@@ -91,9 +97,15 @@ FEEDS = [
     ("google_economista",
      "El Economista (via Google News)",
      "https://news.google.com/rss/search?"
-     "q=site%3Aeleconomista.es+(retail+OR+comercio+OR+consumo+OR+distribuci%C3%B3n)"
+     "q=site%3Aeleconomista.es+(%22comercio+minorista%22+OR+retail+OR+%22distribuci%C3%B3n+comercial%22+OR+supermercados+OR+tiendas+OR+%22gran+consumo%22)"
      "&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "generalista", False),
+     "multisector", "generalista", True),
+    ("google_viaempresa",
+     "Viaempresa (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=site%3Aviaempresa.cat+(comer%C3%A7+OR+retail+OR+minorista+OR+distribuci%C3%B3+OR+consum+OR+botiga+OR+supermercat)"
+     "&hl=ca&gl=ES&ceid=ES:ca",
+     "multisector", "generalista", True),
 ]
 
 
@@ -109,6 +121,31 @@ KEYWORDS = [
     "cnae 47", "g-i",
 ]
 _KW_RE = re.compile("|".join(re.escape(k) for k in KEYWORDS), re.IGNORECASE)
+
+# Termes que sovint apareixen en notícies NO retail (energia industrial,
+# agroalimentari primari, mineria) i tendeixen a colar-se via "venta" / "consumo".
+# Si una notícia toca aquests temes, exigim ≥2 hits de keywords retail per
+# considerar-la realment del sector — així una notícia legítima retail amb
+# menció lateral a l'energia segueix passant.
+ANTI_KEYWORDS = [
+    "energía eléctrica", "energia elèctrica",
+    "energía renovable", "energia renovable",
+    "fotovoltaic", "fotovoltáic",
+    "eólic", "eólica", "eòlic", "eòlica",
+    "MWh", "GWh", "TWh", "kWh", "PPA",
+    "Grenergy", "Iberdrola", "Endesa", "Naturgy", "Repsol",
+    "agro", "agrícol", "agrari", "agricultura",
+    "ramader", "ganader",
+    "regadío", "regadiu", "regadiu",
+    "minería", "mineria",
+    "petróleo", "petroli",
+    "gas natural",
+    "combustible", "combustibles",
+    "fósil", "fòssil", "fossil",
+    "litio", "liti",
+    "campo aragonés", "campo andaluz", "campo extremeño",
+]
+_ANTI_RE = re.compile("|".join(re.escape(k) for k in ANTI_KEYWORDS), re.IGNORECASE)
 
 _UA = ("Mozilla/5.0 (compatible; ObservatoriComercBot/1.0; "
        "+https://observatori-comerc.streamlit.app)")
@@ -142,7 +179,14 @@ def _clean_snippet(text, n=240):
 
 def _matches_keywords(titol, snippet):
     blob = f"{titol} {snippet}"
-    return bool(_KW_RE.search(blob))
+    hits = _KW_RE.findall(blob)
+    if not hits:
+        return False
+    # Si la notícia toca un domini no-retail (energia, agro, mineria...) exigim
+    # almenys 2 matches retail diferents per evitar falsos positius via "venta".
+    if _ANTI_RE.search(blob):
+        return len({h.lower() for h in hits}) >= 2
+    return True
 
 
 def _fetch_one(feed_cfg):
