@@ -41,31 +41,6 @@ df_surv = _load_csv("estructura_retail_supervivencia")  # anual: supervivència 
 
 # ─── Helpers de presentació LECTURA ────────────────────────────
 
-def lectura_placeholder():
-    """Caixa groga per a blocs sense lectura encara redactada.
-
-    Text neutre en castellà, sense signatura. Asimetria intencional vs els
-    blocs amb lectura automàtica via insight() — destaca visualment que falta
-    contingut.
-    """
-    st.markdown(
-        """
-        <div style="background:#fff8e1; border-left:4px solid #f0a500;
-                    padding:14px 18px; margin:8px 0 24px; border-radius:3px;
-                    font-family:'DM Sans',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
-                        text-transform:uppercase; color:#f0a500; margin-bottom:6px;">
-                LECTURA
-            </div>
-            <div style="color:#555; font-size:14px; font-style:italic;">
-                [Lectura pendiente]
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 def firma_lectura():
     """Signatura corporativa discreta sota cada insight() de lectura real."""
     st.markdown(
@@ -250,8 +225,6 @@ if not df_europa.empty and "pes_cnae47" in df_europa.columns:
     st.plotly_chart(fig2, use_container_width=True)
     source("Eurostat, Comptes Nacionals (nama_10_a64)" if _ca
            else "Eurostat, Cuentas Nacionales (nama_10_a64)")
-
-lectura_placeholder()
 
 # ═══════════════════════════════════════════════════════════════
 # BLOC 3 — DIMENSIÓ ESTRUCTURAL (Eurostat bd_size)
