@@ -94,9 +94,9 @@ if _tesi_titol and not _tesi_obsoleta:
     st.markdown(
         f"""
         <div style="background:#ffffff; border-left:4px solid #0a0a0a;
-                    padding:18px 22px; margin:18px 0 28px; border-radius:3px;
+                    padding:18px 22px; margin:18px 0 28px; border-radius:0;
                     font-family:'Inter',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+            <div style="font-size:10px; font-weight:700; letter-spacing:0;
                         text-transform:uppercase; color:#0a0a0a; margin-bottom:8px;">
                 {_eyebrow}
             </div>
@@ -121,9 +121,9 @@ else:
     st.markdown(
         f"""
         <div style="background:#fafafa; border-left:4px solid #ccc;
-                    padding:14px 18px; margin:18px 0 28px; border-radius:3px;
+                    padding:14px 18px; margin:18px 0 28px; border-radius:0;
                     font-family:'Inter',sans-serif;">
-            <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
+            <div style="font-size:10px; font-weight:700; letter-spacing:0;
                         text-transform:uppercase; color:#999; margin-bottom:6px;">
                 {_eyebrow}
             </div>
@@ -227,8 +227,8 @@ if not df_cdmge.empty and "indicador" in df_cdmge.columns:
         st.markdown(
             f"""
             <div style="margin:6px 0 4px;">
-                <div style="font-size:10px; font-weight:700; letter-spacing:1.5px;
-                            text-transform:uppercase; color:#d24d2c;">
+                <div style="font-size:10px; font-weight:700; letter-spacing:0;
+                            text-transform:uppercase; color:#0a0a0a;">
                     {_eyebrow}
                 </div>
                 <div style="font-size:13px; color:#666; margin-top:2px;">

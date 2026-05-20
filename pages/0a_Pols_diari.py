@@ -158,9 +158,9 @@ _fig.add_trace(go.Scatter(
     x=_plot_df["data"], y=_plot_df["mm"],
     mode="lines",
     name=_sm_lbl,
-    line=dict(color="#d24d2c", width=2.8),
+    line=dict(color="#0a0a0a", width=2.8),
     fill="tozeroy",
-    fillcolor="rgba(210, 77, 44, 0.12)",
+    fillcolor="rgba(245, 216, 0, 0.12)",
     hovertemplate="%{x|%d/%m/%Y}<br><b>%{y:+.1f}%</b><extra></extra>",
 ))
 
