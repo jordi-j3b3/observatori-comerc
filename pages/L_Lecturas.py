@@ -1,10 +1,9 @@
 """Pulso de la semana — arxiu cronològic mirall de la newsletter setmanal.
 
-Cada número del .md es parseja per blocs (◆ LA CIFRA, ◆ TRES NOTICIAS, ◆ DATOS,
-◆ LA PREDICCIÓN) i es renderitza amb un estil consultant-grade: exhibit per
-la xifra, cards per les notícies, barres divergents per les dades comparades
-i una caixa fosca destacada per la predicció. Si el parser troba un format
-inesperat, fa fallback a markdown plain.
+Estètica editorial crítica alt contrast (Politico/Axios/Bloomberg Opinion):
+fons blanc, negre intens, accent groc highlighter, sense caixes ni
+border-left. Archivo Narrow per titulars, Inter per cos, Lora italic
+per pull-quotes, IBM Plex Mono per xifres comparades.
 """
 import os
 import re
@@ -31,224 +30,251 @@ MESES_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
             "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 
 
-# ─── CSS específic del Pulso ─────────────────────────────────────
+# ─── CSS Pulso (editorial alt contrast) ──────────────────────────
 
 PULSO_CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Inter:wght@400;500;700&family=Lora:ital,wght@1,400;1,500&family=IBM+Plex+Mono:wght@500;700&display=swap');
+
 .pulso-intro {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.02rem;
-    line-height: 1.65;
-    color: #4a4a4a;
-    font-style: italic;
-    max-width: 760px;
-    margin: 8px 0 40px 0;
-}
-.pulso-issue {
-    padding: 32px 0 48px 0;
-    border-top: 1px solid #e0e0e0;
-}
-.pulso-issue:first-of-type {
-    border-top: 3px solid #0a0a0a;
-}
-.pulso-eyebrow {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: #0055a4;
-    margin: 0 0 10px 0;
-}
-.pulso-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.1rem;
-    line-height: 1.15;
-    color: #0a0a0a;
-    margin: 0 0 14px 0;
-    font-weight: 400;
-}
-.pulso-preheader {
-    font-family: 'DM Sans', sans-serif;
-    font-style: italic;
-    color: #4a4a4a;
+    font-family: 'Inter', sans-serif;
     font-size: 1rem;
-    line-height: 1.5;
-    margin: 0 0 36px 0;
+    line-height: 1.6;
+    color: #444;
     max-width: 720px;
+    margin: 4px 0 56px 0;
 }
-.pulso-section {
-    margin: 36px 0 28px 0;
+
+.pulso-issue {
+    padding: 56px 0 72px 0;
+    border-top: 8px solid #0a0a0a;
+    margin-top: 32px;
 }
-.pulso-section-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
+.pulso-issue:first-of-type { margin-top: 16px; }
+
+.pulso-eyebrow {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: #6a6a6a;
+    margin: 0 0 14px 0;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.pulso-title {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 3rem;
+    line-height: 1.02;
+    color: #0a0a0a;
     font-weight: 700;
-    letter-spacing: 2.8px;
-    text-transform: uppercase;
-    color: #0055a4;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #0055a4;
-    display: inline-block;
-    margin-bottom: 20px;
+    margin: 0 0 18px 0;
+    text-transform: none;
+    letter-spacing: -0.5px;
 }
+
+.pulso-preheader {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: #555;
+    max-width: 720px;
+    margin: 0 0 40px 0;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+.pulso-section { margin: 44px 0 32px 0; }
+
+.pulso-section-label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0a0a0a;
+    margin: 0 0 28px 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #0a0a0a;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0;
+}
+
 .pulso-prosa {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.97rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
     line-height: 1.7;
     color: #1a1a1a;
-    margin: 0 0 14px 0;
+    margin: 0 0 18px 0;
 }
-.pulso-cifra-exhibit {
-    background: #f4f4f2;
-    border-left: 4px solid #0055a4;
-    padding: 36px 32px;
-    margin: 8px 0 28px 0;
-    text-align: center;
-}
+
+/* CIFRA — sense caixa, xifra gegant amb subratllat groc */
+.pulso-cifra-wrap { margin: 8px 0 32px 0; }
 .pulso-cifra-value {
-    font-family: 'DM Serif Display', serif;
-    font-size: 4.5rem;
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 6.5rem;
     line-height: 1;
-    color: #0055a4;
-    margin: 0 0 16px 0;
-    font-weight: 400;
-    letter-spacing: -1px;
+    color: #0a0a0a;
+    font-weight: 700;
+    letter-spacing: -3px;
+    margin: 0;
+    display: inline-block;
+    background: linear-gradient(180deg, transparent 0%, transparent 58%,
+                #f5d800 58%, #f5d800 92%, transparent 92%);
+    padding: 0 8px;
 }
 .pulso-cifra-context {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Archivo Narrow', sans-serif;
     font-size: 1.05rem;
-    color: #1a1a1a;
-    margin-bottom: 8px;
     font-weight: 500;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    margin: 22px 0 4px 0;
+    letter-spacing: 0;
 }
 .pulso-cifra-fuente {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.78rem;
-    color: #4a4a4a;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-top: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    color: #6a6a6a;
+    margin: 0 0 28px 0;
 }
+
+/* NOTÍCIES — numeració gran + filets, sense card */
 .pulso-noticia {
-    background: #ffffff;
-    border-left: 3px solid #0055a4;
-    padding: 22px 26px;
-    margin: 0 0 18px 0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 24px;
+    padding: 26px 0;
+    border-top: 1px solid #d0d0d0;
 }
+.pulso-noticia:last-child { border-bottom: 1px solid #d0d0d0; }
+.pulso-noticia-num {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 3rem;
+    line-height: 0.9;
+    color: #0a0a0a;
+    font-weight: 700;
+}
+.pulso-noticia-content { min-width: 0; }
 .pulso-noticia-fuente {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.74rem;
-    color: #c0392b;
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 0.86rem;
+    color: #6a6a6a;
     text-transform: uppercase;
-    letter-spacing: 1.4px;
-    margin-bottom: 8px;
-    font-weight: 600;
+    margin: 2px 0 8px 0;
+    letter-spacing: 0;
 }
 .pulso-noticia-titulo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.25rem;
-    line-height: 1.3;
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 1.5rem;
+    line-height: 1.18;
     color: #0a0a0a;
-    margin: 0 0 14px 0;
-    font-weight: 400;
+    font-weight: 700;
+    margin: 0 0 12px 0;
 }
 .pulso-noticia-body p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.97rem;
     line-height: 1.65;
     color: #1a1a1a;
     margin: 0 0 10px 0;
 }
 .pulso-noticia-body p:last-child { margin-bottom: 0; }
 
+/* DADES — taula austera amb barres negres + Espanya groc */
 .pulso-data-intro {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.98rem;
+    line-height: 1.55;
     color: #1a1a1a;
     margin: 0 0 20px 0;
-    line-height: 1.6;
 }
 .pulso-bars {
-    margin: 16px 0 24px 0;
-    padding: 8px 0;
+    margin: 12px 0 28px 0;
+    border-top: 1px solid #0a0a0a;
+    border-bottom: 1px solid #0a0a0a;
+    padding: 14px 0;
 }
 .pulso-bar-row {
     display: grid;
-    grid-template-columns: 130px 1fr 64px;
+    grid-template-columns: 140px 72px 1fr;
     align-items: center;
-    gap: 14px;
-    padding: 5px 0;
-    font-family: 'DM Sans', sans-serif;
+    gap: 16px;
+    padding: 6px 0;
 }
 .pulso-bar-label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 0.95rem;
+    color: #0a0a0a;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+.pulso-bar-value {
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 0.92rem;
-    color: #1a1a1a;
+    color: #0a0a0a;
+    font-weight: 500;
     text-align: right;
-    padding-right: 8px;
 }
 .pulso-bar-track {
     position: relative;
-    height: 22px;
-}
-.pulso-bar-center {
-    position: absolute;
-    left: 50%;
-    top: -2px;
-    bottom: -2px;
-    width: 1px;
-    background: #c8c8c8;
+    height: 14px;
 }
 .pulso-bar-fill {
     position: absolute;
-    top: 3px;
-    bottom: 3px;
-    border-radius: 1px;
-}
-.pulso-bar-fill.pos { background: #0055a4; left: 50%; }
-.pulso-bar-fill.neg { background: #c0392b; right: 50%; }
-.pulso-bar-value {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #0a0a0a;
-}
-.pulso-bar-row.highlight .pulso-bar-label {
-    font-weight: 700;
-    color: #0055a4;
-}
-.pulso-bar-row.highlight .pulso-bar-value {
-    color: #0055a4;
-}
-.pulso-prediccion-box {
+    top: 2px;
+    bottom: 2px;
     background: #0a0a0a;
-    padding: 36px 36px 28px 36px;
-    margin: 12px 0 16px 0;
+    left: 0;
+}
+.pulso-bar-fill.neg { background: #6a6a6a; }
+.pulso-bar-row.highlight .pulso-bar-fill { background: #f5d800; }
+.pulso-bar-row.highlight .pulso-bar-label,
+.pulso-bar-row.highlight .pulso-bar-value { font-weight: 700; }
+
+/* PREDICCIÓ — pull-quote tipogràfic, sense caixa fosca */
+.pulso-prediccion {
+    padding: 20px 0 8px 0;
+    margin: 16px 0 8px 0;
     position: relative;
 }
-.pulso-prediccion-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
+.pulso-prediccion-mark {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 6rem;
+    line-height: 0.6;
+    color: #f5d800;
     font-weight: 700;
-    letter-spacing: 2.8px;
-    text-transform: uppercase;
-    color: #c0392b;
-    margin-bottom: 18px;
+    position: absolute;
+    top: -8px;
+    left: -4px;
+    user-select: none;
 }
-.pulso-prediccion-box p {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.02rem;
-    line-height: 1.7;
-    color: #f4f4f2;
-    margin: 0 0 14px 0;
+.pulso-prediccion-body {
+    padding-left: 56px;
+}
+.pulso-prediccion-body p {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: #1a1a1a;
+    margin: 0 0 16px 0;
+    font-weight: 400;
 }
 .pulso-prediccion-firma {
     text-align: right;
-    font-family: 'DM Serif Display', serif;
-    font-style: italic;
-    color: #c0392b;
-    margin-top: 22px;
-    font-size: 1.05rem;
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 0.95rem;
+    color: #0a0a0a;
+    text-transform: uppercase;
+    margin: 24px 0 0 0;
+    font-weight: 500;
+    letter-spacing: 0;
+}
+.pulso-prediccion-firma::before {
+    content: "— ";
+    color: #f5d800;
+    font-weight: 700;
 }
 </style>
 """
@@ -267,7 +293,6 @@ def strip_trazabilidad(md: str) -> str:
 
 
 def extract_meta(md: str) -> tuple[dict, str]:
-    """Extreu Asunto / Pre-header / Titular del frontmatter."""
     meta = {"asunto": None, "preheader": None, "titular": None}
     lines = md.split("\n")
     body_start = 0
@@ -293,7 +318,6 @@ def extract_meta(md: str) -> tuple[dict, str]:
 
 
 def md_inline(text: str) -> str:
-    """Converteix **bold** i *italic* mantenint la resta tal qual."""
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
     return text
@@ -305,19 +329,11 @@ def paragraphs(text: str, css_class: str = "pulso-prosa") -> str:
 
 
 def parse_sections(body: str) -> list[tuple[str, str]]:
-    """Tornar [(titol_seccio, contingut), ...] dividint per '**◆ TITLE**'.
-
-    Strip del header redundant (EL PULSO DE LA SEMANA · Núm. X) i del
-    footer email (Observatorio del Comercio · Darse de baja).
-    """
-    # Strip footer email
     body = re.split(r"\n+\-{3,}\s*\n+\*\*Observatorio del Comercio\*\*", body)[0].rstrip()
-    # Strip prelude redundant
     body = re.sub(
         r"^\*\*EL PULSO[^*]*\*\*\s*\n\*[^*]+\*\s*\n+\-{3,}\s*\n+",
         "", body, count=1,
     ).strip()
-
     parts = re.split(r"\n*\*\*◆\s+([^*]+?)\*\*\s*\n+", body)
     sections = []
     for i in range(1, len(parts), 2):
@@ -344,8 +360,8 @@ def render_cifra(content: str) -> str:
     ).strip()
 
     label = ("La xifra de la setmana" if _ca else "La cifra de la semana")
-    exhibit = (
-        f'<div class="pulso-cifra-exhibit">'
+    cifra_html = (
+        f'<div class="pulso-cifra-wrap">'
         f'<div class="pulso-cifra-value">{cifra}</div>'
         f'<div class="pulso-cifra-context">{ctx}</div>'
         f'<div class="pulso-cifra-fuente">{fnt}</div>'
@@ -354,7 +370,7 @@ def render_cifra(content: str) -> str:
     return (
         f'<div class="pulso-section">'
         f'<div class="pulso-section-label">{label}</div>'
-        f'{exhibit}'
+        f'{cifra_html}'
         f'{paragraphs(prosa)}'
         f'</div>'
     )
@@ -370,7 +386,7 @@ def render_noticias(content: str) -> str:
         re.DOTALL,
     )
     cards = []
-    for m in pattern.finditer(content):
+    for idx, m in enumerate(pattern.finditer(content), start=1):
         titol = m.group("titol").strip()
         fuente = m.group("fuente").strip()
         body = m.group("body").strip()
@@ -380,9 +396,12 @@ def render_noticias(content: str) -> str:
         )
         cards.append(
             f'<div class="pulso-noticia">'
+            f'<div class="pulso-noticia-num">{idx:02d}</div>'
+            f'<div class="pulso-noticia-content">'
             f'<div class="pulso-noticia-fuente">{fuente}</div>'
             f'<div class="pulso-noticia-titulo">{titol}</div>'
             f'<div class="pulso-noticia-body">{body_html}</div>'
+            f'</div>'
             f'</div>'
         )
     cards_html = "".join(cards) if cards else paragraphs(content)
@@ -404,19 +423,18 @@ def render_datos(content: str) -> str:
         content, flags=re.MULTILINE,
     )
 
-    # Treu meta + bullets, queda la prosa interpretativa
     prosa = re.sub(r"^\*\*Datos:\*\*.+$\n?", "", content, flags=re.MULTILINE)
     prosa = re.sub(r"^\-\s+.+%\s*$\n?", "", prosa, flags=re.MULTILINE).strip()
 
     bars_html = ""
     if bullets:
-        valors = [(p.strip(), v.strip()) for p, v in bullets]
-        nums = [float(v.replace("+", "").replace(",", ".")) for _, v in valors]
+        items = [(p.strip(), v.strip()) for p, v in bullets]
+        nums = [float(v.replace("+", "").replace(",", ".")) for _, v in items]
         max_abs = max((abs(n) for n in nums), default=1.0) or 1.0
         rows = []
-        for (pais, v_str), n in zip(valors, nums):
-            pct = abs(n) / max_abs * 46
-            cls = "pos" if n >= 0 else "neg"
+        for (pais, v_str), n in zip(items, nums):
+            pct = abs(n) / max_abs * 100
+            cls = "neg" if n < 0 else ""
             is_spain = pais.lower() in ("españa", "espanya", "spain")
             highlight = " highlight" if is_spain else ""
             val_display = f"{v_str}%" if "%" not in v_str else v_str
@@ -425,11 +443,10 @@ def render_datos(content: str) -> str:
             rows.append(
                 f'<div class="pulso-bar-row{highlight}">'
                 f'<div class="pulso-bar-label">{pais}</div>'
+                f'<div class="pulso-bar-value">{val_display}</div>'
                 f'<div class="pulso-bar-track">'
-                f'<div class="pulso-bar-center"></div>'
                 f'<div class="pulso-bar-fill {cls}" style="width:{pct:.1f}%;"></div>'
                 f'</div>'
-                f'<div class="pulso-bar-value">{val_display}</div>'
                 f'</div>'
             )
         bars_html = f'<div class="pulso-bars">{"".join(rows)}</div>'
@@ -448,20 +465,18 @@ def render_datos(content: str) -> str:
 def render_prediccion(content: str) -> str:
     label = ("La predicció" if _ca else "La predicción")
     firma_m = re.search(r"\n\s*\*\s*[—\-]\s*J3B3\s*\*\s*$", content)
-    if firma_m:
-        body = content[:firma_m.start()].strip()
-    else:
-        body = content.strip()
+    body = content[:firma_m.start()].strip() if firma_m else content.strip()
     body_html = "".join(
         f'<p>{md_inline(p.strip())}</p>'
         for p in body.split("\n\n") if p.strip()
     )
     return (
         f'<div class="pulso-section">'
-        f'<div class="pulso-prediccion-box">'
-        f'<div class="pulso-prediccion-label">{label}</div>'
-        f'{body_html}'
-        f'<div class="pulso-prediccion-firma">— J3B3</div>'
+        f'<div class="pulso-section-label">{label}</div>'
+        f'<div class="pulso-prediccion">'
+        f'<div class="pulso-prediccion-mark">&ldquo;</div>'
+        f'<div class="pulso-prediccion-body">{body_html}</div>'
+        f'<div class="pulso-prediccion-firma">J3B3, observatori</div>'
         f'</div>'
         f'</div>'
     )
@@ -477,7 +492,6 @@ def render_block(title: str, content: str) -> str:
         return render_datos(content)
     if "PREDICC" in nm:
         return render_prediccion(content)
-    # Fallback genèric
     return (
         f'<div class="pulso-section">'
         f'<div class="pulso-section-label">{title}</div>'
@@ -533,15 +547,13 @@ else:
     total = len(issues)
     for i, (d, meta, body) in enumerate(issues):
         num = total - i
-        eyebrow_label = (f"Núm. {num}  ·  {format_data(d)}"
-                         if _ca else
-                         f"Núm. {num}  ·  {format_data(d)}")
+        eyebrow = f"Núm. {num}  ·  {format_data(d)}"
         titular = meta.get("titular") or ""
         preheader = meta.get("preheader") or ""
 
         st.markdown(
             f'<div class="pulso-issue">'
-            f'<div class="pulso-eyebrow">{eyebrow_label}</div>'
+            f'<div class="pulso-eyebrow">{eyebrow}</div>'
             f'<h2 class="pulso-title">{titular}</h2>'
             f'<p class="pulso-preheader">{preheader}</p>'
             f'</div>',
@@ -556,7 +568,6 @@ else:
                 blocks_html = "".join(render_block(t, c) for t, c in sections)
                 st.markdown(blocks_html, unsafe_allow_html=True)
         except Exception:
-            # Si el parser falla per qualsevol raó, fallback a markdown plain
             st.markdown(body)
 
 # ─── CTA SUBSCRIPCIÓ ────────────────────────────────────────────
