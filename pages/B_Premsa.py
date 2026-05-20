@@ -171,17 +171,17 @@ st.markdown("""
 .press-item {padding:14px 0; border-bottom:1px solid #eee;}
 .press-item:last-child {border-bottom:none;}
 .press-meta {color:#666; font-size:12px; margin-bottom:4px; font-family:'Inter',sans-serif;}
-.press-meta .font {font-weight:600; color:#0a0a0a;}
-.press-meta .badge {display:inline-block; padding:1px 6px; border-radius:3px;
+.press-meta .font {font-weight:600; color:#003366;}
+.press-meta .badge {display:inline-block; padding:1px 6px; border-radius:0;
                     background:#f0f0f0; color:#555; font-size:10px; margin-left:6px;
-                    text-transform:uppercase; letter-spacing:0.5px;}
-.press-meta .badge.institucional {background:#f4f4f2; color:#0a0a0a;}
+                    text-transform:uppercase; letter-spacing:0;}
+.press-meta .badge.institucional {background:#f4f4f2; color:#003366;}
 .press-meta .badge.sectorial {background:#fff3e0; color:#c47200;}
 .press-meta .badge.generalista {background:#f5f5f5; color:#666;}
 .press-meta .badge.agregador {background:#f5f5f5; color:#666;}
 .press-titol a {color:#222; text-decoration:none; font-weight:600; font-size:16px;
                 font-family:'Inter',sans-serif; line-height:1.35;}
-.press-titol a:hover {color:#0a0a0a; text-decoration:underline;}
+.press-titol a:hover {color:#003366; text-decoration:underline;}
 .press-snippet {color:#555; font-size:13px; margin-top:4px; line-height:1.5;
                 font-family:'Inter',sans-serif;}
 </style>

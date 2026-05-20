@@ -209,7 +209,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             zmax=d_map["_pct"].max() * 1.05,
             colorscale=[
                 [0, "#ffffff"], [0.25, "#fff9b8"], [0.5, "#f5d800"],
-                [0.75, "#6a6a6a"], [1, "#0a0a0a"],
+                [0.75, "#6a6a6a"], [1, "#003366"],
             ],
             colorbar=dict(title="% PIB", thickness=15),
             marker=dict(line=dict(width=1.5, color="white")),
@@ -230,7 +230,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
                 xref="paper", yref="paper",
                 x=0.18, y=0.18,
                 showarrow=False,
-                font=dict(size=10, color="#0a0a0a", family="Inter, sans-serif"),
+                font=dict(size=10, color="#003366", family="Inter, sans-serif"),
             )],
         )
         st.plotly_chart(fig_map, use_container_width=True,

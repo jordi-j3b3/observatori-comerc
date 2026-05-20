@@ -62,6 +62,25 @@ if df.empty or "index_capacitat" not in df.columns:
 
 df_idx = df.dropna(subset=["index_capacitat"]).copy()
 
+# ─── Helper: filtre per franja de poblacio ───────────────────
+
+BRACKETS = {
+    "5k-20k": (5_000, 20_000),
+    "20k-50k": (20_000, 50_000),
+    "50k-100k": (50_000, 100_000),
+    "100k-500k": (100_000, 500_000),
+    ">500k": (500_000, float("inf")),
+}
+
+def _filter_brackets(d, selected):
+    if not selected or set(selected) == set(BRACKETS.keys()):
+        return d
+    mask = pd.Series(False, index=d.index)
+    for b in selected:
+        lo, hi = BRACKETS[b]
+        mask |= (d["poblacio"] >= lo) & (d["poblacio"] < hi)
+    return d[mask]
+
 # ─── KPIs superiors ──────────────────────────────────────────
 
 col1, col2, col3, col4 = st.columns(4)
@@ -97,24 +116,41 @@ st.markdown("---")
 
 st.subheader("Rànquing de municipis" if _ca else "Ranking de municipios")
 
-n_top = st.select_slider(
-    ("Mostrar Top N" if _ca else "Mostrar Top N"),
-    options=[10, 25, 50, 100, 250, 500],
-    value=25,
+brackets_rank = st.multiselect(
+    ("Franja de població (hab.)" if _ca else "Franja de población (hab.)"),
+    options=list(BRACKETS.keys()),
+    default=list(BRACKETS.keys()),
+    help=("Filtra el rànquing per municipis de mida semblant" if _ca
+          else "Filtra el ranking por municipios de tamaño similar"),
+    key="brackets_rank",
 )
 
-ordenar_per = st.radio(
-    ("Ordenar per" if _ca else "Ordenar por"),
-    options=["index_capacitat", "empreses_g_i", "gi_per_1000hab"],
-    format_func=lambda c: {
-        "index_capacitat": "Índex de capacitat" if _ca else "Índice de capacidad",
-        "empreses_g_i": "Empreses absolutes" if _ca else "Empresas absolutas",
-        "gi_per_1000hab": "Densitat (per 1.000 hab.)" if _ca else "Densidad (por 1.000 hab.)",
-    }.get(c, c),
-    horizontal=True,
-)
+col_top, col_ord = st.columns([1, 2])
+with col_top:
+    n_top = st.select_slider(
+        ("Mostrar Top N" if _ca else "Mostrar Top N"),
+        options=[10, 25, 50, 100, 250, 500],
+        value=25,
+    )
+with col_ord:
+    ordenar_per = st.radio(
+        ("Ordenar per" if _ca else "Ordenar por"),
+        options=["index_capacitat", "empreses_g_i", "gi_per_1000hab"],
+        format_func=lambda c: {
+            "index_capacitat": "Índex de capacitat" if _ca else "Índice de capacidad",
+            "empreses_g_i": "Empreses absolutes" if _ca else "Empresas absolutas",
+            "gi_per_1000hab": "Densitat (per 1.000 hab.)" if _ca else "Densidad (por 1.000 hab.)",
+        }.get(c, c),
+        horizontal=True,
+    )
 
-df_sorted = df_idx.sort_values(ordenar_per, ascending=False).head(n_top)
+df_rank_base = _filter_brackets(df_idx, brackets_rank)
+df_sorted = df_rank_base.sort_values(ordenar_per, ascending=False).head(n_top)
+
+if df_sorted.empty:
+    st.info("No hi ha municipis dins les franges seleccionades." if _ca
+            else "No hay municipios dentro de las franjas seleccionadas.")
+    st.stop()
 
 # ─── Gràfic horitzontal ─────────────────────────────────────
 
@@ -159,39 +195,104 @@ source("INE, Directori Central d'Empreses (T=4721) i Padró Municipal (T=33167).
 
 st.subheader("Relació empreses ↔ població" if _ca else "Relación empresas ↔ población")
 
-fig_sc = go.Figure()
-fig_sc.add_trace(go.Scatter(
-    x=df_idx["poblacio"],
-    y=df_idx["empreses_g_i"],
-    mode="markers",
-    marker=dict(
-        size=df_idx["index_capacitat"] / 4 + 4,
-        color=df_idx["gi_per_1000hab"],
-        colorscale=[[0, "#e8f0fe"], [0.5, "#5a9fd4"], [1, "#0055a4"]],
-        showscale=True,
-        colorbar=dict(title=("Densitat" if _ca else "Densidad"), thickness=15),
-        line=dict(width=0.5, color="white"),
-    ),
-    text=df_idx["municipi"],
-    customdata=df_idx[["empreses_g_i", "poblacio", "gi_per_1000hab", "index_capacitat"]].values,
-    hovertemplate=(
-        "<b>%{text}</b><br>"
-        + ("Pob.: " if _ca else "Pob.: ") + "%{customdata[1]:,.0f}<br>"
-        + ("Empr. G-I: " if _ca else "Empr. G-I: ") + "%{customdata[0]:,.0f}<br>"
-        + ("Densitat: " if _ca else "Densidad: ") + "%{customdata[2]:.1f}<br>"
-        + ("Índex: " if _ca else "Índice: ") + "%{customdata[3]:.1f}<extra></extra>"
-    ).replace(",", "."),
-))
+col_sc_search, col_sc_brackets = st.columns([1, 2])
+with col_sc_search:
+    search_query = st.text_input(
+        ("Cercar municipi" if _ca else "Buscar municipio"),
+        value="",
+        placeholder=("Ex: Girona, Bilbao..." if _ca else "Ej: Girona, Bilbao..."),
+        help=("Coincidència parcial, insensible a majúscules" if _ca
+              else "Coincidencia parcial, insensible a mayúsculas"),
+        key="search_sc",
+    )
+with col_sc_brackets:
+    brackets_sc = st.multiselect(
+        ("Franja de població (hab.)" if _ca else "Franja de población (hab.)"),
+        options=list(BRACKETS.keys()),
+        default=list(BRACKETS.keys()),
+        key="brackets_sc",
+    )
 
-apply_layout(fig_sc,
-    xaxis_title=("Població" if _ca else "Población") + " (escala logarítmica)",
-    yaxis_title=("Empreses G-I" if _ca else "Empresas G-I") + " (escala logarítmica)",
-    height=520,
-    hovermode="closest",
-)
-fig_sc.update_xaxes(type="log")
-fig_sc.update_yaxes(type="log")
-st.plotly_chart(fig_sc, use_container_width=True)
+df_sc = _filter_brackets(df_idx, brackets_sc)
+
+if df_sc.empty:
+    st.info("No hi ha municipis dins les franges seleccionades." if _ca
+            else "No hay municipios dentro de las franjas seleccionadas.")
+else:
+    fig_sc = go.Figure()
+    fig_sc.add_trace(go.Scatter(
+        x=df_sc["poblacio"],
+        y=df_sc["empreses_g_i"],
+        mode="markers",
+        name=("Municipis" if _ca else "Municipios"),
+        marker=dict(
+            size=df_sc["index_capacitat"] / 4 + 4,
+            color=df_sc["gi_per_1000hab"],
+            colorscale=[[0, "#e8f0fe"], [0.5, "#5a9fd4"], [1, "#0055a4"]],
+            showscale=True,
+            colorbar=dict(title=("Densitat" if _ca else "Densidad"), thickness=15),
+            line=dict(width=0.5, color="white"),
+        ),
+        text=df_sc["municipi"],
+        customdata=df_sc[["empreses_g_i", "poblacio", "gi_per_1000hab", "index_capacitat"]].values,
+        hovertemplate=(
+            "<b>%{text}</b><br>"
+            + ("Pob.: " if _ca else "Pob.: ") + "%{customdata[1]:,.0f}<br>"
+            + ("Empr. G-I: " if _ca else "Empr. G-I: ") + "%{customdata[0]:,.0f}<br>"
+            + ("Densitat: " if _ca else "Densidad: ") + "%{customdata[2]:.1f}<br>"
+            + ("Índex: " if _ca else "Índice: ") + "%{customdata[3]:.1f}<extra></extra>"
+        ).replace(",", "."),
+    ))
+
+    # Highlight de municipi cercat (sobre el dataset complet, no nomes franja)
+    df_match = pd.DataFrame()
+    if search_query.strip():
+        q = search_query.strip().lower()
+        df_match = df_idx[df_idx["municipi"].str.lower().str.contains(q, na=False)]
+
+    if not df_match.empty:
+        fig_sc.add_trace(go.Scatter(
+            x=df_match["poblacio"],
+            y=df_match["empreses_g_i"],
+            mode="markers+text",
+            name=("Coincidència" if _ca else "Coincidencia"),
+            marker=dict(
+                size=df_match["index_capacitat"] / 4 + 14,
+                color=RED,
+                line=dict(width=2, color="white"),
+                symbol="circle",
+            ),
+            text=df_match["municipi"],
+            textposition="top center",
+            textfont=dict(size=11, color=RED, family="Inter, sans-serif"),
+            customdata=df_match[["empreses_g_i", "poblacio", "gi_per_1000hab", "index_capacitat"]].values,
+            hovertemplate=(
+                "<b>%{text}</b><br>"
+                + ("Pob.: " if _ca else "Pob.: ") + "%{customdata[1]:,.0f}<br>"
+                + ("Empr. G-I: " if _ca else "Empr. G-I: ") + "%{customdata[0]:,.0f}<br>"
+                + ("Densitat: " if _ca else "Densidad: ") + "%{customdata[2]:.1f}<br>"
+                + ("Índex: " if _ca else "Índice: ") + "%{customdata[3]:.1f}<extra></extra>"
+            ).replace(",", "."),
+        ))
+        st.caption(
+            (f"{len(df_match)} coincidència(es): " if _ca else f"{len(df_match)} coincidencia(s): ")
+            + ", ".join(df_match["municipi"].head(10).tolist())
+            + ("..." if len(df_match) > 10 else "")
+        )
+    elif search_query.strip():
+        st.caption("Cap municipi coincideix amb la cerca." if _ca
+                   else "Ningún municipio coincide con la búsqueda.")
+
+    apply_layout(fig_sc,
+        xaxis_title=("Població" if _ca else "Población") + " (escala logarítmica)",
+        yaxis_title=("Empreses G-I" if _ca else "Empresas G-I") + " (escala logarítmica)",
+        height=520,
+        hovermode="closest",
+        showlegend=bool(not df_match.empty),
+    )
+    fig_sc.update_xaxes(type="log")
+    fig_sc.update_yaxes(type="log")
+    st.plotly_chart(fig_sc, use_container_width=True)
 source("INE, Directori Central d'Empreses i Padró Municipal. Càlcul propi"
        if _ca else
        "INE, Directorio Central de Empresas y Padrón Municipal. Cálculo propio")

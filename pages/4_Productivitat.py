@@ -519,7 +519,7 @@ with tab3:
                 with col_num:
                     st.markdown(
                         f"<div style='font-family:Inter,sans-serif;font-size:11px;"
-                        f"font-weight:600;letter-spacing:2px;text-transform:uppercase;"
+                        f"font-weight:600;letter-spacing:0;text-transform:uppercase;"
                         f"color:#b35900;margin-bottom:4px;'>"
                         f"{'Any' if _ca else 'Año'} {any_last}</div>"
                         f"<div style='font-size:3.4rem;line-height:1;color:#e67e22;"

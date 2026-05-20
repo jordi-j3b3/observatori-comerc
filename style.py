@@ -12,26 +12,33 @@ import json
 # àlies per a compatibilitat amb codi existent. Els valors han canviat
 # a la nova paleta editorial.
 
-DARK = "#0a0a0a"          # tinta principal (negre intens)
-DARK_SOFT = "#1a1a1a"
+# Paleta J3B3 — blau marí fosc + crema/blanc + groc highlighter
+BRAND = "#003366"         # blau marca j3b3.com (links, accents, filets, hovers)
+BRAND_DEEP = "#001f3f"    # variant més fosca per a contrastos extrems
+INK = "#2c2c2c"           # tinta de cos (gris fosc, no negre absolut)
+INK_STRONG = "#1a1a1a"    # tinta destacada per a titulars
 GRAY_DARK = "#6a6a6a"
 GRAY = "#c0c0c0"
 GRAY_LIGHT = "#d0d0d0"
-YELLOW = "#f5d800"        # accent destacat (highlighter)
-YELLOW_SOFT = "#fff9b8"   # versió clara per a fons subtils
-RED = "#c0392b"           # accent dur (negatius o atenció)
+SURFACE = "#ffffff"       # fons principal
+SURFACE_SOFT = "#f5f5f5"  # fons secundari j3b3 per a separadors discretos
+YELLOW = "#f5d800"        # highlighter (subratllats, accent destacat)
+YELLOW_SOFT = "#fff9b8"
+RED = "#c0392b"           # accent dur (negatius/atenció)
 
-# Àlies retrocompatibles. Antic PURPLE (#0055a4) → ara DARK (negre).
-PURPLE = DARK
+# Àlies retrocompatibles
+DARK = INK_STRONG
+DARK_SOFT = INK
+PURPLE = BRAND
 PURPLE_LIGHT = GRAY_DARK
-PURPLE_BG = YELLOW_SOFT
-BLUE = DARK_SOFT
-GREEN = "#5a8f3d"         # verd terròs (no pas saturat)
-ORANGE = "#c75d2c"        # taronja terròs (no pas saturat)
+PURPLE_BG = SURFACE_SOFT
+BLUE = BRAND
+GREEN = "#5a8f3d"          # verd terròs (no pas saturat)
+ORANGE = "#c75d2c"         # taronja terròs (no pas saturat)
 
-# Paleta editorial per a sèries múltiples. Comença amb negre i alterna
-# amb groc + gris + accents discretos, no amb una rampa de colors plens.
-PALETTE = [DARK, YELLOW, GRAY_DARK, RED, "#5a8f3d", "#c75d2c", "#5a3d8f", "#3d8f8f", GRAY, "#0a0a0a"]
+# Paleta editorial per a sèries múltiples: comença amb el blau marca
+# i alterna amb groc highlighter, gris i accents discretos.
+PALETTE = [BRAND, YELLOW, GRAY_DARK, RED, "#5a8f3d", "#c75d2c", BRAND_DEEP, "#3d8f8f", GRAY, INK_STRONG]
 
 
 # ─── FORMAT NUMÈRIC (europeu: 1.234,56) ─────────────────────
@@ -69,31 +76,31 @@ PLOTLY_LAYOUT = dict(
     margin=dict(l=60, r=20, t=40, b=50),
     colorway=PALETTE,
     hoverlabel=dict(
-        bgcolor="#0a0a0a",
+        bgcolor="#003366",
         font_size=13,
         font_family="Inter, sans-serif",
         font_color="#ffffff",
-        bordercolor="#0a0a0a",
+        bordercolor="#003366",
     ),
     xaxis=dict(
         gridcolor="rgba(0,0,0,0.05)",
-        linecolor="#0a0a0a",
+        linecolor="#003366",
         linewidth=1,
         zeroline=True,
-        zerolinecolor="rgba(0,0,0,0.18)",
+        zerolinecolor="rgba(0,51,102,0.18)",
         zerolinewidth=1,
         tickfont=dict(family="Archivo Narrow, sans-serif", size=12, color="#1a1a1a"),
-        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#0a0a0a"),
+        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#003366"),
     ),
     yaxis=dict(
         gridcolor="rgba(0,0,0,0.05)",
-        linecolor="#0a0a0a",
+        linecolor="#003366",
         linewidth=1,
         zeroline=True,
-        zerolinecolor="rgba(0,0,0,0.18)",
+        zerolinecolor="rgba(0,51,102,0.18)",
         zerolinewidth=1,
         tickfont=dict(family="Archivo Narrow, sans-serif", size=12, color="#1a1a1a"),
-        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#0a0a0a"),
+        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#003366"),
     ),
     legend=dict(
         orientation="h",
@@ -106,7 +113,7 @@ PLOTLY_LAYOUT = dict(
     ),
     hovermode="x unified",
     title=dict(
-        font=dict(family="Archivo Narrow, sans-serif", size=15, color="#0a0a0a"),
+        font=dict(family="Archivo Narrow, sans-serif", size=15, color="#003366"),
         x=0,
         xanchor="left",
     ),
@@ -176,7 +183,7 @@ def inject_css():
         h1, .stMarkdown h1 {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
-            color: #0a0a0a;
+            color: #003366;
             font-size: 2.6rem !important;
             line-height: 1.05 !important;
             letter-spacing: -0.5px;
@@ -184,14 +191,14 @@ def inject_css():
         h2, .stMarkdown h2 {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
-            color: #0a0a0a;
+            color: #003366;
             font-size: 1.9rem !important;
             line-height: 1.1 !important;
         }
         h3, .stMarkdown h3 {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
-            color: #0a0a0a;
+            color: #003366;
             font-size: 1.4rem !important;
             line-height: 1.15 !important;
         }
@@ -199,7 +206,7 @@ def inject_css():
         .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
             font-family: 'Archivo Narrow', sans-serif;
             font-weight: 700;
-            color: #0a0a0a;
+            color: #003366;
         }
 
         /* Mètriques editorial — fons blanc, valor en Archivo Narrow,
@@ -209,7 +216,7 @@ def inject_css():
             border-radius: 0 !important;
             padding: 12px 16px 12px 0 !important;
             border: none !important;
-            border-top: 1px solid #0a0a0a !important;
+            border-top: 1px solid #003366 !important;
             box-shadow: none !important;
         }
         [data-testid="stMetricLabel"],
@@ -228,7 +235,7 @@ def inject_css():
         [data-testid="stMetricValue"] span {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             font-size: 2.2rem !important;
             line-height: 1.05 !important;
             letter-spacing: -0.5px !important;
@@ -251,7 +258,7 @@ def inject_css():
         /* Color del valor del delta: negre intens per positius, vermell pels negatius */
         [data-testid="stMetricDeltaIcon-Up"] ~ div,
         [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Up"] + div {
-            color: #0a0a0a !important;
+            color: #003366 !important;
         }
         [data-testid="stMetricDeltaIcon-Down"] ~ div,
         [data-testid="stMetricDelta"] [data-testid="stMetricDeltaIcon-Down"] + div {
@@ -262,7 +269,7 @@ def inject_css():
         [data-testid="stMetricDeltaIcon-Down"] {
             font-family: 'Material Symbols Rounded', 'Material Symbols Outlined' !important;
         }
-        [data-testid="stMetricDeltaIcon-Up"] svg { fill: #0a0a0a !important; }
+        [data-testid="stMetricDeltaIcon-Up"] svg { fill: #003366 !important; }
         [data-testid="stMetricDeltaIcon-Down"] svg { fill: #c0392b !important; }
         /* Help icon (?) — discreta */
         [data-testid="stMetricLabel"] [data-testid="stTooltipIcon"],
@@ -272,7 +279,7 @@ def inject_css():
 
         /* Sidebar (es manté fosc per coherència de chrome) */
         [data-testid="stSidebar"] {
-            background-color: #0a0a0a;
+            background-color: #001f3f;
         }
         [data-testid="stSidebar"] * {
             color: #FFFFFF !important;
@@ -286,7 +293,7 @@ def inject_css():
 
         /* Botons */
         .stDownloadButton button {
-            background-color: #0a0a0a;
+            background-color: #003366;
             color: #ffffff;
             border: none;
             border-radius: 0;
@@ -296,7 +303,7 @@ def inject_css():
             text-transform: uppercase;
         }
         .stDownloadButton button:hover {
-            background-color: #1a1a1a;
+            background-color: #001f3f;
             box-shadow: inset 0 -3px 0 0 #f5d800;
         }
 
@@ -308,8 +315,8 @@ def inject_css():
             color: #6a6a6a;
         }
         .stTabs [aria-selected="true"] {
-            color: #0a0a0a !important;
-            border-bottom-color: #0a0a0a !important;
+            color: #003366 !important;
+            border-bottom-color: #003366 !important;
             border-bottom-width: 3px !important;
         }
 
@@ -322,13 +329,13 @@ def inject_css():
             border-radius: 0;
             padding: 14px 16px 12px 0;
             border: none;
-            border-top: 1px solid #0a0a0a;
+            border-top: 1px solid #003366;
         }
 
         /* Insight box — fons blanc, filet gruixut superior negre + accent groc */
         .insight-box {
             background: #ffffff;
-            border-top: 3px solid #0a0a0a;
+            border-top: 3px solid #003366;
             border-radius: 0;
             padding: 20px 22px 18px 22px;
             margin: 16px 0 24px 0;
@@ -347,7 +354,7 @@ def inject_css():
             font-size: 0.92rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             margin-bottom: 12px;
             letter-spacing: 0;
         }
@@ -369,7 +376,7 @@ def inject_css():
         .conclusions-block {
             background: #ffffff;
             border: none;
-            border-top: 3px solid #0a0a0a;
+            border-top: 3px solid #003366;
             border-radius: 0;
             padding: 28px 0 24px 0;
             margin: 24px 0;
@@ -380,7 +387,7 @@ def inject_css():
             font-size: 0.92rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             margin-bottom: 10px;
             letter-spacing: 0;
         }
@@ -388,7 +395,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             font-size: 2rem !important;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             margin: 0 0 14px 0 !important;
             padding: 0 !important;
             border: none !important;
@@ -416,14 +423,14 @@ def inject_css():
             background: linear-gradient(180deg, transparent 0%, transparent 60%,
                         #f5d800 60%, #f5d800 92%, transparent 92%);
             padding: 0 2px;
-            color: #0a0a0a;
+            color: #003366;
         }
 
         /* Newsletter (subscripció combinada Pulso setmanal + trimestral) */
         .newsletter-block {
             background: #ffffff;
             border: none;
-            border-top: 2px solid #0a0a0a;
+            border-top: 2px solid #003366;
             border-bottom: 1px solid #d0d0d0;
             border-radius: 0;
             padding: 24px 0 16px 0;
@@ -435,7 +442,7 @@ def inject_css():
             font-size: 0.92rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             margin-bottom: 10px;
             letter-spacing: 0;
         }
@@ -443,7 +450,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             font-size: 1.7rem !important;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             margin: 0 0 12px 0 !important;
             padding: 0 !important;
             border: none !important;
@@ -472,7 +479,7 @@ def inject_css():
         .cdmge-block {
             background: #ffffff;
             border: none;
-            border-top: 2px solid #0a0a0a;
+            border-top: 2px solid #003366;
             border-bottom: 1px solid #d0d0d0;
             border-radius: 0;
             padding: 26px 0 20px 0;
@@ -484,7 +491,7 @@ def inject_css():
             font-size: 0.92rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             margin-bottom: 8px;
             letter-spacing: 0;
             display: inline-flex;
@@ -507,7 +514,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             font-size: 1.9rem !important;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             margin: 0 0 8px 0 !important;
             padding: 0 !important;
             border: none !important;
@@ -556,7 +563,7 @@ def inject_css():
             font-family: 'Inter', sans-serif;
             margin-top: 56px;
             padding-top: 28px;
-            border-top: 3px solid #0a0a0a;
+            border-top: 3px solid #003366;
             color: #444;
             font-size: 13px;
             line-height: 1.6;
@@ -574,7 +581,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif;
             font-weight: 700;
             font-size: 1.15rem;
-            color: #0a0a0a;
+            color: #003366;
             margin: 6px 0 6px 0;
             line-height: 1.2;
         }
@@ -588,7 +595,7 @@ def inject_css():
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             margin: 6px 0 10px 0;
             letter-spacing: 0;
         }
@@ -607,7 +614,7 @@ def inject_css():
             transition: border-color 0.15s, background 0.15s;
         }
         .j3b3-footer a:hover {
-            color: #0a0a0a;
+            color: #003366;
             background: linear-gradient(180deg, transparent 0%, transparent 70%,
                         #f5d800 70%, #f5d800 100%);
             border-bottom-color: transparent;
@@ -642,7 +649,7 @@ def inject_css():
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            color: #0a0a0a;
+            color: #003366;
             letter-spacing: 0;
         }
 
@@ -653,7 +660,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             text-transform: uppercase;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             font-size: 0.95rem !important;
             letter-spacing: 0;
         }
@@ -685,7 +692,7 @@ def inject_css():
         .stSlider label {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 500 !important;
-            color: #0a0a0a !important;
+            color: #003366 !important;
             text-transform: uppercase;
             font-size: 0.85rem !important;
             letter-spacing: 0;
@@ -694,8 +701,8 @@ def inject_css():
         /* Botons (st.button, no només downloadButton) */
         .stButton > button {
             background-color: #ffffff;
-            color: #0a0a0a;
-            border: 1px solid #0a0a0a;
+            color: #003366;
+            border: 1px solid #003366;
             border-radius: 0;
             font-family: 'Archivo Narrow', sans-serif;
             font-weight: 700;
@@ -704,13 +711,13 @@ def inject_css():
             letter-spacing: 0;
         }
         .stButton > button:hover {
-            background-color: #0a0a0a;
+            background-color: #003366;
             color: #ffffff;
             box-shadow: inset 0 -3px 0 0 #f5d800;
         }
         .stButton > button:active,
         .stButton > button:focus {
-            background-color: #0a0a0a;
+            background-color: #003366;
             color: #ffffff;
             box-shadow: inset 0 -3px 0 0 #f5d800;
         }
@@ -719,7 +726,7 @@ def inject_css():
         [data-testid="stAlert"],
         [data-testid="stNotification"] {
             border-radius: 0 !important;
-            border-left: 4px solid #0a0a0a !important;
+            border-left: 4px solid #003366 !important;
             background: #ffffff !important;
             font-family: 'Inter', sans-serif !important;
             color: #1a1a1a !important;
@@ -736,13 +743,13 @@ def inject_css():
         }
         [data-testid="stAlertContentSuccess"] {
             background: #ffffff !important;
-            border-left-color: #0a0a0a !important;
+            border-left-color: #003366 !important;
         }
         /* Selectors alternatius per a la versió actual de Streamlit */
         div[data-baseweb="notification"] {
             border-radius: 0 !important;
             background: #ffffff !important;
-            border-left: 4px solid #0a0a0a !important;
+            border-left: 4px solid #003366 !important;
             box-shadow: none !important;
         }
 
@@ -831,7 +838,7 @@ def inject_css():
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
             text-transform: uppercase;
-            background: #0a0a0a !important;
+            background: #003366 !important;
             color: #ffffff !important;
             font-size: 0.85rem !important;
         }
@@ -846,7 +853,7 @@ def inject_css():
 
         /* Tabs — substituir background gris pels filets editorial */
         .stTabs [data-baseweb="tab-list"] {
-            border-bottom: 2px solid #0a0a0a;
+            border-bottom: 2px solid #003366;
             gap: 24px;
         }
         .stTabs [data-baseweb="tab"] {
@@ -856,11 +863,11 @@ def inject_css():
 
         /* Slider thumb negre */
         .stSlider [data-baseweb="slider"] [role="slider"] {
-            background: #0a0a0a !important;
-            border-color: #0a0a0a !important;
+            background: #003366 !important;
+            border-color: #003366 !important;
         }
         .stSlider [data-baseweb="slider"] > div > div {
-            background: #0a0a0a !important;
+            background: #003366 !important;
         }
 
         /* Pills (segmented control) — sense arrodoniments, blanc/negre */
@@ -873,7 +880,7 @@ def inject_css():
         }
         [data-testid="stPills"] button[aria-pressed="true"],
         button[kind="pillsSegment"][aria-pressed="true"] {
-            background: #0a0a0a !important;
+            background: #003366 !important;
             color: #ffffff !important;
         }
 
@@ -971,16 +978,16 @@ def lectura_vigent_box(titol, data_referencia,
     """
     st.markdown(
         f"""
-        <div style="background:#ffffff; border-top:2px solid #0a0a0a;
+        <div style="background:#ffffff; border-top:2px solid #003366;
                     padding:20px 0 18px 0; margin:18px 0 28px;
                     border-bottom:1px solid #d0d0d0;
                     font-family:'Inter',sans-serif;">
             <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.92rem;
                         font-weight:700; text-transform:uppercase;
-                        color:#0a0a0a; margin-bottom:10px;">
+                        color:#003366; margin-bottom:10px;">
                 {eyebrow}
             </div>
-            <div style="font-family:'Archivo Narrow',sans-serif; color:#0a0a0a;
+            <div style="font-family:'Archivo Narrow',sans-serif; color:#003366;
                         font-size:1.45rem; font-weight:700; line-height:1.2;
                         margin-bottom:10px;">
                 {titol}
@@ -1000,7 +1007,7 @@ def source(text):
     lbl = "Font" if lang == "ca" else "Fuente"
     if "Càlcul propi" in text or "Cálculo propio" in text:
         meto_lbl = "Veure metodologia" if lang == "ca" else "Ver metodología"
-        extra = f' · <a href="/Metodologia" target="_self" style="color:#0a0a0a; border-bottom:1px solid #0a0a0a;">{meto_lbl}</a>'
+        extra = f' · <a href="/Metodologia" target="_self" style="color:#003366; border-bottom:1px solid #003366;">{meto_lbl}</a>'
     else:
         extra = ""
     st.markdown(f'<div class="source-label">{lbl}: {text}{extra}</div>', unsafe_allow_html=True)

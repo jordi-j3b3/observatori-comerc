@@ -47,7 +47,7 @@ PULSO_CSS = """
 
 .pulso-issue {
     padding: 56px 0 72px 0;
-    border-top: 3px solid #0a0a0a;
+    border-top: 3px solid #003366;
     margin-top: 32px;
 }
 .pulso-issue:first-of-type { margin-top: 16px; }
@@ -66,7 +66,7 @@ PULSO_CSS = """
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 3rem;
     line-height: 1.02;
-    color: #0a0a0a;
+    color: #003366;
     font-weight: 700;
     margin: 0 0 18px 0;
     text-transform: none;
@@ -91,10 +91,10 @@ PULSO_CSS = """
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 1.05rem;
     font-weight: 700;
-    color: #0a0a0a;
+    color: #003366;
     margin: 0 0 28px 0;
     padding-bottom: 8px;
-    border-bottom: 3px solid #0a0a0a;
+    border-bottom: 3px solid #003366;
     display: block;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -114,7 +114,7 @@ PULSO_CSS = """
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 6.5rem;
     line-height: 1;
-    color: #0a0a0a;
+    color: #003366;
     font-weight: 700;
     letter-spacing: -3px;
     margin: 0;
@@ -152,7 +152,7 @@ PULSO_CSS = """
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 3rem;
     line-height: 0.9;
-    color: #0a0a0a;
+    color: #003366;
     font-weight: 700;
 }
 .pulso-noticia-content { min-width: 0; }
@@ -168,7 +168,7 @@ PULSO_CSS = """
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 1.5rem;
     line-height: 1.18;
-    color: #0a0a0a;
+    color: #003366;
     font-weight: 700;
     margin: 0 0 12px 0;
 }
@@ -191,8 +191,8 @@ PULSO_CSS = """
 }
 .pulso-bars {
     margin: 12px 0 28px 0;
-    border-top: 1px solid #0a0a0a;
-    border-bottom: 1px solid #0a0a0a;
+    border-top: 1px solid #003366;
+    border-bottom: 1px solid #003366;
     padding: 14px 0;
 }
 .pulso-bar-row {
@@ -205,14 +205,14 @@ PULSO_CSS = """
 .pulso-bar-label {
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 0.95rem;
-    color: #0a0a0a;
+    color: #003366;
     text-transform: uppercase;
     font-weight: 500;
 }
 .pulso-bar-value {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 0.92rem;
-    color: #0a0a0a;
+    color: #003366;
     font-weight: 500;
     text-align: right;
 }
@@ -224,7 +224,7 @@ PULSO_CSS = """
     position: absolute;
     top: 2px;
     bottom: 2px;
-    background: #0a0a0a;
+    background: #003366;
     left: 0;
 }
 .pulso-bar-fill.neg { background: #6a6a6a; }
@@ -265,7 +265,7 @@ PULSO_CSS = """
     text-align: right;
     font-family: 'Archivo Narrow', sans-serif;
     font-size: 0.95rem;
-    color: #0a0a0a;
+    color: #003366;
     text-transform: uppercase;
     margin: 24px 0 0 0;
     font-weight: 500;
