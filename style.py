@@ -787,21 +787,23 @@ def newsletter_form(lang="es", compact=False):
     import streamlit.components.v1 as components
 
     _ca = lang == "ca"
-    eyebrow = "Butlletí trimestral" if _ca else "Boletín trimestral"
-    title = ("Rep el resum trimestral de l'observatori"
-             if _ca else "Recibe el resumen trimestral del observatorio")
-    desc = ("Cada trimestre t'enviem les xifres noves del comerç minorista, "
-            "les conclusions destacades i breus anàlisis sectorials. "
-            "El Pulso de la semana —edició setmanal en castellà— es publica també "
-            "al dashboard cada dilluns."
+    eyebrow = "Butlletí" if _ca else "Boletín"
+    title = ("Rep El Pulso cada dilluns"
+             if _ca else "Recibe El Pulso cada lunes")
+    desc = ("Subscriu-te una vegada i rep dues cadències al teu correu: "
+            "cada dilluns, <strong>El Pulso de la setmana</strong> —una xifra, "
+            "tres notícies amb angle i una predicció signada—; cada trimestre, "
+            "el <strong>resum complet de l'observatori</strong> amb les xifres "
+            "noves del comerç minorista i les conclusions destacades."
             if _ca else
-            "Cada trimestre te enviamos las cifras nuevas del comercio minorista, "
-            "las conclusiones destacadas y breves análisis sectoriales. "
-            "El Pulso de la semana —edición semanal— también se publica en el "
-            "dashboard cada lunes.")
-    desc_compact = ("Resum trimestral per correu. El Pulso setmanal es publica al dashboard."
+            "Suscríbete una vez y recibe dos cadencias en tu correo: "
+            "cada lunes, <strong>El Pulso de la semana</strong> —una cifra, "
+            "tres noticias con ángulo y una predicción firmada—; cada trimestre, "
+            "el <strong>resumen completo del observatorio</strong> con las cifras "
+            "nuevas del comercio minorista y las conclusiones destacadas.")
+    desc_compact = ("El Pulso cada dilluns i el resum d'observatori cada trimestre. Una sola subscripció."
                     if _ca else
-                    "Resumen trimestral por correo. El Pulso semanal se publica en el dashboard.")
+                    "El Pulso cada lunes y el resumen del observatorio cada trimestre. Una sola suscripción.")
     foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb MailerLite."
             if _ca else
             "Puedes darte de baja en cualquier momento. Email gestionado con MailerLite.")
