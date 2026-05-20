@@ -787,19 +787,21 @@ def newsletter_form(lang="es", compact=False):
     import streamlit.components.v1 as components
 
     _ca = lang == "ca"
-    eyebrow = "Butlletí" if _ca else "Boletín"
-    title = ("Rep les actualitzacions trimestrals"
-             if _ca else "Recibe las actualizaciones trimestrales")
-    desc = ("Cada trimestre t'enviem les noves dades de l'observatori, "
+    eyebrow = "Butlletí trimestral" if _ca else "Boletín trimestral"
+    title = ("Rep el resum trimestral de l'observatori"
+             if _ca else "Recibe el resumen trimestral del observatorio")
+    desc = ("Cada trimestre t'enviem les xifres noves del comerç minorista, "
             "les conclusions destacades i breus anàlisis sectorials. "
-            "Sense spam: només l'enviament trimestral."
+            "El Pulso de la semana —edició setmanal en castellà— es publica també "
+            "al dashboard cada dilluns."
             if _ca else
-            "Cada trimestre te enviamos los nuevos datos del observatorio, "
+            "Cada trimestre te enviamos las cifras nuevas del comercio minorista, "
             "las conclusiones destacadas y breves análisis sectoriales. "
-            "Sin spam: solo el envío trimestral.")
-    desc_compact = ("Rep cada trimestre les noves dades i conclusions de l'observatori."
+            "El Pulso de la semana —edición semanal— también se publica en el "
+            "dashboard cada lunes.")
+    desc_compact = ("Resum trimestral per correu. El Pulso setmanal es publica al dashboard."
                     if _ca else
-                    "Recibe cada trimestre los nuevos datos y conclusiones del observatorio.")
+                    "Resumen trimestral por correo. El Pulso semanal se publica en el dashboard.")
     foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb MailerLite."
             if _ca else
             "Puedes darte de baja en cualquier momento. Email gestionado con MailerLite.")
