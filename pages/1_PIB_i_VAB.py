@@ -129,42 +129,86 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
 
         gap = var_nom_total - var_real_total
 
+        # Detecció dinàmica del signe de les variacions nominal i real
+        _nom_creix = var_nom_total > 0
+        _real_creix = var_real_total > 0
+        # Comparació amb el PIB general espanyol (~2% real). Si CAGR real > 2,
+        # el sector creix per damunt; si < 2 però > 0, creix per sota; si < 0,
+        # decreix en termes reals.
+        PIB_REF_REAL = 2.0
+        if cagr_real > PIB_REF_REAL:
+            _posicio_pib = "per damunt"
+        elif cagr_real > 0:
+            _posicio_pib = "per sota"
+        else:
+            _posicio_pib = "amb decreixement absolut respecte"
+
         if st.session_state.lang == "ca":
+            verb_nom = "ha crescut" if _nom_creix else "s'ha contret"
+            verb_real = "ha estat" if _real_creix else "ha estat negativa,"
             txt = (
-                f"Entre {int(first_r['any'])} i {int(last_r['any'])}, el VAB nominal del comerç al detall ha crescut "
-                f"un <strong>{fpct(var_nom_total, 1, sign=False)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
-                f"però en termes reals la variació ha estat del <strong>{fpct(var_real_total, 1, sign=False)}</strong> "
+                f"Entre {int(first_r['any'])} i {int(last_r['any'])}, el VAB nominal del comerç al detall "
+                f"<strong>{verb_nom}</strong> un "
+                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
+                f"i en termes reals la variació {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
                 f"(CAGR {fpct(cagr_real, 2)}). "
             )
             if gap > 10:
                 txt += (
-                    f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> entre ambdues xifres "
-                    f"és l'<strong>efecte acumulat de la inflació</strong>: una part important del creixement aparent "
+                    f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal i real "
+                    f"és l'<strong>efecte acumulat de la inflació</strong>: una part del creixement aparent "
                     f"és simplement pujada de preus. "
                 )
-            txt += (
-                f"Amb un CAGR real del {fpct(cagr_real, 2)}, el sector creix per sota del PIB general espanyol (~2% real), "
-                f"confirmant la <strong>pèrdua estructural de pes</strong> del sector en l'economia. "
-                f"Factors explicatius: concentració empresarial, digitalització i canvi en patrons de consum."
-            )
+            posicio_lbl = {
+                "per damunt": (
+                    f"Amb un CAGR real del {fpct(cagr_real, 2)}, el sector creix <strong>per damunt</strong> "
+                    f"del PIB general espanyol (~2% real), guanyant pes estructural."
+                ),
+                "per sota": (
+                    f"Amb un CAGR real del {fpct(cagr_real, 2)}, el sector creix <strong>per sota</strong> "
+                    f"del PIB general espanyol (~2% real), confirmant la <strong>pèrdua "
+                    f"estructural de pes</strong> en l'economia. Factors explicatius: "
+                    f"concentració empresarial, digitalització i canvi en patrons de consum."
+                ),
+                "amb decreixement absolut respecte": (
+                    f"Amb un CAGR real negatiu del {fpct(cagr_real, 2)}, el sector es contreu en termes "
+                    f"reals, amb pèrdua estructural de pes accelerada respecte al PIB general."
+                ),
+            }
+            txt += posicio_lbl[_posicio_pib]
         else:
+            verb_nom = "ha crecido" if _nom_creix else "se ha contraído"
+            verb_real = "ha sido" if _real_creix else "ha sido negativa,"
             txt = (
-                f"Entre {int(first_r['any'])} y {int(last_r['any'])}, el VAB nominal del comercio minorista ha crecido "
-                f"un <strong>{fpct(var_nom_total, 1, sign=False)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
-                f"pero en términos reales la variación ha sido del <strong>{fpct(var_real_total, 1, sign=False)}</strong> "
+                f"Entre {int(first_r['any'])} y {int(last_r['any'])}, el VAB nominal del comercio minorista "
+                f"<strong>{verb_nom}</strong> un "
+                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
+                f"y en términos reales la variación {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
                 f"(CAGR {fpct(cagr_real, 2)}). "
             )
             if gap > 10:
                 txt += (
-                    f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> entre ambas cifras "
-                    f"es el <strong>efecto acumulado de la inflación</strong>: una parte importante del crecimiento aparente "
-                    f"es simplemente subida de precios. "
+                    f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal y real "
+                    f"es el <strong>efecto acumulado de la inflación</strong>: una parte del crecimiento "
+                    f"aparente es simplemente subida de precios. "
                 )
-            txt += (
-                f"Con un CAGR real del {fpct(cagr_real, 2)}, el sector crece por debajo del PIB general español (~2% real), "
-                f"confirmando la <strong>pérdida estructural de peso</strong> del sector en la economía. "
-                f"Factores explicativos: concentración empresarial, digitalización y cambio en patrones de consumo."
-            )
+            posicio_lbl_es = {
+                "per damunt": (
+                    f"Con un CAGR real del {fpct(cagr_real, 2)}, el sector crece <strong>por encima</strong> "
+                    f"del PIB general español (~2% real), ganando peso estructural."
+                ),
+                "per sota": (
+                    f"Con un CAGR real del {fpct(cagr_real, 2)}, el sector crece <strong>por debajo</strong> "
+                    f"del PIB general español (~2% real), confirmando la <strong>pérdida "
+                    f"estructural de peso</strong> en la economía. Factores explicativos: "
+                    f"concentración empresarial, digitalización y cambio en patrones de consumo."
+                ),
+                "amb decreixement absolut respecte": (
+                    f"Con un CAGR real negativo del {fpct(cagr_real, 2)}, el sector se contrae en términos "
+                    f"reales, con pérdida estructural de peso acelerada respecto al PIB general."
+                ),
+            }
+            txt += posicio_lbl_es[_posicio_pib]
         insight(txt)
 
 # ─── Gràfic 2: Pes CNAE 47 sobre PIB ─────────────────────────

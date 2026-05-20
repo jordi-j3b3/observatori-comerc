@@ -439,15 +439,33 @@ with tab1:
                 f"<strong>{fpct(top3_share, 1, sign=False)}</strong> del total — un nivell de "
                 f"concentració moderat per la naturalesa fragmentada del comerç de proximitat. "
                 f"<br><br>"
-                f"Entre {first_year} i {last_year}, el sector ha perdut un "
-                f"<strong>{fpct(var_total, 1)}</strong> d'empreses en agregat. La dinàmica és "
+            )
+            # Verb dinàmic segons signe agregat
+            verb_agregat = "ha perdut" if var_total < 0 else "ha guanyat"
+            # Validar que el winner realment creix (var_pct > 0); altrament reformular
+            _winner_positiu = float(winner["var_pct"]) > 0
+            _loser_negatiu = float(loser["var_pct"]) < 0
+            lider_frase = (
+                f"<strong>{winner['label']}</strong> lidera el creixement "
+                f"({fpct(winner['var_pct'])}), una xifra coherent amb el desplaçament del consum "
+                f"cap a canals digitals i nous formats de proximitat. "
+                if _winner_positiu else
+                f"Cap subsector no creix de manera neta; <strong>{winner['label']}</strong> "
+                f"({fpct(winner['var_pct'])}) és el que cau menys, mentre que "
+            )
+            pateix_frase = (
+                f"<strong>{loser['label']}</strong> és el que més pateix ({fpct(loser['var_pct'])}), "
+                f"un patró típic dels subsectors amb més pressió de la digitalització i del comerç de gran format. "
+                if _loser_negatiu else
+                f"<strong>{loser['label']}</strong> ({fpct(loser['var_pct'])}) tanca el rànquing, "
+                f"encara que també en territori positiu. "
+            )
+            txt += (
+                f"Entre {first_year} i {last_year}, el sector <strong>{verb_agregat}</strong> un "
+                f"<strong>{fpct(abs(var_total), 1, sign=False)}</strong> d'empreses en agregat. La dinàmica és "
                 f"asimètrica: <strong>{n_grow} subsector{'s' if n_grow != 1 else ''} creixen</strong> i "
                 f"<strong>{n_lose} subsector{'s' if n_lose != 1 else ''} perden</strong> teixit "
-                f"empresarial. <strong>{winner['label']}</strong> lidera el creixement "
-                f"({fpct(winner['var_pct'])}), una xifra coherent amb el desplaçament del consum cap "
-                f"a canals digitals i nous formats de proximitat. <strong>{loser['label']}</strong> "
-                f"és el que més pateix ({fpct(loser['var_pct'])}), un patró típic dels subsectors amb "
-                f"més pressió de la digitalització i del comerç de gran format. "
+                f"empresarial. {lider_frase}{pateix_frase}"
                 f"<br><br>"
                 f"<em>Lectura amb les altres pestanyes:</em> el rànquing per <strong>nombre d'empreses</strong> "
                 f"no és el mateix que el rànquing per <strong>facturació</strong> o per "
@@ -457,8 +475,9 @@ with tab1:
                 f"d'empreses (consolidació en grans operadors). Veure pestanya Activitat per a la "
                 f"comparativa."
             )
+            insight(txt)
         else:
-            insight(
+            txt_es = (
                 f"El comercio al detalle español agrupa <strong>{fnum(total_subs)} empresas</strong> en "
                 f"<strong>{len(df_subs)} subsectores</strong>. <strong>{leader['label']}</strong> "
                 f"es el que tiene más empresas ({fnum(leader['empreses'])}), seguido de "
@@ -468,15 +487,31 @@ with tab1:
                 f"<strong>{fpct(top3_share, 1, sign=False)}</strong> del total — un nivel de "
                 f"concentración moderado por la naturaleza fragmentada del comercio de proximidad. "
                 f"<br><br>"
-                f"Entre {first_year} y {last_year}, el sector ha perdido un "
-                f"<strong>{fpct(var_total, 1)}</strong> de empresas en agregado. La dinámica es "
+            )
+            verb_agregat_es = "ha perdido" if var_total < 0 else "ha ganado"
+            _winner_positiu = float(winner["var_pct"]) > 0
+            _loser_negatiu = float(loser["var_pct"]) < 0
+            lider_frase_es = (
+                f"<strong>{winner['label']}</strong> lidera el crecimiento "
+                f"({fpct(winner['var_pct'])}), una cifra coherente con el desplazamiento del consumo "
+                f"hacia canales digitales y nuevos formatos de proximidad. "
+                if _winner_positiu else
+                f"Ningún subsector crece de forma neta; <strong>{winner['label']}</strong> "
+                f"({fpct(winner['var_pct'])}) es el que menos cae, mientras que "
+            )
+            pateix_frase_es = (
+                f"<strong>{loser['label']}</strong> es el que más sufre ({fpct(loser['var_pct'])}), "
+                f"un patrón típico de los subsectores con más presión de la digitalización y del comercio de gran formato. "
+                if _loser_negatiu else
+                f"<strong>{loser['label']}</strong> ({fpct(loser['var_pct'])}) cierra el ranking, "
+                f"aunque también en territorio positivo. "
+            )
+            txt_es += (
+                f"Entre {first_year} y {last_year}, el sector <strong>{verb_agregat_es}</strong> un "
+                f"<strong>{fpct(abs(var_total), 1, sign=False)}</strong> de empresas en agregado. La dinámica es "
                 f"asimétrica: <strong>{n_grow} subsector{'es' if n_grow != 1 else ''} crecen</strong> y "
                 f"<strong>{n_lose} subsector{'es' if n_lose != 1 else ''} pierden</strong> tejido "
-                f"empresarial. <strong>{winner['label']}</strong> lidera el crecimiento "
-                f"({fpct(winner['var_pct'])}), una cifra coherente con el desplazamiento del consumo "
-                f"hacia canales digitales y nuevos formatos de proximidad. <strong>{loser['label']}</strong> "
-                f"es el que más sufre ({fpct(loser['var_pct'])}), un patrón típico de los subsectores con "
-                f"más presión de la digitalización y del comercio de gran formato. "
+                f"empresarial. {lider_frase_es}{pateix_frase_es}"
                 f"<br><br>"
                 f"<em>Lectura con las otras pestañas:</em> el ranking por <strong>número de empresas</strong> "
                 f"no coincide con el ranking por <strong>facturación</strong> o por "
@@ -486,6 +521,7 @@ with tab1:
                 f"reducido de empresas (consolidación en grandes operadores). Ver pestaña Actividad para "
                 f"la comparativa."
             )
+            insight(txt_es)
 
 # ============================================================
 # TAB 2: ACTIVITAT I PRODUCTIVITAT - EAS
@@ -954,9 +990,9 @@ with tab3:
                 f"cosa que reflecteix com el comerç de proximitat compita cada cop més contra "
                 f"despeses no comercialitzables (lloguer, energia, oci fora de la llar). "
                 f"<br><br>"
-                f"L'<strong>alimentació</strong> ({fnum(cat_top['despesa_per_llar'])} €/any) concentra "
-                f"el gruix de la despesa al comerç al detall per llar i és estructuralment estable per la seva naturalesa "
-                f"de bé bàsic. La categoria amb més dinamisme és <strong>{cat_winner['label']}</strong> "
+                f"<strong>{cat_top['label']}</strong> ({fnum(cat_top['despesa_per_llar'])} €/any) "
+                f"concentra el gruix de la despesa al comerç al detall per llar. "
+                f"La categoria amb més dinamisme és <strong>{cat_winner['label']}</strong> "
                 f"({fpct(cat_winner['var_pct'])} entre {first_year} i {last_year}), reflectint canvis "
                 f"de patrons de consum. <strong>{cat_loser['label']}</strong> mostra la pitjor evolució "
                 f"({fpct(cat_loser['var_pct'])}), un senyal de pressió sobre el comerç tradicional al "
@@ -993,9 +1029,9 @@ with tab3:
                 f"reflejando cómo el comercio de proximidad compite cada vez más contra "
                 f"gastos no comercializables (alquiler, energía, ocio fuera del hogar). "
                 f"<br><br>"
-                f"La <strong>alimentación</strong> ({fnum(cat_top['despesa_per_llar'])} €/año) concentra "
-                f"el grueso del gasto minorista por hogar y es estructuralmente estable por su naturaleza "
-                f"de bien básico. La categoría más dinámica es <strong>{cat_winner['label']}</strong> "
+                f"<strong>{cat_top['label']}</strong> ({fnum(cat_top['despesa_per_llar'])} €/año) "
+                f"concentra el grueso del gasto minorista por hogar. "
+                f"La categoría más dinámica es <strong>{cat_winner['label']}</strong> "
                 f"({fpct(cat_winner['var_pct'])} entre {first_year} y {last_year}), reflejando cambios "
                 f"en patrones de consumo. <strong>{cat_loser['label']}</strong> muestra la peor evolución "
                 f"({fpct(cat_loser['var_pct'])}), señal de presión sobre el comercio tradicional ligado "

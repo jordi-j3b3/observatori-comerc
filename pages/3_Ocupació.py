@@ -141,36 +141,66 @@ if not df_prod.empty and "personal_ocupat" in df_prod.columns:
         any_f = int(first["any"])
         any_l = int(last["any"])
 
+        # Detecció dinàmica: intensificació (hores creixen més que ocupació)
+        # vs extensificació (ocupació creix més que hores).
+        _intensifica = var_h > var_ocu
+        _hpt_creix = hpt_last > hpt_first
         if _ca:
+            if _intensifica:
+                titol_bloc = "<strong>Més hores, no més contractació.</strong>"
+                lectura = (
+                    f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla "
+                    f"existent abans que crear nous llocs de treball. La reforma laboral de 2022 — que va "
+                    f"limitar la temporalitat i va impulsar la conversió a contractes indefinits — ha "
+                    f"contribuït a aquest patró: menys rotació i més hores per treballador."
+                )
+            else:
+                titol_bloc = "<strong>Més contractació, menys intensitat.</strong>"
+                lectura = (
+                    f"El sector ha optat per <strong>ampliar la plantilla</strong> més que intensificar "
+                    f"la jornada existent: la creació de nous llocs de treball ha anat per davant de "
+                    f"l'augment d'hores per treballador."
+                )
+            verb_hpt = "ha passat" if _hpt_creix else "ha passat (a la baixa)"
             txt = (
-                f"<strong>Més hores, no més contractació.</strong> "
+                f"{titol_bloc} "
                 f"Entre {any_f} i {any_l}, el personal ocupat ha variat un {fpct(var_ocu)}, "
-                f"mentre que les hores treballades han crescut un {fpct(var_h)}. "
-                f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla existent "
-                f"abans que crear nous llocs de treball. La reforma laboral de 2022 — que va limitar la "
-                f"temporalitat i va impulsar la conversió a contractes indefinits — ha contribuït a aquest patró: "
-                f"menys rotació i més hores per treballador. "
-                f"La ràtio d'hores per treballador ha passat de {fnum(hpt_first)} a {fnum(hpt_last)} h/any."
+                f"mentre que les hores treballades han variat un {fpct(var_h)}. "
+                f"{lectura} "
+                f"La ràtio d'hores per treballador {verb_hpt} de {fnum(hpt_first)} a {fnum(hpt_last)} h/any."
                 f"<br><br>"
                 f"<strong>La contractació segueix el valor afegit, no la facturació.</strong> "
-                f"A partir de 2022, el valor afegit i el personal ocupat mostren trajectòries paral·leles, "
+                f"El valor afegit i el personal ocupat mostren trajectòries paral·leles, "
                 f"mentre que la xifra de negoci creix a un ritme diferent. "
                 f"Això suggereix que les decisions de contractació responen al <strong>valor net generat</strong> "
                 f"(descomptant costos intermedis), no al volum de vendes brut."
             )
         else:
+            if _intensifica:
+                titol_bloc = "<strong>Más horas, no más contratación.</strong>"
+                lectura = (
+                    f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla "
+                    f"existente antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — "
+                    f"que limitó la temporalidad e impulsó la conversión a contratos indefinidos — ha "
+                    f"contribuido a este patrón: menos rotación y más horas por trabajador."
+                )
+            else:
+                titol_bloc = "<strong>Más contratación, menos intensidad.</strong>"
+                lectura = (
+                    f"El sector ha optado por <strong>ampliar la plantilla</strong> más que intensificar "
+                    f"la jornada existente: la creación de nuevos puestos ha ido por delante del "
+                    f"aumento de horas por trabajador."
+                )
+            verb_hpt = "ha pasado" if _hpt_creix else "ha pasado (a la baja)"
             txt = (
-                f"<strong>Más horas, no más contratación.</strong> "
+                f"{titol_bloc} "
                 f"Entre {any_f} y {any_l}, el personal ocupado ha variado un {fpct(var_ocu)}, "
-                f"mientras que las horas trabajadas han crecido un {fpct(var_h)}. "
-                f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla existente "
-                f"antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — que limitó la "
-                f"temporalidad e impulsó la conversión a contratos indefinidos — ha contribuido a este patrón: "
-                f"menos rotación y más horas por trabajador. "
-                f"La ratio de horas por trabajador ha pasado de {fnum(hpt_first)} a {fnum(hpt_last)} h/año."
+                f"mientras que las horas trabajadas han variado un {fpct(var_h)}. "
+                f"{lectura} "
+                f"La ratio de horas por trabajador {verb_hpt} de {fnum(hpt_first)} a {fnum(hpt_last)} h/año."
                 f"<br><br>"
                 f"<strong>La contratación sigue al valor añadido, no a la facturación.</strong> "
-                f"A partir de 2022, el valor añadido y el personal ocupado muestran trayectorias paralelas, "
+                f"El valor añadido y el personal ocupado muestran trayectorias paralelas, "
                 f"mientras que la cifra de negocio crece a un ritmo diferente. "
                 f"Esto sugiere que las decisiones de contratación responden al <strong>valor neto generado</strong> "
                 f"(descontando costes intermedios), no al volumen de ventas bruto."
@@ -203,25 +233,50 @@ if not df_prod.empty and not df_esp.empty and "personal_ocupat" in df_prod.colum
     if len(merged) > 1:
         te_first = merged.iloc[0]["treb_per_empresa"]
         te_last = merged.iloc[-1]["treb_per_empresa"]
+        _te_puja = te_last > te_first
         if _ca:
+            if _te_puja:
+                lectura_te = (
+                    "<strong>Que pugi indica que les empreses supervivents són més grans</strong>: "
+                    "la concentració empresarial elimina petits comerços i deixa al sector "
+                    "empreses amb plantilles més àmplies. Això té implicacions per a la "
+                    "<strong>qualitat de l'ocupació</strong>: les empreses més grans solen "
+                    "oferir millors condicions laborals, convenis col·lectius més favorables "
+                    "i més oportunitats de promoció interna."
+                )
+            else:
+                lectura_te = (
+                    "<strong>Que baixi indica una atomització creixent</strong>: el sector guanya "
+                    "empreses més que treballadors, reflectint l'entrada de microempreses, autònoms "
+                    "i nous formats sense plantilla. Aquesta dinàmica pot indicar dinamisme "
+                    "emprenedor però redueix l'escala mitjana i el poder negociador."
+                )
             insight(
                 f"La ràtio de treballadors per empresa ha passat de <strong>{fnum(te_first, 1)}</strong> "
-                f"({int(merged.iloc[0]['any'])}) a <strong>{fnum(te_last, 1)}</strong> ({int(merged.iloc[-1]['any'])}). "
-                f"Que pugi indica que les empreses supervivents són més grans: la concentració empresarial "
-                f"elimina petits comerços i deixa al sector empreses amb plantilles més àmplies. "
-                f"Això té implicacions per a la <strong>qualitat de l'ocupació</strong>: les empreses més grans "
-                f"solen oferir millors condicions laborals, convenis col·lectius més favorables "
-                f"i més oportunitats de promoció interna."
+                f"({int(merged.iloc[0]['any'])}) a <strong>{fnum(te_last, 1)}</strong> "
+                f"({int(merged.iloc[-1]['any'])}). {lectura_te}"
             )
         else:
+            if _te_puja:
+                lectura_te = (
+                    "<strong>Que suba indica que las empresas supervivientes son más grandes</strong>: "
+                    "la concentración empresarial elimina pequeños comercios y deja al sector "
+                    "empresas con plantillas más amplias. Esto tiene implicaciones para la "
+                    "<strong>calidad del empleo</strong>: las empresas más grandes suelen ofrecer "
+                    "mejores condiciones laborales, convenios colectivos más favorables y más "
+                    "oportunidades de promoción interna."
+                )
+            else:
+                lectura_te = (
+                    "<strong>Que baje indica una atomización creciente</strong>: el sector gana "
+                    "empresas más que trabajadores, reflejando la entrada de microempresas, "
+                    "autónomos y nuevos formatos sin plantilla. Esta dinámica puede indicar "
+                    "dinamismo emprendedor, pero reduce la escala media y el poder negociador."
+                )
             insight(
                 f"La ratio de trabajadores por empresa ha pasado de <strong>{fnum(te_first, 1)}</strong> "
-                f"({int(merged.iloc[0]['any'])}) a <strong>{fnum(te_last, 1)}</strong> ({int(merged.iloc[-1]['any'])}). "
-                f"Que suba indica que las empresas supervivientes son más grandes: la concentración empresarial "
-                f"elimina pequeños comercios y deja al sector empresas con plantillas más amplias. "
-                f"Esto tiene implicaciones para la <strong>calidad del empleo</strong>: las empresas más grandes "
-                f"suelen ofrecer mejores condiciones laborales, convenios colectivos más favorables "
-                f"y más oportunidades de promoción interna."
+                f"({int(merged.iloc[0]['any'])}) a <strong>{fnum(te_last, 1)}</strong> "
+                f"({int(merged.iloc[-1]['any'])}). {lectura_te}"
             )
 else:
     st.info("Dades insuficients per calcular treballadors per empresa." if _ca
