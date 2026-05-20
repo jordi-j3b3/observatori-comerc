@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout,
+                   fnum, fpct, cagr, apply_layout, highlight_expander,
                    PURPLE, RED, BLUE, ORANGE, GREEN)
 
 inject_css()
@@ -320,49 +320,53 @@ with tab2:
             source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
                    else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
 
-        df_qs = df.dropna(subset=["quota_salarial"])
-        if not df_qs.empty:
-            st.subheader("Quota salarial" if _ca else "Cuota salarial")
-            fig_qs = go.Figure()
-            fig_qs.add_trace(go.Scatter(
-                x=df_qs["any"], y=df_qs["quota_salarial"] * 100,
-                mode="lines+markers",
-                name=("Quota salarial" if _ca else "Cuota salarial"),
-                line=dict(color=BLUE, width=3),
-                marker=dict(size=8),
-                text=[f"{v:.1f}%".replace(".", ",") for v in df_qs["quota_salarial"] * 100],
-                textposition="top center",
-                textfont=dict(size=10),
-            ))
-            apply_layout(fig_qs,
-                yaxis_title=("% del Valor Afegit" if _ca else "% del Valor Añadido"),
-                height=380,
-            )
-            st.plotly_chart(fig_qs, use_container_width=True)
-            source("INE, Estadística Estructural d'Empreses. Càlcul propi" if _ca
-                   else "INE, Estadística Estructural de Empresas. Cálculo propio")
-
-        if "cost_laboral_per_ocupat" in df.columns:
-            df_cl = df.dropna(subset=["cost_laboral_per_ocupat"])
-            if not df_cl.empty:
-                st.subheader("Cost laboral per ocupat (preus constants)" if _ca
-                             else "Coste laboral por ocupado (precios constantes)")
-
-                fig_cl = go.Figure()
-                fig_cl.add_trace(go.Bar(
-                    x=df_cl["any"], y=df_cl["cost_laboral_per_ocupat"],
-                    marker_color=PURPLE,
-                    text=[f"{fnum(v, 0)} EUR" for v in df_cl["cost_laboral_per_ocupat"]],
-                    textposition="outside",
-                    textfont=dict(size=11),
+        _lbl_lab_exp = ("Veure quota salarial i cost laboral per ocupat"
+                       if _ca else
+                       "Ver cuota salarial y coste laboral por ocupado")
+        with highlight_expander(_lbl_lab_exp, expanded=False):
+            df_qs = df.dropna(subset=["quota_salarial"])
+            if not df_qs.empty:
+                st.subheader("Quota salarial" if _ca else "Cuota salarial")
+                fig_qs = go.Figure()
+                fig_qs.add_trace(go.Scatter(
+                    x=df_qs["any"], y=df_qs["quota_salarial"] * 100,
+                    mode="lines+markers",
+                    name=("Quota salarial" if _ca else "Cuota salarial"),
+                    line=dict(color=BLUE, width=3),
+                    marker=dict(size=8),
+                    text=[f"{v:.1f}%".replace(".", ",") for v in df_qs["quota_salarial"] * 100],
+                    textposition="top center",
+                    textfont=dict(size=10),
                 ))
-                apply_layout(fig_cl,
-                    yaxis_title=("EUR / ocupat" if _ca else "EUR / ocupado"),
+                apply_layout(fig_qs,
+                    yaxis_title=("% del Valor Afegit" if _ca else "% del Valor Añadido"),
                     height=380,
                 )
-                st.plotly_chart(fig_cl, use_container_width=True)
-                source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
-                       else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
+                st.plotly_chart(fig_qs, use_container_width=True)
+                source("INE, Estadística Estructural d'Empreses. Càlcul propi" if _ca
+                       else "INE, Estadística Estructural de Empresas. Cálculo propio")
+
+            if "cost_laboral_per_ocupat" in df.columns:
+                df_cl = df.dropna(subset=["cost_laboral_per_ocupat"])
+                if not df_cl.empty:
+                    st.subheader("Cost laboral per ocupat (preus constants)" if _ca
+                                 else "Coste laboral por ocupado (precios constantes)")
+
+                    fig_cl = go.Figure()
+                    fig_cl.add_trace(go.Bar(
+                        x=df_cl["any"], y=df_cl["cost_laboral_per_ocupat"],
+                        marker_color=PURPLE,
+                        text=[f"{fnum(v, 0)} EUR" for v in df_cl["cost_laboral_per_ocupat"]],
+                        textposition="outside",
+                        textfont=dict(size=11),
+                    ))
+                    apply_layout(fig_cl,
+                        yaxis_title=("EUR / ocupat" if _ca else "EUR / ocupado"),
+                        height=380,
+                    )
+                    st.plotly_chart(fig_cl, use_container_width=True)
+                    source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
+                           else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
 
         if not df_qs.empty:
             qs_first = df_qs.iloc[0]
@@ -622,86 +626,90 @@ with tab3:
         source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
                else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 
-        # ─── Gràfic 2: Composició de cada euro venut (waterfall implicit) ──
-        st.subheader("Descomposició de la xifra de negoci" if _ca
-                     else "Descomposición de la cifra de negocios")
+        _lbl_stack_exp = ("Veure descomposició de la xifra de negoci"
+                          if _ca else
+                          "Ver descomposición de la cifra de negocios")
+        with highlight_expander(_lbl_stack_exp, expanded=False):
+            # ─── Gràfic 2: Composició de cada euro venut (waterfall implicit) ──
+            st.subheader("Descomposició de la xifra de negoci" if _ca
+                         else "Descomposición de la cifra de negocios")
 
-        df_w = df_m.copy()
-        if has_brut and "cogs" in df_w.columns:
-            # Descomposicio completa: COGS + altres intermedis + personal + excedent
-            df_w["pct_cogs"] = df_w["cogs"] / df_w["xifra_negoci_constants"] * 100 * (df_w["xifra_negoci_constants"] / df_w["xifra_negoci_constants"])
-            # Recalcular sobre xifra a preus corrents per consistencia (el ratio es invariant)
-            # Aprofitem que tenim cogs (corrents) i xifra negoci constants? millor calcular el ratio
-            # CGS / Xifra a preus corrents = ratio invariant
-            df_w["pct_cogs"] = (1 - df_w["marge_brut"]) * 100  # = COGS / Vendes
-            # Altres intermedis = (Vendes - VA - COGS) / Vendes = marge_brut*100 - marge_vab
-            df_w["pct_altres_int"] = df_w["pct_cogs"] - 0  # placeholder
-            # En realitat: 100 = COGS_pct + AltresInt_pct + VA_pct
-            # AltresInt_pct = 100 - COGS_pct - VA_pct = marge_brut_pct - marge_vab
-            df_w["pct_altres_int"] = df_w["marge_brut_pct"] - df_w["marge_vab"]
-            df_w["pct_personal"] = df_w["clu"]
-            df_w["pct_excedent"] = df_w["marge_op"]
+            df_w = df_m.copy()
+            if has_brut and "cogs" in df_w.columns:
+                # Descomposicio completa: COGS + altres intermedis + personal + excedent
+                df_w["pct_cogs"] = df_w["cogs"] / df_w["xifra_negoci_constants"] * 100 * (df_w["xifra_negoci_constants"] / df_w["xifra_negoci_constants"])
+                # Recalcular sobre xifra a preus corrents per consistencia (el ratio es invariant)
+                # Aprofitem que tenim cogs (corrents) i xifra negoci constants? millor calcular el ratio
+                # CGS / Xifra a preus corrents = ratio invariant
+                df_w["pct_cogs"] = (1 - df_w["marge_brut"]) * 100  # = COGS / Vendes
+                # Altres intermedis = (Vendes - VA - COGS) / Vendes = marge_brut*100 - marge_vab
+                df_w["pct_altres_int"] = df_w["pct_cogs"] - 0  # placeholder
+                # En realitat: 100 = COGS_pct + AltresInt_pct + VA_pct
+                # AltresInt_pct = 100 - COGS_pct - VA_pct = marge_brut_pct - marge_vab
+                df_w["pct_altres_int"] = df_w["marge_brut_pct"] - df_w["marge_vab"]
+                df_w["pct_personal"] = df_w["clu"]
+                df_w["pct_excedent"] = df_w["marge_op"]
 
-            fig_stack = go.Figure()
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["pct_cogs"],
-                name=("Cost de mercaderia (COGS)" if _ca else "Coste de mercancía (COGS)"),
-                marker_color="#7f8c8d",
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["pct_altres_int"],
-                name=("Altres intermedis (lloguer, energia, serveis)" if _ca
-                      else "Otros intermedios (alquiler, energía, servicios)"),
-                marker_color="#bdc3c7",
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["pct_personal"],
-                name=("Personal" if _ca else "Personal"),
-                marker_color=BLUE,
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["pct_excedent"],
-                name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
-                marker_color=GREEN,
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-        else:
-            # Fallback sense COGS
-            df_w["resta_intermedis"] = 100 - df_w["marge_vab"]
-            df_w["resta_personal"] = df_w["clu"]
-            df_w["resta_excedent"] = df_w["marge_op"]
+                fig_stack = go.Figure()
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["pct_cogs"],
+                    name=("Cost de mercaderia (COGS)" if _ca else "Coste de mercancía (COGS)"),
+                    marker_color="#7f8c8d",
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["pct_altres_int"],
+                    name=("Altres intermedis (lloguer, energia, serveis)" if _ca
+                          else "Otros intermedios (alquiler, energía, servicios)"),
+                    marker_color="#bdc3c7",
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["pct_personal"],
+                    name=("Personal" if _ca else "Personal"),
+                    marker_color=BLUE,
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["pct_excedent"],
+                    name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
+                    marker_color=GREEN,
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+            else:
+                # Fallback sense COGS
+                df_w["resta_intermedis"] = 100 - df_w["marge_vab"]
+                df_w["resta_personal"] = df_w["clu"]
+                df_w["resta_excedent"] = df_w["marge_op"]
 
-            fig_stack = go.Figure()
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["resta_intermedis"],
-                name=("Costos intermedis" if _ca else "Costes intermedios"),
-                marker_color="#bdc3c7",
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["resta_personal"],
-                name=("Personal" if _ca else "Personal"),
-                marker_color=BLUE,
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
-            fig_stack.add_trace(go.Bar(
-                x=df_w["any"], y=df_w["resta_excedent"],
-                name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
-                marker_color=GREEN,
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
-            ))
+                fig_stack = go.Figure()
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["resta_intermedis"],
+                    name=("Costos intermedis" if _ca else "Costes intermedios"),
+                    marker_color="#bdc3c7",
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["resta_personal"],
+                    name=("Personal" if _ca else "Personal"),
+                    marker_color=BLUE,
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
+                fig_stack.add_trace(go.Bar(
+                    x=df_w["any"], y=df_w["resta_excedent"],
+                    name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
+                    marker_color=GREEN,
+                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
+                ))
 
-        apply_layout(fig_stack,
-            yaxis_title=("% de cada euro facturat" if _ca else "% de cada euro facturado"),
-            height=420,
-            barmode="stack",
-        )
-        st.plotly_chart(fig_stack, use_container_width=True)
-        source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
-               else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
+            apply_layout(fig_stack,
+                yaxis_title=("% de cada euro facturat" if _ca else "% de cada euro facturado"),
+                height=420,
+                barmode="stack",
+            )
+            st.plotly_chart(fig_stack, use_container_width=True)
+            source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
+                   else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 
         # ─── Insight rendibilitat ────────────────────────────────
         marge_op_std = df_m["marge_op"].std()
