@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout,
+                   fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, GREEN, ORANGE, PALETTE)
 
 inject_css()
@@ -860,61 +860,65 @@ with tab3:
             delta_color="off",
         )
 
-        # Evolucio temporal (line chart simple amb pivot table)
-        st.subheader("Evolució de la despesa al llarg del temps" if _ca else "Evolución del gasto a lo largo del tiempo")
+        _lbl_evo_exp = ("Veure evolució temporal de la despesa per categoria"
+                       if _ca else
+                       "Ver evolución temporal del gasto por categoría")
+        with highlight_expander(_lbl_evo_exp, expanded=False):
+            # Evolucio temporal (line chart simple amb pivot table)
+            st.subheader("Evolució de la despesa al llarg del temps" if _ca else "Evolución del gasto a lo largo del tiempo")
 
-        sel_default = ["01", "03", "05", "09"]
-        sel_codis = st.multiselect(
-            ("Selecciona categories" if _ca else "Selecciona categorías"),
-            options=retail_codis,
-            default=sel_default,
-            format_func=lambda c: DLABEL.get(c, c),
-            key="evo_subsectors",
-        )
-
-        if sel_codis:
-            df_evo = df_epf[df_epf["codi_coicop"].isin(sel_codis)].copy()
-            df_evo["categoria"] = df_evo["codi_coicop"].map(DLABEL)
-            df_evo = df_evo.sort_values(["codi_coicop", "any"])
-
-            fig_evo = go.Figure()
-            for i, codi in enumerate(sel_codis):
-                d = df_evo[df_evo["codi_coicop"] == codi]
-                if d.empty:
-                    continue
-                fig_evo.add_trace(go.Scatter(
-                    x=d["any"].tolist(),
-                    y=d["despesa_per_llar"].tolist(),
-                    mode="lines+markers",
-                    name=DLABEL.get(codi, codi),
-                    line=dict(color=PALETTE[i % len(PALETTE)], width=2.5),
-                    marker=dict(size=6),
-                    hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:,.0f} €<extra></extra>",
-                ))
-            fig_evo.update_layout(
-                yaxis_title=("Despesa mitjana anual per llar (€)" if _ca else "Gasto medio anual por hogar (€)"),
-                height=460,
-                font=dict(family="Inter, sans-serif", size=13),
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=60, r=260, t=40, b=50),
-                xaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
-                yaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
-                legend=dict(
-                    orientation="v",
-                    yanchor="top",
-                    y=1.0,
-                    xanchor="left",
-                    x=1.02,
-                    bgcolor="rgba(255,255,255,0.85)",
-                    bordercolor="rgba(0,0,0,0.1)",
-                    borderwidth=1,
-                ),
-                hovermode="x unified",
+            sel_default = ["01", "03", "05", "09"]
+            sel_codis = st.multiselect(
+                ("Selecciona categories" if _ca else "Selecciona categorías"),
+                options=retail_codis,
+                default=sel_default,
+                format_func=lambda c: DLABEL.get(c, c),
+                key="evo_subsectors",
             )
-            st.plotly_chart(fig_evo, use_container_width=True)
-            source("INE, Enquesta de Pressupostos Familiars (preus constants)" if _ca
-                   else "INE, Encuesta de Presupuestos Familiares (precios constantes)")
+
+            if sel_codis:
+                df_evo = df_epf[df_epf["codi_coicop"].isin(sel_codis)].copy()
+                df_evo["categoria"] = df_evo["codi_coicop"].map(DLABEL)
+                df_evo = df_evo.sort_values(["codi_coicop", "any"])
+
+                fig_evo = go.Figure()
+                for i, codi in enumerate(sel_codis):
+                    d = df_evo[df_evo["codi_coicop"] == codi]
+                    if d.empty:
+                        continue
+                    fig_evo.add_trace(go.Scatter(
+                        x=d["any"].tolist(),
+                        y=d["despesa_per_llar"].tolist(),
+                        mode="lines+markers",
+                        name=DLABEL.get(codi, codi),
+                        line=dict(color=PALETTE[i % len(PALETTE)], width=2.5),
+                        marker=dict(size=6),
+                        hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:,.0f} €<extra></extra>",
+                    ))
+                fig_evo.update_layout(
+                    yaxis_title=("Despesa mitjana anual per llar (€)" if _ca else "Gasto medio anual por hogar (€)"),
+                    height=460,
+                    font=dict(family="Inter, sans-serif", size=13),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    margin=dict(l=60, r=260, t=40, b=50),
+                    xaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
+                    yaxis=dict(gridcolor="rgba(0,0,0,0.06)", zeroline=False),
+                    legend=dict(
+                        orientation="v",
+                        yanchor="top",
+                        y=1.0,
+                        xanchor="left",
+                        x=1.02,
+                        bgcolor="rgba(255,255,255,0.85)",
+                        bordercolor="rgba(0,0,0,0.1)",
+                        borderwidth=1,
+                    ),
+                    hovermode="x unified",
+                )
+                st.plotly_chart(fig_evo, use_container_width=True)
+                source("INE, Enquesta de Pressupostos Familiars (preus constants)" if _ca
+                       else "INE, Encuesta de Presupuestos Familiares (precios constantes)")
 
         # ── Insight Demanda (analisi profunda) ─────────────────
         df_groups_sorted = df_groups.sort_values("despesa_per_llar", ascending=False)
