@@ -6,7 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout,
+                   fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, RED, BLUE, GREEN, ORANGE, GRAY)
 
 inject_css()
@@ -399,33 +399,37 @@ if "vab_meur" in df_year.columns:
     st.plotly_chart(fig2, use_container_width=True)
     source("Eurostat, Comptes Nacionals" if _ca else "Eurostat, Cuentas Nacionales")
 
-# ─── Gràfic 3: Evolució temporal ─────────────────────────────
+_lbl_evo_eu = ("Veure evolució temporal del pes CNAE 47 per país"
+               if _ca else
+               "Ver evolución temporal del peso CNAE 47 por país")
+with highlight_expander(_lbl_evo_eu, expanded=False):
+    # ─── Gràfic 3: Evolució temporal ─────────────────────────────
 
-st.subheader("Evolució pes CNAE 47 — principals països" if _ca
-             else "Evolución peso CNAE 47 — principales países")
+    st.subheader("Evolució pes CNAE 47 — principals països" if _ca
+                 else "Evolución peso CNAE 47 — principales países")
 
-highlight = ["ES", "DE", "FR", "IT", "PT", "EU27_2020"]
-colors_map = {
-    "ES": RED, "DE": BLUE, "FR": GREEN,
-    "IT": ORANGE, "PT": "#8E44AD", "EU27_2020": PURPLE,
-}
+    highlight = ["ES", "DE", "FR", "IT", "PT", "EU27_2020"]
+    colors_map = {
+        "ES": RED, "DE": BLUE, "FR": GREEN,
+        "IT": ORANGE, "PT": "#8E44AD", "EU27_2020": PURPLE,
+    }
 
-if "pes_cnae47" in df.columns:
-    fig3 = go.Figure()
-    for code in highlight:
-        df_c = df[df["pais_codi"] == code].sort_values("any")
-        if not df_c.empty:
-            fig3.add_trace(go.Scatter(
-                x=df_c["any"], y=df_c["pes_cnae47"] * 100,
-                mode="lines+markers",
-                name=df_c["pais"].iloc[0],
-                line=dict(color=colors_map.get(code, "#999"), width=2.5),
-                marker=dict(size=5),
-            ))
+    if "pes_cnae47" in df.columns:
+        fig3 = go.Figure()
+        for code in highlight:
+            df_c = df[df["pais_codi"] == code].sort_values("any")
+            if not df_c.empty:
+                fig3.add_trace(go.Scatter(
+                    x=df_c["any"], y=df_c["pes_cnae47"] * 100,
+                    mode="lines+markers",
+                    name=df_c["pais"].iloc[0],
+                    line=dict(color=colors_map.get(code, "#999"), width=2.5),
+                    marker=dict(size=5),
+                ))
 
-    apply_layout(fig3, yaxis_title="% PIB", height=450)
-    st.plotly_chart(fig3, use_container_width=True)
-    source("Eurostat, Comptes Nacionals" if _ca else "Eurostat, Cuentas Nacionales")
+        apply_layout(fig3, yaxis_title="% PIB", height=450)
+        st.plotly_chart(fig3, use_container_width=True)
+        source("Eurostat, Comptes Nacionals" if _ca else "Eurostat, Cuentas Nacionales")
 
 # ─── Insight Europa ──────────────────────────────────────────
 
