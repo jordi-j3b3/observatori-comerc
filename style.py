@@ -1,25 +1,37 @@
 """
 Estils compartits: layout Plotly, CSS global, helpers de presentació.
-Disseny editorial basat en DM Serif Display + DM Sans.
+Disseny editorial alt contrast: Archivo Narrow + Inter + Lora italic +
+IBM Plex Mono. Paleta negre/blanc/groc highlighter.
 """
 import streamlit as st
 import os
 import json
 
 # ─── COLORS ───────────────────────────────────────────────────
+# Es mantenen els noms antics (PURPLE, BLUE, PURPLE_LIGHT, ...) com a
+# àlies per a compatibilitat amb codi existent. Els valors han canviat
+# a la nova paleta editorial.
 
-PURPLE = "#0055a4"
-PURPLE_LIGHT = "#5a9fd4"
-PURPLE_BG = "#e8f0fe"
-RED = "#c0392b"
-BLUE = "#2980b9"
-GREEN = "#27ae60"
-ORANGE = "#e67e22"
-DARK = "#1a1a1a"
-GRAY = "#bdc3c7"
-GRAY_DARK = "#7f8c8d"
+DARK = "#0a0a0a"          # tinta principal (negre intens)
+DARK_SOFT = "#1a1a1a"
+GRAY_DARK = "#6a6a6a"
+GRAY = "#c0c0c0"
+GRAY_LIGHT = "#d0d0d0"
+YELLOW = "#f5d800"        # accent destacat (highlighter)
+YELLOW_SOFT = "#fff9b8"   # versió clara per a fons subtils
+RED = "#c0392b"           # accent dur (negatius o atenció)
 
-PALETTE = [PURPLE, RED, GREEN, ORANGE, "#8e44ad", "#1abc9c", "#e67e22", "#3498db", "#2c3e50", "#d35400"]
+# Àlies retrocompatibles. Antic PURPLE (#0055a4) → ara DARK (negre).
+PURPLE = DARK
+PURPLE_LIGHT = GRAY_DARK
+PURPLE_BG = YELLOW_SOFT
+BLUE = DARK_SOFT
+GREEN = "#5a8f3d"         # verd terròs (no pas saturat)
+ORANGE = "#c75d2c"        # taronja terròs (no pas saturat)
+
+# Paleta editorial per a sèries múltiples. Comença amb negre i alterna
+# amb groc + gris + accents discretos, no amb una rampa de colors plens.
+PALETTE = [DARK, YELLOW, GRAY_DARK, RED, "#5a8f3d", "#c75d2c", "#5a3d8f", "#3d8f8f", GRAY, "#0a0a0a"]
 
 
 # ─── FORMAT NUMÈRIC (europeu: 1.234,56) ─────────────────────
@@ -51,25 +63,37 @@ def fpct(n, decimals=1, sign=True):
 # ─── PLOTLY LAYOUT ────────────────────────────────────────────
 
 PLOTLY_LAYOUT = dict(
-    font=dict(family="DM Sans, sans-serif", size=13, color=DARK),
-    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="Inter, sans-serif", size=13, color=DARK),
+    plot_bgcolor="#ffffff",
     paper_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=60, r=20, t=40, b=50),
+    colorway=PALETTE,
     hoverlabel=dict(
-        bgcolor="white",
+        bgcolor="#0a0a0a",
         font_size=13,
-        font_family="DM Sans, sans-serif",
-        bordercolor="#ddd",
+        font_family="Inter, sans-serif",
+        font_color="#ffffff",
+        bordercolor="#0a0a0a",
     ),
     xaxis=dict(
-        gridcolor="rgba(0,0,0,0.06)",
-        linecolor="rgba(0,0,0,0.1)",
-        zeroline=False,
+        gridcolor="rgba(0,0,0,0.05)",
+        linecolor="#0a0a0a",
+        linewidth=1,
+        zeroline=True,
+        zerolinecolor="rgba(0,0,0,0.18)",
+        zerolinewidth=1,
+        tickfont=dict(family="Archivo Narrow, sans-serif", size=12, color="#1a1a1a"),
+        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#0a0a0a"),
     ),
     yaxis=dict(
-        gridcolor="rgba(0,0,0,0.06)",
-        linecolor="rgba(0,0,0,0.1)",
-        zeroline=False,
+        gridcolor="rgba(0,0,0,0.05)",
+        linecolor="#0a0a0a",
+        linewidth=1,
+        zeroline=True,
+        zerolinecolor="rgba(0,0,0,0.18)",
+        zerolinewidth=1,
+        tickfont=dict(family="Archivo Narrow, sans-serif", size=12, color="#1a1a1a"),
+        title_font=dict(family="Archivo Narrow, sans-serif", size=13, color="#0a0a0a"),
     ),
     legend=dict(
         orientation="h",
@@ -77,9 +101,15 @@ PLOTLY_LAYOUT = dict(
         y=1.02,
         xanchor="left",
         x=0,
-        font=dict(size=12),
+        font=dict(family="Archivo Narrow, sans-serif", size=12, color="#1a1a1a"),
+        bgcolor="rgba(0,0,0,0)",
     ),
     hovermode="x unified",
+    title=dict(
+        font=dict(family="Archivo Narrow, sans-serif", size=15, color="#0a0a0a"),
+        x=0,
+        xanchor="left",
+    ),
 )
 
 
@@ -560,19 +590,221 @@ def inject_css():
             letter-spacing: 0;
         }
 
-        /* Expander */
-        .streamlit-expanderHeader {
-            font-family: 'Archivo Narrow', sans-serif;
-            font-weight: 700;
+        /* Expander — pelat editorial */
+        .streamlit-expanderHeader,
+        [data-testid="stExpander"] summary,
+        [data-testid="stExpander"] details > summary {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
             text-transform: uppercase;
+            color: #0a0a0a !important;
+            font-size: 0.95rem !important;
+            letter-spacing: 0;
+        }
+        [data-testid="stExpander"] {
+            border: none !important;
+            border-top: 1px solid #d0d0d0 !important;
+            border-bottom: 1px solid #d0d0d0 !important;
+            border-radius: 0 !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stExpander"] details {
+            background: transparent !important;
         }
 
-        /* Selectbox */
-        .stSelectbox > div > div {
-            border-radius: 0;
+        /* Inputs (selectbox, multiselect, text, number, date) — sense arrodoniments */
+        .stSelectbox > div > div,
+        .stMultiSelect > div > div,
+        .stTextInput > div > div,
+        .stNumberInput > div > div,
+        .stDateInput > div > div,
+        .stTextArea > div > div {
+            border-radius: 0 !important;
         }
-        .stMultiSelect > div > div {
+        .stSelectbox label, .stMultiSelect label,
+        .stTextInput label, .stNumberInput label,
+        .stDateInput label, .stTextArea label,
+        .stRadio label, .stCheckbox label,
+        .stSlider label {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 500 !important;
+            color: #0a0a0a !important;
+            text-transform: uppercase;
+            font-size: 0.85rem !important;
+            letter-spacing: 0;
+        }
+
+        /* Botons (st.button, no només downloadButton) */
+        .stButton > button {
+            background-color: #ffffff;
+            color: #0a0a0a;
+            border: 1px solid #0a0a0a;
             border-radius: 0;
+            font-family: 'Archivo Narrow', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+        .stButton > button:hover {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            box-shadow: inset 0 -3px 0 0 #f5d800;
+        }
+        .stButton > button:active,
+        .stButton > button:focus {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            box-shadow: inset 0 -3px 0 0 #f5d800;
+        }
+
+        /* Alerts: st.info / st.warning / st.error / st.success */
+        [data-testid="stAlert"],
+        [data-testid="stNotification"] {
+            border-radius: 0 !important;
+            border-left: 4px solid #0a0a0a !important;
+            background: #ffffff !important;
+            font-family: 'Inter', sans-serif !important;
+            color: #1a1a1a !important;
+            box-shadow: none !important;
+        }
+        [data-testid="stAlertContentInfo"] { background: #ffffff !important; }
+        [data-testid="stAlertContentWarning"] {
+            background: #ffffff !important;
+            border-left-color: #f5d800 !important;
+        }
+        [data-testid="stAlertContentError"] {
+            background: #ffffff !important;
+            border-left-color: #c0392b !important;
+        }
+        [data-testid="stAlertContentSuccess"] {
+            background: #ffffff !important;
+            border-left-color: #0a0a0a !important;
+        }
+        /* Selectors alternatius per a la versió actual de Streamlit */
+        div[data-baseweb="notification"] {
+            border-radius: 0 !important;
+            background: #ffffff !important;
+            border-left: 4px solid #0a0a0a !important;
+            box-shadow: none !important;
+        }
+
+        /* Sidebar — tipografia editorial sobre fons negre */
+        [data-testid="stSidebar"] *,
+        [data-testid="stSidebarContent"] * {
+            font-family: 'Inter', sans-serif !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a,
+        [data-testid="stSidebar"] nav a,
+        [data-testid="stSidebar"] li {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            font-size: 0.92rem !important;
+        }
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4 {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+        /* Capçaleres del nav del sidebar */
+        [data-testid="stSidebarNav"] section,
+        [data-testid="stSidebarNav"] header {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+        }
+        /* Selectbox idioma dins sidebar */
+        [data-testid="stSidebar"] .stSelectbox > div > div {
+            background: #1a1a1a !important;
+            border: 1px solid #2a2a2a !important;
+        }
+
+        /* Background general de la pàgina + container */
+        .stApp {
+            background: #ffffff;
+        }
+        .main .block-container {
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+        }
+        [data-testid="stAppViewContainer"] > .main {
+            background: #ffffff;
+        }
+
+        /* Dataframes — esborrar arrodoniments i ombres */
+        [data-testid="stDataFrame"],
+        [data-testid="stTable"] {
+            border-radius: 0 !important;
+            border: 1px solid #d0d0d0 !important;
+        }
+        [data-testid="stDataFrame"] table thead th {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            background: #0a0a0a !important;
+            color: #ffffff !important;
+            font-size: 0.85rem !important;
+        }
+        [data-testid="stDataFrame"] table tbody td {
+            font-family: 'Inter', sans-serif !important;
+            font-size: 0.9rem !important;
+        }
+        [data-testid="stDataFrame"] table tbody td:has(span:not(:empty)),
+        [data-testid="stDataFrame"] [role="gridcell"] {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Tabs — substituir background gris pels filets editorial */
+        .stTabs [data-baseweb="tab-list"] {
+            border-bottom: 2px solid #0a0a0a;
+            gap: 24px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 0;
+            background: transparent !important;
+        }
+
+        /* Slider thumb negre */
+        .stSlider [data-baseweb="slider"] [role="slider"] {
+            background: #0a0a0a !important;
+            border-color: #0a0a0a !important;
+        }
+        .stSlider [data-baseweb="slider"] > div > div {
+            background: #0a0a0a !important;
+        }
+
+        /* Pills (segmented control) — sense arrodoniments, blanc/negre */
+        [data-testid="stPills"] button,
+        button[kind="pillsSegment"] {
+            border-radius: 0 !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        [data-testid="stPills"] button[aria-pressed="true"],
+        button[kind="pillsSegment"][aria-pressed="true"] {
+            background: #0a0a0a !important;
+            color: #ffffff !important;
+        }
+
+        /* Toggle */
+        [data-testid="stToggle"] label {
+            font-family: 'Archivo Narrow', sans-serif !important;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Top horitzontal app bar (Deploy menu) — discreta */
+        header[data-testid="stHeader"] {
+            background: #ffffff !important;
+            border-bottom: 1px solid #d0d0d0;
         }
     </style>
     """, unsafe_allow_html=True)

@@ -196,8 +196,10 @@ _fig.update_layout(
     yaxis_title=("Variació anual (%)" if _ca else "Variación anual (%)"),
     xaxis_title="",
     hovermode="x unified",
-    legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1, font=dict(size=11)),
+    legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1,
+                font=dict(family="Inter, sans-serif", size=11)),
     plot_bgcolor="white",
+    font=dict(family="Inter, sans-serif", size=13, color="#1a1a1a"),
 )
 _fig.update_yaxes(gridcolor="#eee", zeroline=False, ticksuffix="%")
 _fig.update_xaxes(gridcolor="#f5f5f5", showspikes=True, spikemode="across",

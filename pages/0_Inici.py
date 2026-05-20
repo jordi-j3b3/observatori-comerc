@@ -243,9 +243,9 @@ if not df_cdmge.empty and "indicador" in df_cdmge.columns:
         _fig.add_trace(go.Scatter(
             x=_plot["data"], y=_plot["mm30"],
             mode="lines",
-            line=dict(color="#d24d2c", width=2.6),
+            line=dict(color="#0a0a0a", width=2.6),
             fill="tozeroy",
-            fillcolor="rgba(210, 77, 44, 0.10)",
+            fillcolor="rgba(245, 216, 0, 0.18)",
             hovertemplate="%{x|%d/%m/%Y}: %{y:+.1f}%<extra></extra>",
             showlegend=False,
         ))
@@ -257,6 +257,7 @@ if not df_cdmge.empty and "indicador" in df_cdmge.columns:
             xaxis_title="",
             hovermode="x unified",
             plot_bgcolor="white",
+            font=dict(family="Inter, sans-serif", size=12, color="#1a1a1a"),
         )
         _fig.update_yaxes(gridcolor="#eee", zeroline=False, ticksuffix="%")
         _fig.update_xaxes(gridcolor="#f5f5f5")
