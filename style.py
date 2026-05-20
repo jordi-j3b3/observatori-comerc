@@ -113,6 +113,7 @@ PLOTLY_LAYOUT = dict(
     ),
     hovermode="x unified",
     title=dict(
+        text="",
         font=dict(family="Archivo Narrow, sans-serif", size=15, color="#003366"),
         x=0,
         xanchor="left",
@@ -653,9 +654,8 @@ def inject_css():
             letter-spacing: 0;
         }
 
-        /* Expander — pelat editorial + crida d'atenció amb highlight groc.
-           El groc highlighter al fons del header indica que hi ha contingut
-           addicional per consultar (mateix patró que els strong dels insights). */
+        /* Expander default — pelat editorial (per a expanders utilitaris
+           tipus 'descarregar dades', 'metodologia tècnica', etc.) */
         .streamlit-expanderHeader,
         [data-testid="stExpander"] summary,
         [data-testid="stExpander"] details > summary,
@@ -664,19 +664,30 @@ def inject_css():
             font-weight: 700 !important;
             text-transform: uppercase;
             color: #003366 !important;
-            font-size: 1rem !important;
+            font-size: 0.95rem !important;
             letter-spacing: 0 !important;
+            background: #ffffff !important;
+            padding: 8px 0 !important;
+            cursor: pointer;
+        }
+
+        /* Expander destacat — només quan el container pare té key
+           "highlight_expander_*" (helper highlight_expander() a style.py).
+           Subratllat groc al header per indicar contingut addicional rellevant. */
+        [class*="st-key-highlight_expander_"] [data-testid="stExpander"] summary,
+        [data-testid^="stVerticalBlock"] [class*="st-key-highlight_expander_"] summary,
+        .st-key-highlight_expander summary,
+        div[class*="highlight_expander"] [data-testid="stExpander"] summary {
             background: linear-gradient(180deg,
                         transparent 0%, transparent 55%,
                         rgba(245, 216, 0, 0.45) 55%, rgba(245, 216, 0, 0.45) 92%,
                         transparent 92%) !important;
+            font-size: 1rem !important;
             padding: 10px 8px !important;
-            cursor: pointer;
             transition: background 0.15s ease;
         }
-        [data-testid="stExpander"] summary:hover,
-        .streamlit-expanderHeader:hover,
-        details > summary[role="button"]:hover {
+        [class*="st-key-highlight_expander_"] [data-testid="stExpander"] summary:hover,
+        div[class*="highlight_expander"] [data-testid="stExpander"] summary:hover {
             background: linear-gradient(180deg,
                         transparent 0%, transparent 30%,
                         #f5d800 30%, #f5d800 95%,
@@ -705,23 +716,25 @@ def inject_css():
             margin: 8px 0 16px 0 !important;
         }
         /* Cos del contingut expandit — alinea al marge esquerre, sense
-           indentació tipus 'caixa'. El contingut surt rasant amb el marge
-           de la pàgina, no encaixat dins d'un quadre. */
+           indentació tipus 'caixa'. Cobertura agressiva de tots els wrappers
+           interns que Streamlit pot afegir entre details/summary i el contingut. */
         [data-testid="stExpanderDetails"],
         [data-testid="stExpander"] [data-testid="stExpanderDetails"],
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] > div,
+        [data-testid="stExpander"] [data-testid="stExpanderDetails"] > div > div,
         [data-testid="stExpander"] [data-testid="stExpanderDetails"] .stMarkdown,
-        [data-testid="stExpander"] details > div:not(summary) {
-            padding: 12px 0 16px 0 !important;
+        [data-testid="stExpander"] [data-testid="stExpanderDetails"] .stVerticalBlock,
+        [data-testid="stExpander"] [data-testid="stExpanderDetails"] [data-testid="stVerticalBlock"],
+        [data-testid="stExpander"] details > div:not(summary),
+        [data-testid="stExpander"] details > div > div {
             padding-left: 0 !important;
             padding-right: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
         }
-        /* Streamlit a vegades indenta el body amb un wrapper intern */
-        [data-testid="stExpander"] [data-testid="stExpanderDetails"] > div > div {
-            padding-left: 0 !important;
-            margin-left: 0 !important;
+        [data-testid="stExpanderDetails"] {
+            padding-top: 8px !important;
+            padding-bottom: 12px !important;
         }
         /* Eliminar markers natius del details (carret arrodonit del browser) */
         [data-testid="stExpander"] summary::-webkit-details-marker,

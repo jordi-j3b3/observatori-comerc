@@ -126,9 +126,43 @@ pg = st.navigation(nav)
 with st.sidebar:
     st.divider()
 
-    # Nota: el butlletí ja apareix a la home i a la pàgina Pulso amb el
-    # formulari complet. No s'embed al sidebar perquè el form de MailerLite
-    # forçava una caixa blanca al sidebar blau i feia mal a l'estètica.
+    # Butlletí: CTA tipogràfic dins el sidebar (sense embed MailerLite,
+    # que forçava una caixa blanca lletja sobre el blau marí). El form
+    # complet segueix a la home i a la pàgina Pulso.
+    _nl_eyebrow = "Butlletí" if _ca else "Boletín"
+    _nl_title = "Rep El Pulso cada dilluns" if _ca else "Recibe El Pulso cada lunes"
+    _nl_desc = ("El Pulso setmanal + resum trimestral al teu correu. "
+                "Subscriu-te des de la pàgina d'inici."
+                if _ca else
+                "El Pulso semanal + resumen trimestral en tu correo. "
+                "Suscríbete desde la página de inicio.")
+    st.markdown(
+        f"""
+        <div style="font-family:'Inter',sans-serif; padding:0 4px; color:#ffffff;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.78rem;
+                        font-weight:700; text-transform:uppercase; color:#ffffff;
+                        opacity:0.7; margin-bottom:10px;">
+                {_nl_eyebrow}
+            </div>
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:1.05rem;
+                        font-weight:700; color:#ffffff; margin-bottom:8px;
+                        line-height:1.2;
+                        background: linear-gradient(180deg, transparent 0%, transparent 60%,
+                                    rgba(245, 216, 0, 0.55) 60%, rgba(245, 216, 0, 0.55) 92%,
+                                    transparent 92%);
+                        display: inline;">
+                {_nl_title}
+            </div>
+            <div style="font-size:12px; line-height:1.55; color:#ffffff; opacity:0.85;
+                        margin: 10px 0 0 0;">
+                {_nl_desc}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
 
     # Secció Recursos (peu del sidebar)
     _lbl_recursos = "Recursos" if _ca else "Recursos"
