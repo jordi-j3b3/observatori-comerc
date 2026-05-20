@@ -73,7 +73,7 @@ if not df_esp.empty and len(df_esp) > 1:
 
 # ─── Gràfic 1: Evolució Espanya ──────────────────────────────
 
-st.subheader(t("emp_evolution"))
+st.header("1. " + t("emp_evolution"))
 
 fig = go.Figure()
 if not df_esp.empty:
@@ -92,7 +92,7 @@ source("INE, Directori Central d'Empreses (DIRCE)" if _ca
 
 # ─── Gràfic 2: Taxa variació anual ──────────────────────────
 
-st.subheader(t("emp_destruction"))
+st.header("2. " + t("emp_destruction"))
 
 if len(df_esp) > 1:
     df_esp["var_pct"] = df_esp["empreses"].pct_change() * 100
@@ -141,55 +141,56 @@ if not df_esp.empty and len(df_esp) > 1:
         )
     insight(txt)
 
-# ─── Densitat comercial: empreses / 1.000 habitants ──────────
+# ─── Densitat comercial: empreses / 1.000 habitants (secundari) ──
 
 if "empreses_per_1000hab" in df_esp.columns:
-    st.subheader("Densitat comercial (empreses per 1.000 habitants)" if _ca
-                 else "Densidad comercial (empresas por 1.000 habitantes)")
+    _lbl_dens_exp = ("Veure densitat comercial (empreses / 1.000 hab.)"
+                     if _ca else
+                     "Ver densidad comercial (empresas / 1.000 hab.)")
+    with st.expander(_lbl_dens_exp, expanded=False):
+        df_dens = df_esp.dropna(subset=["empreses_per_1000hab"])
+        fig_dens = go.Figure()
+        fig_dens.add_trace(go.Scatter(
+            x=df_dens["any"], y=df_dens["empreses_per_1000hab"],
+            mode="lines+markers",
+            line=dict(color=PURPLE, width=2.5),
+            marker=dict(size=6),
+            fill="tozeroy", fillcolor="rgba(93,79,255,0.08)",
+            text=[f"{v:.2f}".replace(".", ",") for v in df_dens["empreses_per_1000hab"]],
+            hovertemplate="%{x}: %{text} emp/1.000 hab<extra></extra>",
+        ))
+        apply_layout(fig_dens,
+            yaxis_title=("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab."),
+            height=400,
+        )
+        st.plotly_chart(fig_dens, use_container_width=True)
+        source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
+               else "INE, DIRCE y Padrón Municipal. Cálculo propio")
 
-    df_dens = df_esp.dropna(subset=["empreses_per_1000hab"])
-    fig_dens = go.Figure()
-    fig_dens.add_trace(go.Scatter(
-        x=df_dens["any"], y=df_dens["empreses_per_1000hab"],
-        mode="lines+markers",
-        line=dict(color=PURPLE, width=2.5),
-        marker=dict(size=6),
-        fill="tozeroy", fillcolor="rgba(93,79,255,0.08)",
-        text=[f"{v:.2f}".replace(".", ",") for v in df_dens["empreses_per_1000hab"]],
-        hovertemplate="%{x}: %{text} emp/1.000 hab<extra></extra>",
-    ))
-    apply_layout(fig_dens,
-        yaxis_title=("Empreses / 1.000 hab." if _ca else "Empresas / 1.000 hab."),
-        height=400,
-    )
-    st.plotly_chart(fig_dens, use_container_width=True)
-    source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
-           else "INE, DIRCE y Padrón Municipal. Cálculo propio")
-
-    if len(df_dens) > 1:
-        d_first = df_dens.iloc[0]["empreses_per_1000hab"]
-        d_last = df_dens.iloc[-1]["empreses_per_1000hab"]
-        var_dens = ((d_last / d_first) - 1) * 100
-        if _ca:
-            insight(
-                f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
-                f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
-                f"una caiguda del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
-                f"Això reflecteix un doble efecte: la destrucció d'empreses i el creixement de la població, "
-                f"que junts redueixen la proximitat del comerç al ciutadà. "
-                f"La pèrdua de densitat comercial impacta especialment en àrees rurals i barris perifèrics, "
-                f"on el comerç de proximitat té un paper social més enllà del purament econòmic."
-            )
-        else:
-            insight(
-                f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
-                f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
-                f"una caída del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
-                f"Esto refleja un doble efecto: la destrucción de empresas y el crecimiento de la población, "
-                f"que juntos reducen la proximidad del comercio al ciudadano. "
-                f"La pérdida de densidad comercial impacta especialmente en áreas rurales y barrios periféricos, "
-                f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
-            )
+        if len(df_dens) > 1:
+            d_first = df_dens.iloc[0]["empreses_per_1000hab"]
+            d_last = df_dens.iloc[-1]["empreses_per_1000hab"]
+            var_dens = ((d_last / d_first) - 1) * 100
+            if _ca:
+                insight(
+                    f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
+                    f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                    f"una caiguda del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
+                    f"Això reflecteix un doble efecte: la destrucció d'empreses i el creixement de la població, "
+                    f"que junts redueixen la proximitat del comerç al ciutadà. "
+                    f"La pèrdua de densitat comercial impacta especialment en àrees rurals i barris perifèrics, "
+                    f"on el comerç de proximitat té un paper social més enllà del purament econòmic."
+                )
+            else:
+                insight(
+                    f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
+                    f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                    f"una caída del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
+                    f"Esto refleja un doble efecto: la destrucción de empresas y el crecimiento de la población, "
+                    f"que juntos reducen la proximidad del comercio al ciudadano. "
+                    f"La pérdida de densidad comercial impacta especialmente en áreas rurales y barrios periféricos, "
+                    f"donde el comercio de proximidad tiene un papel social más allá de lo puramente económico."
+                )
 
 # ─── GeoJSON (compartit per mapa DIRCE i mapa EEE) ──────────
 
@@ -204,7 +205,7 @@ geojson = load_geojson()
 # ─── Mapa interactiu CCAA ──────────��─────────────────────────
 
 st.markdown("---")
-st.subheader(t("emp_ccaa_title"))
+st.header("3. " + t("emp_ccaa_title"))
 
 if not df_ccaa.empty:
     any_sel = st.select_slider(
@@ -359,58 +360,64 @@ if not df_ccaa.empty:
                 source("INE, DIRCE i Padrón Municipal. Càlcul propi" if _ca
                        else "INE, DIRCE y Padrón Municipal. Cálculo propio")
 
-    # Variació acumulada per CCAA (fora dels tabs)
-    first_year = df_ccaa["any"].min()
-    last_year = df_ccaa["any"].max()
-    df_first = df_ccaa[df_ccaa["any"] == first_year][["territori", "empreses"]].rename(columns={"empreses": "emp_first"})
-    df_last = df_ccaa[df_ccaa["any"] == last_year][["territori", "empreses"]].rename(columns={"empreses": "emp_last"})
-    df_var_ccaa = df_first.merge(df_last, on="territori")
-    df_var_ccaa["var_pct"] = ((df_var_ccaa["emp_last"] / df_var_ccaa["emp_first"]) - 1) * 100
-    df_var_ccaa = df_var_ccaa.sort_values("var_pct", ascending=True)
+    # Anàlisi addicional per CCAA (variació acumulada + evolució per CCAA)
+    # dins un sol expander secundari per no sobrecarregar la pàgina.
+    _lbl_ccaa_exp = ("Veure anàlisi addicional per CCAA"
+                     if _ca else
+                     "Ver análisis adicional por CCAA")
+    with st.expander(_lbl_ccaa_exp, expanded=False):
+        # Variació acumulada per CCAA
+        first_year = df_ccaa["any"].min()
+        last_year = df_ccaa["any"].max()
+        df_first = df_ccaa[df_ccaa["any"] == first_year][["territori", "empreses"]].rename(columns={"empreses": "emp_first"})
+        df_last = df_ccaa[df_ccaa["any"] == last_year][["territori", "empreses"]].rename(columns={"empreses": "emp_last"})
+        df_var_ccaa = df_first.merge(df_last, on="territori")
+        df_var_ccaa["var_pct"] = ((df_var_ccaa["emp_last"] / df_var_ccaa["emp_first"]) - 1) * 100
+        df_var_ccaa = df_var_ccaa.sort_values("var_pct", ascending=True)
 
-    st.subheader(f"{'Variació acumulada' if _ca else 'Variación acumulada'} {int(first_year)}-{int(last_year)} "
-                 f"{'per CCAA' if _ca else 'por CCAA'}")
+        st.subheader(f"{'Variació acumulada' if _ca else 'Variación acumulada'} {int(first_year)}-{int(last_year)} "
+                     f"{'per CCAA' if _ca else 'por CCAA'}")
 
-    fig_var = go.Figure()
-    colors_var = [GREEN if v >= 0 else RED for v in df_var_ccaa["var_pct"]]
-    fig_var.add_trace(go.Bar(
-        y=df_var_ccaa["territori"], x=df_var_ccaa["var_pct"],
-        orientation="h",
-        marker_color=colors_var,
-        text=[fpct(v) for v in df_var_ccaa["var_pct"]],
-        textposition="outside",
-        textfont=dict(size=11),
-    ))
-    apply_layout(fig_var,
-        xaxis_title=("Variació acumulada (%)" if _ca else "Variación acumulada (%)"),
-        height=max(450, len(df_var_ccaa) * 32 + 100),
-        margin=dict(l=200, r=80, t=40, b=50),
-    )
-    fig_var.add_vline(x=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
-    st.plotly_chart(fig_var, use_container_width=True)
-    source("INE, DIRCE. Càlcul propi" if _ca else "INE, DIRCE. Cálculo propio")
+        fig_var = go.Figure()
+        colors_var = [GREEN if v >= 0 else RED for v in df_var_ccaa["var_pct"]]
+        fig_var.add_trace(go.Bar(
+            y=df_var_ccaa["territori"], x=df_var_ccaa["var_pct"],
+            orientation="h",
+            marker_color=colors_var,
+            text=[fpct(v) for v in df_var_ccaa["var_pct"]],
+            textposition="outside",
+            textfont=dict(size=11),
+        ))
+        apply_layout(fig_var,
+            xaxis_title=("Variació acumulada (%)" if _ca else "Variación acumulada (%)"),
+            height=max(450, len(df_var_ccaa) * 32 + 100),
+            margin=dict(l=200, r=80, t=40, b=50),
+        )
+        fig_var.add_vline(x=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
+        st.plotly_chart(fig_var, use_container_width=True)
+        source("INE, DIRCE. Càlcul propi" if _ca else "INE, DIRCE. Cálculo propio")
 
-    # Evolució temporal per CCAA seleccionades
-    st.subheader(t("emp_ccaa_evolution"))
+        # Evolució temporal per CCAA seleccionades
+        st.subheader(t("emp_ccaa_evolution"))
 
-    default_ccaa = [c for c in ["Cataluña", "Madrid (Comunidad de)", "Andalucía",
-                                "Comunitat Valenciana"] if c in ccaa_names]
-    sel_ccaa = st.multiselect(t("emp_ccaa_select"), sorted(ccaa_names), default=default_ccaa)
+        default_ccaa = [c for c in ["Cataluña", "Madrid (Comunidad de)", "Andalucía",
+                                    "Comunitat Valenciana"] if c in ccaa_names]
+        sel_ccaa = st.multiselect(t("emp_ccaa_select"), sorted(ccaa_names), default=default_ccaa)
 
-    if sel_ccaa:
-        fig4 = go.Figure()
-        for i, ccaa in enumerate(sel_ccaa):
-            df_c = df_ccaa[df_ccaa["territori"] == ccaa].sort_values("any")
-            fig4.add_trace(go.Scatter(
-                x=df_c["any"], y=df_c["empreses"],
-                mode="lines+markers", name=ccaa,
-                line=dict(color=PALETTE[i % len(PALETTE)], width=2.5),
-                marker=dict(size=5),
-            ))
+        if sel_ccaa:
+            fig4 = go.Figure()
+            for i, ccaa in enumerate(sel_ccaa):
+                df_c = df_ccaa[df_ccaa["territori"] == ccaa].sort_values("any")
+                fig4.add_trace(go.Scatter(
+                    x=df_c["any"], y=df_c["empreses"],
+                    mode="lines+markers", name=ccaa,
+                    line=dict(color=PALETTE[i % len(PALETTE)], width=2.5),
+                    marker=dict(size=5),
+                ))
 
-        apply_layout(fig4, yaxis_title=t("emp_count"), height=450)
-        st.plotly_chart(fig4, use_container_width=True)
-        source("INE, DIRCE")
+            apply_layout(fig4, yaxis_title=t("emp_count"), height=450)
+            st.plotly_chart(fig4, use_container_width=True)
+            source("INE, DIRCE")
 else:
     st.info("No hi ha dades de CCAA disponibles." if _ca
             else "No hay datos de CCAA disponibles.")
