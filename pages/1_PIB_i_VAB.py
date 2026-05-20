@@ -7,7 +7,7 @@ import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout,
+                   fnum, fpct, cagr, apply_layout, highlight_expander,
                    PURPLE, PURPLE_LIGHT, RED, BLUE, PALETTE)
 
 inject_css()
@@ -236,34 +236,38 @@ if "pes_cnae47" in df.columns:
            if st.session_state.lang == "ca" else
            "INE, Contabilidad Nacional. Cálculo propio")
 
-# ─── Gràfic 3: Variació anual ─────────────────────────────────
+_lbl_var_exp = ("Veure variació anual nominal i real"
+                if st.session_state.lang == "ca" else
+                "Ver variación anual nominal y real")
+with highlight_expander(_lbl_var_exp, expanded=False):
+    # ─── Gràfic 3: Variació anual ─────────────────────────────────
 
-var_cols = [c for c in df.columns if c.startswith("var_")]
-if var_cols:
-    st.subheader(t("pib_annual_var"))
+    var_cols = [c for c in df.columns if c.startswith("var_")]
+    if var_cols:
+        st.subheader(t("pib_annual_var"))
 
-    fig3 = go.Figure()
-    colors = {"var_vab_cnae47_corrents": RED, "var_vab_cnae47_constants": BLUE}
-    names = {"var_vab_cnae47_corrents": t("pib_nominal"), "var_vab_cnae47_constants": t("pib_real")}
+        fig3 = go.Figure()
+        colors = {"var_vab_cnae47_corrents": RED, "var_vab_cnae47_constants": BLUE}
+        names = {"var_vab_cnae47_corrents": t("pib_nominal"), "var_vab_cnae47_constants": t("pib_real")}
 
-    for col in var_cols:
-        df_var = df.dropna(subset=[col])
-        fig3.add_trace(go.Bar(
-            x=df_var["any"], y=df_var[col] * 100,
-            name=names.get(col, col),
-            marker_color=colors.get(col, "#999"),
-        ))
+        for col in var_cols:
+            df_var = df.dropna(subset=[col])
+            fig3.add_trace(go.Bar(
+                x=df_var["any"], y=df_var[col] * 100,
+                name=names.get(col, col),
+                marker_color=colors.get(col, "#999"),
+            ))
 
-    apply_layout(fig3,
-        yaxis_title=t("annual_variation") + " (%)",
-        barmode="group",
-        height=400,
-    )
-    fig3.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
-    st.plotly_chart(fig3, use_container_width=True)
-    source("INE, Comptabilitat Nacional. Càlcul propi"
-           if st.session_state.lang == "ca" else
-           "INE, Contabilidad Nacional. Cálculo propio")
+        apply_layout(fig3,
+            yaxis_title=t("annual_variation") + " (%)",
+            barmode="group",
+            height=400,
+        )
+        fig3.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
+        st.plotly_chart(fig3, use_container_width=True)
+        source("INE, Comptabilitat Nacional. Càlcul propi"
+               if st.session_state.lang == "ca" else
+               "INE, Contabilidad Nacional. Cálculo propio")
 
 # ─── VAB nominal vs real per CCAA ─────────────────────────────
 
