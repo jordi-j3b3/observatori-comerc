@@ -1047,6 +1047,103 @@ def fetch_icm():
     return df
 
 
+def fetch_icm_distribucion():
+    """
+    ICM per modo de distribución comercial (INE, base 2021=100).
+    Substitueix la sèrie descatalogada "Índices de grandes superficies" (taula
+    25982 històrica, fin 2023-12) amb el desglossament actual integrat a l'ICM:
+    Empresas unilocalizadas, Pequeñas cadenas, Grandes cadenas, Grandes
+    superficies. Granularitat mensual.
+
+    Taules INE:
+      - 60105 (cifra negoci precios corrents × modo distribución)
+      - 75809 (cifra negoci precios constantes × modo distribución)
+
+    Filtra ambit retail al total ("Comercio al por menor sin Estaciones de
+    Servicio (47 sin 473)") — els subagregats alimentació/resto queden fora.
+
+    Retorna DataFrame amb columnes:
+      - serie_id (nom complet INE)
+      - tipus ("real" / "nominal")
+      - modo ("Empresas unilocalizadas" / "Pequeñas cadenas" / "Grandes cadenas" / "Grandes superficies" / "General")
+      - indicador ("index" / "var_mensual" / "var_anual" / "var_mitjana_acum")
+      - any, mes, data, valor
+    """
+    TABLES = [(60105, "nominal"), (75809, "real")]
+
+    INDICADOR_MAP = {
+        "Índice": "index",
+        "Variación mensual": "var_mensual",
+        "Variación anual": "var_anual",
+        "Variación de la media en lo que va de año": "var_mitjana_acum",
+    }
+    AMBIT_TOTAL = "Comercio al por menor sin Estaciones de Servicio (47 sin 473)"
+    MODOS = {
+        "Empresas unilocalizadas", "Pequeñas cadenas",
+        "Grandes cadenas", "Grandes Superficies", "General",
+    }
+
+    rows = []
+    for tid, tipus in TABLES:
+        data = _fetch_table(tid, nult=120, det=2)
+        if not isinstance(data, list):
+            continue
+        for serie in data:
+            nombre = serie.get("Nombre", "").strip()
+            if not nombre:
+                continue
+            parts = [p.strip() for p in nombre.rstrip(".").split(". ") if p.strip()]
+            # Filtra només l'ambit retail total
+            if AMBIT_TOTAL not in parts:
+                continue
+            # Modo de distribució: el segment que coincideix amb la llista
+            modo = next((p for p in parts if p in MODOS), None)
+            if modo is None:
+                continue
+            # Indicador: l'últim segment que coincideix amb el mapa
+            indicador = None
+            for p in reversed(parts):
+                if p in INDICADOR_MAP:
+                    indicador = INDICADOR_MAP[p]
+                    break
+            if indicador is None:
+                continue
+
+            for obs in serie.get("Data", []):
+                val = obs.get("Valor")
+                if val is None:
+                    continue
+                any_ = obs.get("Anyo")
+                per = obs.get("Periodo") or {}
+                mes = per.get("Mes_inicio")
+                try:
+                    any_int = int(any_)
+                    mes_int = int(mes)
+                    data_str = f"{any_int:04d}-{mes_int:02d}-01"
+                except (TypeError, ValueError):
+                    continue
+                rows.append({
+                    "serie_id": nombre,
+                    "tipus": tipus,
+                    "modo": modo,
+                    "indicador": indicador,
+                    "any": any_int,
+                    "mes": mes_int,
+                    "data": data_str,
+                    "valor": float(val),
+                })
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    df = (df.dropna(subset=["data"])
+            .drop_duplicates(subset=["serie_id", "data", "indicador"])
+            .sort_values(["tipus", "modo", "indicador", "data"])
+            .reset_index(drop=True))
+    return df
+
+
 if __name__ == "__main__":
     print("Testejant API INE...")
 

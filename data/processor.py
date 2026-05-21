@@ -1061,6 +1061,25 @@ def process_icm():
     return df
 
 
+def process_icm_distribucion():
+    """
+    ICM per modo de distribución comercial (INE).
+    Substitueix la taula 25982 descatalogada el 2023 (Antiguos índices de
+    grandes superficies) amb el desglossament actual integrat a l'ICM base
+    2021=100. Modos: Empresas unilocalizadas, Pequeñas cadenas, Grandes
+    cadenas, Grandes Superficies.
+
+    Taules INE: 60105 (nominal) + 75809 (real). Genera icm_distribucion.csv.
+    """
+    print("  Carregant ICM per modo de distribució (60105+75809)...")
+    df = ine.fetch_icm_distribucion()
+    if df.empty:
+        print("  AVIS: cap dada ICM distribució; mantenint cache existent")
+        return load_cache("icm_distribucion")
+    save_cache(df, "icm_distribucion")
+    return df
+
+
 def process_estructura_retail():
     """
     Estructura empresarial CNAE 47 — Eurostat Business Demography (bd_size).
@@ -1159,6 +1178,9 @@ def process_all():
 
     print("\n9b. ICM — Índices de Comercio al por Menor (INE):")
     process_icm()
+
+    print("\n9c. ICM per modo de distribució (Grandes superficies, etc):")
+    process_icm_distribucion()
 
     print("\n10. Estructura empresarial G47 (Eurostat bd_size):")
     process_estructura_retail()

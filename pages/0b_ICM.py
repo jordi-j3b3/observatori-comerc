@@ -14,6 +14,7 @@ import streamlit as st
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source,
                    page_meta, fnum, fpct, apply_layout, highlight_expander,
+                   format_mes_any,
                    PURPLE, RED, GREEN, GRAY_DARK, YELLOW, PALETTE)
 
 inject_css()
@@ -33,7 +34,18 @@ def load_icm():
     return df.dropna(subset=["data"])
 
 
+@st.cache_data(ttl=3600)
+def load_icm_distribucion():
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "icm_distribucion.csv")
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    return df.dropna(subset=["data"])
+
+
 df = load_icm()
+df_distrib = load_icm_distribucion()
 
 st.title("Pols mensual del comerç" if _ca else "Pulso mensual del comercio")
 
@@ -120,7 +132,7 @@ if not _last_real_idx.empty:
     last_data = _last_real_idx.iloc[-1]["data"]
     st.caption(
         ("Darrera dada disponible: " if _ca else "Último dato disponible: ")
-        + last_data.strftime("%B %Y").capitalize()
+        + format_mes_any(last_data, st.session_state.lang)
     )
 
 c1, c2, c3, c4 = st.columns(4)
@@ -181,6 +193,10 @@ else:
     df_serie_real = df_serie_real[df_serie_real["data"] >= "2020-01-01"]
     df_serie_nom = df_serie_nom[df_serie_nom["data"] >= "2020-01-01"]
 
+_lang = st.session_state.lang
+_lbl_real = [format_mes_any(d, _lang) for d in df_serie_real["data"]]
+_lbl_nom = [format_mes_any(d, _lang) for d in df_serie_nom["data"]]
+
 fig_evo = go.Figure()
 fig_evo.add_trace(go.Scatter(
     x=df_serie_real["data"], y=df_serie_real["valor"],
@@ -188,7 +204,8 @@ fig_evo.add_trace(go.Scatter(
     name=("Real (preus constants)" if _ca else "Real (precios constantes)"),
     line=dict(color=PURPLE, width=2.6),
     marker=dict(size=5),
-    hovertemplate="%{x|%b %Y}: <b>%{y:+.1f}%</b><extra></extra>",
+    customdata=_lbl_real,
+    hovertemplate="%{customdata}: <b>%{y:+.1f}%</b><extra></extra>",
 ))
 fig_evo.add_trace(go.Scatter(
     x=df_serie_nom["data"], y=df_serie_nom["valor"],
@@ -196,13 +213,17 @@ fig_evo.add_trace(go.Scatter(
     name=("Nominal (preus corrents)" if _ca else "Nominal (precios corrientes)"),
     line=dict(color=GRAY_DARK, width=2, dash="dot"),
     marker=dict(size=4),
-    hovertemplate="%{x|%b %Y}: <b>%{y:+.1f}%</b><extra></extra>",
+    customdata=_lbl_nom,
+    hovertemplate="%{customdata}: <b>%{y:+.1f}%</b><extra></extra>",
 ))
 fig_evo.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
 apply_layout(fig_evo,
     yaxis_title=("Variació anual (%)" if _ca else "Variación anual (%)"),
     height=420,
 )
+# Format numèric a l'eix X per no dependre del locale del browser (que
+# podria mostrar "Mar 2026" en anglès). Ticks com 03/2026.
+fig_evo.update_xaxes(tickformat="%m/%Y")
 st.plotly_chart(fig_evo, use_container_width=True)
 source("INE, Índices de Comercio al por Menor (ICM). Sense estacions de servei (47 sense 473)"
        if _ca else
@@ -216,7 +237,7 @@ if not df_serie_real.empty and len(df_serie_real) >= 2:
     _signe = "creix" if _last_v > 0 else ("cau" if _last_v < 0 else "s'estabilitza")
     if _ca:
         insight(
-            f"Al <strong>{_last_dt.strftime('%B %Y').capitalize()}</strong>, la cifra de negoci real "
+            f"Al <strong>{format_mes_any(_last_dt, 'ca')}</strong>, la cifra de negoci real "
             f"del comerç al detall espanyol <strong>{_signe} un {abs(_last_v):.1f}%</strong> respecte "
             f"al mateix mes de l'any anterior. En els darrers 12 mesos, la variació anual mitjana s'ha "
             f"situat al <strong>{_avg_12:+.1f}%</strong>. "
@@ -226,7 +247,7 @@ if not df_serie_real.empty and len(df_serie_real) >= 2:
     else:
         _signe_es = "crece" if _last_v > 0 else ("cae" if _last_v < 0 else "se estabiliza")
         insight(
-            f"En <strong>{_last_dt.strftime('%B %Y').capitalize()}</strong>, la cifra de negocio real "
+            f"En <strong>{format_mes_any(_last_dt, 'es')}</strong>, la cifra de negocio real "
             f"del comercio minorista español <strong>{_signe_es} un {abs(_last_v):.1f}%</strong> "
             f"respecto al mismo mes del año anterior. En los últimos 12 meses, la variación anual "
             f"media se ha situado en el <strong>{_avg_12:+.1f}%</strong>. "
@@ -270,9 +291,9 @@ if not df_branca.empty:
         margin=dict(l=240, r=80, t=30, b=50),
     )
     st.plotly_chart(fig_br, use_container_width=True)
-    source(f"INE, ICM. Cifra de negoci a preus constants — {_last_dt.strftime('%B %Y').capitalize()}"
+    source(f"INE, ICM. Cifra de negoci a preus constants — {format_mes_any(_last_dt, 'ca')}"
            if _ca else
-           f"INE, ICM. Cifra de negocio a precios constantes — {_last_dt.strftime('%B %Y').capitalize()}")
+           f"INE, ICM. Cifra de negocio a precios constantes — {format_mes_any(_last_dt, 'es')}")
 
 # ─── 3. Per CCAA ──────────────────────────────────────────────
 
@@ -304,9 +325,137 @@ if not df_ccaa.empty:
         margin=dict(l=200, r=80, t=30, b=50),
     )
     st.plotly_chart(fig_cc, use_container_width=True)
-    source(f"INE, ICM per CCAA. Cifra de negoci a preus constants — {_last_dt.strftime('%B %Y').capitalize()}"
+    source(f"INE, ICM per CCAA. Cifra de negoci a preus constants — {format_mes_any(_last_dt, 'ca')}"
            if _ca else
-           f"INE, ICM por CCAA. Cifra de negocio a precios constantes — {_last_dt.strftime('%B %Y').capitalize()}")
+           f"INE, ICM por CCAA. Cifra de negocio a precios constantes — {format_mes_any(_last_dt, 'es')}")
+
+# ─── 4. Variació per format de venda (modos de distribución) ──
+
+st.header("4. " + ("Variació anual per format de venda" if _ca
+                    else "Variación anual por formato de venta"))
+
+if _ca:
+    st.markdown(
+        "Desglossament de l'ICM per **modo de distribució comercial**: "
+        "*Empreses unilocalitzades* (un sol establiment), *Petites cadenes* "
+        "(2 a 24 botigues), *Grans cadenes* (25 o més) i *Grans superfícies* "
+        "(≥2.500 m² de venda). Substitueix la sèrie històrica IGS, "
+        "descatalogada el desembre de 2023."
+    )
+else:
+    st.markdown(
+        "Desglose del ICM por **modo de distribución comercial**: "
+        "*Empresas unilocalizadas* (un solo establecimiento), *Pequeñas cadenas* "
+        "(2 a 24 tiendas), *Grandes cadenas* (25 o más) y *Grandes Superficies* "
+        "(≥2.500 m² de venta). Sustituye a la serie histórica IGS, "
+        "descatalogada en diciembre de 2023."
+    )
+
+if df_distrib.empty:
+    st.info("Encara no hi ha dades de modos de distribució a la cache."
+            if _ca else
+            "Aún no hay datos de modos de distribución en la caché.")
+else:
+    # Sèrie real (preus constants), variació anual, ordenada per modo
+    _ds = df_distrib[(df_distrib["tipus"] == "real") &
+                     (df_distrib["indicador"] == "var_anual")].copy()
+    _ds = _ds.sort_values("data")
+
+    _modo_lbl_ca = {
+        "Empresas unilocalizadas": "Unilocalitzades",
+        "Pequeñas cadenas": "Petites cadenes",
+        "Grandes cadenas": "Grans cadenes",
+        "Grandes Superficies": "Grans superfícies",
+    }
+    _modo_lbl_es = {
+        "Empresas unilocalizadas": "Unilocalizadas",
+        "Pequeñas cadenas": "Pequeñas cadenas",
+        "Grandes cadenas": "Grandes cadenas",
+        "Grandes Superficies": "Grandes Superficies",
+    }
+    _modo_lbl = _modo_lbl_ca if _ca else _modo_lbl_es
+
+    # Mètriques: última variació anual de cada modo
+    _last_dt_d = _ds["data"].max()
+    _last = _ds[_ds["data"] == _last_dt_d]
+    st.caption(
+        ("Darrera dada disponible: " if _ca else "Último dato disponible: ")
+        + format_mes_any(_last_dt_d, st.session_state.lang)
+    )
+    _cols_m = st.columns(4)
+    _modo_order = ["Empresas unilocalizadas", "Pequeñas cadenas",
+                   "Grandes cadenas", "Grandes Superficies"]
+    for i, m in enumerate(_modo_order):
+        with _cols_m[i]:
+            _row = _last[_last["modo"] == m]
+            if not _row.empty:
+                _v = float(_row.iloc[0]["valor"])
+                st.metric(_modo_lbl[m], fpct(_v, 1))
+            else:
+                st.metric(_modo_lbl[m], "—")
+
+    # Sèrie 36 mesos amb 4 línies
+    _cutoff = _last_dt_d - pd.Timedelta(days=365 * 3)
+    _ds_plot = _ds[_ds["data"] >= _cutoff]
+
+    fig_d = go.Figure()
+    _colors_d = {
+        "Empresas unilocalizadas": GRAY_DARK,
+        "Pequeñas cadenas": GREEN,
+        "Grandes cadenas": PURPLE,
+        "Grandes Superficies": RED,
+    }
+    for m in _modo_order:
+        _serie = _ds_plot[_ds_plot["modo"] == m].sort_values("data")
+        if _serie.empty:
+            continue
+        _lbl_serie = [format_mes_any(d, st.session_state.lang) for d in _serie["data"]]
+        fig_d.add_trace(go.Scatter(
+            x=_serie["data"], y=_serie["valor"],
+            mode="lines+markers",
+            name=_modo_lbl[m],
+            line=dict(color=_colors_d[m], width=2.4),
+            marker=dict(size=4),
+            customdata=_lbl_serie,
+            hovertemplate=f"<b>{_modo_lbl[m]}</b><br>%{{customdata}}: %{{y:+.1f}}%<extra></extra>",
+        ))
+    fig_d.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+    apply_layout(fig_d,
+        yaxis_title=("Variació anual (%)" if _ca else "Variación anual (%)"),
+        height=420,
+    )
+    fig_d.update_xaxes(tickformat="%m/%Y")
+    st.plotly_chart(fig_d, use_container_width=True)
+    source(("INE, ICM per modo de distribució (taula 75809). Preus constants, "
+            "Comerç sense estacions de servei.") if _ca else
+           ("INE, ICM por modo de distribución (tabla 75809). Precios constantes, "
+            "Comercio sin estaciones de servicio."))
+
+    # Insight curt
+    if not _last.empty:
+        _by_modo = {m: float(_last[_last["modo"] == m].iloc[0]["valor"])
+                    for m in _modo_order if not _last[_last["modo"] == m].empty}
+        if len(_by_modo) >= 2:
+            _best = max(_by_modo, key=_by_modo.get)
+            _worst = min(_by_modo, key=_by_modo.get)
+            if _ca:
+                insight(
+                    f"A <strong>{format_mes_any(_last_dt_d, 'ca')}</strong>, "
+                    f"el format que millor evoluciona és <strong>{_modo_lbl[_best]}</strong> "
+                    f"({fpct(_by_modo[_best], 1)}), i el que va més fluix és "
+                    f"<strong>{_modo_lbl[_worst]}</strong> ({fpct(_by_modo[_worst], 1)}). "
+                    f"La bretxa entre formats indica si la concentració del retail accelera "
+                    f"o es modera."
+                )
+            else:
+                insight(
+                    f"En <strong>{format_mes_any(_last_dt_d, 'es')}</strong>, "
+                    f"el formato con mejor evolución es <strong>{_modo_lbl[_best]}</strong> "
+                    f"({fpct(_by_modo[_best], 1)}), y el más flojo es "
+                    f"<strong>{_modo_lbl[_worst]}</strong> ({fpct(_by_modo[_worst], 1)}). "
+                    f"La brecha entre formatos indica si la concentración del retail acelera "
+                    f"o se modera."
+                )
 
 # ─── Expander: evolució ocupació ──────────────────────────────
 
@@ -320,6 +469,7 @@ with highlight_expander(_lbl_ocu_exp, expanded=False):
     else:
         df_ocu_serie = df_ocu_serie[df_ocu_serie["data"] >= "2020-01-01"]
 
+    _lbl_ocu = [format_mes_any(d, st.session_state.lang) for d in df_ocu_serie["data"]]
     fig_ocu = go.Figure()
     fig_ocu.add_trace(go.Scatter(
         x=df_ocu_serie["data"], y=df_ocu_serie["valor"],
@@ -327,13 +477,15 @@ with highlight_expander(_lbl_ocu_exp, expanded=False):
         line=dict(color=PURPLE, width=2.6),
         marker=dict(size=5),
         name="",
-        hovertemplate="%{x|%b %Y}: <b>%{y:+.1f}%</b><extra></extra>",
+        customdata=_lbl_ocu,
+        hovertemplate="%{customdata}: <b>%{y:+.1f}%</b><extra></extra>",
     ))
     fig_ocu.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
     apply_layout(fig_ocu,
         yaxis_title=("Variació anual ocupats (%)" if _ca else "Variación anual ocupados (%)"),
         height=380,
     )
+    fig_ocu.update_xaxes(tickformat="%m/%Y")
     st.plotly_chart(fig_ocu, use_container_width=True)
     source("INE, ICM ocupació mensual" if _ca else "INE, ICM empleo mensual")
 

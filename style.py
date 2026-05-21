@@ -1173,6 +1173,25 @@ def cagr(first_val, last_val, years):
     return ((last_val / first_val) ** (1 / years) - 1) * 100
 
 
+_MESOS_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+             "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+_MESOS_CA = ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny",
+             "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"]
+
+
+def format_mes_any(dt, lang="es"):
+    """Format 'Mes Any' en català o castellà sense dependre del locale del SO.
+
+    strftime('%B %Y') retorna mesos en anglès si el locale no està configurat
+    (típic en GitHub Actions / Streamlit Cloud). Aquesta funció força la
+    traducció amb un diccionari estàtic.
+    """
+    if dt is None:
+        return ""
+    mes = _MESOS_CA[dt.month - 1] if lang == "ca" else _MESOS_ES[dt.month - 1]
+    return f"{mes} {dt.year}"
+
+
 def page_meta(sources, lang="es"):
     """Footer global de cada pàgina: branding, recursos, contacte i meta info.
 
