@@ -59,7 +59,7 @@
     "eee_ccaa_metric": "Magnitud",
     "eee_ccaa_vab_pc": "VAB per càpita (estimat)",
     "eee_ccaa_prod": "Productivitat per ocupat",
-    "eee_ccaa_sal_med": "Salari mitjà per ocupat",
+    "eee_ccaa_sal_med": "Salari mitjà del comerç al detall (CNAE 47) per CCAA",
 
     "ocu_title": "Ocupació (CNAE 47)",
     "ocu_evolution": "Evolució dels ocupats",
@@ -156,7 +156,7 @@
     "eee_ccaa_metric": "Magnitud",
     "eee_ccaa_vab_pc": "VAB per cápita (estimado)",
     "eee_ccaa_prod": "Productividad por ocupado",
-    "eee_ccaa_sal_med": "Salario medio por ocupado",
+    "eee_ccaa_sal_med": "Salario medio del comercio minorista (CNAE 47) por CCAA",
 
     "ocu_title": "Empleo (CNAE 47)",
     "ocu_evolution": "Evolución de los ocupados",

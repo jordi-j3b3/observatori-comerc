@@ -1047,6 +1047,60 @@ def fetch_icm():
     return df
 
 
+def fetch_eaes():
+    """
+    EAES — Encuesta Anual de Estructura Salarial (INE, taula 28185).
+    Salari brut anual mitjà per treballador a jornada equivalent. Cobreix
+    industria + construcció + serveis (excloent ocupadors domèstics i
+    organismes extraterritorials). Granularitat anual, 19 seccions CNAE.
+
+    Filtra només:
+      - Sexe: Total (no homes/dones)
+      - Àmbit: Total Nacional
+      - Indicador: Salario medio bruto (no percentiles)
+
+    Retorna DataFrame amb columnes: sector, any, valor.
+
+    Per comparativa amb sector G47 (calculat amb EEE), tenir en compte:
+    EAES dóna xifra més alta perquè és jornada equivalent; EEE divideix
+    massa salarial entre tots els ocupats (incloent parcials). A més,
+    l'EAES només té el sector G complet (comerç al por mayor+menor+
+    reparación vehicles), no G47 aïllat.
+    """
+    data = _fetch_table(28185, nult=10, det=2)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    rows = []
+    for s in data:
+        nombre = s.get("Nombre", "")
+        if not nombre.startswith("Total. "):
+            continue
+        rest = nombre[len("Total. "):]
+        if "Total Nacional" not in rest or "Salario medio bruto" not in rest:
+            continue
+        sector = rest.split(". Dato base")[0].strip()
+        for obs in s.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            if val is None or any_ is None:
+                continue
+            # L'EAES marca alguns valors com a no fiables amb negatius
+            # (vegeu Industries extractives dones 2023). Els descartem.
+            try:
+                v = float(val)
+            except (TypeError, ValueError):
+                continue
+            if v <= 0:
+                continue
+            rows.append({"sector": sector, "any": int(any_), "valor": v})
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    return df.sort_values(["sector", "any"]).reset_index(drop=True)
+
+
 def fetch_icm_distribucion():
     """
     ICM per modo de distribución comercial (INE, base 2021=100).

@@ -1061,6 +1061,21 @@ def process_icm():
     return df
 
 
+def process_eaes():
+    """
+    EAES — Encuesta Anual de Estructura Salarial (INE T=28185).
+    Salari brut anual mitjà total nacional per sector. Per comparar el
+    sector G (comerç) amb la mitjana de la economia espanyola.
+    """
+    print("  Carregant EAES (taula 28185, salari brut anual per sector)...")
+    df = ine.fetch_eaes()
+    if df.empty:
+        print("  AVIS: cap dada EAES; mantenint cache existent")
+        return load_cache("eaes")
+    save_cache(df, "eaes")
+    return df
+
+
 def process_icm_distribucion():
     """
     ICM per modo de distribución comercial (INE).
@@ -1181,6 +1196,9 @@ def process_all():
 
     print("\n9c. ICM per modo de distribució (Grandes superficies, etc):")
     process_icm_distribucion()
+
+    print("\n9d. EAES — Encuesta Anual de Estructura Salarial:")
+    process_eaes()
 
     print("\n10. Estructura empresarial G47 (Eurostat bd_size):")
     process_estructura_retail()
