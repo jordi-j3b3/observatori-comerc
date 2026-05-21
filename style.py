@@ -830,14 +830,21 @@ def inject_css():
         [data-testid="stSidebar"] button {
             font-family: 'Inter', sans-serif;
         }
+        /* Items de navegació (PIB i VAB, Empreses, etc.) — més discrets
+           que el títol de secció: Inter regular, case normal, mida petita */
         [data-testid="stSidebar"] [data-testid="stSidebarNav"] a span,
         [data-testid="stSidebar"] nav a span,
         [data-testid="stSidebar"] li span {
-            font-family: 'Archivo Narrow', sans-serif;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0;
-            font-size: 0.92rem;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 400 !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            font-size: 0.85rem !important;
+        }
+        /* Item actiu lleugerament més marcat */
+        [data-testid="stSidebar"] [aria-current="page"] span,
+        [data-testid="stSidebar"] nav a[aria-current="page"] span {
+            font-weight: 600 !important;
         }
         [data-testid="stSidebar"] h1,
         [data-testid="stSidebar"] h2,
@@ -848,12 +855,20 @@ def inject_css():
             text-transform: uppercase;
             letter-spacing: 0;
         }
-        /* Capçaleres del nav del sidebar */
+        /* Capçaleres de secció del nav (EDITORIAL, POLS, RADIOGRAFIA, etc.)
+           — clarament destacades vs els items per sota */
         [data-testid="stSidebarNav"] section,
-        [data-testid="stSidebarNav"] header {
+        [data-testid="stSidebarNav"] header,
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] > div > div > span,
+        [data-testid="stSidebar"] [data-testid="stSidebarNavSection"] {
             font-family: 'Archivo Narrow', sans-serif !important;
             font-weight: 700 !important;
-            text-transform: uppercase;
+            text-transform: uppercase !important;
+            font-size: 0.78rem !important;
+            letter-spacing: 1px !important;
+            opacity: 0.85;
+            margin-top: 18px !important;
+            margin-bottom: 6px !important;
         }
         /* Selectbox idioma dins sidebar */
         [data-testid="stSidebar"] .stSelectbox > div > div {
