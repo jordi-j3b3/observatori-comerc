@@ -578,7 +578,7 @@ with tab2:
                 f"<i>{HOVER_LBL_EX}:</i> "
                 "%{customdata[0]}<br>"
                 + ("<b>Xifra de negoci</b>: " if _ca else "<b>Cifra de negocios</b>: ")
-                + "%{x:.2f} k milions €<extra></extra>"
+                + "%{x:.1f} k milions €<extra></extra>"
             ),
         ))
         apply_layout(fig_xn,
@@ -728,7 +728,7 @@ with tab2:
                    f"<strong>{biggest['label']}</strong> facturen "
                    f"<strong>{biggest['xn_per_empresa']/1e6:.1f} M€</strong>".replace(".", ",")
                    + f" de mitjana cada una, mentre que les de <strong>{smallest['label']}</strong> "
-                   f"només facturen {smallest['xn_per_empresa']/1e6:.2f} M€".replace(".", ",")
+                   f"només facturen {smallest['xn_per_empresa']/1e6:.1f} M€".replace(".", ",")
                    + ". Aquesta diferència de més de "
                    f"<strong>{biggest['xn_per_empresa']/smallest['xn_per_empresa']:.0f}× </strong>"
                    f"il·lustra la dualitat estructural del sector: pocs operadors grans en alguns "
@@ -771,7 +771,7 @@ with tab2:
                    f"<strong>{biggest['label']}</strong> facturan "
                    f"<strong>{biggest['xn_per_empresa']/1e6:.1f} M€</strong>".replace(".", ",")
                    + f" de media cada una, mientras que las de <strong>{smallest['label']}</strong> "
-                   f"solo facturan {smallest['xn_per_empresa']/1e6:.2f} M€".replace(".", ",")
+                   f"solo facturan {smallest['xn_per_empresa']/1e6:.1f} M€".replace(".", ",")
                    + ". Esta diferencia de más de "
                    f"<strong>{biggest['xn_per_empresa']/smallest['xn_per_empresa']:.0f}× </strong>"
                    f"ilustra la dualidad estructural del sector: pocos operadores grandes en algunos "

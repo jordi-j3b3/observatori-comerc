@@ -78,11 +78,11 @@ with col3:
     if "pes_cnae47" in df.columns:
         pes = df.dropna(subset=["pes_cnae47"]).iloc[-1]
         lbl_pes = "Pes sobre PIB" if st.session_state.lang == "ca" else "Peso sobre PIB"
-        st.metric(f"{lbl_pes} ({int(pes['any'])})", fpct(pes['pes_cnae47'] * 100, 2, sign=False))
+        st.metric(f"{lbl_pes} ({int(pes['any'])})", fpct(pes['pes_cnae47'] * 100, 1, sign=False))
 with col4:
     if n_years > 0:
         cagr_val = cagr(first["vab_cnae47_corrents"], last["vab_cnae47_corrents"], n_years)
-        st.metric(f"CAGR {any_first}-{any_last}", fpct(cagr_val, 2))
+        st.metric(f"CAGR {any_first}-{any_last}", fpct(cagr_val, 1))
 
 # ─── Gràfic 1: VAB nominal vs real ────────────────────────────
 
@@ -149,9 +149,9 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
             txt = (
                 f"Entre {int(first_r['any'])} i {int(last_r['any'])}, el VAB nominal del comerç al detall "
                 f"<strong>{verb_nom}</strong> un "
-                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
+                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
                 f"i en termes reals la variació {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
-                f"(CAGR {fpct(cagr_real, 2)}). "
+                f"(CAGR {fpct(cagr_real, 1)}). "
             )
             if gap > 10:
                 txt += (
@@ -161,17 +161,17 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
                 )
             posicio_lbl = {
                 "per damunt": (
-                    f"Amb un CAGR real del {fpct(cagr_real, 2)}, el sector creix <strong>per damunt</strong> "
+                    f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per damunt</strong> "
                     f"del PIB general espanyol (~2% real), guanyant pes estructural."
                 ),
                 "per sota": (
-                    f"Amb un CAGR real del {fpct(cagr_real, 2)}, el sector creix <strong>per sota</strong> "
+                    f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per sota</strong> "
                     f"del PIB general espanyol (~2% real), confirmant la <strong>pèrdua "
                     f"estructural de pes</strong> en l'economia. Factors explicatius: "
                     f"concentració empresarial, digitalització i canvi en patrons de consum."
                 ),
                 "amb decreixement absolut respecte": (
-                    f"Amb un CAGR real negatiu del {fpct(cagr_real, 2)}, el sector es contreu en termes "
+                    f"Amb un CAGR real negatiu del {fpct(cagr_real, 1)}, el sector es contreu en termes "
                     f"reals, amb pèrdua estructural de pes accelerada respecte al PIB general."
                 ),
             }
@@ -182,9 +182,9 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
             txt = (
                 f"Entre {int(first_r['any'])} y {int(last_r['any'])}, el VAB nominal del comercio minorista "
                 f"<strong>{verb_nom}</strong> un "
-                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 2)}), "
+                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
                 f"y en términos reales la variación {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
-                f"(CAGR {fpct(cagr_real, 2)}). "
+                f"(CAGR {fpct(cagr_real, 1)}). "
             )
             if gap > 10:
                 txt += (
@@ -194,17 +194,17 @@ if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
                 )
             posicio_lbl_es = {
                 "per damunt": (
-                    f"Con un CAGR real del {fpct(cagr_real, 2)}, el sector crece <strong>por encima</strong> "
+                    f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por encima</strong> "
                     f"del PIB general español (~2% real), ganando peso estructural."
                 ),
                 "per sota": (
-                    f"Con un CAGR real del {fpct(cagr_real, 2)}, el sector crece <strong>por debajo</strong> "
+                    f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por debajo</strong> "
                     f"del PIB general español (~2% real), confirmando la <strong>pérdida "
                     f"estructural de peso</strong> en la economía. Factores explicativos: "
                     f"concentración empresarial, digitalización y cambio en patrones de consumo."
                 ),
                 "amb decreixement absolut respecte": (
-                    f"Con un CAGR real negativo del {fpct(cagr_real, 2)}, el sector se contrae en términos "
+                    f"Con un CAGR real negativo del {fpct(cagr_real, 1)}, el sector se contrae en términos "
                     f"reales, con pérdida estructural de peso acelerada respecto al PIB general."
                 ),
             }
@@ -222,7 +222,7 @@ if "pes_cnae47" in df.columns:
     fig2.add_trace(go.Bar(
         x=df_pes["any"], y=df_pes["pes_cnae47"] * 100,
         marker_color=PURPLE,
-        text=[fpct(v, 2, sign=False) for v in df_pes["pes_cnae47"] * 100],
+        text=[fpct(v, 1, sign=False) for v in df_pes["pes_cnae47"] * 100],
         textposition="outside",
         textfont=dict(size=10),
     ))

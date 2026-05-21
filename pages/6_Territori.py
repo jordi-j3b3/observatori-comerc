@@ -86,7 +86,7 @@ if not d_yr_esp.empty:
     if pd.notna(row.get("pes_cnae47_pib")):
         c1.metric(
             f"{'Pes CNAE 47 / PIB' if _ca else 'Peso CNAE 47 / PIB'} ({int(any_sel)})",
-            fpct(row["pes_cnae47_pib"] * 100, 2, sign=False))
+            fpct(row["pes_cnae47_pib"] * 100, 1, sign=False))
     if "xifra_negoci" in row and pd.notna(row.get("xifra_negoci")):
         c2.metric(t("eee_ccaa_xn") + " (M EUR)", fnum(row["xifra_negoci"] / 1e6))
     if "personal_ocupat" in row and pd.notna(row.get("personal_ocupat")):
@@ -124,7 +124,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             y=d_pes["territori"], x=d_pes["_pct"],
             orientation="h",
             marker_color=colors_pes,
-            text=[fpct(v, 2, sign=False) for v in d_pes["_pct"]],
+            text=[fpct(v, 1, sign=False) for v in d_pes["_pct"]],
             textposition="outside",
             textfont=dict(size=11),
         ))
@@ -132,7 +132,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         if esp_pes is not None:
             fig_pes.add_vline(
                 x=esp_pes, line_dash="dash", line_color=RED, line_width=2,
-                annotation_text=f"{'Espanya' if _ca else 'Espana'}: {fpct(esp_pes, 2, sign=False)}",
+                annotation_text=f"{'Espanya' if _ca else 'Espana'}: {fpct(esp_pes, 1, sign=False)}",
                 annotation_position="top right",
             )
 
@@ -165,13 +165,13 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         _spread = _top1["_pct"] - _bot1["_pct"]
         if _ca:
             _txt_pes = (
-                f"<strong>{_top1['territori']}</strong> lidera amb un {fpct(_top1['_pct'], 2, sign=False)} del seu PIB "
+                f"<strong>{_top1['territori']}</strong> lidera amb un {fpct(_top1['_pct'], 1, sign=False)} del seu PIB "
                 f"dedicat al comerç al detall, gairebé el doble que <strong>{_bot1['territori']}</strong> "
-                f"({fpct(_bot1['_pct'], 2, sign=False)}). "
+                f"({fpct(_bot1['_pct'], 1, sign=False)}). "
             )
             if esp_pes:
                 _txt_pes += (
-                    f"<strong>{len(_above)}</strong> comunitats superen la mitjana nacional ({fpct(esp_pes, 2, sign=False)}) "
+                    f"<strong>{len(_above)}</strong> comunitats superen la mitjana nacional ({fpct(esp_pes, 1, sign=False)}) "
                     f"i <strong>{len(_below)}</strong> queden per sota. "
                 )
             _txt_pes += (
@@ -180,13 +180,13 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             )
         else:
             _txt_pes = (
-                f"<strong>{_top1['territori']}</strong> lidera con un {fpct(_top1['_pct'], 2, sign=False)} de su PIB "
+                f"<strong>{_top1['territori']}</strong> lidera con un {fpct(_top1['_pct'], 1, sign=False)} de su PIB "
                 f"dedicado al comercio minorista, casi el doble que <strong>{_bot1['territori']}</strong> "
-                f"({fpct(_bot1['_pct'], 2, sign=False)}). "
+                f"({fpct(_bot1['_pct'], 1, sign=False)}). "
             )
             if esp_pes:
                 _txt_pes += (
-                    f"<strong>{len(_above)}</strong> comunidades superan la media nacional ({fpct(esp_pes, 2, sign=False)}) "
+                    f"<strong>{len(_above)}</strong> comunidades superan la media nacional ({fpct(esp_pes, 1, sign=False)}) "
                     f"y <strong>{len(_below)}</strong> quedan por debajo. "
                 )
             _txt_pes += (
@@ -214,7 +214,7 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             colorbar=dict(title="% PIB", thickness=15),
             marker=dict(line=dict(width=1.5, color="white")),
             text=d_map["territori"],
-            hovertemplate="<b>%{text}</b><br>Pes CNAE 47: %{z:.2f}%<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>Pes CNAE 47: %{z:.1f}%<extra></extra>",
         ))
         fig_map.update_layout(
             map=dict(

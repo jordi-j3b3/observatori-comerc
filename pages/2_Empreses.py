@@ -69,7 +69,7 @@ if not df_esp.empty and len(df_esp) > 1:
     col1.metric(f"{'Empreses' if _ca else 'Empresas'} ({int(last_esp['any'])})", fnum(last_esp['empreses']))
     col2.metric(f"{'Variació' if _ca else 'Variación'} {int(first_esp['any'])}-{int(last_esp['any'])}", fpct(pct_var))
     col3.metric("Empreses perdudes" if _ca else "Empresas perdidas", fnum(total_var))
-    col4.metric("CAGR", fpct(cagr_val, 2))
+    col4.metric("CAGR", fpct(cagr_val, 1))
 
 # ─── Gràfic 1: Evolució Espanya ──────────────────────────────
 
@@ -138,7 +138,7 @@ if not df_esp.empty and len(df_esp) > 1:
             f"el {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} {diff_lbl}</strong> "
             f"que el {int(first_esp['any'])} ({fpct(pct_var)}). "
             f"El màxim es va registrar el {int(peak['any'])} amb {fnum(peak['empreses'])} empreses. "
-            f"Això suposa una {cagr_lbl} anual mitjana (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
+            f"Això suposa una {cagr_lbl} anual mitjana (CAGR) del <strong>{fpct(cagr_val, 1)}</strong>. "
             f"{tendencia}"
         )
     else:
@@ -159,7 +159,7 @@ if not df_esp.empty and len(df_esp) > 1:
             f"en {int(last_esp['any'])}, <strong>{fnum(abs(total_var))} {diff_lbl}</strong> "
             f"que en {int(first_esp['any'])} ({fpct(pct_var)}). "
             f"El máximo se registró en {int(peak['any'])} con {fnum(peak['empreses'])} empresas. "
-            f"Esto supone una {cagr_lbl} anual media (CAGR) del <strong>{fpct(cagr_val, 2)}</strong>. "
+            f"Esto supone una {cagr_lbl} anual media (CAGR) del <strong>{fpct(cagr_val, 1)}</strong>. "
             f"{tendencia}"
         )
     insight(txt)
@@ -179,7 +179,7 @@ if "empreses_per_1000hab" in df_esp.columns:
             line=dict(color=PURPLE, width=2.5),
             marker=dict(size=6),
             fill="tozeroy", fillcolor="rgba(93,79,255,0.08)",
-            text=[f"{v:.2f}".replace(".", ",") for v in df_dens["empreses_per_1000hab"]],
+            text=[f"{v:.1f}".replace(".", ",") for v in df_dens["empreses_per_1000hab"]],
             hovertemplate="%{x}: %{text} emp/1.000 hab<extra></extra>",
         ))
         apply_layout(fig_dens,
@@ -198,8 +198,8 @@ if "empreses_per_1000hab" in df_esp.columns:
             if _ca:
                 if _dens_baixa:
                     insight(
-                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
-                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 1)} empreses per 1.000 habitants</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 1)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
                         f"una caiguda del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
                         f"Això reflecteix un doble efecte: la destrucció d'empreses i el creixement de la població, "
                         f"que junts redueixen la proximitat del comerç al ciutadà. "
@@ -208,8 +208,8 @@ if "empreses_per_1000hab" in df_esp.columns:
                     )
                 else:
                     insight(
-                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 2)} empreses per 1.000 habitants</strong> "
-                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"La densitat comercial ha passat de <strong>{fnum(d_first, 1)} empreses per 1.000 habitants</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 1)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
                         f"un augment del <strong>{fpct(var_dens, 1, sign=False)}</strong>. "
                         f"L'increment del comerç per habitant pot reflectir l'arribada de nous formats de "
                         f"proximitat, franquícies i e-commerce purs, o bé una estabilització poblacional "
@@ -218,8 +218,8 @@ if "empreses_per_1000hab" in df_esp.columns:
             else:
                 if _dens_baixa:
                     insight(
-                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
-                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 1)} empresas por 1.000 habitantes</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 1)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
                         f"una caída del <strong>{fpct(abs(var_dens), 1, sign=False)}</strong>. "
                         f"Esto refleja un doble efecto: la destrucción de empresas y el crecimiento de la población, "
                         f"que juntos reducen la proximidad del comercio al ciudadano. "
@@ -228,8 +228,8 @@ if "empreses_per_1000hab" in df_esp.columns:
                     )
                 else:
                     insight(
-                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 2)} empresas por 1.000 habitantes</strong> "
-                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 2)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
+                        f"La densidad comercial ha pasado de <strong>{fnum(d_first, 1)} empresas por 1.000 habitantes</strong> "
+                        f"({int(df_dens.iloc[0]['any'])}) a <strong>{fnum(d_last, 1)}</strong> ({int(df_dens.iloc[-1]['any'])}), "
                         f"un aumento del <strong>{fpct(var_dens, 1, sign=False)}</strong>. "
                         f"El incremento del comercio por habitante puede reflejar la llegada de nuevos "
                         f"formatos de proximidad, franquicias y e-commerce puros, o bien una estabilización "

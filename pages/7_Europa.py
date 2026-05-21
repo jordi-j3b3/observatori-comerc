@@ -331,13 +331,13 @@ if not es_data.empty and "pes_cnae47" in es_data.columns:
 
     es_pes = es_data.iloc[0]["pes_cnae47"] * 100
     lbl_pes = "Pes CNAE 47 Espanya" if _ca else "Peso CNAE 47 España"
-    col1.metric(f"{lbl_pes} ({int(any_sel)})", fpct(es_pes, 2, sign=False))
+    col1.metric(f"{lbl_pes} ({int(any_sel)})", fpct(es_pes, 1, sign=False))
 
     if not eu_data.empty:
         eu_pes = eu_data.iloc[0]["pes_cnae47"] * 100
         diff = es_pes - eu_pes
         col2.metric("Mitjana UE-27" if _ca else "Media UE-27",
-                    fpct(eu_pes, 2, sign=False), f"{fpct(diff, 2)} vs UE")
+                    fpct(eu_pes, 1, sign=False), f"{fpct(diff, 1)} vs UE")
 
     if not df_countries.empty:
         ranking = df_countries.dropna(subset=["pes_cnae47"]).sort_values("pes_cnae47", ascending=False)
@@ -360,7 +360,7 @@ if "pes_cnae47" in df_year.columns:
         y=df_sorted["pais"], x=df_sorted["pes_cnae47"] * 100,
         orientation="h",
         marker_color=colors,
-        text=[fpct(v, 2, sign=False) for v in df_sorted["pes_cnae47"] * 100],
+        text=[fpct(v, 1, sign=False) for v in df_sorted["pes_cnae47"] * 100],
         textposition="outside",
         textfont=dict(size=11),
     ))
@@ -445,11 +445,11 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
 
         if _ca:
             txt = (
-                f"Espanya destina un <strong>{fpct(es_pes, 2, sign=False)}</strong> del seu PIB al comerç al detall, "
+                f"Espanya destina un <strong>{fpct(es_pes, 1, sign=False)}</strong> del seu PIB al comerç al detall, "
             )
             if es_pes > eu_pes:
                 txt += (
-                    f"<strong>{fpct(es_pes - eu_pes, 2)} per sobre</strong> de la mitjana europea ({fpct(eu_pes, 2, sign=False)}). "
+                    f"<strong>{fpct(es_pes - eu_pes, 1)} per sobre</strong> de la mitjana europea ({fpct(eu_pes, 1, sign=False)}). "
                     "Això pot reflectir una estructura econòmica amb més pes del consum final "
                     "i una menor industrialització relativa comparada amb països com Alemanya. "
                     "El pes superior també s'explica per la importància del turisme, que impulsa "
@@ -457,10 +457,10 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
                 )
             else:
                 txt += (
-                    f"<strong>{fpct(eu_pes - es_pes, 2)} per sota</strong> de la mitjana europea ({fpct(eu_pes, 2, sign=False)}). "
+                    f"<strong>{fpct(eu_pes - es_pes, 1)} per sota</strong> de la mitjana europea ({fpct(eu_pes, 1, sign=False)}). "
                 )
             txt += (
-                f"La tendència mostra una variació de <strong>{fpct(es_trend, 2)}</strong> des de "
+                f"La tendència mostra una variació de <strong>{fpct(es_trend, 1)}</strong> des de "
                 f"{int(es_hist.iloc[0]['any'])}. "
             )
             if es_trend < -0.2:
@@ -470,11 +470,11 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
                 )
         else:
             txt = (
-                f"España destina un <strong>{fpct(es_pes, 2, sign=False)}</strong> de su PIB al comercio minorista, "
+                f"España destina un <strong>{fpct(es_pes, 1, sign=False)}</strong> de su PIB al comercio minorista, "
             )
             if es_pes > eu_pes:
                 txt += (
-                    f"<strong>{fpct(es_pes - eu_pes, 2)} por encima</strong> de la media europea ({fpct(eu_pes, 2, sign=False)}). "
+                    f"<strong>{fpct(es_pes - eu_pes, 1)} por encima</strong> de la media europea ({fpct(eu_pes, 1, sign=False)}). "
                     "Esto puede reflejar una estructura económica con más peso del consumo final "
                     "y una menor industrialización relativa comparada con países como Alemania. "
                     "El peso superior también se explica por la importancia del turismo, que impulsa "
@@ -482,10 +482,10 @@ if not es_data.empty and not eu_data.empty and "pes_cnae47" in es_data.columns:
                 )
             else:
                 txt += (
-                    f"<strong>{fpct(eu_pes - es_pes, 2)} por debajo</strong> de la media europea ({fpct(eu_pes, 2, sign=False)}). "
+                    f"<strong>{fpct(eu_pes - es_pes, 1)} por debajo</strong> de la media europea ({fpct(eu_pes, 1, sign=False)}). "
                 )
             txt += (
-                f"La tendencia muestra una variación de <strong>{fpct(es_trend, 2)}</strong> desde "
+                f"La tendencia muestra una variación de <strong>{fpct(es_trend, 1)}</strong> desde "
                 f"{int(es_hist.iloc[0]['any'])}. "
             )
             if es_trend < -0.2:

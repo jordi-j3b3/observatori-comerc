@@ -369,12 +369,12 @@ if not df_pib.empty and "vab_cnae47_corrents" in df_pib.columns and "vab_cnae47_
         if _ca:
             _conclusions.append(
                 f"El VAB nominal del CNAE 47 es de <strong>{fnum(_pib_last['vab_cnae47_corrents'])} M EUR</strong> ({_pib_yr}), "
-                f"amb un creixement real anualitzat (CAGR) del <strong>{fpct(_cagr_real, 2)}</strong> des de {int(_pib_first['any'])}."
+                f"amb un creixement real anualitzat (CAGR) del <strong>{fpct(_cagr_real, 1)}</strong> des de {int(_pib_first['any'])}."
             )
         else:
             _conclusions.append(
                 f"El VAB nominal del CNAE 47 es de <strong>{fnum(_pib_last['vab_cnae47_corrents'])} M EUR</strong> ({_pib_yr}), "
-                f"con un crecimiento real anualizado (CAGR) del <strong>{fpct(_cagr_real, 2)}</strong> desde {int(_pib_first['any'])}."
+                f"con un crecimiento real anualizado (CAGR) del <strong>{fpct(_cagr_real, 1)}</strong> desde {int(_pib_first['any'])}."
             )
 
 # 2. Empreses
@@ -446,14 +446,14 @@ if not df_europa.empty and "pes_cnae47" in df_europa.columns:
         if _ca:
             _pos = "per sobre" if _diff > 0 else "per sota"
             _conclusions.append(
-                f"Espanya destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> del seu PIB al comerç al detall, "
-                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+                f"Espanya destina un <strong>{fpct(_es_pct, 1, sign=False)}</strong> del seu PIB al comerç al detall, "
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la mitjana UE-27 ({fpct(_eu_pct, 1, sign=False)})."
             )
         else:
             _pos = "por encima" if _diff > 0 else "por debajo"
             _conclusions.append(
-                f"Espana destina un <strong>{fpct(_es_pct, 2, sign=False)}</strong> de su PIB al comercio minorista, "
-                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la media UE-27 ({fpct(_eu_pct, 2, sign=False)})."
+                f"Espana destina un <strong>{fpct(_es_pct, 1, sign=False)}</strong> de su PIB al comercio minorista, "
+                f"<strong>{fpct(abs(_diff), 2, sign=False)} {_pos}</strong> de la media UE-27 ({fpct(_eu_pct, 1, sign=False)})."
             )
 
 # 6. Territori

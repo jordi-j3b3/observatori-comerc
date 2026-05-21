@@ -110,29 +110,29 @@ with tab1:
 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric(f"{_lbl_va_short} ({any_last})",
-                    f"{fnum(last['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
+                    f"{fnum(last['productivitat_va_hora'], 1)} {t('prod_eur_h')}")
         col2.metric(f"{_lbl_va_short} ({any_first})",
-                    f"{fnum(first['productivitat_va_hora'], 2)} {t('prod_eur_h')}")
+                    f"{fnum(first['productivitat_va_hora'], 1)} {t('prod_eur_h')}")
         col3.metric(f"{'Variació' if _ca else 'Variación'} {any_first}–{any_last}",
                     fpct(var))
         with col4:
-            st.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 2))
+            st.metric(f"CAGR {any_first}–{any_last}", fpct(cagr_prod, 1))
             with st.popover("Què és el CAGR?" if _ca else "¿Qué es el CAGR?"):
                 if _ca:
                     st.markdown(
                         f"**CAGR** (*Compound Annual Growth Rate*) és la taxa de creixement anual compost.\n\n"
                         f"Indica quant ha crescut la productivitat **cada any de mitjana** si el creixement "
                         f"hagués estat constant entre {any_first} i {any_last} ({n_anys} anys).\n\n"
-                        f"Un CAGR del **{fpct(cagr_prod, 2)}** vol dir que, de mitjana, la productivitat "
-                        f"ha augmentat un {fpct(cagr_prod, 2)} cada any durant aquest període."
+                        f"Un CAGR del **{fpct(cagr_prod, 1)}** vol dir que, de mitjana, la productivitat "
+                        f"ha augmentat un {fpct(cagr_prod, 1)} cada any durant aquest període."
                     )
                 else:
                     st.markdown(
                         f"**CAGR** (*Compound Annual Growth Rate*) es la tasa de crecimiento anual compuesto.\n\n"
                         f"Indica cuánto ha crecido la productividad **cada año de media** si el crecimiento "
                         f"hubiese sido constante entre {any_first} y {any_last} ({n_anys} años).\n\n"
-                        f"Un CAGR del **{fpct(cagr_prod, 2)}** significa que, de media, la productividad "
-                        f"ha aumentado un {fpct(cagr_prod, 2)} cada año durante este período."
+                        f"Un CAGR del **{fpct(cagr_prod, 1)}** significa que, de media, la productividad "
+                        f"ha aumentado un {fpct(cagr_prod, 1)} cada año durante este período."
                     )
 
     # ─── Gràfic: Índex base 100 ──────────────────────────────────
@@ -592,7 +592,7 @@ with tab3:
                 name=("Marge brut sobre vendes" if _ca else "Margen bruto sobre ventas"),
                 line=dict(color=ORANGE, width=3),
                 marker=dict(size=8),
-                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
+                hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
             ))
         fig_marges.add_trace(go.Scatter(
             x=df_m["any"], y=df_m["marge_vab"],
@@ -600,7 +600,7 @@ with tab3:
             name=("Valor Afegit sobre vendes" if _ca else "Valor Añadido sobre ventas"),
             line=dict(color=PURPLE, width=2.8),
             marker=dict(size=7),
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
+            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
         fig_marges.add_trace(go.Scatter(
             x=df_m["any"], y=df_m["clu"],
@@ -608,7 +608,7 @@ with tab3:
             name=("Cost laboral unitari" if _ca else "Coste laboral unitario"),
             line=dict(color=BLUE, width=2.5, dash="dot"),
             marker=dict(size=6),
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
+            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
         fig_marges.add_trace(go.Scatter(
             x=df_m["any"], y=df_m["marge_op"],
@@ -616,7 +616,7 @@ with tab3:
             name=("Marge operatiu (≈ EBITDA)" if _ca else "Margen operativo (≈ EBITDA)"),
             line=dict(color=GREEN, width=2.8),
             marker=dict(size=7),
-            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.2f}%<extra></extra>",
+            hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
         apply_layout(fig_marges,
             yaxis_title=("% sobre xifra de negoci" if _ca else "% sobre cifra de negocios"),
