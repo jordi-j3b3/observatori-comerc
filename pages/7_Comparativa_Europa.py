@@ -83,7 +83,8 @@ if df_europa.empty and df_mens.empty and df_total.empty:
 # BLOC 1 — POSICIONAMENT ESTRUCTURAL
 # ═══════════════════════════════════════════════════════════════
 st.markdown("---")
-st.header("1. " + ("Posicionament estructural" if _ca else "Posicionamiento estructural"))
+st.header("1. " + ("Pes del comerç al detall sobre el PIB" if _ca
+                   else "Peso del comercio minorista sobre el PIB"))
 
 if not df_europa.empty and "pes_cnae47" in df_europa.columns:
     anys_disp = sorted(df_europa["any"].dropna().unique(), reverse=True)

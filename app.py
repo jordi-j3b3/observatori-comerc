@@ -56,6 +56,10 @@ p_pols = st.Page(
     "pages/0a_Pols_diari.py",
     title=("Pols diari" if _ca else "Pulso diario"),
 )
+p_icm = st.Page(
+    "pages/0b_ICM.py",
+    title=("Pols mensual" if _ca else "Pulso mensual"),
+)
 p_pib = st.Page(
     "pages/1_PIB_i_VAB.py",
     title=("PIB i VAB" if _ca else "PIB y VAB"),
@@ -105,7 +109,7 @@ p_premsa = st.Page(
 nav = {
     SEC_HOME: [p_inici],
     SEC_LECTURAS: [p_lecturas],
-    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
+    SEC_RADIO: [p_icm, p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
     SEC_DETALL: [p_subs, p_terr, p_pols],
     SEC_RECURSOS: [p_metod, p_premsa],
 }

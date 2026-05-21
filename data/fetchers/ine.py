@@ -919,6 +919,134 @@ def fetch_cdmge():
     return df
 
 
+def fetch_icm():
+    """
+    ICM — Índices de Comercio al por Menor (INE, base 2021=100).
+    Sèrie mensual oficial del comerç al detall espanyol.
+
+    Combina 6 taules wstempus:
+      - 60096: cifra negoci preus constants — Total Nacional × branca CNAE
+      - 59787: cifra negoci preus corrents — Total Nacional × especials agregats
+      - 60110: cifra negoci preus corrents — per CCAA × branca general
+      - 60111: cifra negoci preus constants — per CCAA × branca general
+      - 60114: ocupació mensual — Total Nacional × general
+      - 60115: ocupació mensual — Total Nacional × especials agregats
+
+    Retorna DataFrame amb columnes:
+      - serie_id (nom complet INE)
+      - ambit ("nacional" o nom CCAA)
+      - tipus ("real" / "nominal" / "ocupacio")
+      - branca (text descriptiu de la branca CNAE 47)
+      - indicador ("index" / "var_mensual" / "var_anual" / "var_mitjana_acum")
+      - any (int)
+      - mes (int 1-12)
+      - data (pd.Timestamp, primer dia del mes)
+      - valor (float)
+
+    Documentació: https://www.ine.es/dyngs/INEbase/es/operacion.htm?
+                  c=Estadistica_C&cid=1254736176900
+    """
+    ICM_TABLES = [60096, 59787, 60110, 60111, 60114, 60115]
+
+    INDICADOR_MAP = {
+        "Índice": "index",
+        "Variación mensual": "var_mensual",
+        "Variación anual": "var_anual",
+        "Variación de la media en lo que va de año": "var_mitjana_acum",
+    }
+
+    def _classifica_tipus(nom):
+        n = nom.lower()
+        if "ocupación" in n or "ocupacion" in n:
+            return "ocupacio"
+        if "precios constantes" in n:
+            return "real"
+        if "precios corrientes" in n:
+            return "nominal"
+        return "altre"
+
+    def _extreu_indicador(parts):
+        # L'indicador és sempre l'últim segment net abans del punt final
+        for p in reversed(parts):
+            p_clean = p.strip()
+            if p_clean in INDICADOR_MAP:
+                return INDICADOR_MAP[p_clean]
+        return None
+
+    def _extreu_ambit(parts):
+        first = parts[0].strip()
+        if first.startswith("Total Nacional"):
+            return "nacional"
+        return first  # nom CCAA literal
+
+    def _extreu_branca(parts):
+        # La branca és el segment que conté 'Comercio' o un agrupat de codis
+        # CNAE entre parèntesi. Si no en trobem, fallback al penúltim segment.
+        for p in parts[2:-1]:  # Saltem ambit i tipus, deixem fora indicador final
+            p_clean = p.strip()
+            if (p_clean.startswith("Comercio") or
+                    "Alimentación" in p_clean or "Equipo" in p_clean or
+                    "Resto" in p_clean or "Salud" in p_clean):
+                return p_clean
+        return parts[-2].strip() if len(parts) >= 2 else ""
+
+    rows = []
+    for tid in ICM_TABLES:
+        data = _fetch_table(tid, nult=120, det=2)
+        if not isinstance(data, list):
+            continue
+        for serie in data:
+            nombre = serie.get("Nombre", "").strip()
+            if not nombre:
+                continue
+            # El nom acaba amb punt final; partim per ". " preservant cua
+            parts = [p for p in nombre.rstrip(".").split(". ") if p.strip()]
+            if len(parts) < 3:
+                continue
+
+            ambit = _extreu_ambit(parts)
+            tipus = _classifica_tipus(nombre)
+            branca = _extreu_branca(parts)
+            indicador = _extreu_indicador(parts)
+            if indicador is None or tipus == "altre":
+                continue
+
+            for obs in serie.get("Data", []):
+                val = obs.get("Valor")
+                if val is None:
+                    continue
+                any_ = obs.get("Anyo")
+                per = obs.get("Periodo") or {}
+                mes = per.get("Mes_inicio")
+                try:
+                    any_int = int(any_)
+                    mes_int = int(mes)
+                    data_str = f"{any_int:04d}-{mes_int:02d}-01"
+                except (TypeError, ValueError):
+                    continue
+                rows.append({
+                    "serie_id": nombre,
+                    "ambit": ambit,
+                    "tipus": tipus,
+                    "branca": branca,
+                    "indicador": indicador,
+                    "any": any_int,
+                    "mes": mes_int,
+                    "data": data_str,
+                    "valor": float(val),
+                })
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    df = df.dropna(subset=["data"]).drop_duplicates(
+        subset=["serie_id", "data", "indicador"]
+    )
+    df = df.sort_values(["tipus", "ambit", "branca", "indicador", "data"]).reset_index(drop=True)
+    return df
+
+
 if __name__ == "__main__":
     print("Testejant API INE...")
 
