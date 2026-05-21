@@ -30,6 +30,14 @@ FEEDS = [
      "https://www.diffusionsport.com/punto-de-venta/feed/",
      "multisector", "sectorial", False),
 
+    # Feed global de Diffusion Sport (sector esports). Filtrem per
+    # KEYWORDS perquè inclou també producte/marques pures sense angle
+    # retail; volem només notícies amb operativa de venda.
+    ("diffusion_sport_global",
+     "Diffusion Sport — Global",
+     "https://www.diffusionsport.com/feed/",
+     "multisector", "sectorial", True),
+
     ("expansion_distribucion",
      "Expansión — Distribució",
      "https://www.expansion.com/rss/empresasdistribucion.xml",
@@ -147,6 +155,78 @@ ANTI_KEYWORDS = [
 ]
 _ANTI_RE = re.compile("|".join(re.escape(k) for k in ANTI_KEYWORDS), re.IGNORECASE)
 
+# Anti-keywords HARD: si una notícia hi toca, es descarta sempre
+# (independentment de quants hits retail tingui). Per a casos on
+# tot el contingut és no-retail i exigir "≥2 hits retail" no
+# discrimina prou. Afegit 2026-05-21.
+ANTI_KEYWORDS_HARD = [
+    # Seguretat alimentària / alertes sanitàries
+    "E.coli", "E. coli", "escherichia coli",
+    "listeria", "salmonella", "salmonelosis",
+    "alerta sanitaria", "alerta sanitària",
+    "alerta alimentaria", "alerta alimentària",
+    "retira lote", "retirada de lote", "retirada del lote",
+    "retira partida", "retira producto", "retirada del producto",
+    # Begudes espirituoses / fabricants majoristes globals (G46, no G47)
+    "Diageo", "Pernod Ricard",
+    "Johnnie Walker", "Jack Daniel", "Smirnoff", "Bacardi",
+    "Anheuser-Busch", "AB InBev",
+    "destilería", "destil·leria", "destileria",
+    # Regulació immobiliària / lloguer (paraula "consum" sovint refereix
+    # al Departament de Consum, no al sector minorista)
+    "cláusulas abusivas", "clàusules abusives",
+    "ley de vivienda", "llei d'habitatge", "llei de l'habitatge",
+    "alquiler vivienda", "lloguer d'habitatge", "lloguer habitatge",
+    "inmobiliaria abusiva", "immobiliària abusiva",
+]
+_ANTI_HARD_RE = re.compile("|".join(re.escape(k) for k in ANTI_KEYWORDS_HARD), re.IGNORECASE)
+
+# Conflicte laboral / RRHH: si una notícia parla únicament d'això (sense
+# operativa retail concreta), la descartem encara que mencioni una empresa
+# retail. Decisió J3B3 2026-05-21: el recull és sectorial, no laboral.
+LABOR_KEYWORDS = [
+    "ERE", "ERTE", "expediente de regulación", "expedient de regulació",
+    "sindicato", "sindicat", "sindicatos", "sindicats",
+    "huelga", "vaga",
+    "convenio colectivo", "conveni col·lectiu", "conveni colectiu",
+    "despido", "acomiadament", "despidos", "acomiadaments",
+    "comité de empresa", "comitè d'empresa",
+    "movilización", "mobilització",
+    "trabajadores movilizados", "treballadors mobilitzats",
+    "salarios", "salaris",
+]
+_LABOR_RE = re.compile("|".join(re.escape(k) for k in LABOR_KEYWORDS), re.IGNORECASE)
+
+# Termes que indiquen que la notícia parla d'operativa retail concreta
+# (vendes, obertures, expansió, e-commerce, M&A). Si una notícia toca
+# LABOR_KEYWORDS però cap d'aquests, no és una notícia retail útil.
+RETAIL_OPS_KEYWORDS = [
+    "ventas", "vendes",
+    "facturación", "facturació",
+    "ingresos", "ingressos",
+    "beneficio", "benefici",
+    "margen", "marge",
+    "tienda", "tiendas", "botiga", "botigues",
+    "apertura", "obertura", "aperturas", "obertures",
+    "cierre de tiendas", "tancament de botigues", "cierre tiendas",
+    "expansión", "expansió",
+    "ecommerce", "e-commerce", "comercio electr", "comerç electr",
+    "online", "en línea", "en línia",
+    "fusión", "fusió", "adquisición", "adquisició",
+    "OPA", "compra de", "venta de",
+    "facturó", "facturà",
+    "cuota de mercado", "quota de mercat",
+    "nuevo formato", "nou format", "nuevo concepto", "nou concepte",
+    "logística", "logística",
+    "centro logístico", "centre logístic",
+    "private label", "marca blanca", "marca pròpia", "marca propia",
+    "consumidor", "consumidors", "consumidores",
+    "consumo", "consum",
+    "precio", "preu", "precios", "preus",
+    "inflación", "inflació",
+]
+_RETAIL_OPS_RE = re.compile("|".join(re.escape(k) for k in RETAIL_OPS_KEYWORDS), re.IGNORECASE)
+
 _UA = ("Mozilla/5.0 (compatible; ObservatoriComercBot/1.0; "
        "+https://observatori-comerc.streamlit.app)")
 
@@ -179,8 +259,18 @@ def _clean_snippet(text, n=240):
 
 def _matches_keywords(titol, snippet):
     blob = f"{titol} {snippet}"
+    # Anti-keywords HARD: descartar sempre (G46 majoristes globals,
+    # alertes sanitàries, regulació immobiliària/lloguer...).
+    if _ANTI_HARD_RE.search(blob):
+        return False
     hits = _KW_RE.findall(blob)
     if not hits:
+        return False
+    # Conflicte laboral pur: si toca termes laborals (ERE, sindicat, vaga...)
+    # i NO toca operativa retail concreta (vendes, botigues, expansió...),
+    # descartar encara que la notícia mencioni una empresa retail per nom.
+    # Decisió J3B3 2026-05-21: el recull és sectorial, no laboral.
+    if _LABOR_RE.search(blob) and not _RETAIL_OPS_RE.search(blob):
         return False
     # Si la notícia toca un domini no-retail (energia, agro, mineria...) exigim
     # almenys 2 matches retail diferents per evitar falsos positius via "venta".
