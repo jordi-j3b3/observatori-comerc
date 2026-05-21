@@ -42,6 +42,8 @@ df_ecommerce = load_data("ecommerce")
 df_europa = load_data("europa_vab")
 df_territori = load_data("eee_ccaa")
 df_cdmge = load_data("cdmge")
+df_distrib = load_data("icm_distribucion")
+df_eu_m = load_data("europa_retail_mensual")
 
 # ─── HEADER ────────────────────────────────────────────────────
 
@@ -168,21 +170,13 @@ with hero_l:
         )
 
 with hero_r:
+    _eyebrow_r = "Tesi vigent" if _ca else "Tesis vigente"
     if _tesi_titol and not _tesi_obsoleta:
         _tesi_data_fmt = _tesi_data.strftime("%d/%m/%Y")
-        _link_html = ""
-        if _tesi_enllac:
-            _link_lbl = "Llegir el Pulso complet →" if _ca else "Leer el Pulso completo →"
-            _link_html = (
-                f'<div style="margin-top:14px;"><a href="{_tesi_enllac}" target="_blank" '
-                f'rel="noopener" style="color:#003366; text-decoration:none; font-size:13px; '
-                f'font-weight:600; border-bottom:1px solid #003366;">{_link_lbl}</a></div>'
-            )
-        _eyebrow_r = "Tesi vigent" if _ca else "Tesis vigente"
         st.markdown(
             f"""
             <div style="background:#ffffff; border-top:3px solid #003366;
-                        padding:18px 18px 18px 18px; margin-top:18px;
+                        padding:18px 18px 14px 18px; margin-top:18px;
                         font-family:'Inter',sans-serif;
                         background-color:rgba(0,51,102,0.03);">
                 <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
@@ -198,32 +192,96 @@ with hero_r:
                 <div style="color:#6a6a6a; font-size:11.5px;">
                     {_tesi_autor} · {_tesi_data_fmt}
                 </div>
-                {_link_html}
             </div>
             """,
             unsafe_allow_html=True,
         )
+        st.page_link(
+            "pages/T_Tesi_ampliada.py",
+            label=("Llegir l'argumentació completa →" if _ca
+                   else "Leer la argumentación completa →"),
+        )
     else:
-        _eyebrow_r = "Tesi vigent" if _ca else "Tesis vigente"
-        _fb = ("La tesi vigent es publicarà aquí cada dilluns."
-               if _ca else
-               "La tesis vigente se publicará aquí cada lunes.")
+        # Tesi obsoleta/absent: en lloc d'un "aviat disponible" gris,
+        # mostrem 3 dades calentes del cache (sense inventar text).
+        _hot_lines = []
+        # 1) Pols diari 30d
+        if _pulse:
+            _lbl_pd = ("Pols 30d (vendes diàries grans empreses)"
+                       if _ca else "Pulso 30d (ventas diarias grandes empresas)")
+            _hot_lines.append((_lbl_pd, fpct(_pulse["avg_30"], 1)))
+        # 2) ICM Grandes Superficies última var_anual
+        if not df_distrib.empty and "modo" in df_distrib.columns:
+            _d = df_distrib[(df_distrib["tipus"] == "real") &
+                            (df_distrib["indicador"] == "var_anual") &
+                            (df_distrib["modo"] == "Grandes Superficies")].copy()
+            _d["data"] = pd.to_datetime(_d["data"], errors="coerce")
+            _d = _d.dropna(subset=["data", "valor"]).sort_values("data")
+            if not _d.empty:
+                _last = _d.iloc[-1]
+                _lbl_gs = ("Grans superfícies · ICM YoY"
+                           if _ca else "Grandes Superficies · ICM YoY")
+                _hot_lines.append((_lbl_gs, fpct(float(_last["valor"]), 1)))
+        # 3) Eurostat ES vs UE-27, última diferència
+        if not df_eu_m.empty and "yoy" in df_eu_m.columns:
+            _eu_last_mes = df_eu_m["periode"].max()
+            _es = df_eu_m[(df_eu_m["pais_codi"] == "ES") &
+                          (df_eu_m["periode"] == _eu_last_mes)]
+            _ue = df_eu_m[(df_eu_m["pais_codi"] == "EU27_2020") &
+                          (df_eu_m["periode"] == _eu_last_mes)]
+            if not _es.empty and not _ue.empty:
+                _es_v = float(_es.iloc[0]["yoy"]) if pd.notna(_es.iloc[0]["yoy"]) else None
+                _ue_v = float(_ue.iloc[0]["yoy"]) if pd.notna(_ue.iloc[0]["yoy"]) else None
+                if _es_v is not None and _ue_v is not None:
+                    _diff = _es_v - _ue_v
+                    _lbl_eu = ("ES vs UE-27 (Eurostat YoY)"
+                               if _ca else "ES vs UE-27 (Eurostat YoY)")
+                    _hot_lines.append((_lbl_eu,
+                                        f"{fpct(_es_v, 1)} vs {fpct(_ue_v, 1)} ({fpct(_diff, 1)})"))
+
+        if _hot_lines:
+            _hot_html = "".join(
+                f"<div style='display:flex; justify-content:space-between; "
+                f"padding:6px 0; border-bottom:1px solid rgba(0,51,102,0.08); "
+                f"font-size:12.5px;'>"
+                f"<span style='color:#6a6a6a;'>{lbl}</span>"
+                f"<span style='font-family:Archivo Narrow,sans-serif; font-weight:700; "
+                f"color:#003366;'>{val}</span></div>"
+                for lbl, val in _hot_lines
+            )
+        else:
+            _hot_html = ""
+
+        _pending_lbl = ("Pendent d'actualitzar" if _ca else "Pendiente de actualizar")
+        _live_lbl = ("Mentrestant, dades del cache:" if _ca
+                     else "Mientras tanto, datos del caché:")
         st.markdown(
             f"""
             <div style="background:rgba(0,51,102,0.02); border-top:3px solid #c0c0c0;
-                        padding:18px; margin-top:18px;
+                        padding:16px 18px 12px 18px; margin-top:18px;
                         font-family:'Inter',sans-serif;">
                 <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
                             font-weight:700; text-transform:uppercase;
-                            color:#6a6a6a; margin-bottom:8px;">
+                            color:#6a6a6a; margin-bottom:4px;">
                     {_eyebrow_r}
                 </div>
-                <div style="color:#6a6a6a; font-size:14px; font-style:italic;">
-                    {_fb}
+                <div style="color:#6a6a6a; font-size:12.5px; margin-bottom:12px;">
+                    {_pending_lbl}
                 </div>
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.72rem;
+                            font-weight:700; text-transform:uppercase; color:#6a6a6a;
+                            opacity:0.7; margin-bottom:6px;">
+                    {_live_lbl}
+                </div>
+                {_hot_html}
             </div>
             """,
             unsafe_allow_html=True,
+        )
+        st.page_link(
+            "pages/T_Tesi_ampliada.py",
+            label=("Veure dades vives a la pàgina de Tesi →" if _ca
+                   else "Ver datos vivos en la página de Tesis →"),
         )
 
 # Banner d'avís si el retard del Pols diari és superior al normal
