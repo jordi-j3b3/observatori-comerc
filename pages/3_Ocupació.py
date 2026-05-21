@@ -7,7 +7,8 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, cagr, apply_layout, highlight_expander,
-                   PURPLE, RED, BLUE, ORANGE)
+                   PURPLE, RED, BLUE, ORANGE,
+                   BRAND, BRAND_DEEP, YELLOW)
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -284,6 +285,158 @@ if not df_prod.empty and not df_esp.empty and "personal_ocupat" in df_prod.colum
 else:
     st.info("Dades insuficients per calcular treballadors per empresa." if _ca
             else "Datos insuficientes para calcular trabajadores por empresa.")
+
+# ─── Comparativa salarial vs total Espanya (EAES) ─────────────
+
+@st.cache_data(ttl=3600)
+def load_eaes():
+    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "eaes.csv")
+    if not os.path.exists(p):
+        return pd.DataFrame()
+    return pd.read_csv(p)
+
+
+df_eaes = load_eaes()
+if not df_eaes.empty:
+    st.markdown("---")
+    st.header(("Salaris: comerç vs total economia espanyola"
+                if _ca else "Salarios: comercio vs total economía española"))
+
+    if _ca:
+        st.markdown(
+            "Per situar el sector en el conjunt de l'economia, fem servir l'**Enquesta Anual "
+            "d'Estructura Salarial (EAES, taula INE 28185)**, que mesura el salari brut anual "
+            "per treballador a jornada equivalent i és **consistent entre sectors**. "
+            "Permet comparar el comerç amb la mitjana de l'economia espanyola."
+        )
+    else:
+        st.markdown(
+            "Para situar el sector en el conjunto de la economía, usamos la **Encuesta Anual "
+            "de Estructura Salarial (EAES, tabla INE 28185)**, que mide el salario bruto anual "
+            "por trabajador a jornada equivalente y es **consistente entre sectores**. "
+            "Permite comparar el comercio con la media de la economía española."
+        )
+
+    _yr_eaes = int(df_eaes["any"].max())
+    _eaes_last = df_eaes[df_eaes["any"] == _yr_eaes]
+    SECTOR_TOTAL = "Industria, construcción y servicios (excepto actividades de los hogares como empleadores y de organizaciones y organismos extraterritoriales)"
+    SECTOR_COMERCIO = "Comercio al por mayor y al por menor; reparación de vehículos de motor y motocicletas"
+
+    _total = _eaes_last[_eaes_last["sector"] == SECTOR_TOTAL]
+    _comer = _eaes_last[_eaes_last["sector"] == SECTOR_COMERCIO]
+
+    if not _total.empty and not _comer.empty:
+        _v_total = float(_total["valor"].iloc[0])
+        _v_comer = float(_comer["valor"].iloc[0])
+        _diff = _v_comer - _v_total
+        _diff_pct = (_diff / _v_total) * 100
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric(("Mitjana economia espanyola" if _ca
+                        else "Media economía española"),
+                       f"{fnum(_v_total)} EUR",
+                       help=f"EAES {_yr_eaes} · jornada equivalent")
+        with c2:
+            st.metric(("Sector comerç (G45+G46+G47)" if _ca
+                        else "Sector comercio (G45+G46+G47)"),
+                       f"{fnum(_v_comer)} EUR",
+                       help=f"EAES {_yr_eaes} · inclou majorista")
+        with c3:
+            _label_diff = ("Diferència sobre la mitjana" if _ca
+                            else "Diferencia sobre la media")
+            st.metric(_label_diff,
+                       fpct(_diff_pct, 1),
+                       delta=f"{fnum(_diff)} EUR",
+                       delta_color="inverse")
+
+        _lbl_total = "Total economia espanyola" if _ca else "Total economía española"
+        _lbl_comer = "Sector comerç (G)" if _ca else "Sector comercio (G)"
+        _comp = pd.DataFrame({
+            "Categoria": [_lbl_total, _lbl_comer],
+            "Valor": [_v_total, _v_comer],
+            "Color": [BRAND_DEEP, BRAND],
+        })
+
+        fig_c = go.Figure()
+        fig_c.add_trace(go.Bar(
+            y=_comp["Categoria"], x=_comp["Valor"],
+            orientation="h",
+            marker=dict(color=_comp["Color"], line=dict(color=BRAND_DEEP, width=0.5)),
+            text=[f"{fnum(v)} EUR" for v in _comp["Valor"]],
+            textposition="outside", textfont=dict(size=13, color=BRAND_DEEP),
+            hovertemplate="<b>%{y}</b>: %{x:,.0f} EUR<extra></extra>",
+            width=0.5,
+        ))
+        apply_layout(fig_c,
+            xaxis_title="EUR / treballador / any" if _ca else "EUR / trabajador / año",
+            height=240, margin=dict(l=220, r=120, t=20, b=50),
+        )
+        st.plotly_chart(fig_c, use_container_width=True)
+        source(f"INE, Encuesta Anual de Estructura Salarial (EAES), taula 28185 · {_yr_eaes}")
+
+        _serie_total = df_eaes[df_eaes["sector"] == SECTOR_TOTAL].sort_values("any")
+        _serie_comer = df_eaes[df_eaes["sector"] == SECTOR_COMERCIO].sort_values("any")
+
+        if len(_serie_total) >= 3 and len(_serie_comer) >= 3:
+            _lbl_evo = ("Veure evolució 2014-{:d}".format(_yr_eaes) if _ca
+                        else "Ver evolución 2014-{:d}".format(_yr_eaes))
+            with highlight_expander(_lbl_evo, expanded=False):
+                fig_evo = go.Figure()
+                fig_evo.add_trace(go.Scatter(
+                    x=_serie_total["any"], y=_serie_total["valor"],
+                    mode="lines+markers",
+                    name=_lbl_total,
+                    line=dict(color=BRAND_DEEP, width=2.8),
+                    marker=dict(size=7),
+                    hovertemplate="<b>%{x}</b>: %{y:,.0f} EUR<extra></extra>",
+                ))
+                fig_evo.add_trace(go.Scatter(
+                    x=_serie_comer["any"], y=_serie_comer["valor"],
+                    mode="lines+markers",
+                    name=_lbl_comer,
+                    line=dict(color=YELLOW, width=2.8),
+                    marker=dict(size=7, line=dict(color=BRAND_DEEP, width=1)),
+                    hovertemplate="<b>%{x}</b>: %{y:,.0f} EUR<extra></extra>",
+                ))
+                apply_layout(fig_evo,
+                    yaxis_title="EUR / treballador / any" if _ca
+                                else "EUR / trabajador / año",
+                    height=380, margin=dict(l=70, r=20, t=40, b=50),
+                )
+                st.plotly_chart(fig_evo, use_container_width=True)
+                source(f"INE, EAES (taula 28185) · sèrie 2014-{_yr_eaes}")
+
+        if _ca:
+            insight(
+                f"Segons l'EAES de l'any {_yr_eaes}, el sector comerç (G45+G46+G47) paga "
+                f"un <strong>{fpct(abs(_diff_pct), 1, sign=False)} menys</strong> que la "
+                f"mitjana de l'economia espanyola: <strong>{fnum(_v_comer)} EUR vs "
+                f"{fnum(_v_total)} EUR</strong>. Aquesta diferència reflecteix el pes elevat "
+                f"d'ocupacions de menor qualificació i la presència de jornades parcials, "
+                f"especialment al comerç al detall G47. "
+                f"<br><br><em>Nota: l'EAES només publica el sector G complet (que inclou "
+                f"comerç majorista G45+G46 i venda i reparació de vehicles G45), no "
+                f"el CNAE 47 aïllat. La xifra del sector comerç de l'EAES tendeix a "
+                f"sobreestimar lleugerament el salari del retail estrictament G47 "
+                f"perquè el majorista paga més de mitjana.</em>"
+            )
+        else:
+            insight(
+                f"Según la EAES del año {_yr_eaes}, el sector comercio (G45+G46+G47) paga "
+                f"un <strong>{fpct(abs(_diff_pct), 1, sign=False)} menos</strong> que la "
+                f"media de la economía española: <strong>{fnum(_v_comer)} EUR vs "
+                f"{fnum(_v_total)} EUR</strong>. Esta diferencia refleja el peso elevado "
+                f"de ocupaciones de menor cualificación y la presencia de jornadas parciales, "
+                f"especialmente en el comercio minorista G47. "
+                f"<br><br><em>Nota: la EAES solo publica el sector G completo (que incluye "
+                f"comercio mayorista G45+G46 y venta y reparación de vehículos G45), no "
+                f"el CNAE 47 aislado. La cifra del sector comercio de la EAES tiende a "
+                f"sobreestimar ligeramente el salario del retail estrictamente G47 "
+                f"porque el mayorista paga más de media.</em>"
+            )
+
+# ─── Descàrrega de dades ─────────────────────────────────────
 
 with st.expander(t("download_data")):
     if not df_prod.empty:
