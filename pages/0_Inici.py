@@ -197,9 +197,9 @@ with hero_r:
             unsafe_allow_html=True,
         )
         st.page_link(
-            "pages/T_Tesi_ampliada.py",
-            label=("Llegir l'argumentació completa →" if _ca
-                   else "Leer la argumentación completa →"),
+            "pages/L_Lecturas.py",
+            label=("Llegir el Pulso de la setmana →" if _ca
+                   else "Leer el Pulso de la semana →"),
         )
     else:
         # Tesi obsoleta/absent: en lloc d'un "aviat disponible" gris,
@@ -279,9 +279,9 @@ with hero_r:
             unsafe_allow_html=True,
         )
         st.page_link(
-            "pages/T_Tesi_ampliada.py",
-            label=("Veure dades vives a la pàgina de Tesi →" if _ca
-                   else "Ver datos vivos en la página de Tesis →"),
+            "pages/L_Lecturas.py",
+            label=("Veure el Pulso de la setmana →" if _ca
+                   else "Ver el Pulso de la semana →"),
         )
 
 # Banner d'avís si el retard del Pols diari és superior al normal

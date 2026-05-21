@@ -51,10 +51,6 @@ p_lecturas = st.Page(
     "pages/L_Lecturas.py",
     title=("Pulso de la setmana" if _ca else "Pulso de la semana"),
 )
-p_tesi = st.Page(
-    "pages/T_Tesi_ampliada.py",
-    title=("Tesi vigent" if _ca else "Tesis vigente"),
-)
 
 # RADIOGRAFIA — comença amb Pols diari (conjuntural diari), segueixen sèries anuals
 p_pols = st.Page(
@@ -113,7 +109,7 @@ p_premsa = st.Page(
 # Construcció del diccionari de navegació
 nav = {
     SEC_HOME: [p_inici],
-    SEC_EDITORIAL: [p_tesi, p_lecturas],
+    SEC_EDITORIAL: [p_lecturas],
     SEC_PULSO: [p_pols, p_icm],
     SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
     SEC_DETALL: [p_subs, p_terr],
