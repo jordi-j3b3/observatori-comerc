@@ -33,7 +33,8 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
 # Etiquetes de seccions (capçaleres del sidebar)
 SEC_HOME = "Inicio" if not _ca else "Inici"
-SEC_LECTURAS = "Lecturas" if not _ca else "Lectures"
+SEC_EDITORIAL = "Editorial"  # mateix en ca i es
+SEC_PULSO = "Pulso" if not _ca else "Pols"
 SEC_RADIO = "Radiografía" if not _ca else "Radiografia"
 SEC_DETALL = "Detalle" if not _ca else "Detall"
 SEC_RECURSOS = "Recursos"
@@ -108,9 +109,10 @@ p_premsa = st.Page(
 # Construcció del diccionari de navegació
 nav = {
     SEC_HOME: [p_inici],
-    SEC_LECTURAS: [p_lecturas],
-    SEC_RADIO: [p_icm, p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
-    SEC_DETALL: [p_subs, p_terr, p_pols],
+    SEC_EDITORIAL: [p_lecturas],
+    SEC_PULSO: [p_pols, p_icm],
+    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
+    SEC_DETALL: [p_subs, p_terr],
     SEC_RECURSOS: [p_metod, p_premsa],
 }
 
