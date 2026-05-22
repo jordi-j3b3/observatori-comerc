@@ -1156,6 +1156,92 @@ def save_last_update():
     print(f"  Data actualització: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
 
+# Datasets vigilats pel sistema d'alertes de la home. Per cada un, la
+# columna que marca la "última dada de la sèrie" i l'etiqueta editorial.
+DATASETS_VIGILATS = {
+    "pib_vab":               {"col": "any",     "ca": "PIB i VAB",                  "es": "PIB y VAB"},
+    "empreses":              {"col": "any",     "ca": "Empreses",                   "es": "Empresas"},
+    "productivitat":         {"col": "any",     "ca": "Productivitat",              "es": "Productividad"},
+    "ecommerce":             {"col": "any",     "ca": "E-commerce",                 "es": "E-commerce"},
+    "eee_ccaa":              {"col": "any",     "ca": "Territori",                  "es": "Territorio"},
+    "europa_vab":            {"col": "any",     "ca": "Europa (VAB)",               "es": "Europa (VAB)"},
+    "icm":                   {"col": "data",    "ca": "Pols mensual (ICM)",         "es": "Pulso mensual (ICM)"},
+    "icm_distribucion":      {"col": "data",    "ca": "ICM per format de venda",    "es": "ICM por formato de venta"},
+    "eaes":                  {"col": "any",     "ca": "Salaris (EAES)",             "es": "Salarios (EAES)"},
+    "europa_retail_mensual": {"col": "periode", "ca": "Comerç a Europa (mensual)",  "es": "Comercio en Europa (mensual)"},
+    "cdmge":                 {"col": "data",    "ca": "Pols diari",                 "es": "Pulso diario"},
+    "ipc":                   {"col": "any",     "ca": "IPC",                        "es": "IPC"},
+    "subsectors_dirce":      {"col": "any",     "ca": "Subsectors",                 "es": "Subsectores"},
+}
+
+
+def _dataset_last_marker(name, col):
+    """Retorna un string que identifica la última dada de la sèrie d'un
+    dataset (any, periode YYYY-MM o data YYYY-MM-DD), o None si no es pot."""
+    df = load_cache(name)
+    if df.empty or col not in df.columns:
+        return None
+    serie = df[col].dropna()
+    if serie.empty:
+        return None
+    if col == "any":
+        try:
+            return str(int(serie.max()))
+        except (ValueError, TypeError):
+            return None
+    if col == "periode":
+        return str(serie.max())
+    # col == "data"
+    d = pd.to_datetime(serie, errors="coerce").max()
+    return d.strftime("%Y-%m-%d") if pd.notna(d) else None
+
+
+def record_dataset_updates():
+    """Detecta quins datasets han avançat de data respecte l'última execució
+    i registra els events a cache/updates_log.json. La home en mostra els
+    recents al bloc 'Novetats'. La primera execució inicialitza en silenci
+    (sense events) per no generar falses novetats."""
+    import json
+    from datetime import date
+    ensure_cache_dir()
+    path = os.path.join(CACHE_DIR, "updates_log.json")
+    log = {"datasets": {}, "events": []}
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                log = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            log = {"datasets": {}, "events": []}
+    log.setdefault("datasets", {})
+    log.setdefault("events", [])
+
+    today = date.today().isoformat()
+    nous = 0
+    for name, cfg in DATASETS_VIGILATS.items():
+        marker = _dataset_last_marker(name, cfg["col"])
+        if marker is None:
+            continue
+        prev = log["datasets"].get(name, {}).get("last_data")
+        if marker != prev:
+            log["datasets"][name] = {"last_data": marker, "detected_at": today}
+            # Només generem event si ja teníem un valor anterior (evita
+            # 13 falses novetats el primer cop que s'inicialitza el log).
+            if prev is not None:
+                log["events"].insert(0, {
+                    "dataset": name,
+                    "label_ca": cfg["ca"],
+                    "label_es": cfg["es"],
+                    "last_data": marker,
+                    "detected_at": today,
+                })
+                nous += 1
+    # Conservem només els 60 events més recents
+    log["events"] = log["events"][:60]
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(log, f, ensure_ascii=False, indent=1)
+    print(f"  Registre d'actualitzacions: {nous} novetat(s) detectada(es)")
+
+
 def process_all():
     """Executa tot el processament."""
     print("Processant dades...")
@@ -1205,6 +1291,9 @@ def process_all():
 
     print("\n11. Registrant data actualitzacio:")
     save_last_update()
+
+    print("\n12. Detectant novetats per al bloc d'alertes de la home:")
+    record_dataset_updates()
 
     print("\nProcessament complet!")
 

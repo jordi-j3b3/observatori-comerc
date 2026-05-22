@@ -363,6 +363,88 @@ if _pulse_fresc and _pulse["lag_days"] > 21:
 
 st.markdown("<div style='margin-top:18px;'></div>", unsafe_allow_html=True)
 
+# ─── NOVETATS (alertes d'actualització de dades) ───────────────
+
+@st.cache_data(ttl=600)
+def load_updates_log():
+    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "updates_log.json")
+    if not os.path.exists(p):
+        return {"events": []}
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {"events": []}
+
+
+def _fmt_marker(marker, lang):
+    """Formata el marcador de data d'un event (any / mes-any / data)."""
+    parts = str(marker).split("-")
+    if len(parts) == 1:
+        return parts[0]  # any
+    try:
+        if len(parts) == 2:  # YYYY-MM
+            from style import format_mes_any as _fma
+            return _fma(date(int(parts[0]), int(parts[1]), 1), lang)
+        if len(parts) == 3:  # YYYY-MM-DD
+            return f"{int(parts[2]):02d}/{int(parts[1]):02d}/{parts[0]}"
+    except (ValueError, TypeError):
+        return str(marker)
+    return str(marker)
+
+
+_upd_log = load_updates_log()
+_NOVETATS_DIES = 14
+_recents = []
+for _ev in _upd_log.get("events", []):
+    try:
+        _det = date.fromisoformat(_ev.get("detected_at", ""))
+    except (TypeError, ValueError):
+        continue
+    _ago = (_avui - _det).days
+    if 0 <= _ago <= _NOVETATS_DIES:
+        _recents.append((_ev, _ago))
+
+if _recents:
+    _nov_eyebrow = "Novetats" if _ca else "Novedades"
+    _nov_sub = ("Actualitzacions de dades dels darrers 14 dies"
+                if _ca else "Actualizaciones de datos de los últimos 14 días")
+    _items_html = ""
+    for _ev, _ago in _recents:
+        _lbl = _ev.get("label_ca" if _ca else "label_es", _ev.get("dataset", ""))
+        _marker_fmt = _fmt_marker(_ev.get("last_data", ""), st.session_state.lang)
+        if _ago == 0:
+            _when = "avui" if _ca else "hoy"
+        elif _ago == 1:
+            _when = "ahir" if _ca else "ayer"
+        else:
+            _when = (f"fa {_ago} dies" if _ca else f"hace {_ago} días")
+        _verb = "actualitzat amb dades de" if _ca else "actualizado con datos de"
+        _items_html += (
+            f"<div style='display:flex; justify-content:space-between; align-items:baseline;"
+            f" gap:12px; padding:7px 0; border-bottom:1px solid rgba(0,51,102,0.08);'>"
+            f"<span style='font-size:13px; color:#1a1a1a;'>"
+            f"<strong style='color:#003366;'>{_lbl}</strong> {_verb} {_marker_fmt}</span>"
+            f"<span style='font-size:11.5px; color:#6a6a6a; white-space:nowrap;'>{_when}</span>"
+            f"</div>"
+        )
+    st.markdown(
+        f"""
+        <div style="border-top:3px solid #f5d800; background:rgba(245,216,0,0.06);
+                    padding:16px 18px 8px 18px; margin:6px 0 22px;
+                    font-family:'Inter',sans-serif;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                        font-weight:700; text-transform:uppercase; color:#003366;
+                        margin-bottom:2px;">
+                {_nov_eyebrow}
+            </div>
+            <div style="font-size:12px; color:#6a6a6a; margin-bottom:8px;">{_nov_sub}</div>
+            {_items_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # ─── KPIs ──────────────────────────────────────────────────────
 
 col1, col2, col3, col4 = st.columns(4)
