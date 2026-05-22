@@ -1257,7 +1257,7 @@ def page_meta(sources, lang="es"):
                 <div>
                     <div class="footer-col-title">{col_contact}</div>
                     <ul>
-                        <li><a href="mailto:info@j3b3.com">info@j3b3.com</a></li>
+                        <li><a href="mailto:observatorio@j3b3.com">observatorio@j3b3.com</a></li>
                         <li><a href="https://www.linkedin.com/company/j3b3-consulting/" target="_blank" rel="noopener">LinkedIn</a></li>
                         <li><a href="https://www.j3b3.com" target="_blank" rel="noopener">www.j3b3.com</a></li>
                     </ul>

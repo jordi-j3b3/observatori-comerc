@@ -188,7 +188,7 @@ with st.sidebar:
                     rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_about}</a></div>
             <div><a href="https://www.j3b3.com" target="_blank"
                     rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_consulting}</a></div>
-            <div><a href="mailto:info@j3b3.com" style="color:#ffffff; text-decoration:none;">→ {_lbl_contact}: info@j3b3.com</a></div>
+            <div><a href="mailto:observatorio@j3b3.com" style="color:#ffffff; text-decoration:none;">→ {_lbl_contact}: observatorio@j3b3.com</a></div>
         </div>
         """,
         unsafe_allow_html=True,
