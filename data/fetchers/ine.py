@@ -11,8 +11,12 @@ BASE_URL = "https://servicios.ine.es/wstempus/js/ES"
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
 
 
-def _fetch_table(table_id, nult=None, retries=3, det=None):
+def _fetch_table(table_id, nult=None, retries=8, det=None):
     """Descarrega una taula de l'INE amb reintentos per peticions en cua.
+    Les taules pesades (p.ex. series diaries com la 37808) s'encuen al servidor:
+    l'INE respon HTTP 202 amb {"status": "Petición en proceso..."} —o bé 200 amb
+    un cos d'estat «en proceso»— mentre materialitza la taula. En aquests casos
+    esperem i reintentem fins que retorna les dades.
     det=2 retorna NombrePeriodo, Fecha i metadades de Periodo (necessari per series diaries)."""
     url = f"{BASE_URL}/DATOS_TABLA/{table_id}"
     params = {}
@@ -25,10 +29,17 @@ def _fetch_table(table_id, nult=None, retries=3, det=None):
         resp = requests.get(url, params=params, timeout=120)
         if resp.status_code == 200:
             data = resp.json()
-            if isinstance(data, dict) and data.get("Status") == "En proceso":
-                time.sleep(10)
+            # Petició encara en cua retornada amb 200 i cos d'estat
+            estat = ""
+            if isinstance(data, dict):
+                estat = str(data.get("Status") or data.get("status") or "")
+            if "proceso" in estat.lower():
+                time.sleep(15)
                 continue
             return data
+        elif resp.status_code == 202:
+            # Petició acceptada però encara en proceso (taula pesada en cua)
+            time.sleep(15)
         elif resp.status_code == 429:
             time.sleep(30)
         else:
