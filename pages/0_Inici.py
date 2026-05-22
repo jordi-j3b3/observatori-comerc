@@ -44,6 +44,7 @@ df_territori = load_data("eee_ccaa")
 df_cdmge = load_data("cdmge")
 df_distrib = load_data("icm_distribucion")
 df_eu_m = load_data("europa_retail_mensual")
+df_icm = load_data("icm")
 
 # ─── HEADER ────────────────────────────────────────────────────
 
@@ -79,6 +80,28 @@ if not df_cdmge.empty and "indicador" in df_cdmge.columns:
             "lag_days": _lag_days, "plot": _plot_p,
         }
 
+# El Pols diari (CDMGE) és una estadística experimental de l'INE que
+# s'actualitza de forma irregular. Si la darrera dada té més de 30 dies,
+# deixa de ser representativa com a "darrers 30 dies" i la retirem de la
+# home (es manté la pàgina pròpia al sidebar). El hero passa a l'ICM.
+POLS_LAG_LLINDAR = 30
+_pulse_fresc = _pulse is not None and _pulse["lag_days"] <= POLS_LAG_LLINDAR
+
+# Fallback fresc per al hero quan el Pols diari és obsolet: variació anual
+# real de l'ICM mensual (Pols mensual), branca general CNAE 47.
+_icm_hero = None
+if not _pulse_fresc and not df_icm.empty and "ambit" in df_icm.columns:
+    _s = df_icm[(df_icm["ambit"] == "nacional") &
+                (df_icm["tipus"] == "real") &
+                (df_icm["indicador"] == "var_anual") &
+                (df_icm["branca"] == "Comercio al por menor, excepto de vehículos de motor y motocicletas")].copy()
+    _s = _s.dropna(subset=["valor"])
+    if not _s.empty:
+        _s["data"] = pd.to_datetime(_s["data"], errors="coerce")
+        _s = _s.dropna(subset=["data"]).sort_values("data")
+        if not _s.empty:
+            _icm_hero = {"valor": float(_s.iloc[-1]["valor"]), "data": _s.iloc[-1]["data"]}
+
 # ─── HERO: NÚMERO-XOC (esquerra) + TESI VIGENT (dreta) ─────────
 
 _tesi = load_tesi()
@@ -112,7 +135,7 @@ _tesi_obsoleta = (_tesi_data is None) or ((_avui - _tesi_data).days > 10)
 hero_l, hero_r = st.columns([3, 2], gap="large")
 
 with hero_l:
-    if _pulse:
+    if _pulse_fresc:
         _sign_color = "#003366" if _pulse["avg_30"] >= 0 else "#c0392b"
         _sign_text = fpct(_pulse["avg_30"], 1)
         _eyebrow_l = ("Pols del consum · darrers 30 dies"
@@ -151,6 +174,43 @@ with hero_l:
                 </div>
                 <div style="color:#6a6a6a; font-size:12px; margin-top:10px;">
                     {_asof_l}: {_pulse['last_dt'].strftime('%d/%m/%Y')} · {_lag_l}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    elif _icm_hero is not None:
+        # Fallback: el Pols diari està obsolet (>30d). Mostrem l'ICM mensual,
+        # que sí és fresc, com a número-xoc del hero.
+        _sign_color = "#003366" if _icm_hero["valor"] >= 0 else "#c0392b"
+        _sign_text = fpct(_icm_hero["valor"], 1)
+        _eyebrow_l = ("Pols del consum · darrer mes (ICM)"
+                      if _ca else
+                      "Pulso del consumo · último mes (ICM)")
+        _sub_l = ("Variació anual de la xifra de negoci real del comerç al detall"
+                  if _ca else
+                  "Variación anual de la cifra de negocio real del comercio minorista")
+        _asof_l = "Darrera dada" if _ca else "Último dato"
+        from style import format_mes_any as _fma
+        st.markdown(
+            f"""
+            <div style="font-family:'Inter',sans-serif; border-top:3px solid #003366;
+                        padding:18px 0 8px 0; margin-top:18px;">
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                            font-weight:700; text-transform:uppercase; color:#003366;
+                            margin-bottom:4px;">
+                    {_eyebrow_l}
+                </div>
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:5.2rem;
+                            font-weight:700; line-height:1; color:{_sign_color};
+                            letter-spacing:-2px; margin:10px 0 6px;">
+                    {_sign_text}
+                </div>
+                <div style="color:#1a1a1a; font-size:14px; line-height:1.5; margin-top:8px;">
+                    {_sub_l}
+                </div>
+                <div style="color:#6a6a6a; font-size:12px; margin-top:10px;">
+                    {_asof_l}: {_fma(_icm_hero['data'], st.session_state.lang)} · INE, ICM
                 </div>
             </div>
             """,
@@ -205,11 +265,15 @@ with hero_r:
         # Tesi obsoleta/absent: en lloc d'un "aviat disponible" gris,
         # mostrem 3 dades calentes del cache (sense inventar text).
         _hot_lines = []
-        # 1) Pols diari 30d
-        if _pulse:
+        # 1) Pols diari 30d (només si és fresc; si no, l'ICM ja entra a sota)
+        if _pulse_fresc:
             _lbl_pd = ("Pols 30d (vendes diàries grans empreses)"
                        if _ca else "Pulso 30d (ventas diarias grandes empresas)")
             _hot_lines.append((_lbl_pd, fpct(_pulse["avg_30"], 1)))
+        elif _icm_hero is not None:
+            _lbl_icm = ("Comerç al detall · ICM YoY"
+                        if _ca else "Comercio minorista · ICM YoY")
+            _hot_lines.append((_lbl_icm, fpct(_icm_hero["valor"], 1)))
         # 2) ICM Grandes Superficies última var_anual
         if not df_distrib.empty and "modo" in df_distrib.columns:
             _d = df_distrib[(df_distrib["tipus"] == "real") &
@@ -285,7 +349,7 @@ with hero_r:
         )
 
 # Banner d'avís si el retard del Pols diari és superior al normal
-if _pulse and _pulse["lag_days"] > 21:
+if _pulse_fresc and _pulse["lag_days"] > 21:
     _notice = (
         f"L'INE publica el CDMGE un cop al mes amb retard de ~30-40 dies. "
         f"Última dada disponible: {_pulse['last_dt'].strftime('%d/%m/%Y')} "
@@ -360,10 +424,11 @@ with col4:
         st.metric(t("kpi_productivitat"), "—")
 
 # ─── POLS DIARI · CHART 12 MESOS ───────────────────────────────
+# Només si el Pols diari és fresc (<=30d). Si l'INE fa més d'un mes que
+# no publica, el chart no apareix a la home (la pàgina pròpia es manté).
 
-st.markdown("---")
-
-if _pulse:
+if _pulse_fresc:
+    st.markdown("---")
     _eyebrow_c = ("Pols diari · darrers 12 mesos (mitjana mòbil 30 dies)"
                   if _ca else
                   "Pulso diario · últimos 12 meses (media móvil 30 días)")
