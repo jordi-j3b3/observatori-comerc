@@ -227,6 +227,55 @@ RETAIL_OPS_KEYWORDS = [
 ]
 _RETAIL_OPS_RE = re.compile("|".join(re.escape(k) for k in RETAIL_OPS_KEYWORDS), re.IGNORECASE)
 
+# Geografia: l'observatori és del comerç a Espanya. Google News retorna
+# sovint mitjans llatinoamericans en castellà (mercat mexicà, colombià...).
+# Si una notícia toca un país/cadena estrangera i NO menciona Espanya ni
+# cap empresa retail espanyola, la descartem. Així "Inditex obre a Mèxic"
+# (que SÍ interessa) es manté, però "Soriana lidera el retail mexicano" cau.
+# Decisió J3B3 2026-05-22.
+FOREIGN_KEYWORDS = [
+    # Països i gentilicis (evitem mots ambigus com "Chile"/"Lima" en solitari)
+    "México", "Mexico", "mexicano", "mexicana", "mexicanos",
+    "Colombia", "colombiano", "colombiana",
+    "argentino", "argentina ", "Buenos Aires",
+    "chileno", "chilena", "Santiago de Chile",
+    "peruano", "peruana", "Perú",
+    "venezolano", "venezolana", "Venezuela",
+    "ecuatoriano", "Ecuador",
+    "boliviano", "Bolivia",
+    "uruguayo", "Uruguay", "paraguayo", "Paraguay",
+    "guatemalteco", "Guatemala", "hondureño", "Honduras",
+    "Nicaragua", "Costa Rica", "Panamá", "República Dominicana",
+    "Ciudad de México", "CDMX", "Guadalajara", "Monterrey",
+    "Bogotá", "Medellín",
+    # Cadenes de distribució no espanyoles (LATAM/altres)
+    "Soriana", "Liverpool", "Falabella", "Cencosud", "Coppel",
+    "Oxxo", "OXXO", "Chedraui", "Ripley", "Sodimac",
+    "Walmart de México", "Walmart México", "Bodega Aurrera",
+    "Grupo Éxito", "Cencosud",
+]
+_FOREIGN_RE = re.compile("|".join(re.escape(k) for k in FOREIGN_KEYWORDS), re.IGNORECASE)
+
+# Senyals d'Espanya: si una notícia toca un país estranger PERÒ també
+# Espanya o una empresa retail espanyola, es considera rellevant (expansió,
+# comparativa, etc.) i no es descarta pel filtre geogràfic.
+SPAIN_KEYWORDS = [
+    "España", "español", "española", "españoles", "espanyol", "espanyola",
+    "Espanya", "INE", "CNMC", "Idescat",
+    # Comunitats i ciutats principals
+    "Madrid", "Barcelona", "València", "Valencia", "Sevilla", "Bilbao",
+    "Zaragoza", "Málaga", "Cataluña", "Catalunya", "Andalucía", "Galicia",
+    "País Vasco", "Euskadi", "Comunidad Valenciana",
+    # Empreses retail espanyoles
+    "Mercadona", "Inditex", "Zara", "Pull&Bear", "Bershka",
+    "Massimo Dutti", "Stradivarius", "El Corte Inglés", "Corte Inglés",
+    "Mango", "Dia ", "Eroski", "Alcampo", "Consum", "Caprabo",
+    "Bonpreu", "Esclat", "Tendam", "Cortefiel", "Springfield",
+    "Desigual", "Tous", "Camper", "Decathlon España", "Lidl España",
+    "Carrefour España",
+]
+_SPAIN_RE = re.compile("|".join(re.escape(k) for k in SPAIN_KEYWORDS), re.IGNORECASE)
+
 _UA = ("Mozilla/5.0 (compatible; ObservatoriComercBot/1.0; "
        "+https://observatori-comerc.streamlit.app)")
 
@@ -265,6 +314,12 @@ def _matches_keywords(titol, snippet):
         return False
     hits = _KW_RE.findall(blob)
     if not hits:
+        return False
+    # Geografia: notícia d'un país estranger (LATAM, etc.) sense cap menció
+    # a Espanya ni a una empresa retail espanyola → fora (l'observatori és
+    # del comerç espanyol). "Inditex obre a Mèxic" es manté; "Soriana al
+    # mercat mexicà" cau. Decisió J3B3 2026-05-22.
+    if _FOREIGN_RE.search(blob) and not _SPAIN_RE.search(blob):
         return False
     # Conflicte laboral pur: si toca termes laborals (ERE, sindicat, vaga...)
     # i NO toca operativa retail concreta (vendes, botigues, expansió...),
