@@ -8,7 +8,7 @@ per pull-quotes, IBM Plex Mono per xifres comparades.
 import os
 import re
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import streamlit as st
@@ -287,6 +287,17 @@ def format_data(d: date) -> str:
     return f"{d.day} de {mesos[d.month - 1]} de {d.year}"
 
 
+def format_setmana(d: date) -> str:
+    """Rang de la setmana (dilluns–diumenge) que conté la data del número."""
+    mesos = MESOS_CA if _ca else MESES_ES
+    dl = d - timedelta(days=d.weekday())
+    dg = dl + timedelta(days=6)
+    if dl.month == dg.month:
+        return f"{dl.day}-{dg.day} de {mesos[dl.month - 1]} de {dg.year}"
+    return (f"{dl.day} de {mesos[dl.month - 1]} – "
+            f"{dg.day} de {mesos[dg.month - 1]} de {dg.year}")
+
+
 def strip_trazabilidad(md: str) -> str:
     idx = md.find("### TRAZABILIDAD")
     return (md[:idx] if idx >= 0 else md).rstrip()
@@ -547,7 +558,7 @@ else:
     total = len(issues)
     for i, (d, meta, body) in enumerate(issues):
         num = total - i
-        eyebrow = f"Núm. {num}  ·  {format_data(d)}"
+        eyebrow = f"Núm. {num}  ·  {format_setmana(d)}"
         titular = meta.get("titular") or ""
         preheader = meta.get("preheader") or ""
 
