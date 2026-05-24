@@ -505,7 +505,7 @@ if not df_ocu.empty:
     _piv["quota_dones"] = _piv["Dones"] / _piv["Total"] * 100
     figg = go.Figure()
     for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                          ("EU27_2020", BLUE, "UE-27")]:
+                          ("EU27_2020", ORANGE, "UE-27")]:
         _d = _piv[_piv["pais_codi"] == _p].sort_values("any")
         figg.add_trace(go.Scatter(
             x=_d["any"], y=_d["quota_dones"], mode="lines+markers", name=_nm,
@@ -519,7 +519,7 @@ if not df_ocu.empty:
                  else f"Edad: relevo generacional ({_ult})")
     figa = go.Figure()
     for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                          ("EU27_2020", BLUE, "UE-27")]:
+                          ("EU27_2020", ORANGE, "UE-27")]:
         _ys = [_ageshare(_p, _ult, b) for b in _ages]
         figa.add_trace(go.Bar(x=_ages, y=_ys, name=_nm, marker_color=_col))
     apply_layout(figa, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
@@ -533,18 +533,14 @@ if not df_ocu.empty:
          f"El pes dels joves 15-24 ha caigut del {fpct(_ageshare('ES', _first, '15-24'), 1, sign=False)} ({_first}) "
          f"al {fpct(jove_es, 1, sign=False)} ({_ult}) —ara per sota de la UE-27 ({fpct(jove_ue, 1, sign=False)})—, "
          f"mentre els 50-64 gairebé es dupliquen (fins al {fpct(sen_es, 1, sign=False)}). "
-         f"El <strong>relleu generacional és feble</strong>: cada cop entren menys joves i la plantilla es fa gran. "
-         f"És justament aquí on la immigració actua com a porta d'entrada al sector —un angle que aquesta font "
-         f"(LFS) no permet quantificar per nacionalitat a nivell de CNAE 47."
+         f"El <strong>relleu generacional és feble</strong>: cada cop entren menys joves i la plantilla es fa gran."
          if _ca else
          f"El comercio es un <strong>sector feminizado</strong> ({fpct(w_es, 1, sign=False)} de mujeres en España, "
          f"ligeramente por debajo de la UE-27, {fpct(w_ue, 1, sign=False)}), pero <strong>envejece rápido</strong>. "
          f"El peso de los jóvenes 15-24 ha caído del {fpct(_ageshare('ES', _first, '15-24'), 1, sign=False)} ({_first}) "
          f"al {fpct(jove_es, 1, sign=False)} ({_ult}) —ahora por debajo de la UE-27 ({fpct(jove_ue, 1, sign=False)})—, "
          f"mientras los 50-64 casi se duplican (hasta el {fpct(sen_es, 1, sign=False)}). "
-         f"El <strong>relevo generacional es débil</strong>: entran cada vez menos jóvenes y la plantilla envejece. "
-         f"Es justo aquí donde la inmigración actúa como puerta de entrada al sector —un ángulo que esta fuente "
-         f"(LFS) no permite cuantificar por nacionalidad a nivel de CNAE 47.")
+         f"El <strong>relevo generacional es débil</strong>: entran cada vez menos jóvenes y la plantilla envejece.")
     )
 
 # ─── Descàrrega de dades ─────────────────────────────────────
