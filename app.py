@@ -125,11 +125,29 @@ if LOCAL_ONLY:
     )
     nav[SEC_DETALL].append(p_municipis)
 
-pg = st.navigation(nav)
+# position="hidden": amaguem la nav nativa (no plegable) i en construïm una
+# de pròpia amb grups plegables al sidebar.
+pg = st.navigation(nav, position="hidden")
 
-# ─── SIDEBAR BRANDING ───────────────────────────────────────────
+# ─── SIDEBAR: NAVEGACIÓ PLEGABLE + BRANDING ─────────────────────
 
 with st.sidebar:
+    # Navegació per àmbits. Cada àmbit és un expander; s'obre automàticament
+    # el que conté la pàgina activa perquè el sidebar no creixi sense control.
+    # A la home (sense àmbit propi) s'obre Radiografia, el contingut principal.
+    _active_title = pg.title
+    _on_home = _active_title in [_p.title for _p in nav.get(SEC_HOME, [])]
+    for _sec, _sec_pages in nav.items():
+        if _sec == SEC_HOME:
+            for _pp in _sec_pages:
+                st.page_link(_pp)
+            continue
+        _is_open = (any(_pp.title == _active_title for _pp in _sec_pages)
+                    or (_on_home and _sec == SEC_RADIO))
+        with st.expander(_sec, expanded=_is_open):
+            for _pp in _sec_pages:
+                st.page_link(_pp)
+
     st.divider()
 
     # Butlletí: CTA tipogràfic dins el sidebar (sense embed MailerLite,

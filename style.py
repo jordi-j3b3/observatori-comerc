@@ -296,6 +296,55 @@ def inject_css():
             display: none !important;
         }
 
+        /* ── Navegació plegable al sidebar: expanders transparents sobre el
+           navy (anul·la el fons blanc global dels expanders) ── */
+        [data-testid="stSidebar"] [data-testid="stExpander"],
+        [data-testid="stSidebar"] [data-testid="stExpander"] > div,
+        [data-testid="stSidebar"] [data-testid="stExpander"] details,
+        [data-testid="stSidebar"] [data-testid="stExpander"] details > div,
+        [data-testid="stSidebar"] [data-testid="stExpanderDetails"],
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #FFFFFF !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stExpander"] {
+            margin: 0 !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+            border-top: 1px solid rgba(255,255,255,0.12) !important;
+            padding: 8px 4px !important;
+            font-family: 'Archivo Narrow', sans-serif !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            font-size: 0.82rem !important;
+            letter-spacing: 0.02em;
+            opacity: 0.82;
+        }
+        [data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
+            opacity: 1 !important;
+        }
+        /* Enllaços de pàgina dins el sidebar */
+        [data-testid="stSidebar"] [data-testid="stPageLink"] {
+            background: transparent !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stPageLink"] p {
+            color: #FFFFFF !important;
+            font-size: 0.92rem !important;
+        }
+        [data-testid="stSidebar"] [data-testid="stPageLink"]:hover {
+            background: rgba(255,255,255,0.08) !important;
+            border-radius: 4px;
+        }
+        /* Pàgina activa (Inici fora d'expander i enllaços actius) */
+        [data-testid="stSidebar"] [data-testid="stPageLink"][aria-current="page"],
+        [data-testid="stSidebar"] [data-testid="stPageLink"] a[aria-current="page"] {
+            background: rgba(255,255,255,0.14) !important;
+            border-radius: 4px;
+        }
+
         /* Botons */
         .stDownloadButton button {
             background-color: #003366;
