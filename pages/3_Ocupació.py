@@ -436,6 +436,117 @@ if not df_eaes.empty:
                 f"porque el mayorista paga más de media.</em>"
             )
 
+# ─── Qui treballa al comerç: sexe i edat (Eurostat EU-LFS) ───
+
+@st.cache_data(ttl=3600)
+def load_ocu_sx():
+    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "ocupacio_comerc.csv")
+    if os.path.exists(p):
+        return pd.read_csv(p)
+    return pd.DataFrame()
+
+df_ocu = load_ocu_sx()
+
+if not df_ocu.empty:
+    st.markdown("---")
+    st.header("Qui treballa al comerç: sexe i edat" if _ca
+              else "Quién trabaja en el comercio: sexo y edad")
+    intro(
+        ("Més enllà de quantes persones treballen al comerç, importa <strong>qui</strong> ho fa. "
+         "Amb l'Enquesta de Població Activa europea (Eurostat, CNAE 47) radiografiem el sector per "
+         "<strong>sexe</strong> i <strong>edat</strong>, i el comparem amb la UE-27. Dues preguntes: "
+         "és un sector feminitzat? I es renova generacionalment o envelleix?"
+         if _ca else
+         "Más allá de cuántas personas trabajan en el comercio, importa <strong>quién</strong> lo hace. "
+         "Con la Encuesta de Población Activa europea (Eurostat, CNAE 47) radiografiamos el sector por "
+         "<strong>sexo</strong> y <strong>edad</strong>, y lo comparamos con la UE-27. Dos preguntas: "
+         "¿es un sector feminizado? ¿Y se renueva generacionalmente o envejece?")
+    )
+
+    _ages = ["15-24", "25-49", "50-64", "65+"]
+    _ult = int(df_ocu["any"].max())
+    _first = int(df_ocu["any"].min())
+
+    def _wshare(p, y):
+        b = df_ocu[(df_ocu["edat"] == "15-64 (total)") & (df_ocu["pais_codi"] == p) & (df_ocu["any"] == y)]
+        tot = b[b["sexe"] == "Total"]["ocupats_milers"]
+        don = b[b["sexe"] == "Dones"]["ocupats_milers"]
+        return (don.values[0] / tot.values[0] * 100) if len(tot) and len(don) and tot.values[0] else None
+
+    def _ageshare(p, y, band):
+        a = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["edat"].isin(_ages))
+                   & (df_ocu["pais_codi"] == p) & (df_ocu["any"] == y)]
+        s = a.groupby("edat")["ocupats_milers"].sum()
+        return (s.get(band, 0) / s.sum() * 100) if s.sum() else None
+
+    w_es, w_ue = _wshare("ES", _ult), _wshare("EU27_2020", _ult)
+    jove_es, jove_ue = _ageshare("ES", _ult, "15-24"), _ageshare("EU27_2020", _ult, "15-24")
+    sen_es = _ageshare("ES", _ult, "50-64")
+
+    k1, k2, k3 = st.columns(3)
+    k1.metric(("Dones al comerç" if _ca else "Mujeres en el comercio"),
+              fpct(w_es, 1, sign=False), help=(f"UE-27: {fpct(w_ue, 1, sign=False)}"))
+    k2.metric(("Joves 15-24" if _ca else "Jóvenes 15-24"),
+              fpct(jove_es, 1, sign=False),
+              delta=fpct(jove_es - _ageshare("ES", _first, "15-24"), 1),
+              delta_color="normal",
+              help=(f"vs {_first}; UE-27 avui: {fpct(jove_ue, 1, sign=False)}"))
+    k3.metric(("Treballadors 50-64" if _ca else "Trabajadores 50-64"),
+              fpct(sen_es, 1, sign=False),
+              delta=fpct(sen_es - _ageshare("ES", _first, "50-64"), 1),
+              delta_color="off", help=(f"vs {_first}"))
+
+    # --- Gènere: quota de dones al llarg del temps, ES vs UE ---
+    st.subheader("Sexe: un sector majoritàriament femení" if _ca
+                 else "Sexo: un sector mayoritariamente femenino")
+    _g = df_ocu[df_ocu["edat"] == "15-64 (total)"]
+    _piv = _g.pivot_table(index=["pais_codi", "any"], columns="sexe",
+                          values="ocupats_milers").reset_index()
+    _piv["quota_dones"] = _piv["Dones"] / _piv["Total"] * 100
+    figg = go.Figure()
+    for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
+                          ("EU27_2020", BLUE, "UE-27")]:
+        _d = _piv[_piv["pais_codi"] == _p].sort_values("any")
+        figg.add_trace(go.Scatter(
+            x=_d["any"], y=_d["quota_dones"], mode="lines+markers", name=_nm,
+            line=dict(color=_col, width=2.5), marker=dict(size=5)))
+    apply_layout(figg, yaxis_title="% dones" if _ca else "% mujeres", height=360)
+    st.plotly_chart(figg, use_container_width=True)
+    source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
+
+    # --- Edat: estructura per franja, ES vs UE (darrer any) ---
+    st.subheader(f"Edat: relleu generacional ({_ult})" if _ca
+                 else f"Edad: relevo generacional ({_ult})")
+    figa = go.Figure()
+    for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
+                          ("EU27_2020", BLUE, "UE-27")]:
+        _ys = [_ageshare(_p, _ult, b) for b in _ages]
+        figa.add_trace(go.Bar(x=_ages, y=_ys, name=_nm, marker_color=_col))
+    apply_layout(figa, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
+                 height=360, barmode="group")
+    st.plotly_chart(figa, use_container_width=True)
+    source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
+
+    insight(
+        (f"El comerç és un <strong>sector feminitzat</strong> ({fpct(w_es, 1, sign=False)} de dones a Espanya, "
+         f"lleugerament per sota de la UE-27, {fpct(w_ue, 1, sign=False)}), però <strong>envelleix de pressa</strong>. "
+         f"El pes dels joves 15-24 ha caigut del {fpct(_ageshare('ES', _first, '15-24'), 1, sign=False)} ({_first}) "
+         f"al {fpct(jove_es, 1, sign=False)} ({_ult}) —ara per sota de la UE-27 ({fpct(jove_ue, 1, sign=False)})—, "
+         f"mentre els 50-64 gairebé es dupliquen (fins al {fpct(sen_es, 1, sign=False)}). "
+         f"El <strong>relleu generacional és feble</strong>: cada cop entren menys joves i la plantilla es fa gran. "
+         f"És justament aquí on la immigració actua com a porta d'entrada al sector —un angle que aquesta font "
+         f"(LFS) no permet quantificar per nacionalitat a nivell de CNAE 47."
+         if _ca else
+         f"El comercio es un <strong>sector feminizado</strong> ({fpct(w_es, 1, sign=False)} de mujeres en España, "
+         f"ligeramente por debajo de la UE-27, {fpct(w_ue, 1, sign=False)}), pero <strong>envejece rápido</strong>. "
+         f"El peso de los jóvenes 15-24 ha caído del {fpct(_ageshare('ES', _first, '15-24'), 1, sign=False)} ({_first}) "
+         f"al {fpct(jove_es, 1, sign=False)} ({_ult}) —ahora por debajo de la UE-27 ({fpct(jove_ue, 1, sign=False)})—, "
+         f"mientras los 50-64 casi se duplican (hasta el {fpct(sen_es, 1, sign=False)}). "
+         f"El <strong>relevo generacional es débil</strong>: entran cada vez menos jóvenes y la plantilla envejece. "
+         f"Es justo aquí donde la inmigración actúa como puerta de entrada al sector —un ángulo que esta fuente "
+         f"(LFS) no permite cuantificar por nacionalidad a nivel de CNAE 47.")
+    )
+
 # ─── Descàrrega de dades ─────────────────────────────────────
 
 with st.expander(t("download_data")):

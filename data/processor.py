@@ -1045,6 +1045,28 @@ def process_tic_comerc():
     return df
 
 
+def process_ocupacio_comerc():
+    """
+    Ocupació al comerç (NACE G47) per sexe i edat (Eurostat lfsa_egan22d, EU-LFS).
+    Radiografia de qui treballa al sector: pes femení i relleu generacional.
+    ES vs UE-27, anual. Cau silenciosament al cache existent si l'API falla.
+    """
+    print("  Carregant ocupació comerç per sexe/edat (Eurostat lfsa_egan22d)...")
+    try:
+        df = eurostat.fetch_ocupacio_comerc()
+    except Exception as e:
+        print(f"  Error API Eurostat ocupació: {e}")
+        return load_cache("ocupacio_comerc")
+
+    if df.empty:
+        print("  AVIS: sense dades ocupació LFS; mantenint cache existent")
+        return load_cache("ocupacio_comerc")
+
+    save_cache(df, "ocupacio_comerc")
+    print(f"  Ocupació comerç (sexe/edat): {len(df)} registres")
+    return df
+
+
 def process_cdmge():
     """
     CDMGE — comerç diari grans empreses (T=37808, INE experimental).
@@ -1192,6 +1214,7 @@ DATASETS_VIGILATS = {
     "eaes":                  {"col": "any",     "ca": "Salaris (EAES)",             "es": "Salarios (EAES)"},
     "europa_retail_mensual": {"col": "periode", "ca": "Comerç a Europa (mensual)",  "es": "Comercio en Europa (mensual)"},
     "tic_comerc": {"col": "any", "ca": "TIC al comerç", "es": "TIC en el comercio"},
+    "ocupacio_comerc": {"col": "any", "ca": "Ocupació per sexe i edat", "es": "Ocupación por sexo y edad"},
     "cdmge":                 {"col": "data",    "ca": "Pols diari",                 "es": "Pulso diario"},
     "ipc":                   {"col": "any",     "ca": "IPC",                        "es": "IPC"},
     "subsectors_dirce":      {"col": "any",     "ca": "Subsectors",                 "es": "Subsectores"},
@@ -1290,6 +1313,9 @@ def process_all():
 
     print("\n5c. TIC al comerç (Eurostat isoc_ec_eseln2):")
     process_tic_comerc()
+
+    print("\n5d. Ocupació comerç per sexe/edat (Eurostat lfsa_egan22d):")
+    process_ocupacio_comerc()
 
     print("\n6. EEE Comercio per CCAA:")
     process_eee_ccaa()

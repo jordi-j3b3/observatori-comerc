@@ -253,19 +253,18 @@ else:
         st.caption(
             f"{'Dades Eurostat bd_size, CNAE G47, any' if _ca else 'Datos Eurostat bd_size, CNAE G47, año'} "
             f"**{darrer_any}**. "
-            + ("Sèrie disponible 2021-2023 per canvi de marc metodològic UE 2019/2152."
+            + ("Sèrie disponible 2021-2023 per canvi de marc metodològic UE 2019/2152. "
+               "Indicadors estructurals comparatius ES-UE; els recomptes absoluts d'empreses i ocupació "
+               "difereixen de la sèrie INE/EPA (font i marc diferents) i per coherència no es mostren aquí."
                if _ca else
-               "Serie disponible 2021-2023 por cambio de marco metodológico UE 2019/2152.")
+               "Serie disponible 2021-2023 por cambio de marco metodológico UE 2019/2152. "
+               "Indicadores estructurales comparativos ES-UE; los recuentos absolutos de empresas y ocupación "
+               "difieren de la serie INE/EPA (fuente y marco distintos) y por coherencia no se muestran aquí.")
         )
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(
-            ("Empreses CNAE 47" if _ca else "Empresas CNAE 47"),
-            fnum(r.get("ENT_NR", 0)),
-        )
-        c2.metric(
-            ("Ocupació total" if _ca else "Ocupación total"),
-            fnum(r.get("EMP_NR", 0)),
-        )
+        # Només ràtios estructurals comparables. Es treuen els recomptes absoluts
+        # (ENT_NR/EMP_NR): bd_size no quadra amb la sèrie INE/EPA de la pàgina
+        # Empresas i generava confusió (mateix concepte, dues xifres).
+        c3, c4 = st.columns(2)
         if r.get("ENT_NR") and r.get("SAL_NR") is not None and r.get("EMP_NR"):
             autonoms = r["EMP_NR"] - r["SAL_NR"]
             pct_auto = (autonoms / r["EMP_NR"]) * 100
