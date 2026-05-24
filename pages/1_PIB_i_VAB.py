@@ -58,6 +58,8 @@ if df.empty:
 
 df = df.sort_values("any")
 
+_ca = st.session_state.lang == "ca"
+
 # ─── KPIs superiors ──────────────────────────────────────────
 
 last = df.dropna(subset=["vab_cnae47_corrents"]).iloc[-1]
@@ -84,254 +86,266 @@ with col4:
         cagr_val = cagr(first["vab_cnae47_corrents"], last["vab_cnae47_corrents"], n_years)
         st.metric(f"CAGR {any_first}-{any_last}", fpct(cagr_val, 1))
 
-# ─── Gràfic 1: VAB nominal vs real ────────────────────────────
+# ─── TABS ────────────────────────────────────────────────────
 
-st.subheader(t("pib_nominal_vs_real"))
+tab1, tab2 = st.tabs([
+    ("Espanya" if _ca else "España"),
+    ("Comunitats autònomes" if _ca else "Comunidades autónomas"),
+])
 
-fig1 = go.Figure()
+# ============================================================
+# TAB 1: ESPANYA
+# ============================================================
+with tab1:
+    # ─── Gràfic 1: VAB nominal vs real ────────────────────────────
 
-if "vab_cnae47_corrents" in df.columns:
-    fig1.add_trace(go.Scatter(
-        x=df["any"], y=df["vab_cnae47_corrents"],
-        mode="lines+markers", name=t("pib_nominal"),
-        line=dict(color=RED, width=2.5),
-        marker=dict(size=5),
-    ))
+    st.subheader(t("pib_nominal_vs_real"))
 
-if "vab_cnae47_constants" in df.columns:
-    fig1.add_trace(go.Scatter(
-        x=df["any"], y=df["vab_cnae47_constants"],
-        mode="lines+markers", name=t("pib_real"),
-        line=dict(color=BLUE, width=2.5),
-        marker=dict(size=5),
-    ))
+    fig1 = go.Figure()
 
-apply_layout(fig1, yaxis_title=t("pib_meur"), height=450)
-st.plotly_chart(fig1, use_container_width=True)
-source("INE, Comptabilitat Nacional. Deflactor: IPC general, base 2002. Càlcul propi"
-       if st.session_state.lang == "ca" else
-       "INE, Contabilidad Nacional. Deflactor: IPC general, base 2002. Cálculo propio")
+    if "vab_cnae47_corrents" in df.columns:
+        fig1.add_trace(go.Scatter(
+            x=df["any"], y=df["vab_cnae47_corrents"],
+            mode="lines+markers", name=t("pib_nominal"),
+            line=dict(color=RED, width=2.5),
+            marker=dict(size=5),
+        ))
 
-# ─── Insight PIB ──────────────────────────────────────────────
+    if "vab_cnae47_constants" in df.columns:
+        fig1.add_trace(go.Scatter(
+            x=df["any"], y=df["vab_cnae47_constants"],
+            mode="lines+markers", name=t("pib_real"),
+            line=dict(color=BLUE, width=2.5),
+            marker=dict(size=5),
+        ))
 
-if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
-    df_clean = df.dropna(subset=["vab_cnae47_corrents", "vab_cnae47_constants"])
-    if len(df_clean) > 2:
-        first_r = df_clean.iloc[0]
-        last_r = df_clean.iloc[-1]
-        n = int(last_r["any"]) - int(first_r["any"])
-
-        # Variació acumulada total del període
-        var_nom_total = ((last_r["vab_cnae47_corrents"] / first_r["vab_cnae47_corrents"]) - 1) * 100
-        var_real_total = ((last_r["vab_cnae47_constants"] / first_r["vab_cnae47_constants"]) - 1) * 100
-        cagr_nom = cagr(first_r["vab_cnae47_corrents"], last_r["vab_cnae47_corrents"], n)
-        cagr_real = cagr(first_r["vab_cnae47_constants"], last_r["vab_cnae47_constants"], n)
-
-        gap = var_nom_total - var_real_total
-
-        # Detecció dinàmica del signe de les variacions nominal i real
-        _nom_creix = var_nom_total > 0
-        _real_creix = var_real_total > 0
-        # Comparació amb el PIB general espanyol (~2% real). Si CAGR real > 2,
-        # el sector creix per damunt; si < 2 però > 0, creix per sota; si < 0,
-        # decreix en termes reals.
-        PIB_REF_REAL = 2.0
-        if cagr_real > PIB_REF_REAL:
-            _posicio_pib = "per damunt"
-        elif cagr_real > 0:
-            _posicio_pib = "per sota"
-        else:
-            _posicio_pib = "amb decreixement absolut respecte"
-
-        if st.session_state.lang == "ca":
-            verb_nom = "ha crescut" if _nom_creix else "s'ha contret"
-            verb_real = "ha estat" if _real_creix else "ha estat negativa,"
-            txt = (
-                f"Entre {int(first_r['any'])} i {int(last_r['any'])}, el VAB nominal del comerç al detall "
-                f"<strong>{verb_nom}</strong> un "
-                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
-                f"i en termes reals la variació {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
-                f"(CAGR {fpct(cagr_real, 1)}). "
-            )
-            if gap > 10:
-                txt += (
-                    f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal i real "
-                    f"és l'<strong>efecte acumulat de la inflació</strong>: una part del creixement aparent "
-                    f"és simplement pujada de preus. "
-                )
-            posicio_lbl = {
-                "per damunt": (
-                    f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per damunt</strong> "
-                    f"del PIB general espanyol (~2% real), guanyant pes estructural."
-                ),
-                "per sota": (
-                    f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per sota</strong> "
-                    f"del PIB general espanyol (~2% real), confirmant la <strong>pèrdua "
-                    f"estructural de pes</strong> en l'economia. Factors explicatius: "
-                    f"concentració empresarial, digitalització i canvi en patrons de consum."
-                ),
-                "amb decreixement absolut respecte": (
-                    f"Amb un CAGR real negatiu del {fpct(cagr_real, 1)}, el sector es contreu en termes "
-                    f"reals, amb pèrdua estructural de pes accelerada respecte al PIB general."
-                ),
-            }
-            txt += posicio_lbl[_posicio_pib]
-        else:
-            verb_nom = "ha crecido" if _nom_creix else "se ha contraído"
-            verb_real = "ha sido" if _real_creix else "ha sido negativa,"
-            txt = (
-                f"Entre {int(first_r['any'])} y {int(last_r['any'])}, el VAB nominal del comercio minorista "
-                f"<strong>{verb_nom}</strong> un "
-                f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
-                f"y en términos reales la variación {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
-                f"(CAGR {fpct(cagr_real, 1)}). "
-            )
-            if gap > 10:
-                txt += (
-                    f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal y real "
-                    f"es el <strong>efecto acumulado de la inflación</strong>: una parte del crecimiento "
-                    f"aparente es simplemente subida de precios. "
-                )
-            posicio_lbl_es = {
-                "per damunt": (
-                    f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por encima</strong> "
-                    f"del PIB general español (~2% real), ganando peso estructural."
-                ),
-                "per sota": (
-                    f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por debajo</strong> "
-                    f"del PIB general español (~2% real), confirmando la <strong>pérdida "
-                    f"estructural de peso</strong> en la economía. Factores explicativos: "
-                    f"concentración empresarial, digitalización y cambio en patrones de consumo."
-                ),
-                "amb decreixement absolut respecte": (
-                    f"Con un CAGR real negativo del {fpct(cagr_real, 1)}, el sector se contrae en términos "
-                    f"reales, con pérdida estructural de peso acelerada respecto al PIB general."
-                ),
-            }
-            txt += posicio_lbl_es[_posicio_pib]
-        insight(txt)
-
-# ─── Gràfic 2: Pes CNAE 47 sobre PIB ─────────────────────────
-
-if "pes_cnae47" in df.columns:
-    st.subheader(t("pib_weight"))
-
-    df_pes = df.dropna(subset=["pes_cnae47"])
-
-    fig2 = go.Figure()
-    fig2.add_trace(go.Bar(
-        x=df_pes["any"], y=df_pes["pes_cnae47"] * 100,
-        marker_color=PURPLE,
-        text=[fpct(v, 1, sign=False) for v in df_pes["pes_cnae47"] * 100],
-        textposition="outside",
-        textfont=dict(size=10),
-    ))
-    apply_layout(fig2,
-        yaxis_title="%",
-        yaxis_range=[0, max(df_pes["pes_cnae47"] * 100) * 1.25],
-        height=400,
-    )
-    st.plotly_chart(fig2, use_container_width=True)
-    source("INE, Comptabilitat Nacional. Càlcul propi"
+    apply_layout(fig1, yaxis_title=t("pib_meur"), height=450)
+    st.plotly_chart(fig1, use_container_width=True)
+    source("INE, Comptabilitat Nacional. Deflactor: IPC general, base 2002. Càlcul propi"
            if st.session_state.lang == "ca" else
-           "INE, Contabilidad Nacional. Cálculo propio")
+           "INE, Contabilidad Nacional. Deflactor: IPC general, base 2002. Cálculo propio")
 
-_lbl_var_exp = ("Veure variació anual nominal i real"
-                if st.session_state.lang == "ca" else
-                "Ver variación anual nominal y real")
-with highlight_expander(_lbl_var_exp, expanded=False):
-    # ─── Gràfic 3: Variació anual ─────────────────────────────────
+    # ─── Insight PIB ──────────────────────────────────────────────
 
-    var_cols = [c for c in df.columns if c.startswith("var_")]
-    if var_cols:
-        st.subheader(t("pib_annual_var"))
+    if "vab_cnae47_constants" in df.columns and "vab_cnae47_corrents" in df.columns:
+        df_clean = df.dropna(subset=["vab_cnae47_corrents", "vab_cnae47_constants"])
+        if len(df_clean) > 2:
+            first_r = df_clean.iloc[0]
+            last_r = df_clean.iloc[-1]
+            n = int(last_r["any"]) - int(first_r["any"])
 
-        fig3 = go.Figure()
-        colors = {"var_vab_cnae47_corrents": RED, "var_vab_cnae47_constants": BLUE}
-        names = {"var_vab_cnae47_corrents": t("pib_nominal"), "var_vab_cnae47_constants": t("pib_real")}
+            # Variació acumulada total del període
+            var_nom_total = ((last_r["vab_cnae47_corrents"] / first_r["vab_cnae47_corrents"]) - 1) * 100
+            var_real_total = ((last_r["vab_cnae47_constants"] / first_r["vab_cnae47_constants"]) - 1) * 100
+            cagr_nom = cagr(first_r["vab_cnae47_corrents"], last_r["vab_cnae47_corrents"], n)
+            cagr_real = cagr(first_r["vab_cnae47_constants"], last_r["vab_cnae47_constants"], n)
 
-        for col in var_cols:
-            df_var = df.dropna(subset=[col])
-            fig3.add_trace(go.Bar(
-                x=df_var["any"], y=df_var[col] * 100,
-                name=names.get(col, col),
-                marker_color=colors.get(col, "#999"),
-            ))
+            gap = var_nom_total - var_real_total
 
-        apply_layout(fig3,
-            yaxis_title=t("annual_variation") + " (%)",
-            barmode="group",
+            # Detecció dinàmica del signe de les variacions nominal i real
+            _nom_creix = var_nom_total > 0
+            _real_creix = var_real_total > 0
+            # Comparació amb el PIB general espanyol (~2% real). Si CAGR real > 2,
+            # el sector creix per damunt; si < 2 però > 0, creix per sota; si < 0,
+            # decreix en termes reals.
+            PIB_REF_REAL = 2.0
+            if cagr_real > PIB_REF_REAL:
+                _posicio_pib = "per damunt"
+            elif cagr_real > 0:
+                _posicio_pib = "per sota"
+            else:
+                _posicio_pib = "amb decreixement absolut respecte"
+
+            if st.session_state.lang == "ca":
+                verb_nom = "ha crescut" if _nom_creix else "s'ha contret"
+                verb_real = "ha estat" if _real_creix else "ha estat negativa,"
+                txt = (
+                    f"Entre {int(first_r['any'])} i {int(last_r['any'])}, el VAB nominal del comerç al detall "
+                    f"<strong>{verb_nom}</strong> un "
+                    f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
+                    f"i en termes reals la variació {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
+                    f"(CAGR {fpct(cagr_real, 1)}). "
+                )
+                if gap > 10:
+                    txt += (
+                        f"La diferència de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal i real "
+                        f"és l'<strong>efecte acumulat de la inflació</strong>: una part del creixement aparent "
+                        f"és simplement pujada de preus. "
+                    )
+                posicio_lbl = {
+                    "per damunt": (
+                        f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per damunt</strong> "
+                        f"del PIB general espanyol (~2% real), guanyant pes estructural."
+                    ),
+                    "per sota": (
+                        f"Amb un CAGR real del {fpct(cagr_real, 1)}, el sector creix <strong>per sota</strong> "
+                        f"del PIB general espanyol (~2% real), confirmant la <strong>pèrdua "
+                        f"estructural de pes</strong> en l'economia. Factors explicatius: "
+                        f"concentració empresarial, digitalització i canvi en patrons de consum."
+                    ),
+                    "amb decreixement absolut respecte": (
+                        f"Amb un CAGR real negatiu del {fpct(cagr_real, 1)}, el sector es contreu en termes "
+                        f"reals, amb pèrdua estructural de pes accelerada respecte al PIB general."
+                    ),
+                }
+                txt += posicio_lbl[_posicio_pib]
+            else:
+                verb_nom = "ha crecido" if _nom_creix else "se ha contraído"
+                verb_real = "ha sido" if _real_creix else "ha sido negativa,"
+                txt = (
+                    f"Entre {int(first_r['any'])} y {int(last_r['any'])}, el VAB nominal del comercio minorista "
+                    f"<strong>{verb_nom}</strong> un "
+                    f"<strong>{fpct(var_nom_total, 1)}</strong> (CAGR {fpct(cagr_nom, 1)}), "
+                    f"y en términos reales la variación {verb_real} del <strong>{fpct(var_real_total, 1)}</strong> "
+                    f"(CAGR {fpct(cagr_real, 1)}). "
+                )
+                if gap > 10:
+                    txt += (
+                        f"La diferencia de <strong>{fpct(gap, 1, sign=False)}</strong> entre nominal y real "
+                        f"es el <strong>efecto acumulado de la inflación</strong>: una parte del crecimiento "
+                        f"aparente es simplemente subida de precios. "
+                    )
+                posicio_lbl_es = {
+                    "per damunt": (
+                        f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por encima</strong> "
+                        f"del PIB general español (~2% real), ganando peso estructural."
+                    ),
+                    "per sota": (
+                        f"Con un CAGR real del {fpct(cagr_real, 1)}, el sector crece <strong>por debajo</strong> "
+                        f"del PIB general español (~2% real), confirmando la <strong>pérdida "
+                        f"estructural de peso</strong> en la economía. Factores explicativos: "
+                        f"concentración empresarial, digitalización y cambio en patrones de consumo."
+                    ),
+                    "amb decreixement absolut respecte": (
+                        f"Con un CAGR real negativo del {fpct(cagr_real, 1)}, el sector se contrae en términos "
+                        f"reales, con pérdida estructural de peso acelerada respecto al PIB general."
+                    ),
+                }
+                txt += posicio_lbl_es[_posicio_pib]
+            insight(txt)
+
+    # ─── Gràfic 2: Pes CNAE 47 sobre PIB ─────────────────────────
+
+    if "pes_cnae47" in df.columns:
+        st.subheader(t("pib_weight"))
+
+        df_pes = df.dropna(subset=["pes_cnae47"])
+
+        fig2 = go.Figure()
+        fig2.add_trace(go.Bar(
+            x=df_pes["any"], y=df_pes["pes_cnae47"] * 100,
+            marker_color=PURPLE,
+            text=[fpct(v, 1, sign=False) for v in df_pes["pes_cnae47"] * 100],
+            textposition="outside",
+            textfont=dict(size=10),
+        ))
+        apply_layout(fig2,
+            yaxis_title="%",
+            yaxis_range=[0, max(df_pes["pes_cnae47"] * 100) * 1.25],
             height=400,
         )
-        fig3.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig2, use_container_width=True)
         source("INE, Comptabilitat Nacional. Càlcul propi"
                if st.session_state.lang == "ca" else
                "INE, Contabilidad Nacional. Cálculo propio")
 
-# ─── VAB nominal vs real per CCAA ─────────────────────────────
+    _lbl_var_exp = ("Veure variació anual nominal i real"
+                    if st.session_state.lang == "ca" else
+                    "Ver variación anual nominal y real")
+    with highlight_expander(_lbl_var_exp, expanded=False):
+        # ─── Gràfic 3: Variació anual ─────────────────────────────────
 
-_ca = st.session_state.lang == "ca"
+        var_cols = [c for c in df.columns if c.startswith("var_")]
+        if var_cols:
+            st.subheader(t("pib_annual_var"))
 
-st.markdown("---")
-lbl_ccaa = ("VAB nominal vs real del comerç al detall per CCAA" if _ca
-            else "VAB nominal vs real del comercio minorista por CCAA")
-st.subheader(lbl_ccaa)
+            fig3 = go.Figure()
+            colors = {"var_vab_cnae47_corrents": RED, "var_vab_cnae47_constants": BLUE}
+            names = {"var_vab_cnae47_corrents": t("pib_nominal"), "var_vab_cnae47_constants": t("pib_real")}
 
-@st.cache_data(ttl=3600)
-def load_eee_ccaa():
-    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "eee_ccaa.csv")
-    if os.path.exists(p):
-        return pd.read_csv(p)
-    return pd.DataFrame()
+            for col in var_cols:
+                df_var = df.dropna(subset=[col])
+                fig3.add_trace(go.Bar(
+                    x=df_var["any"], y=df_var[col] * 100,
+                    name=names.get(col, col),
+                    marker_color=colors.get(col, "#999"),
+                ))
 
-df_eee = load_eee_ccaa()
+            apply_layout(fig3,
+                yaxis_title=t("annual_variation") + " (%)",
+                barmode="group",
+                height=400,
+            )
+            fig3.add_hline(y=0, line_dash="dash", line_color="rgba(0,0,0,0.2)")
+            st.plotly_chart(fig3, use_container_width=True)
+            source("INE, Comptabilitat Nacional. Càlcul propi"
+                   if st.session_state.lang == "ca" else
+                   "INE, Contabilidad Nacional. Cálculo propio")
 
-_vab_nom_col = "vab_eurostat" if "vab_eurostat" in df_eee.columns else "vab_estimat_nominal"
-_vab_real_col = "vab_estimat"
-_has_vab = not df_eee.empty and _vab_real_col in df_eee.columns and _vab_nom_col in df_eee.columns
+# ============================================================
+# TAB 2: COMUNITATS AUTÒNOMES
+# ============================================================
+with tab2:
+    # ─── VAB nominal vs real per CCAA ─────────────────────────────
 
-if _has_vab:
-    df_eee_ccaa = df_eee[df_eee["territori"] != "espanya"].copy()
-    ccaa_list = sorted(df_eee_ccaa["territori"].unique())
+    lbl_ccaa = ("VAB nominal vs real del comerç al detall per CCAA" if _ca
+                else "VAB nominal vs real del comercio minorista por CCAA")
+    st.subheader(lbl_ccaa)
 
-    default_sel = [c for c in ["Cataluña", "Madrid (Comunidad de)", "Andalucía",
-                                "Comunitat Valenciana"] if c in ccaa_list]
-    sel = st.multiselect(
-        "Selecciona CCAA" if _ca else "Selecciona CCAA",
-        ccaa_list, default=default_sel, key="vab_ccaa_sel",
-    )
+    @st.cache_data(ttl=3600)
+    def load_eee_ccaa():
+        p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "eee_ccaa.csv")
+        if os.path.exists(p):
+            return pd.read_csv(p)
+        return pd.DataFrame()
 
-    if sel:
-        fig_ccaa = go.Figure()
-        for i, ccaa in enumerate(sel):
-            dc = df_eee_ccaa[df_eee_ccaa["territori"] == ccaa].sort_values("any")
-            dc_nom = dc.dropna(subset=[_vab_nom_col])
-            dc_real = dc.dropna(subset=[_vab_real_col])
-            color = PALETTE[i % len(PALETTE)]
-            fig_ccaa.add_trace(go.Scatter(
-                x=dc_nom["any"], y=dc_nom[_vab_nom_col] / 1e6,
-                mode="lines+markers", name=f"{ccaa} ({t('pib_nominal')})",
-                line=dict(color=color, width=2),
-                marker=dict(size=5),
-                legendgroup=ccaa,
-            ))
-            fig_ccaa.add_trace(go.Scatter(
-                x=dc_real["any"], y=dc_real[_vab_real_col] / 1e6,
-                mode="lines+markers", name=f"{ccaa} ({t('pib_real')})",
-                line=dict(color=color, width=2, dash="dash"),
-                marker=dict(size=5, symbol="diamond"),
-                legendgroup=ccaa,
-            ))
+    df_eee = load_eee_ccaa()
 
-        apply_layout(fig_ccaa, yaxis_title=t("pib_meur"), height=500)
-        st.plotly_chart(fig_ccaa, use_container_width=True)
-        source("INE + Eurostat. Estimació híbrida" if _ca
-               else "INE + Eurostat. Estimación híbrida")
+    _vab_nom_col = "vab_eurostat" if "vab_eurostat" in df_eee.columns else "vab_estimat_nominal"
+    _vab_real_col = "vab_estimat"
+    _has_vab = not df_eee.empty and _vab_real_col in df_eee.columns and _vab_nom_col in df_eee.columns
 
-else:
-    st.info("No hi ha dades regionals disponibles." if _ca
-            else "No hay datos regionales disponibles.")
+    if _has_vab:
+        df_eee_ccaa = df_eee[df_eee["territori"] != "espanya"].copy()
+        ccaa_list = sorted(df_eee_ccaa["territori"].unique())
+
+        default_sel = [c for c in ["Cataluña", "Madrid (Comunidad de)", "Andalucía",
+                                    "Comunitat Valenciana"] if c in ccaa_list]
+        sel = st.multiselect(
+            "Selecciona CCAA" if _ca else "Selecciona CCAA",
+            ccaa_list, default=default_sel, key="vab_ccaa_sel",
+        )
+
+        if sel:
+            fig_ccaa = go.Figure()
+            for i, ccaa in enumerate(sel):
+                dc = df_eee_ccaa[df_eee_ccaa["territori"] == ccaa].sort_values("any")
+                dc_nom = dc.dropna(subset=[_vab_nom_col])
+                dc_real = dc.dropna(subset=[_vab_real_col])
+                color = PALETTE[i % len(PALETTE)]
+                fig_ccaa.add_trace(go.Scatter(
+                    x=dc_nom["any"], y=dc_nom[_vab_nom_col] / 1e6,
+                    mode="lines+markers", name=f"{ccaa} ({t('pib_nominal')})",
+                    line=dict(color=color, width=2),
+                    marker=dict(size=5),
+                    legendgroup=ccaa,
+                ))
+                fig_ccaa.add_trace(go.Scatter(
+                    x=dc_real["any"], y=dc_real[_vab_real_col] / 1e6,
+                    mode="lines+markers", name=f"{ccaa} ({t('pib_real')})",
+                    line=dict(color=color, width=2, dash="dash"),
+                    marker=dict(size=5, symbol="diamond"),
+                    legendgroup=ccaa,
+                ))
+
+            apply_layout(fig_ccaa, yaxis_title=t("pib_meur"), height=500)
+            st.plotly_chart(fig_ccaa, use_container_width=True)
+            source("INE + Eurostat. Estimació híbrida" if _ca
+                   else "INE + Eurostat. Estimación híbrida")
+
+    else:
+        st.info("No hi ha dades regionals disponibles." if _ca
+                else "No hay datos regionales disponibles.")
 
 # ─── Taula descarregable ──────────────────────────────────────
 
