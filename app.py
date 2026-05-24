@@ -79,7 +79,7 @@ p_prod = st.Page(
 )
 p_ec = st.Page(
     "pages/5_Ecommerce.py",
-    title="E-commerce",
+    title=("Digitalització" if _ca else "Digitalización"),
 )
 p_europa = st.Page(
     "pages/7_Comparativa_Europa.py",
