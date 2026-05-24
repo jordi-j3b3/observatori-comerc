@@ -312,31 +312,52 @@ def fetch_retail_volume_monthly():
     return df[["pais", "pais_codi", "periode", "index_volum"]].reset_index(drop=True)
 
 
-def fetch_tic_comerc():
-    """
-    Dataset isoc_ec_eseln2: % d'empreses del comerç (NACE G47) amb vendes
-    electròniques. Radiografia de la digitalització del sector (ETICCE/Eurostat).
-    ES vs UE-27, sèrie anual. Connecta amb la tesi de redistribució cap a canals
-    nous. Ampliable a web/xarxes/núvol/IA amb altres datasets isoc_*.
-    """
-    params = [
-        ("indic_is", "E_AESELL"),  # empreses que han fet vendes electròniques
-        ("unit", "PC_ENT"),         # % d'empreses
-        ("nace_r2", "G47"),
-        ("geo", "ES"),
-        ("geo", "EU27_2020"),
-    ]
-    data = _fetch_eurostat("isoc_ec_eseln2", params)
-    df = _parse_eurostat_json(data)
-    if df.empty:
-        return df
+# Radiografia de digitalització del comerç (G47), enquesta TIC d'Eurostat.
+# (dataset, indic_is, params_extra, etiqueta_ca, etiqueta_es)
+_DIG_INDICADORS = [
+    ("isoc_ec_eseln2", "E_AESELL", [], "Venda electrònica", "Venta electrónica"),
+    ("isoc_eb_ain2", "E_AI_TANY", [("size_emp", "GE10")],
+     "Intel·ligència artificial", "Inteligencia artificial"),
+    ("isoc_cicce_usen2", "E_CC", [("size_emp", "GE10")], "Núvol (cloud)", "Nube (cloud)"),
+]
 
-    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
-    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
-    df["any"] = pd.to_numeric(df["any"], errors="coerce")
-    df["pct_empreses_evendes"] = pd.to_numeric(df["valor"], errors="coerce")
 
-    return df[["pais", "pais_codi", "any", "pct_empreses_evendes"]].dropna().reset_index(drop=True)
+def fetch_digitalitzacio_comerc():
+    """
+    Radiografia de la digitalització del comerç al detall (NACE G47): %
+    d'empreses que adopten cada tecnologia (venda electrònica, IA, núvol),
+    ES vs UE-27, sèrie anual. Enquesta TIC d'Eurostat (datasets isoc_*).
+    Nota: IA i núvol cobreixen empreses de 10+ ocupats (exclou micro/autònoms).
+    Substitueix l'antic fetch d'e-commerce sol. Ampliable amb més indicadors.
+    """
+    frames = []
+    for dataset, indic, extra, lab_ca, lab_es in _DIG_INDICADORS:
+        params = [("nace_r2", "G47"), ("indic_is", indic), ("unit", "PC_ENT"),
+                  ("geo", "ES"), ("geo", "EU27_2020")] + extra
+        try:
+            data = _fetch_eurostat(dataset, params)
+            df = _parse_eurostat_json(data)
+        except Exception:
+            df = pd.DataFrame()
+        if df.empty:
+            continue
+        df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+        # Defensiu: si encara hi ha múltiples classes de mida, quedar-nos amb 10+
+        if "size_emp" in df.columns and df["size_emp"].nunique() > 1:
+            df = df[df["size_emp"] == "GE10"]
+        df["any"] = pd.to_numeric(df["any"], errors="coerce")
+        df["pct"] = pd.to_numeric(df["valor"], errors="coerce")
+        df["tech"] = lab_ca
+        df["tech_es"] = lab_es
+        frames.append(df[["pais_codi", "any", "tech", "tech_es", "pct"]])
+
+    if not frames:
+        return pd.DataFrame()
+    res = pd.concat(frames, ignore_index=True)
+    res["pais"] = res["pais_codi"].map(COUNTRY_NAMES)
+    return (res.dropna(subset=["any", "pct"])
+            [["pais", "pais_codi", "any", "tech", "tech_es", "pct"]]
+            .reset_index(drop=True))
 
 
 # Sexe de la LFS (lfsa_egan22d)
