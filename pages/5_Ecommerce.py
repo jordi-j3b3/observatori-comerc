@@ -7,7 +7,7 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, cagr, apply_layout,
-                   PURPLE, RED, GREEN, GRAY)
+                   PURPLE, RED, GREEN, GRAY, BRAND, ORANGE)
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -212,6 +212,74 @@ if "ecommerce_cnae47_eur" in df.columns and "pes_cnae47_ecommerce" in df.columns
                 "por encima de otros sectores, consolidando su posición en el ecosistema de e-commerce."
             )
     insight(txt)
+
+# ─── TIC al comerç: adopció de la venda electrònica (Eurostat) ───
+_TIC_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tic_comerc.csv")
+
+@st.cache_data(ttl=3600)
+def load_tic(sig):  # 'sig' (mida+data del CSV) trenca la cache quan canvien les dades
+    if os.path.exists(_TIC_PATH):
+        return pd.read_csv(_TIC_PATH)
+    return pd.DataFrame()
+
+_tic_sig = ((os.path.getsize(_TIC_PATH), int(os.path.getmtime(_TIC_PATH)))
+            if os.path.exists(_TIC_PATH) else (0, 0))
+df_tic = load_tic(_tic_sig)
+
+if not df_tic.empty:
+    st.markdown("---")
+    st.subheader("TIC al comerç: quantes empreses venen per via electrònica" if _ca
+                 else "TIC en el comercio: cuántas empresas venden por vía electrónica")
+    intro(
+        ("Les dades de la CNMC mesuren el <strong>volum de transaccions</strong> (la demanda). "
+         "Aquest indicador en mira l'<strong>altra cara</strong>: quin percentatge de les "
+         "<strong>empreses de comerç</strong> (CNAE 47) ha fet vendes electròniques, segons "
+         "l'enquesta TIC d'Eurostat. És la radiografia de la digitalització de l'oferta, comparada amb la UE-27."
+         if _ca else
+         "Los datos de la CNMC miden el <strong>volumen de transacciones</strong> (la demanda). "
+         "Este indicador mira la <strong>otra cara</strong>: qué porcentaje de las "
+         "<strong>empresas de comercio</strong> (CNAE 47) ha realizado ventas electrónicas, según "
+         "la encuesta TIC de Eurostat. Es la radiografía de la digitalización de la oferta, comparada con la UE-27.")
+    )
+
+    _tult = int(df_tic["any"].max())
+
+    def _tv(p, y):
+        v = df_tic[(df_tic["pais_codi"] == p) & (df_tic["any"] == y)]["pct_empreses_evendes"]
+        return v.values[0] if len(v) else None
+
+    _tes, _tue = _tv("ES", _tult), _tv("EU27_2020", _tult)
+    tc1, tc2, tc3 = st.columns(3)
+    tc1.metric(("Comerços que venen online (ES)" if _ca else "Comercios que venden online (ES)"),
+               fpct(_tes, 1, sign=False), help=f"{_tult}")
+    tc2.metric("UE-27", fpct(_tue, 1, sign=False), help=f"{_tult}")
+    tc3.metric(("Diferència ES − UE" if _ca else "Diferencia ES − UE"),
+               fpct((_tes - _tue) if (_tes is not None and _tue is not None) else None, 1))
+
+    figt = go.Figure()
+    for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
+                          ("EU27_2020", ORANGE, "UE-27")]:
+        _d = df_tic[df_tic["pais_codi"] == _p].sort_values("any")
+        figt.add_trace(go.Scatter(
+            x=_d["any"], y=_d["pct_empreses_evendes"], mode="lines+markers", name=_nm,
+            line=dict(color=_col, width=2.5), marker=dict(size=5)))
+    apply_layout(figt, yaxis_title="% d'empreses" if _ca else "% de empresas", height=380)
+    st.plotly_chart(figt, use_container_width=True)
+    source("Eurostat isoc_ec_eseln2 (enquesta TIC), CNAE G47")
+
+    insight(
+        (f"El {fpct(_tes, 1, sign=False)} de les empreses de comerç espanyoles van vendre per via electrònica el {_tult}, "
+         f"{'per sobre' if (_tes or 0) >= (_tue or 0) else 'per sota'} de la mitjana de la UE-27 ({fpct(_tue, 1, sign=False)}). "
+         f"Espanya partia per sota fa una dècada i va superar la UE arran de la pandèmia: la "
+         f"<strong>capacitat digital del teixit comercial</strong> ja no és el coll d'ampolla. "
+         f"El repte s'ha desplaçat de <em>poder</em> vendre online a <em>competir</em> en canals nous."
+         if _ca else
+         f"El {fpct(_tes, 1, sign=False)} de las empresas de comercio españolas vendieron por vía electrónica en {_tult}, "
+         f"{'por encima' if (_tes or 0) >= (_tue or 0) else 'por debajo'} de la media de la UE-27 ({fpct(_tue, 1, sign=False)}). "
+         f"España partía por debajo hace una década y superó a la UE a raíz de la pandemia: la "
+         f"<strong>capacidad digital del tejido comercial</strong> ya no es el cuello de botella. "
+         f"El reto se ha desplazado de <em>poder</em> vender online a <em>competir</em> en canales nuevos.")
+    )
 
 with st.expander(t("download_data")):
     st.dataframe(df, use_container_width=True)
