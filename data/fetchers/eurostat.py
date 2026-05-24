@@ -339,21 +339,24 @@ def fetch_tic_comerc():
     return df[["pais", "pais_codi", "any", "pct_empreses_evendes"]].dropna().reset_index(drop=True)
 
 
-# Codis de sexe i franges d'edat de la LFS (lfsa_egan22d)
+# Sexe de la LFS (lfsa_egan22d)
 _OCU_SEXE = {"T": "Total", "M": "Homes", "F": "Dones"}
-_OCU_EDAT = {
-    "Y15-24": "15-24", "Y25-49": "25-49", "Y50-64": "50-64",
-    "Y_GE65": "65+", "Y15-64": "15-64 (total)",
-}
+# Rangs LFS a demanar. La taula de NACE detallat només publica rangs amplis o
+# acumulats; les franges fines es construeixen per diferència (vegeu _OCU_BANDES).
+_OCU_RAW = ["Y15-24", "Y15-39", "Y25-49", "Y50-59", "Y50-64", "Y_GE65"]
+# Franges fines resultants, en ordre jove -> gran (partició de 15+ anys)
+_OCU_BANDES = ["15-24", "25-39", "40-49", "50-59", "60-64", "65+"]
 
 
 def fetch_ocupacio_comerc():
     """
     Dataset lfsa_egan22d (EU-LFS): persones ocupades al comerç al detall (NACE
     G47) per sexe i franja d'edat, en milers. ES vs UE-27, sèrie anual.
-    Radiografia de qui treballa al sector: pes femení i relleu generacional
-    (joves 15-24 vs sèniors 50-64/65+). La nacionalitat NO és creuable amb NACE
-    a la LFS (mostra insuficient); per això aquí només sexe i edat.
+    Radiografia de qui treballa al sector: pes femení i relleu generacional.
+    La taula de NACE detallat només dóna rangs amplis/acumulats; aquí es
+    construeixen 6 franges fines per diferència (15-24, 25-39, 40-49, 50-59,
+    60-64, 65+). La nacionalitat NO és creuable amb NACE a la LFS (mostra
+    insuficient); per això aquí només sexe i edat.
     """
     params = [
         ("nace_r2", "G47"),
@@ -362,21 +365,47 @@ def fetch_ocupacio_comerc():
         ("geo", "EU27_2020"),
     ]
     params += [("sex", s) for s in _OCU_SEXE]
-    params += [("age", a) for a in _OCU_EDAT]
+    params += [("age", a) for a in _OCU_RAW]
     data = _fetch_eurostat("lfsa_egan22d", params)
     df = _parse_eurostat_json(data)
     if df.empty:
         return df
 
     df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
-    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
-    df["sexe"] = df["sex"].map(_OCU_SEXE)
-    df["edat"] = df["age"].map(_OCU_EDAT)
     df["any"] = pd.to_numeric(df["any"], errors="coerce")
-    df["ocupats_milers"] = pd.to_numeric(df["valor"], errors="coerce")
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
 
-    return (df[["pais", "pais_codi", "any", "sex", "sexe", "age", "edat",
-                "ocupats_milers"]]
+    # Pivotar per construir les franges fines per diferència de rangs acumulats
+    piv = df.pivot_table(index=["pais_codi", "any", "sex"],
+                         columns="age", values="valor").reset_index()
+
+    def _c(code):
+        return piv[code] if code in piv.columns else 0
+
+    bandes = {
+        "15-24": _c("Y15-24"),
+        "25-39": _c("Y15-39") - _c("Y15-24"),
+        "40-49": _c("Y25-49") - (_c("Y15-39") - _c("Y15-24")),
+        "50-59": _c("Y50-59"),
+        "60-64": _c("Y50-64") - _c("Y50-59"),
+        "65+":   _c("Y_GE65"),
+    }
+
+    rows = []
+    base = piv[["pais_codi", "any", "sex"]]
+    for nom, serie in bandes.items():
+        tmp = base.copy()
+        tmp["edat"] = nom
+        tmp["ocupats_milers"] = serie
+        rows.append(tmp)
+    res = pd.concat(rows, ignore_index=True)
+
+    res["pais"] = res["pais_codi"].map(COUNTRY_NAMES)
+    res["sexe"] = res["sex"].map(_OCU_SEXE)
+    # Diferències poden donar valors lleugerament negatius per arrodoniment LFS
+    res["ocupats_milers"] = res["ocupats_milers"].clip(lower=0)
+
+    return (res[["pais", "pais_codi", "any", "sex", "sexe", "edat", "ocupats_milers"]]
             .dropna(subset=["any", "ocupats_milers", "sexe", "edat"])
             .reset_index(drop=True))
 
