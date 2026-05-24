@@ -141,25 +141,31 @@ def _load_translations():
         return json.load(f)
 
 
-def setup_lang(show_selector=True):
-    """Configura l'idioma: inicialitza session_state i retorna funció t().
+_LANG_OPTIONS = {"Castellano": "es", "Català": "ca"}
 
-    Per defecte: castellà (es). El selector ca/es es manté visible al header.
+
+def render_lang_selector(label="Idioma"):
+    """Renderitza el selector d'idioma (selectbox amb clau persistent
+    'lang_selector'). Cal cridar-lo dins d'un context de sidebar; permet
+    col·locar-lo on convingui (p. ex. al peu del sidebar)."""
+    st.selectbox(label, list(_LANG_OPTIONS.keys()), key="lang_selector")
+
+
+def setup_lang(show_selector=True):
+    """Configura l'idioma i retorna la funció de traducció t().
+
+    L'idioma es deriva del selector (clau de sessió 'lang_selector'); per
+    defecte, castellà. Així el selector es pot renderitzar separadament
+    (al peu del sidebar) amb render_lang_selector() i l'idioma queda fixat
+    abans de construir títols i navegació.
     """
     TRANS = _load_translations()
-    if "lang" not in st.session_state:
-        st.session_state.lang = "es"
+    _label = st.session_state.get("lang_selector", "Castellano")
+    st.session_state.lang = _LANG_OPTIONS.get(_label, "es")
 
     if show_selector:
         with st.sidebar:
-            # Ordre: Castellano primer (default), Català segon
-            lang_options = {"Castellano": "es", "Català": "ca"}
-            selected = st.selectbox(
-                "Idioma",
-                list(lang_options.keys()),
-                index=0 if st.session_state.lang == "es" else 1,
-            )
-            st.session_state.lang = lang_options[selected]
+            render_lang_selector()
 
     def t(key):
         return TRANS.get(st.session_state.lang, {}).get(key, key)

@@ -262,33 +262,33 @@ if not df_dig.empty:
         _col_box.metric((_tca if _ca else _tes), fpct(_v, 1, sign=False),
                         help=f"ES {_yr} · UE-27 {fpct(_vu, 1, sign=False)}")
 
-    # Foto actual per tecnologia: ES vs UE-27
-    _maxy = int(df_dig["any"].max())
-    st.markdown((f"**Adopció per tecnologia: Espanya vs UE-27** (últim any disponible)" if _ca
-                 else f"**Adopción por tecnología: España vs UE-27** (último año disponible)"))
-    _labels = [(_tca if _ca else _tes) for _tca, _tes, _ in _TECHS]
-    figb = go.Figure()
-    figb.add_trace(go.Bar(x=_labels, y=[_last(t[0], "ES")[1] for t in _TECHS],
-                          name=("Espanya" if _ca else "España"), marker_color=BRAND))
-    figb.add_trace(go.Bar(x=_labels, y=[_last(t[0], "EU27_2020")[1] for t in _TECHS],
-                          name="UE-27", marker_color=GRAY))
-    apply_layout(figb, yaxis_title="% d'empreses" if _ca else "% de empresas",
-                 height=360, barmode="group")
-    st.plotly_chart(figb, use_container_width=True)
-    source("Eurostat, enquesta TIC (isoc_ec_eseln2 · isoc_eb_ain2 · isoc_cicce_usen2), CNAE G47")
+    _tab_comp, _tab_evo = st.tabs([
+        ("Comparativa ES vs UE-27" if _ca else "Comparativa ES vs UE-27"),
+        ("Evolució a Espanya" if _ca else "Evolución en España"),
+    ])
 
-    # Evolució de l'adopció a Espanya
-    st.markdown(("**Evolució de l'adopció a Espanya**" if _ca
-                 else "**Evolución de la adopción en España**"))
-    figl = go.Figure()
-    for _tca, _tes, _c in _TECHS:
-        _d = df_dig[(df_dig["tech"] == _tca) & (df_dig["pais_codi"] == "ES")].sort_values("any")
-        figl.add_trace(go.Scatter(
-            x=_d["any"], y=_d["pct"], mode="lines+markers", name=(_tca if _ca else _tes),
-            line=dict(color=_c, width=2.5), marker=dict(size=4)))
-    apply_layout(figl, yaxis_title="% d'empreses" if _ca else "% de empresas", height=360)
-    st.plotly_chart(figl, use_container_width=True)
-    source("Eurostat, enquesta TIC, CNAE G47")
+    with _tab_comp:
+        _labels = [(_tca if _ca else _tes) for _tca, _tes, _ in _TECHS]
+        figb = go.Figure()
+        figb.add_trace(go.Bar(x=_labels, y=[_last(t[0], "ES")[1] for t in _TECHS],
+                              name=("Espanya" if _ca else "España"), marker_color=BRAND))
+        figb.add_trace(go.Bar(x=_labels, y=[_last(t[0], "EU27_2020")[1] for t in _TECHS],
+                              name="UE-27", marker_color=GRAY))
+        apply_layout(figb, yaxis_title="% d'empreses" if _ca else "% de empresas",
+                     height=380, barmode="group")
+        st.plotly_chart(figb, use_container_width=True)
+        source("Eurostat, enquesta TIC (isoc_ec_eseln2 · isoc_eb_ain2 · isoc_cicce_usen2), CNAE G47")
+
+    with _tab_evo:
+        figl = go.Figure()
+        for _tca, _tes, _c in _TECHS:
+            _d = df_dig[(df_dig["tech"] == _tca) & (df_dig["pais_codi"] == "ES")].sort_values("any")
+            figl.add_trace(go.Scatter(
+                x=_d["any"], y=_d["pct"], mode="lines+markers", name=(_tca if _ca else _tes),
+                line=dict(color=_c, width=2.5), marker=dict(size=4)))
+        apply_layout(figl, yaxis_title="% d'empreses" if _ca else "% de empresas", height=380)
+        st.plotly_chart(figl, use_container_width=True)
+        source("Eurostat, enquesta TIC, CNAE G47")
 
     _ec_es, _ec_ue = _last("Venda electrònica", "ES")[1], _last("Venda electrònica", "EU27_2020")[1]
     _ai_es, _ai_ue = _last("Intel·ligència artificial", "ES")[1], _last("Intel·ligència artificial", "EU27_2020")[1]

@@ -507,58 +507,63 @@ if not df_ocu.empty:
               delta=fpct(sen_es - sen_first, 1),
               delta_color="off", help=(f"vs {_first}"))
 
-    # --- Gènere: quota de dones al llarg del temps, ES vs UE ---
-    st.subheader("Sexe: un sector majoritàriament femení" if _ca
-                 else "Sexo: un sector mayoritariamente femenino")
-    _piv = df_ocu.pivot_table(index=["pais_codi", "any"], columns="sexe",
-                              values="ocupats_milers", aggfunc="sum").reset_index()
-    _piv["quota_dones"] = _piv["Dones"] / _piv["Total"] * 100
-    figg = go.Figure()
-    for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                          ("EU27_2020", ORANGE, "UE-27")]:
-        _d = _piv[_piv["pais_codi"] == _p].sort_values("any")
-        figg.add_trace(go.Scatter(
-            x=_d["any"], y=_d["quota_dones"], mode="lines+markers", name=_nm,
-            line=dict(color=_col, width=2.5), marker=dict(size=5)))
-    apply_layout(figg, yaxis_title="% dones" if _ca else "% mujeres", height=360)
-    st.plotly_chart(figg, use_container_width=True)
-    source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
+    _tab_sexe, _tab_edat = st.tabs([
+        ("Sexe" if _ca else "Sexo"),
+        ("Edat: relleu generacional" if _ca else "Edad: relevo generacional"),
+    ])
+
+    # --- Sexe: quota de dones al llarg del temps, ES vs UE ---
+    with _tab_sexe:
+        st.markdown("**Un sector majoritàriament femení**" if _ca
+                    else "**Un sector mayoritariamente femenino**")
+        _piv = df_ocu.pivot_table(index=["pais_codi", "any"], columns="sexe",
+                                  values="ocupats_milers", aggfunc="sum").reset_index()
+        _piv["quota_dones"] = _piv["Dones"] / _piv["Total"] * 100
+        figg = go.Figure()
+        for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
+                              ("EU27_2020", ORANGE, "UE-27")]:
+            _d = _piv[_piv["pais_codi"] == _p].sort_values("any")
+            figg.add_trace(go.Scatter(
+                x=_d["any"], y=_d["quota_dones"], mode="lines+markers", name=_nm,
+                line=dict(color=_col, width=2.5), marker=dict(size=5)))
+        apply_layout(figg, yaxis_title="% dones" if _ca else "% mujeres", height=380)
+        st.plotly_chart(figg, use_container_width=True)
+        source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
 
     # --- Edat: relleu generacional ---
-    st.subheader("Edat: relleu generacional" if _ca else "Edad: relevo generacional")
+    with _tab_edat:
+        # (a) Evolució longitudinal de l'estructura d'edat a Espanya (àrea apilada 100%)
+        st.markdown(("**Com evoluciona l'estructura d'edat a Espanya** "
+                     f"({_first}–{_ult})" if _ca else
+                     "**Cómo evoluciona la estructura de edad en España** "
+                     f"({_first}–{_ult})"))
+        _es = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["pais_codi"] == "ES")]
+        _pv = _es.pivot_table(index="any", columns="edat",
+                              values="ocupats_milers", aggfunc="sum")
+        _pv = _pv.reindex(columns=_ages)
+        _pvs = _pv.div(_pv.sum(axis=1), axis=0) * 100
+        figL = go.Figure()
+        for _b, _colr in zip(_ages, _RAMP):
+            figL.add_trace(go.Scatter(
+                x=_pvs.index, y=_pvs[_b], mode="lines", name=_b,
+                stackgroup="one", line=dict(width=0.5, color=_colr), fillcolor=_colr))
+        apply_layout(figL, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
+                     height=400, yaxis_range=[0, 100])
+        st.plotly_chart(figL, use_container_width=True)
+        source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
 
-    # (a) Evolució longitudinal de l'estructura d'edat a Espanya (àrea apilada 100%)
-    st.markdown(("**Com evoluciona l'estructura d'edat a Espanya** "
-                 f"({_first}–{_ult})" if _ca else
-                 "**Cómo evoluciona la estructura de edad en España** "
-                 f"({_first}–{_ult})"))
-    _es = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["pais_codi"] == "ES")]
-    _pv = _es.pivot_table(index="any", columns="edat",
-                          values="ocupats_milers", aggfunc="sum")
-    _pv = _pv.reindex(columns=_ages)
-    _pvs = _pv.div(_pv.sum(axis=1), axis=0) * 100
-    figL = go.Figure()
-    for _b, _colr in zip(_ages, _RAMP):
-        figL.add_trace(go.Scatter(
-            x=_pvs.index, y=_pvs[_b], mode="lines", name=_b,
-            stackgroup="one", line=dict(width=0.5, color=_colr), fillcolor=_colr))
-    apply_layout(figL, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
-                 height=400, yaxis_range=[0, 100])
-    st.plotly_chart(figL, use_container_width=True)
-    source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
-
-    # (b) Foto actual: Espanya vs UE-27 per franja
-    st.markdown((f"**Foto actual: Espanya vs UE-27** ({_ult})" if _ca
-                 else f"**Foto actual: España vs UE-27** ({_ult})"))
-    figa = go.Figure()
-    for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                          ("EU27_2020", ORANGE, "UE-27")]:
-        _ys = [_ageshare(_p, _ult, b) for b in _ages]
-        figa.add_trace(go.Bar(x=_ages, y=_ys, name=_nm, marker_color=_col))
-    apply_layout(figa, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
-                 height=360, barmode="group")
-    st.plotly_chart(figa, use_container_width=True)
-    source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
+        # (b) Foto actual: Espanya vs UE-27 per franja
+        st.markdown((f"**Foto actual: Espanya vs UE-27** ({_ult})" if _ca
+                     else f"**Foto actual: España vs UE-27** ({_ult})"))
+        figa = go.Figure()
+        for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
+                              ("EU27_2020", ORANGE, "UE-27")]:
+            _ys = [_ageshare(_p, _ult, b) for b in _ages]
+            figa.add_trace(go.Bar(x=_ages, y=_ys, name=_nm, marker_color=_col))
+        apply_layout(figa, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
+                     height=360, barmode="group")
+        st.plotly_chart(figa, use_container_width=True)
+        source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
 
     insight(
         (f"El comerç és un <strong>sector feminitzat</strong> ({fpct(w_es, 1, sign=False)} de dones a Espanya, "

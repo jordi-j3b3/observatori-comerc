@@ -18,10 +18,10 @@ st.logo(
     size="large",
 )
 
-from style import inject_css, setup_lang, newsletter_form
+from style import inject_css, setup_lang, newsletter_form, render_lang_selector
 
 inject_css()
-t = setup_lang(show_selector=True)
+t = setup_lang(show_selector=False)  # el selector es renderitza al peu del sidebar
 
 _ca = st.session_state.lang == "ca"
 
@@ -211,6 +211,10 @@ with st.sidebar:
         """,
         unsafe_allow_html=True,
     )
+
+    st.divider()
+    # Selector d'idioma al peu del sidebar
+    render_lang_selector()
 
     st.divider()
     st.caption(t("footer"))
