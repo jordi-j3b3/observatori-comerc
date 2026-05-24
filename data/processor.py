@@ -1067,6 +1067,64 @@ def process_ocupacio_comerc():
     return df
 
 
+def process_lideres():
+    """
+    Líders del comerç (CNAE 47): comptes anuals dipositats al Registre Mercantil,
+    top empreses 2020-2024 (font: extracció manual SABI, sense API). Llegeix el
+    fitxer cru data/raw/lideres_comerc_sabi.csv, el neteja (format espanyol,
+    n.d.->buit, descarta TotalPasivoCP duplicat) i el desa en format llarg
+    (empresa × any) amb derivats (marges, ràtio personal, productivitat).
+    Actualització: reemplaçar el raw i tornar a executar.
+    """
+    import numpy as np
+    raw_path = os.path.join(CACHE_DIR, "..", "raw", "lideres_comerc_sabi.csv")
+    if not os.path.exists(raw_path):
+        print("  AVIS: sense raw de líders; mantenint cache existent")
+        return load_cache("lideres_comerc")
+    print("  Processant líders del comerç (Registre Mercantil, raw manual)...")
+    raw = pd.read_csv(raw_path, sep=";", quotechar='"', dtype=str, keep_default_na=False)
+
+    def _num(x):
+        x = (x or "").strip()
+        if x in ("", "n.d.", "n.d", "nd"):
+            return np.nan
+        neg = x.startswith("-")
+        x = x.lstrip("-").replace(".", "").replace(",", ".")
+        try:
+            v = float(x)
+            return -v if neg else v
+        except ValueError:
+            return np.nan
+
+    years = [2024, 2023, 2022, 2021, 2020]
+    metrics = ["Ingresos", "EBITDA", "EBIT", "Resultado", "TotalActivo",
+               "DeudasFin", "Empleados", "GastosPersonal"]  # TotalPasivoCP descartat (duplicat d'Activo)
+    sub = {"4711": "Alimentació", "4719": "No especialitzat", "4729": "Alim. especialitzada",
+           "4730": "Combustible", "4741": "Informàtica/electrònica", "4752": "Bricolatge i ferreteria",
+           "4754": "Electrodomèstics", "4759": "Mobles i llar", "4761": "Llibres i cultura",
+           "4764": "Esports", "4771": "Moda i tèxtil", "4772": "Calçat", "4774": "Òptica",
+           "4775": "Cosmètica i perfumeria", "4776": "Mascotes", "4777": "Joieria",
+           "4778": "Altres especialitzats"}
+    rows = []
+    for _, c in raw.iterrows():
+        cn = str(c["CNAE_primario"]).strip()
+        for y in years:
+            rec = {"num": int(c["Num"]), "nombre": c["Nombre"], "nif": c["Codigo_NIF"],
+                   "localitat": c["Localidad"], "forma": c["Forma_juridica"], "cnae": cn,
+                   "subsector": sub.get(cn, "Altres"), "any": y}
+            for m in metrics:
+                rec[m.lower()] = _num(c.get(f"{m}_{y}", ""))
+            rows.append(rec)
+    d = pd.DataFrame(rows)
+    d["marge_ebitda"] = d["ebitda"] / d["ingresos"] * 100
+    d["marge_ebit"] = d["ebit"] / d["ingresos"] * 100
+    d["ratio_personal"] = d["gastospersonal"] / d["ingresos"] * 100
+    d["ingressos_per_empleat"] = d["ingresos"] * 1000 / d["empleados"]
+    save_cache(d, "lideres_comerc")
+    print(f"  Líders del comerç: {len(d)} files ({d['nombre'].nunique()} empreses)")
+    return d
+
+
 def process_cdmge():
     """
     CDMGE — comerç diari grans empreses (T=37808, INE experimental).
@@ -1215,6 +1273,7 @@ DATASETS_VIGILATS = {
     "europa_retail_mensual": {"col": "periode", "ca": "Comerç a Europa (mensual)",  "es": "Comercio en Europa (mensual)"},
     "digitalitzacio_comerc": {"col": "any", "ca": "Digitalització del comerç", "es": "Digitalización del comercio"},
     "ocupacio_comerc": {"col": "any", "ca": "Ocupació per sexe i edat", "es": "Ocupación por sexo y edad"},
+    "lideres_comerc": {"col": "any", "ca": "Líders del comerç", "es": "Líderes del comercio"},
     "cdmge":                 {"col": "data",    "ca": "Pols diari",                 "es": "Pulso diario"},
     "ipc":                   {"col": "any",     "ca": "IPC",                        "es": "IPC"},
     "subsectors_dirce":      {"col": "any",     "ca": "Subsectors",                 "es": "Subsectores"},
@@ -1316,6 +1375,9 @@ def process_all():
 
     print("\n5d. Ocupació comerç per sexe/edat (Eurostat lfsa_egan22d):")
     process_ocupacio_comerc()
+
+    print("\n5e. Líders del comerç (Registre Mercantil, raw manual):")
+    process_lideres()
 
     print("\n6. EEE Comercio per CCAA:")
     process_eee_ccaa()

@@ -95,6 +95,10 @@ p_terr = st.Page(
     "pages/6_Territori.py",
     title=("Territori" if _ca else "Territorio"),
 )
+p_lideres = st.Page(
+    "pages/D_Lideres.py",
+    title=("Líders del comerç" if _ca else "Líderes del comercio"),
+)
 
 # RECURSOS
 p_metod = st.Page(
@@ -112,7 +116,7 @@ nav = {
     SEC_EDITORIAL: [p_lecturas],
     SEC_PULSO: [p_pols, p_icm],
     SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
-    SEC_DETALL: [p_subs, p_terr],
+    SEC_DETALL: [p_subs, p_lideres, p_terr],
     SEC_RECURSOS: [p_metod, p_premsa],
 }
 

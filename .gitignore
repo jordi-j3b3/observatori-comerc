@@ -5,3 +5,6 @@ __pycache__/
 *.xlsx
 *.xls
 data/predicciones/
+
+# Dades font crues (export SABI verbatim) — fora del repo públic
+data/raw/
