@@ -429,7 +429,7 @@ with tab1:
         var_total = (emp_last_total / emp_first_total - 1) * 100 if emp_first_total else 0
 
         if _ca:
-            insight(
+            txt = (
                 f"El comerç al detall espanyol agrupa <strong>{fnum(total_subs)} empreses</strong> en "
                 f"<strong>{len(df_subs)} subsectors</strong>. <strong>{leader['label']}</strong> "
                 f"és el que té més empreses ({fnum(leader['empreses'])}), seguit de "
