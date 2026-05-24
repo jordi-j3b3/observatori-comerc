@@ -1023,6 +1023,28 @@ def process_europa_retail_mensual():
     return df
 
 
+def process_tic_comerc():
+    """
+    % d'empreses del comerç (NACE G47) amb vendes electròniques (Eurostat
+    isoc_ec_eseln2). Radiografia TIC del sector: ES vs UE-27, anual.
+    Cau silenciosament al cache existent si l'API falla.
+    """
+    print("  Carregant TIC al comerç (Eurostat isoc_ec_eseln2)...")
+    try:
+        df = eurostat.fetch_tic_comerc()
+    except Exception as e:
+        print(f"  Error API Eurostat TIC: {e}")
+        return load_cache("tic_comerc")
+
+    if df.empty:
+        print("  AVIS: sense dades TIC; mantenint cache existent")
+        return load_cache("tic_comerc")
+
+    save_cache(df, "tic_comerc")
+    print(f"  TIC comerç: {len(df)} registres")
+    return df
+
+
 def process_cdmge():
     """
     CDMGE — comerç diari grans empreses (T=37808, INE experimental).
@@ -1169,6 +1191,7 @@ DATASETS_VIGILATS = {
     "icm_distribucion":      {"col": "data",    "ca": "ICM per format de venda",    "es": "ICM por formato de venta"},
     "eaes":                  {"col": "any",     "ca": "Salaris (EAES)",             "es": "Salarios (EAES)"},
     "europa_retail_mensual": {"col": "periode", "ca": "Comerç a Europa (mensual)",  "es": "Comercio en Europa (mensual)"},
+    "tic_comerc": {"col": "any", "ca": "TIC al comerç", "es": "TIC en el comercio"},
     "cdmge":                 {"col": "data",    "ca": "Pols diari",                 "es": "Pulso diario"},
     "ipc":                   {"col": "any",     "ca": "IPC",                        "es": "IPC"},
     "subsectors_dirce":      {"col": "any",     "ca": "Subsectors",                 "es": "Subsectores"},
@@ -1264,6 +1287,9 @@ def process_all():
 
     print("\n5b. Europa retail mensual (Eurostat sts_trtu_m):")
     process_europa_retail_mensual()
+
+    print("\n5c. TIC al comerç (Eurostat isoc_ec_eseln2):")
+    process_tic_comerc()
 
     print("\n6. EEE Comercio per CCAA:")
     process_eee_ccaa()

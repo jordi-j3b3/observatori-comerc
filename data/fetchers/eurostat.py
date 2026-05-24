@@ -312,6 +312,33 @@ def fetch_retail_volume_monthly():
     return df[["pais", "pais_codi", "periode", "index_volum"]].reset_index(drop=True)
 
 
+def fetch_tic_comerc():
+    """
+    Dataset isoc_ec_eseln2: % d'empreses del comerç (NACE G47) amb vendes
+    electròniques. Radiografia de la digitalització del sector (ETICCE/Eurostat).
+    ES vs UE-27, sèrie anual. Connecta amb la tesi de redistribució cap a canals
+    nous. Ampliable a web/xarxes/núvol/IA amb altres datasets isoc_*.
+    """
+    params = [
+        ("indic_is", "E_AESELL"),  # empreses que han fet vendes electròniques
+        ("unit", "PC_ENT"),         # % d'empreses
+        ("nace_r2", "G47"),
+        ("geo", "ES"),
+        ("geo", "EU27_2020"),
+    ]
+    data = _fetch_eurostat("isoc_ec_eseln2", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+    df["pais"] = df["pais_codi"].map(COUNTRY_NAMES)
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["pct_empreses_evendes"] = pd.to_numeric(df["valor"], errors="coerce")
+
+    return df[["pais", "pais_codi", "any", "pct_empreses_evendes"]].dropna().reset_index(drop=True)
+
+
 # ─── BUSINESS DEMOGRAPHY (BSD) ────────────────────────────────
 # bd_size: demografia empresarial CNAE G47 anual.
 # Sèrie 2009-2023 viva, comparativa ES vs UE-27 vs grans economies.
