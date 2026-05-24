@@ -438,14 +438,17 @@ if not df_eaes.empty:
 
 # ─── Qui treballa al comerç: sexe i edat (Eurostat EU-LFS) ───
 
+_OCU_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "ocupacio_comerc.csv")
+
 @st.cache_data(ttl=3600)
-def load_ocu_sx():
-    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "ocupacio_comerc.csv")
-    if os.path.exists(p):
-        return pd.read_csv(p)
+def load_ocu_sx(sig):  # 'sig' (mida+data del CSV) trenca la cache quan canvien les dades
+    if os.path.exists(_OCU_PATH):
+        return pd.read_csv(_OCU_PATH)
     return pd.DataFrame()
 
-df_ocu = load_ocu_sx()
+_ocu_sig = ((os.path.getsize(_OCU_PATH), int(os.path.getmtime(_OCU_PATH)))
+            if os.path.exists(_OCU_PATH) else (0, 0))
+df_ocu = load_ocu_sx(_ocu_sig)
 
 if not df_ocu.empty:
     st.markdown("---")
