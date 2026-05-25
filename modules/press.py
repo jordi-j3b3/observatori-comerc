@@ -178,6 +178,13 @@ ANTI_KEYWORDS_HARD = [
     "ley de vivienda", "llei d'habitatge", "llei de l'habitatge",
     "alquiler vivienda", "lloguer d'habitatge", "lloguer habitatge",
     "inmobiliaria abusiva", "immobiliària abusiva",
+    # Geopolítica / defensa / conflictes bèl·lics: es colen via "venta"/"consumo"
+    # (p.ex. "veta la venta de cazas a España"). Afegit 2026-05-25.
+    "cazas", "caza militar", "avión de combate", "aviones de combate",
+    "armamento", "armament", "armamentístic", "misil", "misiles", "míssil",
+    "fuerzas armadas", "forces armades", "OTAN", "Pentágono",
+    "bélico", "bélica", "bèl·lic", "bèl·lica",
+    "guerra de Irán", "Irán", "Irak",
 ]
 _ANTI_HARD_RE = re.compile("|".join(re.escape(k) for k in ANTI_KEYWORDS_HARD), re.IGNORECASE)
 
@@ -269,7 +276,7 @@ SPAIN_KEYWORDS = [
     # Empreses retail espanyoles
     "Mercadona", "Inditex", "Zara", "Pull&Bear", "Bershka",
     "Massimo Dutti", "Stradivarius", "El Corte Inglés", "Corte Inglés",
-    "Mango", "Dia ", "Eroski", "Alcampo", "Consum", "Caprabo",
+    "Mango", "Dia ", "Eroski", "Alcampo", "Caprabo",
     "Bonpreu", "Esclat", "Tendam", "Cortefiel", "Springfield",
     "Desigual", "Tous", "Camper", "Decathlon España", "Lidl España",
     "Carrefour España",
@@ -306,14 +313,20 @@ def _clean_snippet(text, n=240):
     return (text[:n] + "…") if len(text) > n else text
 
 
-def _matches_keywords(titol, snippet):
+def _matches_keywords(titol, snippet, feed_id=""):
     blob = f"{titol} {snippet}"
     # Anti-keywords HARD: descartar sempre (G46 majoristes globals,
-    # alertes sanitàries, regulació immobiliària/lloguer...).
+    # alertes sanitàries, regulació immobiliària/lloguer, geopolítica/defensa...).
     if _ANTI_HARD_RE.search(blob):
         return False
     hits = _KW_RE.findall(blob)
     if not hits:
+        return False
+    # Agregador obert (google_retail): la consulta genèrica de Google News
+    # arrossega molt contingut en castellà de LATAM, on la foraneïtat és a la
+    # FONT i no al text (p.ex. mitjans argentins). Per a aquest feed exigim un
+    # senyal explícit d'Espanya. Afegit 2026-05-25.
+    if feed_id == "google_retail" and not _SPAIN_RE.search(blob):
         return False
     # Geografia: notícia d'un país estranger (LATAM, etc.) sense cap menció
     # a Espanya ni a una empresa retail espanyola → fora (l'observatori és
@@ -348,7 +361,7 @@ def _fetch_one(feed_cfg):
         link = e.get("link") or ""
         if not titol or not link:
             continue
-        if needs_filter and not _matches_keywords(titol, snippet):
+        if needs_filter and not _matches_keywords(titol, snippet, feed_id):
             continue
         rows.append({
             "data": _parse_date(e),
