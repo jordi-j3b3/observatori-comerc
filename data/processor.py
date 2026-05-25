@@ -1116,32 +1116,46 @@ def process_lideres():
                 rec[m.lower()] = _num(c.get(f"{m}_{y}", ""))
             rows.append(rec)
     d = pd.DataFrame(rows)
-    d["marge_ebitda"] = d["ebitda"] / d["ingresos"] * 100
-    d["marge_ebit"] = d["ebit"] / d["ingresos"] * 100
-    d["ratio_personal"] = d["gastospersonal"] / d["ingresos"] * 100
-    d["ingressos_per_empleat"] = d["ingresos"] * 1000 / d["empleados"]
-    # CACHES PÚBLIQUES SLIM: només el que la pàgina mostra. El detall financer
-    # per empresa (EBITDA/EBIT/personal/actiu/empleats × 5 anys) NO es publica;
-    # només facturació de la mostra (rànquing/CAGR) + agregats per subsector.
-    w = d.pivot_table(index=["nombre", "subsector"], columns="any", values="ingresos").reset_index()
-    for y in (2020, 2024):
-        if y not in w.columns:
-            w[y] = float("nan")
-    w = w.rename(columns={2024: "ing_2024", 2020: "ing_2020"})
-    w["cagr"] = ((w["ing_2024"] / w["ing_2020"]) ** (1 / 4) - 1) * 100
-    rank = w[["nombre", "subsector", "ing_2024", "ing_2020", "cagr"]]
-    save_cache(rank, "lideres_ranking")
-    d24 = d[d["any"] == 2024]
-    sub_agg = (d24.groupby("subsector").agg(
-        n=("nombre", "count"),
-        marge_ebitda=("marge_ebitda", "median"),
-        ratio_personal=("ratio_personal", "median"),
-        productivitat=("ingressos_per_empleat", "median"),
-        empleats_total=("empleados", "sum"),
-        ing_total=("ingresos", "sum")).reset_index())
-    save_cache(sub_agg, "lideres_subsector")
-    print(f"  Líders: rànquing {len(rank)} empreses + {len(sub_agg)} subsectors (caches slim públiques)")
-    return rank
+    # CACHE PÚBLICA = mètriques per empresa (snapshot 2024) + creixement orgànic.
+    # Ràtios derivats + facturació + plantilla; el detall financer absolut de 5
+    # anys (l'export verbatim) NO es publica (queda al raw, gitignored).
+    piv = d.pivot_table(index="nombre", columns="any", values="ingresos")
+
+    def _break(nom):
+        s = piv.loc[nom].dropna().sort_index()
+        if len(s) < 2:
+            return False
+        if s.min() / s.max() < 0.10:
+            return True
+        yoy = (s / s.shift(1)).dropna()
+        return bool((yoy > 4.5).any() or (yoy < 0.22).any())
+
+    last = d[d["any"] == 2024].set_index("nombre")
+    base = d[d["any"] == 2020].set_index("nombre")["ingresos"]
+    recs = []
+    for nom, c in last.iterrows():
+        I = c["ingresos"]
+        ta = c["totalactivo"]
+        brk = _break(nom)
+        ing20 = base.get(nom, float("nan"))
+        cagr = (((I / ing20) ** 0.25 - 1) * 100
+                if (pd.notna(I) and pd.notna(ing20) and ing20 > 0 and not brk) else float("nan"))
+        recs.append({
+            "nombre": str(nom).title(), "subsector": c["subsector"],
+            "ing_2024": I, "ing_2020": ing20, "empleados": c["empleados"],
+            "marge_ebitda": c["ebitda"] / I * 100 if I else float("nan"),
+            "marge_ebit": c["ebit"] / I * 100 if I else float("nan"),
+            "marge_net": c["resultado"] / I * 100 if I else float("nan"),
+            "roa": c["resultado"] / ta * 100 if ta else float("nan"),
+            "ratio_personal": c["gastospersonal"] / I * 100 if I else float("nan"),
+            "productivitat": I * 1000 / c["empleados"] if c["empleados"] else float("nan"),
+            "cost_empleat": c["gastospersonal"] * 1000 / c["empleados"] if c["empleados"] else float("nan"),
+            "cagr": cagr, "break_flag": brk,
+        })
+    emp = pd.DataFrame(recs)
+    save_cache(emp, "lideres_empreses")
+    print(f"  Líders del comerç: {len(emp)} empreses (mètriques) · {int(emp['break_flag'].sum())} amb ruptura de sèrie")
+    return emp
 
 
 def process_cdmge():
