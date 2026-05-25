@@ -1,4 +1,5 @@
-"""Pàgina: Líders del comerç (CNAE 47) — mostra de grans empreses (comptes del Registre Mercantil)"""
+"""Pàgina: Líders del comerç (CNAE 47) — mostra de grans empreses (comptes del Registre Mercantil).
+Es publiquen NOMÉS indicadors i ràtios (no xifres absolutes de facturació ni plantilla)."""
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -27,68 +28,42 @@ d = _load(_sig)
 st.title("Líders del comerç" if _ca else "Líderes del comercio")
 intro(
     ("Una <strong>mostra de grans empreses del comerç al detall</strong> (CNAE 47) a partir dels "
-     "<strong>comptes anuals dipositats al Registre Mercantil</strong> (2020-2024). Com que és una mostra "
-     "il·lustrativa dels grans formats —no el rànquing exhaustiu del sector—, l'anàlisi de rendibilitat es fa "
-     "<strong>per subsectors</strong> (on els contrastos són significatius) i es completa amb la <strong>llista "
-     "detallada de la mostra</strong>."
+     "<strong>comptes anuals dipositats al Registre Mercantil</strong> (2020-2024). Per respectar la "
+     "confidencialitat de les dades, no en mostrem les xifres absolutes: només <strong>indicadors i ràtios</strong> "
+     "(marges, rendibilitat, productivitat, creixement), a escala de subsector i d'empresa."
      if _ca else
      "Una <strong>muestra de grandes empresas del comercio minorista</strong> (CNAE 47) a partir de las "
-     "<strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Como es una muestra "
-     "ilustrativa de los grandes formatos —no el ranking exhaustivo del sector—, el análisis de rentabilidad se hace "
-     "<strong>por subsectores</strong> (donde los contrastes son significativos) y se completa con la <strong>lista "
-     "detallada de la muestra</strong>.")
+     "<strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Para respetar la "
+     "confidencialidad de los datos, no mostramos las cifras absolutas: solo <strong>indicadores y ratios</strong> "
+     "(márgenes, rentabilidad, productividad, crecimiento), a escala de subsector y de empresa.")
 )
 
 if d.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
     st.stop()
 
-r = d.dropna(subset=["ing_2024"]).sort_values("ing_2024", ascending=False).reset_index(drop=True)
 cmap = {s: PALETTE[i % len(PALETTE)] for i, s in enumerate(sorted(d["subsector"].unique()))}
 sub = (d.groupby("subsector").agg(
     n=("nombre", "count"),
     marge_ebitda=("marge_ebitda", "median"), roa=("roa", "median"),
-    productivitat=("productivitat", "median"), ratio_personal=("ratio_personal", "median"),
-    empleats_total=("empleados", "sum"), ing_total=("ing_2024", "sum")).reset_index())
+    productivitat=("productivitat", "median"), ratio_personal=("ratio_personal", "median")).reset_index())
 s3 = sub[sub["n"] >= 3].copy()
 
 k1, k2, k3, k4 = st.columns(4)
 k1.metric(("Empreses a la mostra" if _ca else "Empresas en la muestra"), f"{d['nombre'].nunique()}")
-k2.metric(("Facturació agregada" if _ca else "Facturación agregada") + " (2024)", f"{fnum(sub['ing_total'].sum()/1e6, 1)} Md€")
-k3.metric(("Ocupació agregada" if _ca else "Empleo agregado"), fnum(sub["empleats_total"].sum()))
-k4.metric(("Subsectors analitzats" if _ca else "Subsectores analizados"), f"{len(s3)}",
+k2.metric(("Subsectors analitzats" if _ca else "Subsectores analizados"), f"{len(s3)}",
           help=("amb 3+ empreses a la mostra" if _ca else "con 3+ empresas en la muestra"))
+k3.metric(("Marge EBITDA (mediana)" if _ca else "Margen EBITDA (mediana)"), fpct(d["marge_ebitda"].median(), 1))
+k4.metric(("Productivitat (mediana)" if _ca else "Productividad (mediana)"), f"{fnum(d['productivitat'].median()/1000)} k€",
+          help=("facturació per empleat" if _ca else "facturación por empleado"))
 
-tab_mida, tab_rend, tab_creix, tab_llista = st.tabs([
-    ("Mida" if _ca else "Tamaño"),
+tab_rend, tab_creix, tab_emp = st.tabs([
     ("Rendibilitat per subsector" if _ca else "Rentabilidad por subsector"),
     ("Creixement 2020-2024" if _ca else "Crecimiento 2020-2024"),
-    ("La mostra" if _ca else "La muestra"),
+    ("Indicadors per empresa" if _ca else "Indicadores por empresa"),
 ])
 
-# ── TAB 1: MIDA ──
-with tab_mida:
-    st.markdown(("**Les 20 majors de la mostra per facturació** (2024)" if _ca
-                 else "**Las 20 mayores de la muestra por facturación** (2024)"))
-    top = r.head(20).iloc[::-1]
-    fig = go.Figure(go.Bar(
-        y=top["nombre"], x=top["ing_2024"]/1000, orientation="h",
-        marker_color=[cmap.get(s, BRAND) for s in top["subsector"]],
-        text=[f"{fnum(v/1000)} M€" for v in top["ing_2024"]], textposition="outside", textfont=dict(size=10),
-        customdata=top["subsector"], hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<br>%{customdata}<extra></extra>"))
-    apply_layout(fig, xaxis_title="Facturació (M€)" if _ca else "Facturación (M€)",
-                 height=620, margin=dict(l=230, r=90, t=20, b=40))
-    st.plotly_chart(fig, use_container_width=True)
-    source("Comptes anuals dipositats al Registre Mercantil" if _ca else "Cuentas anuales depositadas en el Registro Mercantil")
-    insight(
-        ("L'alimentació ocupa la franja alta de la mostra; la moda i la llar hi apareixen a la franja mitjana. "
-         "Entre la primera i la darrera empresa la mida varia en més de dos ordres de magnitud."
-         if _ca else
-         "La alimentación ocupa la franja alta de la muestra; moda y hogar aparecen en la franja media. Entre la "
-         "primera y la última empresa el tamaño varía en más de dos órdenes de magnitud.")
-    )
-
-# ── TAB 2: RENDIBILITAT PER SUBSECTOR ──
+# ── TAB 1: RENDIBILITAT PER SUBSECTOR ──
 with tab_rend:
     st.markdown(("**Mapa de posicionament dels subsectors** — productivitat vs marge (mediana, 3+ empreses)"
                  if _ca else
@@ -132,7 +107,7 @@ with tab_rend:
          "más atención de tienda, tienen productividad y márgenes más contenidos y el coste de personal sobre ventas más elevado.")
     )
 
-# ── TAB 3: CREIXEMENT ──
+# ── TAB 2: CREIXEMENT ──
 with tab_creix:
     st.markdown(("Creixement de la facturació amb el **CAGR** 2020-2024 (taxa anual composta). **N'excloem les empreses "
                  "amb ruptura en la sèrie d'ingressos** —salts incompatibles amb creixement orgànic, típics de "
@@ -141,8 +116,7 @@ with tab_creix:
                  "Crecimiento de la facturación con el **CAGR** 2020-2024 (tasa anual compuesta). **Excluimos las empresas "
                  "con ruptura en la serie de ingresos** —saltos incompatibles con crecimiento orgánico, típicos de "
                  "reorganizaciones societarias— porque su CAGR no sería comparable."))
-    g = d.dropna(subset=["cagr"]).copy()
-    g = g[(g["ing_2020"] > 0)].sort_values("cagr")
+    g = d.dropna(subset=["cagr"]).sort_values("cagr")
     sel = pd.concat([g.head(8), g.tail(8)]).drop_duplicates("nombre")
     figg = go.Figure(go.Bar(
         y=sel["nombre"], x=sel["cagr"], orientation="h",
@@ -172,33 +146,27 @@ with tab_creix:
          f"subsector crece poco, y el repunte contable de un operador es un artefacto, no una tendencia. Excluidas por ruptura: {', '.join(_brk)}.")
     )
 
-# ── TAB 4: LA MOSTRA (taula ordenable completa) ──
-with tab_llista:
-    st.markdown(("Totes les empreses de la mostra amb les seves mètriques (clica les capçaleres per ordenar). "
-                 "Les que no havien dipositat el 2024 apareixen sense dades de l'exercici."
+# ── TAB 3: INDICADORS PER EMPRESA (taula interactiva de ràtios) ──
+with tab_emp:
+    st.markdown(("Indicadors de cada empresa de la mostra (clica les capçaleres per ordenar). Es mostren **només "
+                 "ràtios** —no xifres absolutes de facturació ni plantilla."
                  if _ca else
-                 "Todas las empresas de la muestra con sus métricas (clica las cabeceras para ordenar). "
-                 "Las que no habían depositado 2024 aparecen sin datos del ejercicio."))
-    cols = {"nombre": "Empresa", "subsector": "Subsector"}
+                 "Indicadores de cada empresa de la muestra (clica las cabeceras para ordenar). Se muestran **solo "
+                 "ratios** —no cifras absolutas de facturación ni plantilla."))
     tbl = d.copy()
-    tbl["fact_meur"] = tbl["ing_2024"]/1000
     tbl["prod_keur"] = tbl["productivitat"]/1000
-    tbl = tbl[["nombre", "subsector", "fact_meur", "marge_ebitda", "roa", "empleados",
-               "prod_keur", "ratio_personal", "cagr"]].sort_values("fact_meur", ascending=False)
+    tbl = tbl[["nombre", "subsector", "marge_ebitda", "roa", "prod_keur", "ratio_personal", "cagr"]]
+    tbl = tbl.sort_values("marge_ebitda", ascending=False)
     tbl.columns = ["Empresa", "Subsector",
-                   "Facturació (M€)" if _ca else "Facturación (M€)",
                    "Marge EBITDA %" if _ca else "Margen EBITDA %", "ROA %",
-                   "Empleats" if _ca else "Empleados",
                    "Fact./empleat (k€)" if _ca else "Fact./empleado (k€)",
                    "Cost pers./vendes %" if _ca else "Coste pers./ventas %",
                    "CAGR 20-24 %"]
     st.dataframe(
         tbl, use_container_width=True, hide_index=True, height=560,
         column_config={
-            ("Facturació (M€)" if _ca else "Facturación (M€)"): st.column_config.NumberColumn(format="%.0f"),
             ("Marge EBITDA %" if _ca else "Margen EBITDA %"): st.column_config.NumberColumn(format="%.1f"),
             "ROA %": st.column_config.NumberColumn(format="%.1f"),
-            ("Empleats" if _ca else "Empleados"): st.column_config.NumberColumn(format="%.0f"),
             ("Fact./empleat (k€)" if _ca else "Fact./empleado (k€)"): st.column_config.NumberColumn(format="%.0f"),
             ("Cost pers./vendes %" if _ca else "Coste pers./ventas %"): st.column_config.NumberColumn(format="%.1f"),
             "CAGR 20-24 %": st.column_config.NumberColumn(format="%.1f"),
@@ -209,6 +177,6 @@ with tab_llista:
                 if _ca else
                 "CAGR vacío = empresa con ruptura de serie (reorganización) o sin cuentas para ambos años."))
 
-page_meta("Comptes anuals dipositats al Registre Mercantil (2020-2024) · mostra de grans empreses CNAE 47" if _ca
-          else "Cuentas anuales depositadas en el Registro Mercantil (2020-2024) · muestra de grandes empresas CNAE 47",
+page_meta("Comptes anuals dipositats al Registre Mercantil (2020-2024) · mostra de grans empreses CNAE 47 · només indicadors i ràtios" if _ca
+          else "Cuentas anuales depositadas en el Registro Mercantil (2020-2024) · muestra de grandes empresas CNAE 47 · solo indicadores y ratios",
           st.session_state.lang)

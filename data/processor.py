@@ -1153,12 +1153,13 @@ def process_lideres():
             "cagr": cagr, "break_flag": brk,
         })
     emp = pd.DataFrame(recs)
-    # CACHE per empresa (ràtios derivats + facturació + plantilla). El detall
-    # financer absolut de 5 anys (l'export verbatim) NO es publica (raw gitignored);
-    # sense botó de descàrrega a la pàgina. La pàgina deriva els agregats per subsector.
-    save_cache(emp, "lideres_empreses")
-    print(f"  Líders del comerç: {len(emp)} empreses · {int(emp['break_flag'].sum())} ruptures de sèrie")
-    return emp
+    # CACHE PÚBLICA = NOMÉS indicadors i ràtios. Es DESCARTEN les xifres absolutes
+    # (facturació, plantilla); no es publiquen en obert. El detall absolut i el raw
+    # verbatim queden fora del repo (raw gitignored). Sense descàrrega a la pàgina.
+    emp_pub = emp.drop(columns=["ing_2024", "ing_2020", "empleados"])
+    save_cache(emp_pub, "lideres_empreses")
+    print(f"  Líders del comerç: {len(emp_pub)} empreses (indicadors/ràtios) · {int(emp['break_flag'].sum())} ruptures")
+    return emp_pub
 
 
 def process_cdmge():
