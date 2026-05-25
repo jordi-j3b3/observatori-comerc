@@ -1152,10 +1152,23 @@ def process_lideres():
             "cost_empleat": c["gastospersonal"] * 1000 / c["empleados"] if c["empleados"] else float("nan"),
             "cagr": cagr, "break_flag": brk,
         })
-    emp = pd.DataFrame(recs)
-    save_cache(emp, "lideres_empreses")
-    print(f"  Líders del comerç: {len(emp)} empreses (mètriques) · {int(emp['break_flag'].sum())} amb ruptura de sèrie")
-    return emp
+    emp = pd.DataFrame(recs)  # mètriques per empresa (en memòria; NO es publiquen els marges per empresa)
+    # CACHE 1 (per empresa, només facturació + creixement): rànquing i CAGR.
+    rank = emp[["nombre", "subsector", "ing_2024", "ing_2020", "cagr", "break_flag"]]
+    save_cache(rank, "lideres_ranking")
+    # CACHE 2 (agregats per subsector): el contrast analític (medianes).
+    sub_agg = (emp.groupby("subsector").agg(
+        n=("nombre", "count"),
+        marge_ebitda=("marge_ebitda", "median"),
+        roa=("roa", "median"),
+        productivitat=("productivitat", "median"),
+        ratio_personal=("ratio_personal", "median"),
+        cost_empleat=("cost_empleat", "median"),
+        empleats_total=("empleados", "sum"),
+        ing_total=("ing_2024", "sum")).reset_index())
+    save_cache(sub_agg, "lideres_subsector")
+    print(f"  Líders: {len(rank)} empreses (rànquing) + {len(sub_agg)} subsectors · {int(emp['break_flag'].sum())} ruptures")
+    return sub_agg
 
 
 def process_cdmge():
