@@ -537,11 +537,11 @@ st.markdown(
     '<div class="pulso-intro">'
     + ("Cada dilluns, una mirada concisa al moment del consum minorista a Espanya i Europa: "
        "una xifra, tres notícies amb angle, dades comparades i una predicció signada. "
-       "Aquí pots consultar l'arxiu cronològic complet, del més recent al més antic."
+       "A dalt tens l'última edició; a sota, l'arxiu de les anteriors."
        if _ca else
        "Cada lunes, una mirada concisa al momento del consumo minorista en España y Europa: "
        "una cifra, tres noticias con ángulo, datos comparados y una predicción firmada. "
-       "Aquí puedes consultar el archivo cronológico completo, del más reciente al más antiguo.")
+       "Arriba tienes la última edición; debajo, el archivo de las anteriores.")
     + "</div>",
     unsafe_allow_html=True,
 )
@@ -556,30 +556,51 @@ if not issues:
     )
 else:
     total = len(issues)
-    for i, (d, meta, body) in enumerate(issues):
-        num = total - i
-        eyebrow = f"Núm. {num}  ·  {format_setmana(d)}"
-        titular = meta.get("titular") or ""
-        preheader = meta.get("preheader") or ""
 
-        st.markdown(
-            f'<div class="pulso-issue">'
-            f'<div class="pulso-eyebrow">{eyebrow}</div>'
-            f'<h2 class="pulso-title">{titular}</h2>'
-            f'<p class="pulso-preheader">{preheader}</p>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
+    def render_body(body: str) -> None:
         try:
             sections = parse_sections(body)
             if not sections:
                 st.markdown(body)
             else:
-                blocks_html = "".join(render_block(t, c) for t, c in sections)
-                st.markdown(blocks_html, unsafe_allow_html=True)
+                st.markdown("".join(render_block(t, c) for t, c in sections),
+                            unsafe_allow_html=True)
         except Exception:
             st.markdown(body)
+
+    # Última edició: plenament visible (protagonista)
+    d0, meta0, body0 = issues[0]
+    eyebrow0 = f"Núm. {total}  ·  {format_setmana(d0)}"
+    st.markdown(
+        f'<div class="pulso-issue">'
+        f'<div class="pulso-eyebrow">{eyebrow0}</div>'
+        f'<h2 class="pulso-title">{meta0.get("titular") or ""}</h2>'
+        f'<p class="pulso-preheader">{meta0.get("preheader") or ""}</p>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    render_body(body0)
+
+    # Edicions anteriors: en segon pla, plegades (arxiu)
+    if total > 1:
+        st.divider()
+        st.markdown(
+            '<div class="pulso-section-label">'
+            + ("Edicions anteriors" if _ca else "Ediciones anteriores")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+        for i in range(1, total):
+            d, meta, body = issues[i]
+            num = total - i
+            titular = meta.get("titular") or ""
+            label = f"Núm. {num}  ·  {format_setmana(d)}" + (f"  —  {titular}" if titular else "")
+            with st.expander(label, expanded=False):
+                preheader = meta.get("preheader") or ""
+                if preheader:
+                    st.markdown(f'<p class="pulso-preheader">{preheader}</p>',
+                                unsafe_allow_html=True)
+                render_body(body)
 
 # ─── CTA SUBSCRIPCIÓ ────────────────────────────────────────────
 st.divider()
