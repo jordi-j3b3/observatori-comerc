@@ -25,7 +25,10 @@ def load_data(name):
     return pd.DataFrame()
 
 @st.cache_data(ttl=3600)
-def load_tesi():
+def load_tesi(sig=None):
+    # `sig` (mida, mtime del fitxer) busca la caché: quan el mirall reescriu
+    # tesi_vigent.json a cada enviament, la home reflecteix la tesi nova sense
+    # esperar el TTL ni un reinici.
     p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tesi_vigent.json")
     if not os.path.exists(p):
         return None
@@ -104,7 +107,11 @@ if not _pulse_fresc and not df_icm.empty and "ambit" in df_icm.columns:
 
 # ─── HERO: NÚMERO-XOC (esquerra) + TESI VIGENT (dreta) ─────────
 
-_tesi = load_tesi()
+_tesi_json_path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tesi_vigent.json")
+_tesi = load_tesi(
+    (os.path.getsize(_tesi_json_path), int(os.path.getmtime(_tesi_json_path)))
+    if os.path.exists(_tesi_json_path) else None
+)
 _tesi_titol = None
 _tesi_data = None
 _tesi_autor = "Observatorio del Comercio · J3B3 Consulting"
