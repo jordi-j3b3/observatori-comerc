@@ -1067,6 +1067,101 @@ def process_ocupacio_comerc():
     return df
 
 
+# Noms comercials curats per a la pàgina de Líders (la raó social verbatim del
+# SABI queda lletja amb .title()). Clau = Nombre original del raw (majúscules).
+# Editable: si un nom comercial no és correcte, ajusta'l aquí.
+_LIDERES_BRAND = {
+    "MERCADONA SA": "Mercadona",
+    "CENTROS COMERCIALES CARREFOUR SA": "Carrefour",
+    "LIDL SUPERMERCADOS SAU": "Lidl",
+    "ALCAMPO SA": "Alcampo",
+    "DIA RETAIL ESPAÑA SA": "Dia",
+    "CONSUM S COOP V": "Consum",
+    "LEROY MERLIN ESPAÑA SL": "Leroy Merlin",
+    "MANGO MNG S.A.": "Mango",
+    "BON PREU SAU": "Bon Preu",
+    "MEDIA MARKT SATURN SAU": "MediaMarkt",
+    "AHORRAMAS, SA": "Ahorramás",
+    "EROSKI, S.COOP.": "Eroski",
+    "IKEA IBERICA SAU": "Ikea",
+    "BRICOLAJE BRICOMAN SLU": "Bricoman",
+    "DECATHLON ESPAÑA SAU": "Decathlon",
+    "PRIMARK TIENDAS SLU": "Primark",
+    "BERSHKA BSK ESPAÑA SA": "Bershka",
+    "STRADIVARIUS ESPAÑA SA": "Stradivarius",
+    "TENDAM RETAIL SA.": "Tendam",
+    "ALIMERKA S.A.": "Alimerka",
+    "CAPRABO SA": "Caprabo",
+    "SPRINTER MEGACENTROS DEL DEPORTE SL": "Sprinter",
+    "CASA AMETLLER SL": "Casa Ametller",
+    "APPLE RETAIL SPAIN SL": "Apple Store",
+    "PC COMPONENTES Y MULTIMEDIA SLU": "PcComponentes",
+    "FAMILYCASH SL": "Family Cash",
+    "HENNES AND MAURITZ SLU": "H&M",
+    "JD SPAIN SPORTS FASHION 2010 SL.": "JD Sports",
+    "JOYERIA TOUS SA": "Tous",
+    "FRAGADIS SL": "Fragadis",
+    "FRANCHISING CALZEDONIA ESPAÑA SA": "Calzedonia",
+    "SEPHORA COSMETICOS ESPAÑA SL": "Sephora",
+    "GRANDES ALMACENES FNAC ESPAÑA SA": "Fnac",
+    "GAME STORES IBERIA SL": "GAME",
+    "CONFORAMA ESPAÑA SA": "Conforama",
+    "ARENAL PERFUMERIAS SL": "Arenal Perfumerías",
+    "GENERAL OPTICA SA": "General Óptica",
+    "TIENDANIMAL COMERCIO ELECTRONICO DE ARTICULOS PARA MASCOTAS SL": "Tiendanimal",
+    "KIABI ESPAÑA KSCE SA": "Kiabi",
+    "KAVE HOME SL": "Kave Home",
+    "LA SIRENA ALIMENTACION CONGELADA SAU": "La Sirena",
+    "ACTION RETAIL SPAIN SL.": "Action",
+    "BIMBA Y LOLA SOCIEDAD LIMITADA.": "Bimba y Lola",
+    "CHRISTIAN DIOR ESPAÑOLA SLU": "Christian Dior",
+    "FOOT LOCKER SPAIN SL": "Foot Locker",
+    "FORUM SPORT SOCIEDAD ANONIMA": "Forum Sport",
+    "MERKAL CALZADOS SL": "Merkal",
+    "ADOLFO DOMINGUEZ SA": "Adolfo Domínguez",
+    "MAISONS DU MONDE ESPAÑA SL.": "Maisons du Monde",
+    "KIKO RETAIL ESPAÑA SL": "Kiko Milano",
+    "ALDI MASQUEFA SUPERMERCADOS SL": "Aldi",
+}
+
+_LIDERES_LEGAL = {"SA", "SL", "SAU", "SLU", "SLP", "SLNE", "SCCL", "SCP", "SC",
+                  "SCV", "SAL", "SCA", "SE", "SLL", "SAS", "SCOOP", "COOP"}
+
+
+_LIDERES_MINUS = {"Y", "I", "DE", "DEL", "LA", "EL", "AND", "DE'"}
+
+
+def _pretty_name(raw):
+    """Nom comercial net: mapa curat si hi és, si no neteja genèrica (col·lapsa
+    formes jurídiques —deletrejades o amb punts— a sigla, capitalitza la resta)."""
+    import re
+    raw = (raw or "").strip()
+    if raw in _LIDERES_BRAND:
+        return _LIDERES_BRAND[raw]
+    txt = raw
+    # formes jurídiques deletrejades -> sigla
+    txt = re.sub(r"\bSOCIEDAD\s+ANONIMA(\s+UNIPERSONAL)?\.?", "SA", txt, flags=re.I)
+    txt = re.sub(r"\bSOCIEDAD\s+LIMITADA(\s+UNIPERSONAL)?\.?", "SL", txt, flags=re.I)
+    txt = re.sub(r"\bSOCIEDAD\s+COOPERATIVA\b", "SCOOP", txt, flags=re.I)
+    # formes jurídiques amb punts (S.A.U. -> SAU, S.L. -> SL)
+    txt = re.sub(r"\bS(\.[A-Za-z])+\.?", lambda m: m.group(0).replace(".", "").upper(), txt)
+    txt = re.sub(r"[.,]", " ", txt)
+    txt = re.sub(r"\s+", " ", txt).strip()
+    out = []
+    for tk in txt.split(" "):
+        tk = tk.strip("-")
+        if not tk:
+            continue
+        u = tk.upper()
+        if u in _LIDERES_LEGAL:
+            out.append(u)
+        elif u in _LIDERES_MINUS:
+            out.append(tk.lower())
+        else:
+            out.append("-".join(p.capitalize() for p in tk.split("-")))
+    return " ".join(out)
+
+
 def process_lideres():
     """
     Líders del comerç (CNAE 47): comptes anuals dipositats al Registre Mercantil,
@@ -1141,7 +1236,7 @@ def process_lideres():
         cagr = (((I / ing20) ** 0.25 - 1) * 100
                 if (pd.notna(I) and pd.notna(ing20) and ing20 > 0 and not brk) else float("nan"))
         recs.append({
-            "nombre": str(nom).title(), "subsector": c["subsector"],
+            "nombre": _pretty_name(nom), "subsector": c["subsector"], "cnae": c["cnae"],
             "ing_2024": I, "ing_2020": ing20, "empleados": c["empleados"],
             "marge_ebitda": c["ebitda"] / I * 100 if I else float("nan"),
             "marge_ebit": c["ebit"] / I * 100 if I else float("nan"),
@@ -1153,12 +1248,18 @@ def process_lideres():
             "cagr": cagr, "break_flag": brk,
         })
     emp = pd.DataFrame(recs)
-    # CACHE PÚBLICA = NOMÉS indicadors i ràtios. Es DESCARTEN les xifres absolutes
-    # (facturació, plantilla); no es publiquen en obert. El detall absolut i el raw
-    # verbatim queden fora del repo (raw gitignored). Sense descàrrega a la pàgina.
-    emp_pub = emp.drop(columns=["ing_2024", "ing_2020", "empleados"])
+    # CACHE PÚBLICA = ràtios + xifres absolutes (facturació, plantilla, quota).
+    # La facturació i la plantilla són fets PÚBLICS del Registre Mercantil; el que
+    # NO es redistribueix és l'export SABI verbatim (llicència), que queda al raw
+    # gitignored. Afegim quota dins la mostra i rang per facturació 2024.
+    tot24 = emp["ing_2024"].sum(skipna=True)
+    emp["quota_2024"] = (emp["ing_2024"] / tot24 * 100) if tot24 else float("nan")
+    emp = emp.sort_values("ing_2024", ascending=False, na_position="last").reset_index(drop=True)
+    emp["rank_2024"] = emp["ing_2024"].rank(ascending=False, method="min").astype("Int64")
+    emp_pub = emp
     save_cache(emp_pub, "lideres_empreses")
-    print(f"  Líders del comerç: {len(emp_pub)} empreses (indicadors/ràtios) · {int(emp['break_flag'].sum())} ruptures")
+    print(f"  Líders del comerç: {len(emp_pub)} empreses (absoluts+ràtios) · "
+          f"top1 quota {emp['quota_2024'].max():.1f}% · {int(emp['break_flag'].sum())} ruptures")
     return emp_pub
 
 

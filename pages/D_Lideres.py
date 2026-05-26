@@ -1,20 +1,26 @@
-"""Pàgina: Líders del comerç (CNAE 47) — mostra de grans empreses (comptes del Registre Mercantil).
-Es publiquen NOMÉS indicadors i ràtios (no xifres absolutes de facturació ni plantilla)."""
+"""Pàgina: Líders del comerç (CNAE 47) — anatomia de la concentració.
+Mostra de grans empreses (comptes del Registre Mercantil) + dinàmica de formats (ICM).
+Es publiquen xifres absolutes i quotes: són fets públics del Registre Mercantil.
+L'export SABI verbatim NO es redistribueix (queda al raw, gitignored)."""
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout, PALETTE, BRAND, RED, GREEN)
+                   fnum, fpct, apply_layout, PALETTE, BRAND, RED, GREEN, GRAY, GRAY_DARK)
 
 inject_css()
 t = setup_lang(show_selector=False)
 page_header()
 
 _ca = st.session_state.lang == "ca"
-_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "lideres_empreses.csv")
+_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+_PATH = os.path.join(_DIR, "lideres_empreses.csv")
+_EAS = os.path.join(_DIR, "subsectors_eas.csv")
+_ICM = os.path.join(_DIR, "icm_distribucion.csv")
 
 
 @st.cache_data(ttl=3600)
@@ -22,100 +28,263 @@ def _load(sig):
     return pd.read_csv(_PATH) if os.path.exists(_PATH) else pd.DataFrame()
 
 
+@st.cache_data(ttl=3600)
+def _sector_total():
+    """Xifra de negoci total del sector CNAE 47 (EAS), últim any. Retorna (any, M€)."""
+    if not os.path.exists(_EAS):
+        return None, None
+    e = pd.read_csv(_EAS)
+    e = e[e["codi"] == 47].sort_values("any")
+    if e.empty:
+        return None, None
+    r = e.iloc[-1]
+    return int(r["any"]), r["xifra_negoci"] / 1e6  # € -> M€
+
+
+@st.cache_data(ttl=3600)
+def _icm_modos():
+    """Sèrie de l'índex de xifra de negoci per modo de distribució (ICM, nominal)."""
+    if not os.path.exists(_ICM):
+        return None
+    d = pd.read_csv(_ICM)
+    ix = d[(d["indicador"] == "index") & (d["tipus"] == "nominal")].copy()
+    ix["data"] = pd.to_datetime(ix["data"])
+    base = ix[ix["any"] == 2016].groupby("modo")["valor"].mean()
+    last = ix.sort_values("data").groupby("modo").tail(1).set_index("modo")
+    va = d[(d["indicador"] == "var_anual") & (d["tipus"] == "nominal")].copy()
+    va["data"] = pd.to_datetime(va["data"])
+    rec = va[va["data"] >= va["data"].max() - pd.Timedelta(days=365)]
+    var12 = rec.groupby("modo")["valor"].mean()
+    return {"serie": ix, "base": base, "last": last, "var12": var12,
+            "last_date": ix["data"].max()}
+
+
 _sig = ((os.path.getsize(_PATH), int(os.path.getmtime(_PATH))) if os.path.exists(_PATH) else (0, 0))
 d = _load(_sig)
 
 st.title("Líders del comerç" if _ca else "Líderes del comercio")
-intro(
-    ("Una <strong>mostra de grans empreses del comerç al detall</strong> (CNAE 47) a partir dels "
-     "<strong>comptes anuals dipositats al Registre Mercantil</strong> (2020-2024). Per respectar la "
-     "confidencialitat de les dades, no en mostrem les xifres absolutes: només <strong>indicadors i ràtios</strong> "
-     "(marges, rendibilitat, productivitat, creixement), a escala de subsector i d'empresa."
-     if _ca else
-     "Una <strong>muestra de grandes empresas del comercio minorista</strong> (CNAE 47) a partir de las "
-     "<strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Para respetar la "
-     "confidencialidad de los datos, no mostramos las cifras absolutas: solo <strong>indicadores y ratios</strong> "
-     "(márgenes, rentabilidad, productividad, crecimiento), a escala de subsector y de empresa.")
-)
 
 if d.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
     st.stop()
 
-cmap = {s: PALETTE[i % len(PALETTE)] for i, s in enumerate(sorted(d["subsector"].unique()))}
-sub = (d.groupby("subsector").agg(
-    n=("nombre", "count"),
-    marge_ebitda=("marge_ebitda", "median"), roa=("roa", "median"),
-    productivitat=("productivitat", "median"), ratio_personal=("ratio_personal", "median")).reset_index())
-s3 = sub[sub["n"] >= 3].copy()
+# ── Mètriques de concentració ──
+d = d.sort_values("ing_2024", ascending=False).reset_index(drop=True)
+ing = d["ing_2024"].dropna().values            # milers d'€
+q = d["quota_2024"].dropna().values            # % sobre la mostra
+cr1, cr4, cr10 = q[:1].sum(), q[:4].sum(), q[:10].sum()
+hhi = (q ** 2).sum()
+mostra_meur = ing.sum() / 1000                 # M€
+lider_meur = ing[0] / 1000                     # M€
+eas_any, sector_meur = _sector_total()
+quota_lider_sector = (lider_meur / sector_meur * 100) if sector_meur else None
+quota_mostra_sector = (mostra_meur / sector_meur * 100) if sector_meur else None
+
+# quants competidors immediats supera el líder sumats
+_lead = ing[0]; _cum = 0.0; _nbeat = 0
+for v in ing[1:]:
+    if _cum + v <= _lead:
+        _cum += v; _nbeat += 1
+    else:
+        break
+_ratio2 = f"{ing[0]/ing[1]:.1f}".replace(".", ",")  # vegades sobre el nº 2
+
+intro(
+    (f"Una <strong>mostra dels {d['nombre'].nunique()} grans operadors del comerç al detall</strong> (CNAE 47) "
+     f"a partir dels <strong>comptes anuals dipositats al Registre Mercantil</strong> (2020-2024). Sumen "
+     f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturació el 2024 — el "
+     f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de tot el sector</strong> (denominador EAS {eas_any}). "
+     f"La resta es reparteix entre desenes de milers d'empreses. Aquí no fem un rànquing d'empreses: fem "
+     f"l'<strong>anatomia de la concentració</strong> que hi ha al darrere de la tesi de l'oligopoli."
+     if _ca else
+     f"Una <strong>muestra de los {d['nombre'].nunique()} grandes operadores del comercio minorista</strong> (CNAE 47) "
+     f"a partir de las <strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Suman "
+     f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturación en 2024 — el "
+     f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de todo el sector</strong> (denominador EAS {eas_any}). "
+     f"El resto se reparte entre decenas de miles de empresas. Aquí no hacemos un ranking de empresas: hacemos "
+     f"la <strong>anatomía de la concentración</strong> que hay detrás de la tesis del oligopolio.")
+)
 
 k1, k2, k3, k4 = st.columns(4)
-k1.metric(("Empreses a la mostra" if _ca else "Empresas en la muestra"), f"{d['nombre'].nunique()}")
-k2.metric(("Subsectors analitzats" if _ca else "Subsectores analizados"), f"{len(s3)}",
-          help=("amb 3+ empreses a la mostra" if _ca else "con 3+ empresas en la muestra"))
-k3.metric(("Marge EBITDA (mediana)" if _ca else "Margen EBITDA (mediana)"), fpct(d["marge_ebitda"].median(), 1))
-k4.metric(("Productivitat (mediana)" if _ca else "Productividad (mediana)"), f"{fnum(d['productivitat'].median()/1000)} k€",
-          help=("facturació per empleat" if _ca else "facturación por empleado"))
+k1.metric(("El líder, sobre el sector" if _ca else "El líder, sobre el sector"),
+          fpct(quota_lider_sector, 1, sign=False) if quota_lider_sector else "—",
+          help=(f"{d['nombre'].iloc[0]}: 1 de cada {round(100/quota_lider_sector)} € del comerç minorista espanyol (EAS {eas_any})"
+                if _ca else
+                f"{d['nombre'].iloc[0]}: 1 de cada {round(100/quota_lider_sector)} € del comercio minorista español (EAS {eas_any})"))
+k2.metric(("Top 4 (dins la mostra)" if _ca else "Top 4 (dentro de la muestra)"),
+          fpct(cr4, 1, sign=False),
+          help=("CR4: pes dels 4 majors sobre la mostra de grans" if _ca else "CR4: peso de los 4 mayores sobre la muestra de grandes"))
+k3.metric("HHI", f"{fnum(hhi)}",
+          help=("Índex Herfindahl-Hirschman dins la mostra; >1.500 = concentrat, >2.500 = molt concentrat"
+                if _ca else "Índice Herfindahl-Hirschman dentro de la muestra; >1.500 = concentrado, >2.500 = muy concentrado"))
+k4.metric(("La mostra, sobre el sector" if _ca else "La muestra, sobre el sector"),
+          fpct(quota_mostra_sector, 1, sign=False) if quota_mostra_sector else "—",
+          help=(f"Els {len(d)} grans = {fpct(quota_mostra_sector,1,sign=False)} del sector; la resta, desenes de milers d'empreses"
+                if _ca else
+                f"Los {len(d)} grandes = {fpct(quota_mostra_sector,1,sign=False)} del sector; el resto, decenas de miles de empresas"))
 
-tab_rend, tab_creix, tab_emp = st.tabs([
-    ("Rendibilitat per subsector" if _ca else "Rentabilidad por subsector"),
-    ("Creixement 2020-2024" if _ca else "Crecimiento 2020-2024"),
-    ("Indicadors per empresa" if _ca else "Indicadores por empresa"),
+tab_conc, tab_din, tab_efi, tab_mostra = st.tabs([
+    ("Concentració" if _ca else "Concentración"),
+    ("L'oligopoli accelera" if _ca else "El oligopolio acelera"),
+    ("Rendibilitat i creixement" if _ca else "Rentabilidad y crecimiento"),
+    ("La mostra completa" if _ca else "La muestra completa"),
 ])
 
-# ── TAB 1: RENDIBILITAT PER SUBSECTOR ──
-with tab_rend:
+# ── TAB 1: CONCENTRACIÓ ──
+with tab_conc:
+    st.markdown(("**Els grans operadors per facturació** (2024, M€). Un sol operador domina el conjunt."
+                 if _ca else
+                 "**Los grandes operadores por facturación** (2024, M€). Un solo operador domina el conjunto."))
+    top = d.dropna(subset=["ing_2024"]).head(15).copy()
+    top = top.sort_values("ing_2024")  # ascendent: el major queda a dalt
+    top["meur"] = top["ing_2024"] / 1000
+    colors = [BRAND if i == len(top) - 1 else "rgba(0,51,102,0.32)" for i in range(len(top))]
+    figc = go.Figure(go.Bar(
+        y=top["nombre"], x=top["meur"], orientation="h", marker_color=colors,
+        text=[fnum(v) for v in top["meur"]], textposition="outside", textfont=dict(size=11),
+        customdata=top["quota_2024"],
+        hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<br>%{customdata:.1f}% de la mostra<extra></extra>"))
+    apply_layout(figc, xaxis_title="Facturació 2024 (M€)" if _ca else "Facturación 2024 (M€)",
+                 height=560, margin=dict(l=160, r=80, t=20, b=40), showlegend=False)
+    st.plotly_chart(figc, use_container_width=True)
+    source("Comptes dipositats al Registre Mercantil (SABI). Càlcul propi" if _ca
+           else "Cuentas depositadas en el Registro Mercantil (SABI). Cálculo propio")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric(("Quota del líder (mostra)" if _ca else "Cuota del líder (muestra)"), fpct(cr1, 1, sign=False))
+    c2.metric("CR10", fpct(cr10, 1, sign=False),
+              help=("els 10 majors sobre la mostra" if _ca else "los 10 mayores sobre la muestra"))
+    c3.metric(("Líder vs nº 2" if _ca else "Líder vs nº 2"), f"{ing[0]/ing[1]:.1f}×".replace(".", ","))
+    insight(
+        (f"<strong>{d['nombre'].iloc[0]}</strong> sol factura <strong>{fpct(cr1,1,sign=False)}</strong> de tota la mostra de "
+         f"grans i representa el <strong>{fpct(quota_lider_sector,1,sign=False)} de tot el comerç minorista espanyol</strong> "
+         f"(EAS {eas_any}): aproximadament <strong>1 de cada {round(100/quota_lider_sector)} euros</strong>. Factura més que "
+         f"els <strong>{_nbeat} operadors següents plegats</strong> i {_ratio2}× el segon. "
+         f"Els quatre primers (CR4) sumen el {fpct(cr4,1,sign=False)} i l'HHI és de {fnum(hhi)}: una "
+         f"estructura clarament concentrada al capdamunt, encara que la mostra només sigui el {fpct(quota_mostra_sector,1,sign=False)} del sector."
+         if _ca else
+         f"<strong>{d['nombre'].iloc[0]}</strong> factura por sí sola el <strong>{fpct(cr1,1,sign=False)}</strong> de toda la muestra de "
+         f"grandes y representa el <strong>{fpct(quota_lider_sector,1,sign=False)} de todo el comercio minorista español</strong> "
+         f"(EAS {eas_any}): aproximadamente <strong>1 de cada {round(100/quota_lider_sector)} euros</strong>. Factura más que "
+         f"los <strong>{_nbeat} operadores siguientes juntos</strong> y {_ratio2}× el segundo. "
+         f"Los cuatro primeros (CR4) suman el {fpct(cr4,1,sign=False)} y el HHI es de {fnum(hhi)}: una "
+         f"estructura claramente concentrada en la cúspide, aunque la muestra sea solo el {fpct(quota_mostra_sector,1,sign=False)} del sector.")
+    )
+    st.caption(("Quota dins la mostra = sobre els grans del gràfic. Quota sobre el sector = sobre la xifra de negoci "
+                f"total del CNAE 47 (EAS {eas_any}). No són el mateix; les distingim sempre."
+                if _ca else
+                "Cuota dentro de la muestra = sobre los grandes del gráfico. Cuota sobre el sector = sobre la cifra de negocio "
+                f"total del CNAE 47 (EAS {eas_any}). No son lo mismo; las distinguimos siempre."))
+
+# ── TAB 2: L'OLIGOPOLI ACCELERA (dinàmica de formats, ICM) ──
+with tab_din:
+    icm = _icm_modos()
+    if icm is None:
+        st.info("Sèrie ICM no disponible." if _ca else "Serie ICM no disponible.")
+    else:
+        MODO_CA = {"Grandes cadenas": "Grans cadenes",
+                   "Empresas unilocalizadas": "Botiga unilocalitzada (petit comerç)",
+                   "Pequeñas cadenas": "Petites cadenes",
+                   "Grandes Superficies": "Grans superfícies"}
+        MODO_ES = {"Grandes cadenas": "Grandes cadenas",
+                   "Empresas unilocalizadas": "Tienda unilocalizada (pequeño comercio)",
+                   "Pequeñas cadenas": "Pequeñas cadenas",
+                   "Grandes Superficies": "Grandes superficies"}
+        STYLE = {"Grandes cadenas": (BRAND, 3.2), "Empresas unilocalizadas": (RED, 3.2),
+                 "Pequeñas cadenas": (GRAY_DARK, 1.6), "Grandes Superficies": (GRAY, 1.6)}
+        lbl = MODO_CA if _ca else MODO_ES
+        st.markdown(("**El que el SABI no veu: la dinàmica entre formats.** Índex de xifra de negoci del comerç "
+                     "(base 2016 = 100). Les <strong>grans cadenes</strong> s'enfilen; el <strong>petit comerç</strong> es queda enrere."
+                     if _ca else
+                     "**Lo que el SABI no ve: la dinámica entre formatos.** Índice de cifra de negocio del comercio "
+                     "(base 2016 = 100). Las <strong>grandes cadenas</strong> se disparan; el <strong>pequeño comercio</strong> se queda atrás."),
+                    unsafe_allow_html=True)
+        figd = go.Figure()
+        for modo in ["Grandes Superficies", "Pequeñas cadenas", "Empresas unilocalizadas", "Grandes cadenas"]:
+            s = icm["serie"][icm["serie"]["modo"] == modo].sort_values("data")
+            col, w = STYLE[modo]
+            figd.add_trace(go.Scatter(
+                x=s["data"], y=s["valor"], mode="lines", name=lbl[modo],
+                line=dict(color=col, width=w),
+                hovertemplate=f"<b>{lbl[modo]}</b><br>%{{x|%b %Y}}: %{{y:.1f}}<extra></extra>"))
+        apply_layout(figd, yaxis_title="Índex (2016 = 100)" if _ca else "Índice (2016 = 100)",
+                     height=440, hovermode="closest")
+        st.plotly_chart(figd, use_container_width=True)
+        source("INE, Índices de Comercio al por Menor (ICM) per modo de distribució" if _ca
+               else "INE, Índices de Comercio al por Menor (ICM) por modo de distribución")
+
+        def _acum(modo):
+            return (icm["last"].loc[modo, "valor"] / icm["base"][modo] - 1) * 100
+        gc, uni = _acum("Grandes cadenas"), _acum("Empresas unilocalizadas")
+        m1, m2, m3 = st.columns(3)
+        m1.metric(("Grans cadenes des de 2016" if _ca else "Grandes cadenas desde 2016"), fpct(gc, 0),
+                  help=("creixement nominal acumulat de la xifra de negoci" if _ca else "crecimiento nominal acumulado de la cifra de negocio"))
+        m2.metric(("Petit comerç des de 2016" if _ca else "Pequeño comercio desde 2016"), fpct(uni, 0))
+        m3.metric(("Grans cadenes, últim any" if _ca else "Grandes cadenas, último año"),
+                  fpct(icm["var12"]["Grandes cadenas"], 1),
+                  help=("variació anual mitjana dels últims 12 mesos" if _ca else "variación anual media de los últimos 12 meses"))
+        insight(
+            (f"Aquí és on es veu la tesi. Des de 2016 les <strong>grans cadenes</strong> han fet créixer la facturació un "
+             f"<strong>{fpct(gc,0)}</strong>, mentre que la <strong>botiga unilocalitzada</strong> —el petit comerç— s'ha quedat al "
+             f"<strong>{fpct(uni,0)}</strong>. L'últim any la distància continua: grans cadenes "
+             f"{fpct(icm['var12']['Grandes cadenas'],1)} vs petit comerç {fpct(icm['var12']['Empresas unilocalizadas'],1)}. "
+             f"<strong>El SABI ens diu qui són els grans (el nivell); l'ICM ens diu que s'estan separant (la dinàmica).</strong> "
+             f"Els colossos de la pestanya anterior són, precisament, aquestes grans cadenes."
+             if _ca else
+             f"Aquí es donde se ve la tesis. Desde 2016 las <strong>grandes cadenas</strong> han hecho crecer la facturación un "
+             f"<strong>{fpct(gc,0)}</strong>, mientras que la <strong>tienda unilocalizada</strong> —el pequeño comercio— se ha quedado en el "
+             f"<strong>{fpct(uni,0)}</strong>. El último año la distancia continúa: grandes cadenas "
+             f"{fpct(icm['var12']['Grandes cadenas'],1)} vs pequeño comercio {fpct(icm['var12']['Empresas unilocalizadas'],1)}. "
+             f"<strong>El SABI nos dice quiénes son los grandes (el nivel); el ICM nos dice que se están separando (la dinámica).</strong> "
+             f"Los colosos de la pestaña anterior son, precisamente, esas grandes cadenas.")
+        )
+        st.page_link("pages/0b_ICM.py",
+                     label=("Veure tota la sèrie ICM per modo de distribució →" if _ca
+                            else "Ver toda la serie ICM por modo de distribución →"))
+
+# ── TAB 3: RENDIBILITAT I CREIXEMENT (eficiència: com competeixen) ──
+with tab_efi:
+    cmap = {s: PALETTE[i % len(PALETTE)] for i, s in enumerate(sorted(d["subsector"].unique()))}
+    sub = (d.groupby("subsector").agg(
+        n=("nombre", "count"),
+        marge_ebitda=("marge_ebitda", "median"), roa=("roa", "median"),
+        productivitat=("productivitat", "median"), ratio_personal=("ratio_personal", "median")).reset_index())
+    s3 = sub[sub["n"] >= 3].copy()
+
     st.markdown(("**Mapa de posicionament dels subsectors** — productivitat vs marge (mediana, 3+ empreses)"
                  if _ca else
                  "**Mapa de posicionamiento de los subsectores** — productividad vs margen (mediana, 3+ empresas)"))
     fig = go.Figure()
     for _, row in s3.iterrows():
         fig.add_trace(go.Scatter(
-            x=[row["productivitat"]/1000], y=[row["marge_ebitda"]], mode="markers+text",
+            x=[row["productivitat"] / 1000], y=[row["marge_ebitda"]], mode="markers+text",
             text=[row["subsector"]], textposition="top center", textfont=dict(size=11),
             marker=dict(size=22, color=cmap.get(row["subsector"], BRAND), line=dict(width=1, color="white")),
             hovertemplate=f"<b>{row['subsector']}</b><br>%{{x:,.0f}} k€/empleat<br>marge EBITDA %{{y:.1f}}%<extra></extra>"))
     apply_layout(fig, xaxis_title="Facturació per empleat (k€)" if _ca else "Facturación por empleado (k€)",
                  yaxis_title="Marge EBITDA (mediana, %)" if _ca else "Margen EBITDA (mediana, %)",
-                 height=460, showlegend=False)
+                 height=440, showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
-    source("Comptes dipositats al Registre Mercantil. Càlcul propi" if _ca else "Cuentas depositadas en el Registro Mercantil. Cálculo propio")
-
-    st.markdown(("**Comparativa per subsector** (medianes, 2024)" if _ca else "**Comparativa por subsector** (medianas, 2024)"))
-    tbl = s3.sort_values("marge_ebitda", ascending=False)
-    show = pd.DataFrame({
-        "Subsector": tbl["subsector"],
-        ("Empreses" if _ca else "Empresas"): tbl["n"].astype(int),
-        ("Marge EBITDA" if _ca else "Margen EBITDA"): tbl["marge_ebitda"].map(lambda v: f"{v:.1f}%".replace(".", ",")),
-        "ROA": tbl["roa"].map(lambda v: f"{v:.1f}%".replace(".", ",")),
-        ("Fact./empleat" if _ca else "Fact./empleado"): tbl["productivitat"].map(lambda v: f"{fnum(v/1000)} k€"),
-        ("Cost personal/vendes" if _ca else "Coste personal/ventas"): tbl["ratio_personal"].map(lambda v: f"{v:.1f}%".replace(".", ",")),
-    })
-    st.dataframe(show, use_container_width=True, hide_index=True)
     source("Comptes dipositats al Registre Mercantil. Càlcul propi" if _ca else "Cuentas depositadas en el Registro Mercantil. Cálculo propio")
     insight(
         ("No hi ha un únic model dins la mostra. L'<strong>electrònica i informàtica</strong> tenen la productivitat "
-         "més alta (ticket elevat, plantilla reduïda i pes de la venda online) però el <strong>marge EBITDA més prim</strong> "
-         "(mediana 2,6 %), senyal d'una competència de preu intensa. La <strong>cosmètica</strong> i la <strong>moda</strong> "
-         "registren els marges mitjans més alts del grup. L'<strong>alimentació</strong> i els <strong>esports</strong>, amb "
-         "més atenció de botiga, tenen productivitat i marges més continguts i el cost de personal sobre vendes més elevat."
+         "més alta (ticket elevat, plantilla reduïda i pes de la venda online) però el <strong>marge EBITDA més prim</strong>, "
+         "senyal d'una competència de preu intensa. La <strong>cosmètica</strong> i la <strong>moda</strong> registren els "
+         "marges més alts. L'<strong>alimentació</strong> —on hi ha el líder— té marges continguts: el seu poder ve del "
+         "<strong>volum</strong>, no del marge unitari."
          if _ca else
          "No hay un único modelo dentro de la muestra. La <strong>electrónica e informática</strong> tienen la productividad "
-         "más alta (ticket elevado, plantilla reducida y peso de la venta online) pero el <strong>margen EBITDA más fino</strong> "
-         "(mediana 2,6 %), señal de una competencia de precio intensa. La <strong>cosmética</strong> y la <strong>moda</strong> "
-         "registran los márgenes medios más altos del grupo. La <strong>alimentación</strong> y los <strong>deportes</strong>, con "
-         "más atención de tienda, tienen productividad y márgenes más contenidos y el coste de personal sobre ventas más elevado.")
+         "más alta (ticket elevado, plantilla reducida y peso de la venta online) pero el <strong>margen EBITDA más fino</strong>, "
+         "señal de una competencia de precio intensa. La <strong>cosmética</strong> y la <strong>moda</strong> registran los "
+         "márgenes más altos. La <strong>alimentación</strong> —donde está el líder— tiene márgenes contenidos: su poder viene del "
+         "<strong>volumen</strong>, no del margen unitario.")
     )
 
-# ── TAB 2: CREIXEMENT ──
-with tab_creix:
-    st.markdown(("Creixement de la facturació amb el **CAGR** 2020-2024 (taxa anual composta). **N'excloem les empreses "
-                 "amb ruptura en la sèrie d'ingressos** —salts incompatibles amb creixement orgànic, típics de "
-                 "reorganitzacions societàries— perquè el seu CAGR no seria comparable."
+    st.markdown(("**Creixement orgànic 2020-2024 (CAGR).** N'excloem les empreses amb ruptura de sèrie "
+                 "(reorganitzacions societàries), el CAGR de les quals no seria comparable."
                  if _ca else
-                 "Crecimiento de la facturación con el **CAGR** 2020-2024 (tasa anual compuesta). **Excluimos las empresas "
-                 "con ruptura en la serie de ingresos** —saltos incompatibles con crecimiento orgánico, típicos de "
-                 "reorganizaciones societarias— porque su CAGR no sería comparable."))
+                 "**Crecimiento orgánico 2020-2024 (CAGR).** Excluimos las empresas con ruptura de serie "
+                 "(reorganizaciones societarias), cuyo CAGR no sería comparable."))
     g = d.dropna(subset=["cagr"]).sort_values("cagr")
     sel = pd.concat([g.head(8), g.tail(8)]).drop_duplicates("nombre")
     figg = go.Figure(go.Bar(
@@ -123,41 +292,40 @@ with tab_creix:
         marker_color=[GREEN if v >= 0 else RED for v in sel["cagr"]],
         text=[fpct(v, 1) for v in sel["cagr"]], textposition="outside", textfont=dict(size=10)))
     figg.add_vline(x=0, line_color="rgba(0,0,0,0.3)")
-    apply_layout(figg, xaxis_title="CAGR 2020-2024 (%)" if _ca else "CAGR 2020-2024 (%)",
-                 height=560, margin=dict(l=230, r=70, t=20, b=40))
+    apply_layout(figg, xaxis_title="CAGR 2020-2024 (%)", height=520, margin=dict(l=170, r=70, t=20, b=40))
     st.plotly_chart(figg, use_container_width=True)
     source("Comptes dipositats al Registre Mercantil. Càlcul propi" if _ca else "Cuentas depositadas en el Registro Mercantil. Cálculo propio")
     _brk = d[d["break_flag"]]["nombre"].tolist()
     insight(
         ("Entre les empreses amb creixement orgànic comparable, els <strong>guanyadors</strong> són cadenes de moda, "
-         "cosmètica i nous formats de descompte en expansió; els <strong>perdedors</strong>, formats sota pressió o en "
-         "reestructuració. <br><br><strong>Aclariment.</strong> Operadors com <strong>MediaMarkt</strong> mostren un salt "
-         "enorme de facturació que <strong>no és creixement real</strong>, sinó una reorganització societària "
-         "(consolidació de l'entitat operativa cap al 2023); per això els excloem. Això resol l'aparent contradicció amb "
-         "la pàgina de Subsectors, on l'electrònica figura entre els que menys creixen: el subsector creix poc, i el "
-         f"repunt comptable d'un operador és un artefacte, no una tendència. Excloses per ruptura: {', '.join(_brk)}."
+         "cosmètica i nous formats de descompte; els <strong>perdedors</strong>, formats sota pressió o en reestructuració. "
+         f"<br><br><strong>Aclariment.</strong> Operadors com <strong>MediaMarkt</strong> mostren un salt comptable que "
+         f"<strong>no és creixement real</strong>, sinó una reorganització societària; per això els excloem. Excloses per "
+         f"ruptura: {', '.join(_brk) if _brk else '—'}."
          if _ca else
          "Entre las empresas con crecimiento orgánico comparable, los <strong>ganadores</strong> son cadenas de moda, "
-         "cosmética y nuevos formatos de descuento en expansión; los <strong>perdedores</strong>, formatos bajo presión o "
-         "en reestructuración. <br><br><strong>Aclaración.</strong> Operadores como <strong>MediaMarkt</strong> muestran un "
-         "salto enorme de facturación que <strong>no es crecimiento real</strong>, sino una reorganización societaria "
-         "(consolidación de la entidad operativa hacia 2023); por eso los excluimos. Esto resuelve la aparente "
-         "contradicción con la página de Subsectores, donde la electrónica figura entre los que menos crecen: el "
-         f"subsector crece poco, y el repunte contable de un operador es un artefacto, no una tendencia. Excluidas por ruptura: {', '.join(_brk)}.")
+         "cosmética y nuevos formatos de descuento; los <strong>perdedores</strong>, formatos bajo presión o en reestructuración. "
+         f"<br><br><strong>Aclaración.</strong> Operadores como <strong>MediaMarkt</strong> muestran un salto contable que "
+         f"<strong>no es crecimiento real</strong>, sino una reorganización societaria; por eso los excluimos. Excluidas por "
+         f"ruptura: {', '.join(_brk) if _brk else '—'}.")
     )
 
-# ── TAB 3: INDICADORS PER EMPRESA (taula interactiva de ràtios) ──
-with tab_emp:
-    st.markdown(("Indicadors de cada empresa de la mostra (clica les capçaleres per ordenar). Es mostren **només "
-                 "ràtios** —no xifres absolutes de facturació ni plantilla."
+# ── TAB 4: LA MOSTRA COMPLETA (taula ordenable amb absoluts + ràtios) ──
+with tab_mostra:
+    st.markdown(("Totes les empreses de la mostra (clica les capçaleres per ordenar). Facturació i quota dins la "
+                 "mostra, més els ràtios d'eficiència."
                  if _ca else
-                 "Indicadores de cada empresa de la muestra (clica las cabeceras para ordenar). Se muestran **solo "
-                 "ratios** —no cifras absolutas de facturación ni plantilla."))
+                 "Todas las empresas de la muestra (clica las cabeceras para ordenar). Facturación y cuota dentro de la "
+                 "muestra, más los ratios de eficiencia."))
     tbl = d.copy()
-    tbl["prod_keur"] = tbl["productivitat"]/1000
-    tbl = tbl[["nombre", "subsector", "marge_ebitda", "roa", "prod_keur", "ratio_personal", "cagr"]]
-    tbl = tbl.sort_values("marge_ebitda", ascending=False)
-    tbl.columns = ["Empresa", "Subsector",
+    tbl["fac_meur"] = tbl["ing_2024"] / 1000
+    tbl["prod_keur"] = tbl["productivitat"] / 1000
+    tbl = tbl[["rank_2024", "nombre", "subsector", "fac_meur", "quota_2024",
+               "marge_ebitda", "roa", "prod_keur", "ratio_personal", "cagr"]]
+    tbl = tbl.sort_values("fac_meur", ascending=False)
+    tbl.columns = ["#", "Empresa", "Subsector",
+                   "Facturació (M€)" if _ca else "Facturación (M€)",
+                   "Quota mostra %" if _ca else "Cuota muestra %",
                    "Marge EBITDA %" if _ca else "Margen EBITDA %", "ROA %",
                    "Fact./empleat (k€)" if _ca else "Fact./empleado (k€)",
                    "Cost pers./vendes %" if _ca else "Coste pers./ventas %",
@@ -165,18 +333,23 @@ with tab_emp:
     st.dataframe(
         tbl, use_container_width=True, hide_index=True, height=560,
         column_config={
+            "#": st.column_config.NumberColumn(format="%d", width="small"),
+            ("Facturació (M€)" if _ca else "Facturación (M€)"): st.column_config.NumberColumn(format="%.0f"),
+            ("Quota mostra %" if _ca else "Cuota muestra %"): st.column_config.NumberColumn(format="%.1f"),
             ("Marge EBITDA %" if _ca else "Margen EBITDA %"): st.column_config.NumberColumn(format="%.1f"),
             "ROA %": st.column_config.NumberColumn(format="%.1f"),
             ("Fact./empleat (k€)" if _ca else "Fact./empleado (k€)"): st.column_config.NumberColumn(format="%.0f"),
             ("Cost pers./vendes %" if _ca else "Coste pers./ventas %"): st.column_config.NumberColumn(format="%.1f"),
             "CAGR 20-24 %": st.column_config.NumberColumn(format="%.1f"),
         })
-    source("Comptes anuals dipositats al Registre Mercantil. Càlcul propi" if _ca
-           else "Cuentas anuales depositadas en el Registro Mercantil. Cálculo propio")
-    st.caption(("CAGR buit = empresa amb ruptura de sèrie (reorganització) o sense comptes per als dos anys."
+    source("Comptes anuals dipositats al Registre Mercantil (SABI). Càlcul propi" if _ca
+           else "Cuentas anuales depositadas en el Registro Mercantil (SABI). Cálculo propio")
+    st.caption(("Facturació i plantilla són dades públiques del Registre Mercantil. CAGR buit = empresa amb ruptura "
+                "de sèrie (reorganització) o sense comptes per als dos anys."
                 if _ca else
-                "CAGR vacío = empresa con ruptura de serie (reorganización) o sin cuentas para ambos años."))
+                "Facturación y plantilla son datos públicos del Registro Mercantil. CAGR vacío = empresa con ruptura "
+                "de serie (reorganización) o sin cuentas para ambos años."))
 
-page_meta("Comptes anuals dipositats al Registre Mercantil (2020-2024) · mostra de grans empreses CNAE 47 · només indicadors i ràtios" if _ca
-          else "Cuentas anuales depositadas en el Registro Mercantil (2020-2024) · muestra de grandes empresas CNAE 47 · solo indicadores y ratios",
+page_meta("Comptes anuals dipositats al Registre Mercantil (SABI, 2020-2024) · INE ICM per modo · EAS (denominador sectorial) · mostra de grans empreses CNAE 47" if _ca
+          else "Cuentas anuales depositadas en el Registro Mercantil (SABI, 2020-2024) · INE ICM por modo · EAS (denominador sectorial) · muestra de grandes empresas CNAE 47",
           st.session_state.lang)
