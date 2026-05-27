@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from urllib.parse import urlparse
 
 import feedparser
 import pandas as pd
@@ -347,6 +348,36 @@ def _matches_keywords(titol, snippet, feed_id=""):
     return True
 
 
+# Dominis que ja ingerim per feed directe o per query dedicada de Google News.
+# A l'agregador OBERT (google_retail) els descartem: Google News els retorna
+# amb una data de DESCOBERTA recent (no la de publicació) i a més els duplica.
+# Volem que google_retail aporti NOMÉS fonts que no cobrim per cap altra via.
+_COVERED_DOMAINS = (
+    "distribucionactualidad.com", "wpcomstaging.com",  # DA (+ mirall staging)
+    "diffusionsport.com", "expansion.com", "alimarket.es",
+    "lavanguardia.com", "cincodias.elpais.com", "elpais.com",
+    "ine.es", "idescat.cat", "gencat.cat",
+    "eleconomista.es",  # via google_economista
+    "viaempresa.cat",   # via google_viaempresa
+)
+# Google News posa la font com a sufix del títol: "Titular - domini.com".
+_TITLE_SRC_RE = re.compile(r"\s[-–]\s([\w.\-]+\.\w{2,})\s*$")
+
+
+def _entry_domain(entry, titol):
+    """Domini d'origen d'un ítem de Google News. Google l'exposa a
+    entry.source.href i també com a sufix del títol. Retorna el domini en
+    minúscules (sense 'www.') o '' si no es pot determinar."""
+    src = entry.get("source")
+    if isinstance(src, dict):
+        href = src.get("href") or src.get("url") or ""
+        net = urlparse(href).netloc.lower()
+        if net:
+            return net[4:] if net.startswith("www.") else net
+    m = _TITLE_SRC_RE.search(titol or "")
+    return m.group(1).lower() if m else ""
+
+
 def _fetch_one(feed_cfg):
     feed_id, nom, url, area, tipus, needs_filter = feed_cfg
     try:
@@ -361,6 +392,10 @@ def _fetch_one(feed_cfg):
         link = e.get("link") or ""
         if not titol or not link:
             continue
+        if feed_id == "google_retail":
+            dom = _entry_domain(e, titol)
+            if dom and any(c in dom for c in _COVERED_DOMAINS):
+                continue
         if needs_filter and not _matches_keywords(titol, snippet, feed_id):
             continue
         rows.append({
@@ -392,5 +427,19 @@ def fetch_press():
     df = pd.DataFrame(rows)
     df = df.drop_duplicates(subset=["link"])
     df["data"] = pd.to_datetime(df["data"], utc=True, errors="coerce")
+
+    # Dedup entre feeds per títol normalitzat: una mateixa notícia pot arribar
+    # pel feed directe de l'editor (data fiable) i per un agregador (Google News,
+    # que reasigna sovint una data de descoberta recent a articles antics).
+    # Conservem la versió de la font més fiable: feeds directes abans que agregadors.
+    _norm = (df["titol"].str.lower()
+             .str.replace(_TITLE_SRC_RE, "", regex=True)            # treu sufix "- domini.com"
+             .str.normalize("NFKD").str.encode("ascii", "ignore").str.decode("ascii")
+             .str.replace(r"[^a-z0-9]+", " ", regex=True).str.strip())
+    df = df.assign(_norm=_norm, _trust=(df["tipus"] == "agregador").astype(int))
+    df = (df.sort_values(["_trust", "data"], ascending=[True, False], na_position="last")
+            .drop_duplicates(subset=["_norm"], keep="first")
+            .drop(columns=["_norm", "_trust"]))
+
     df = df.sort_values("data", ascending=False, na_position="last").reset_index(drop=True)
     return df[cols]
