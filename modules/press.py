@@ -17,8 +17,6 @@ import feedparser
 import pandas as pd
 
 
-_ALIMARKET_BASE = "https://www.alimarket.es/media/rss/sectores/"
-
 # (id, nom, url, area, tipus, requereix_filtre)
 FEEDS = [
     ("distribucion_actualidad",
@@ -39,45 +37,17 @@ FEEDS = [
      "https://www.diffusionsport.com/feed/",
      "multisector", "sectorial", True),
 
-    # Expansión (Unidad Editorial) TRET 2026-05-27: la seva política de mineria
-    # de dades (art. 67.3 RDL 24/2021) reserva expressament qualsevol extracció/
-    # tractament automatitzat del seu contingut, amb l'única excepció de la
-    # indexació per a cercadors públics. Un recull no encaixa a l'excepció, així
-    # que no l'ingerim per evitar problemes. Tampoc entra via google_retail
-    # (expansion.com és a _COVERED_DOMAINS).
-
-    ("la_vanguardia",
-     "La Vanguardia — Economia",
-     "https://www.lavanguardia.com/rss/economia.xml",
-     "multisector", "generalista", True),
-
-    # Alimarket: un feed XML per sector; cada feed publica nomes l'ultim item.
-    # Agreguem diversos sectors per cobrir comerç al detall en sentit ampli.
-    ("alimarket_base",
-     "Alimarket — Distribució base alimentària",
-     _ALIMARKET_BASE + "alimentacion-distribucion-base-alimentaria.xml",
-     "alimentacio", "sectorial", False),
-    ("alimarket_esp",
-     "Alimarket — Distribució especialitzada alimentària",
-     _ALIMARKET_BASE + "alimentacion-distribucion-especializada-alimentaria-generico.xml",
-     "alimentacio", "sectorial", False),
-    ("alimarket_nonfood",
-     "Alimarket — Distribució no alimentària",
-     _ALIMARKET_BASE + "non-food-distribucion-especializada-no-alimentaria.xml",
-     "multisector", "sectorial", False),
-    ("alimarket_perfumeria",
-     "Alimarket — Perfumeria i cosmètica",
-     _ALIMARKET_BASE + "non-food-distribucion-perfumeria-cosmetica.xml",
-     "multisector", "sectorial", False),
-    ("alimarket_electro",
-     "Alimarket — Electrodomèstics i tecnologia",
-     _ALIMARKET_BASE + "electro-distribucion-generalistas-con-electro.xml",
-     "multisector", "sectorial", False),
-
-    ("cinco_dias",
-     "Cinco Días",
-     "https://cincodias.elpais.com/rss/cincodias/portada.xml",
-     "multisector", "generalista", True),
+    # ── Fonts RETIRADES per reserva de mineria de dades / IA (2026-05-27) ──
+    # Aquests editors reserven expressament l'extracció i el tractament
+    # automatitzat del seu contingut (art. 67.3 RDL 24/2021) o el prohibeixen a
+    # les condicions d'ús, així que NO els ingerim per evitar problemes:
+    #   · Expansión (Unidad Editorial) — política de mineria de dades explícita.
+    #   · La Vanguardia (Grupo Godó) — avís legal: cita art. 67.3 + IA/minería.
+    #   · Alimarket — condicions amb reserva TDM explícita + servei B2B de pagament.
+    #   · Cinco Días (PRISA) — bloqueja la lectura automàtica; tractada com a restrictiva.
+    # Tots quatre són també a _COVERED_DOMAINS, de manera que tampoc afloren via
+    # google_retail. La cobertura es manté amb DA, Diffusion Sport, fonts públiques
+    # (INE/Idescat/CCAM) i Google News (El Economista, Viaempresa, consulta retail).
 
     ("ine",
      "INE — Notes de premsa",
@@ -350,17 +320,19 @@ def _matches_keywords(titol, snippet, feed_id=""):
     return True
 
 
-# Dominis que ja ingerim per feed directe o per query dedicada de Google News.
-# A l'agregador OBERT (google_retail) els descartem: Google News els retorna
-# amb una data de DESCOBERTA recent (no la de publicació) i a més els duplica.
-# Volem que google_retail aporti NOMÉS fonts que no cobrim per cap altra via.
+# Dominis que NO volem que aflorin a l'agregador obert (google_retail), per dos
+# motius: (a) ja els cobrim per una altra via (feed directe o query dedicada) i
+# evitem duplicats amb data de descoberta de Google; o (b) són editors amb reserva
+# de mineria de dades que hem retirat expressament i no han d'entrar per cap porta.
 _COVERED_DOMAINS = (
+    # (a) coberts per una altra via
     "distribucionactualidad.com", "wpcomstaging.com",  # DA (+ mirall staging)
-    "diffusionsport.com", "expansion.com", "alimarket.es",
-    "lavanguardia.com", "cincodias.elpais.com", "elpais.com",
+    "diffusionsport.com",
     "ine.es", "idescat.cat", "gencat.cat",
     "eleconomista.es",  # via google_economista
     "viaempresa.cat",   # via google_viaempresa
+    # (b) editors retirats per reserva de mineria de dades (no reintroduir)
+    "expansion.com", "lavanguardia.com", "cincodias.elpais.com", "elpais.com", "alimarket.es",
 )
 # Google News posa la font com a sufix del títol: "Titular - domini.com".
 _TITLE_SRC_RE = re.compile(r"\s[-–]\s([\w.\-]+\.\w{2,})\s*$")
