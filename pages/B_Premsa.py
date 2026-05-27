@@ -209,13 +209,14 @@ items_to_show = df_f.head(MAX_ITEMS)
 for _, row in items_to_show.iterrows():
     tipus = row["tipus"]
     snippet = row["snippet"] if row["snippet"] else ""
+    snippet_html = f"<div class='press-snippet'>{snippet}</div>" if snippet else ""
     html = (
         f"<div class='press-item'>"
         f"<div class='press-meta'><span class='font'>{row['font']}</span> · "
         f"{_fmt_data(row['data'])}"
         f"<span class='badge {tipus}'>{tipus}</span></div>"
         f"<div class='press-titol'><a href='{row['link']}' target='_blank' rel='noopener'>{row['titol']}</a></div>"
-        f"<div class='press-snippet'>{snippet}</div>"
+        f"{snippet_html}"
         f"</div>"
     )
     st.markdown(html, unsafe_allow_html=True)

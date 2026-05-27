@@ -39,10 +39,12 @@ FEEDS = [
      "https://www.diffusionsport.com/feed/",
      "multisector", "sectorial", True),
 
-    ("expansion_distribucion",
-     "Expansión — Distribució",
-     "https://www.expansion.com/rss/empresasdistribucion.xml",
-     "multisector", "sectorial", False),
+    # Expansión (Unidad Editorial) TRET 2026-05-27: la seva política de mineria
+    # de dades (art. 67.3 RDL 24/2021) reserva expressament qualsevol extracció/
+    # tractament automatitzat del seu contingut, amb l'única excepció de la
+    # indexació per a cercadors públics. Un recull no encaixa a l'excepció, així
+    # que no l'ingerim per evitar problemes. Tampoc entra via google_retail
+    # (expansion.com és a _COVERED_DOMAINS).
 
     ("la_vanguardia",
      "La Vanguardia — Economia",
@@ -378,6 +380,22 @@ def _entry_domain(entry, titol):
     return m.group(1).lower() if m else ""
 
 
+# Fonts que mantenim però mostrant NOMÉS titular + enllaç (sense fragment), per
+# prudència davant polítiques editorials restrictives. Buit ara mateix (Expansión
+# s'ha tret del tot). Afegir-hi dominis —p.ex. "exemple.com"— per a futures fonts
+# RSS que vulguem ser especialment conservadors a l'hora de reproduir-ne text.
+_NO_SNIPPET_DOMAINS = set()
+
+
+def _source_domain(entry, titol, link):
+    """Domini de la font real, tant si ve de feed directe com de Google News."""
+    d = _entry_domain(entry, titol)
+    if d:
+        return d
+    net = urlparse(link or "").netloc.lower()
+    return net[4:] if net.startswith("www.") else net
+
+
 def _fetch_one(feed_cfg):
     feed_id, nom, url, area, tipus, needs_filter = feed_cfg
     try:
@@ -398,6 +416,10 @@ def _fetch_one(feed_cfg):
                 continue
         if needs_filter and not _matches_keywords(titol, snippet, feed_id):
             continue
+        if _NO_SNIPPET_DOMAINS:
+            _d = _source_domain(e, titol, link)
+            if any(c in _d for c in _NO_SNIPPET_DOMAINS):
+                snippet = ""
         rows.append({
             "data": _parse_date(e),
             "font": nom,
