@@ -176,6 +176,51 @@ with tab_conc:
                 "Cuota dentro de la muestra = sobre los grandes del gráfico. Cuota sobre el sector = sobre la cifra de negocio "
                 f"total del CNAE 47 (EAS {eas_any}). No son lo mismo; las distinguimos siempre."))
 
+    # ── Dinàmica de la concentració 2020 → 2024 (mateix conjunt d'operadors) ──
+    st.markdown("---")
+    dyn = d.dropna(subset=["ing_2020", "ing_2024"]).copy()
+
+    def _conc_shares(col):
+        v = np.sort(dyn[col].values)[::-1]
+        sh = v / v.sum() * 100
+        return sh[0], sh[:4].sum(), (sh ** 2).sum()
+
+    cr1_20, cr4_20, hhi_20 = _conc_shares("ing_2020")
+    cr1_24c, cr4_24c, hhi_24c = _conc_shares("ing_2024")
+    _ld = dyn.sort_values("ing_2024", ascending=False)
+    _g_lead = (_ld["ing_2024"].iloc[0] / _ld["ing_2020"].iloc[0] - 1) * 100
+    _g_rest = (_ld["ing_2024"].iloc[1:].sum() / _ld["ing_2020"].iloc[1:].sum() - 1) * 100
+
+    st.markdown(("**S'estreny la cúspide? La concentració dins el club dels grans, 2020 → 2024.** "
+                 f"Mateix conjunt de {len(dyn)} operadors amb comptes als dos anys."
+                 if _ca else
+                 "**¿Se estrecha la cúspide? La concentración dentro del club de los grandes, 2020 → 2024.** "
+                 f"Mismo conjunto de {len(dyn)} operadores con cuentas en ambos años."))
+    dd1, dd2, dd3 = st.columns(3)
+    dd1.metric(("Quota del líder (mostra)" if _ca else "Cuota del líder (muestra)"),
+               fpct(cr1_24c, 1, sign=False),
+               delta=f"{cr1_24c - cr1_20:+.1f} pp".replace(".", ","), delta_color="off")
+    dd2.metric("CR4", fpct(cr4_24c, 1, sign=False),
+               delta=f"{cr4_24c - cr4_20:+.1f} pp".replace(".", ","), delta_color="off")
+    dd3.metric("HHI", f"{fnum(hhi_24c)}",
+               delta=f"{hhi_24c - hhi_20:+.0f}", delta_color="off",
+               help=(">1.500 = concentrat" if _ca else ">1.500 = concentrado"))
+    insight(
+        (f"Aquí cal ser honestos amb les dades: dins la mostra de grans, la cúspide <strong>no s'estreny</strong>. "
+         f"Entre 2020 i 2024 el CR4 baixa de {fpct(cr4_20,1,sign=False)} a {fpct(cr4_24c,1,sign=False)} i l'HHI de "
+         f"{fnum(hhi_20)} a {fnum(hhi_24c)}, perquè la resta de grans operadors ha crescut una mica més de pressa que "
+         f"el líder ({fpct(_g_lead,1)} vs {fpct(_g_rest,1)} de facturació acumulada). La concentració al capdamunt és "
+         f"<strong>alta i estable, no creixent</strong>. <strong>La divergència de debò no és gran-contra-més-gran, sinó "
+         f"el bloc dels grans contra el petit comerç</strong> — i això es veu a la pestanya següent."
+         if _ca else
+         f"Aquí hay que ser honestos con los datos: dentro de la muestra de grandes, la cúspide <strong>no se estrecha</strong>. "
+         f"Entre 2020 y 2024 el CR4 baja de {fpct(cr4_20,1,sign=False)} a {fpct(cr4_24c,1,sign=False)} y el HHI de "
+         f"{fnum(hhi_20)} a {fnum(hhi_24c)}, porque el resto de grandes operadores ha crecido algo más rápido que "
+         f"el líder ({fpct(_g_lead,1)} vs {fpct(_g_rest,1)} de facturación acumulada). La concentración en la cúspide es "
+         f"<strong>alta y estable, no creciente</strong>. <strong>La divergencia de verdad no es grande-contra-más-grande, sino "
+         f"el bloque de los grandes contra el pequeño comercio</strong> — y eso se ve en la pestaña siguiente.")
+    )
+
 # ── TAB 2: L'OLIGOPOLI ACCELERA (dinàmica de formats, ICM) ──
 with tab_din:
     icm = _icm_modos()
@@ -250,6 +295,56 @@ with tab_efi:
         marge_ebitda=("marge_ebitda", "median"), roa=("roa", "median"),
         productivitat=("productivitat", "median"), ratio_personal=("ratio_personal", "median")).reset_index())
     s3 = sub[sub["n"] >= 3].copy()
+
+    # ── Mida ≠ rendibilitat (nivell empresa): el que el rànquing per facturació amaga ──
+    ef = d.dropna(subset=["ing_2024", "marge_ebitda", "empleados"]).copy()
+    ef["meur"] = ef["ing_2024"] / 1000
+    med_marge = ef["marge_ebitda"].median()
+    big4_med = ef.sort_values("ing_2024", ascending=False).head(4)["marge_ebitda"].median()
+    top_marge_names = ", ".join(ef.sort_values("marge_ebitda", ascending=False).head(3)["nombre"])
+    st.markdown(("**La mida no compra marge.** Cada bombolla és una empresa: facturació (eix X, escala log) "
+                 "enfront del marge EBITDA; la mida de la bombolla és la plantilla."
+                 if _ca else
+                 "**El tamaño no compra margen.** Cada burbuja es una empresa: facturación (eje X, escala log) "
+                 "frente al margen EBITDA; el tamaño de la burbuja es la plantilla."))
+    figm = go.Figure()
+    for s in sorted(ef["subsector"].unique()):
+        g = ef[ef["subsector"] == s]
+        emp_txt = g["empleados"].map(lambda v: f"{v:,.0f}".replace(",", "."))
+        figm.add_trace(go.Scatter(
+            x=g["meur"], y=g["marge_ebitda"], mode="markers", name=s,
+            marker=dict(size=np.sqrt(g["empleados"].clip(lower=1)) / 8 + 6,
+                        color=cmap.get(s, BRAND), line=dict(width=0.5, color="white"), opacity=0.82),
+            customdata=np.stack([g["nombre"], emp_txt], axis=-1),
+            hovertemplate="<b>%{customdata[0]}</b><br>%{x:,.0f} M€ · "
+                          + ("marge EBITDA " if _ca else "margen EBITDA ")
+                          + "%{y:.1f}%<br>%{customdata[1]} "
+                          + ("empleats" if _ca else "empleados") + "<extra></extra>"))
+    figm.add_hline(y=med_marge, line_dash="dot", line_color="rgba(0,0,0,0.35)",
+                   annotation_text=f"mediana {fpct(med_marge,1,sign=False)}",
+                   annotation_position="top left")
+    apply_layout(figm, xaxis_title="Facturació 2024 (M€, escala log)" if _ca else "Facturación 2024 (M€, escala log)",
+                 yaxis_title="Marge EBITDA (%)" if _ca else "Margen EBITDA (%)",
+                 height=460, showlegend=True)
+    figm.update_xaxes(type="log")
+    st.plotly_chart(figm, use_container_width=True)
+    source("Comptes dipositats al Registre Mercantil. Càlcul propi" if _ca else "Cuentas depositadas en el Registro Mercantil. Cálculo propio")
+    insight(
+        (f"El rànquing per mida amaga que <strong>la mida i el marge no van junts</strong>: la correlació entre "
+         f"facturació i marge és pràcticament nul·la. Els marges més gruixuts no són dels gegants del volum, sinó "
+         f"d'operadors mitjans de luxe, joieria, òptica i moda ({top_marge_names}). Els quatre majors per facturació "
+         f"tenen un marge EBITDA medià del <strong>{fpct(big4_med,1,sign=False)}</strong>, per sota de la mediana de la "
+         f"mostra ({fpct(med_marge,1,sign=False)}): <strong>el seu poder ve del volum i de la quota, no del marge "
+         f"unitari</strong>. És l'angle que un rànquing de facturació, per si sol, no mostra."
+         if _ca else
+         f"El ranking por tamaño oculta que <strong>el tamaño y el margen no van juntos</strong>: la correlación entre "
+         f"facturación y margen es prácticamente nula. Los márgenes más gruesos no son de los gigantes del volumen, sino "
+         f"de operadores medianos de lujo, joyería, óptica y moda ({top_marge_names}). Los cuatro mayores por facturación "
+         f"tienen un margen EBITDA mediano del <strong>{fpct(big4_med,1,sign=False)}</strong>, por debajo de la mediana de la "
+         f"muestra ({fpct(med_marge,1,sign=False)}): <strong>su poder viene del volumen y de la cuota, no del margen "
+         f"unitario</strong>. Es el ángulo que un ranking de facturación, por sí solo, no muestra.")
+    )
+    st.markdown("---")
 
     st.markdown(("**Mapa de posicionament dels subsectors** — productivitat vs marge (mediana, 3+ empreses)"
                  if _ca else
