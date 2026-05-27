@@ -194,43 +194,45 @@ with tab_conc:
     def _conc_shares(col):
         v = np.sort(dyn[col].values)[::-1]
         sh = v / v.sum() * 100
-        return sh[0], sh[:4].sum(), (sh ** 2).sum()
+        return sh[0], sh[:4].sum(), sh[:10].sum(), (sh ** 2).sum()
 
-    cr1_20, cr4_20, hhi_20 = _conc_shares("ing_2020")
-    cr1_24c, cr4_24c, hhi_24c = _conc_shares("ing_2024")
-    _ld = dyn.sort_values("ing_2024", ascending=False)
-    _g_lead = (_ld["ing_2024"].iloc[0] / _ld["ing_2020"].iloc[0] - 1) * 100
-    _g_rest = (_ld["ing_2024"].iloc[1:].sum() / _ld["ing_2020"].iloc[1:].sum() - 1) * 100
+    cr1_20, cr4_20, cr10_20, hhi_20 = _conc_shares("ing_2020")
+    cr1_24c, cr4_24c, cr10_24c, hhi_24c = _conc_shares("ing_2024")
 
-    st.markdown(("**S'estreny la cúspide? La concentració dins el club dels grans, 2020 → 2024.** "
-                 f"Mateix conjunt de {len(dyn)} operadors amb comptes als dos anys."
+    st.markdown(("**La concentració al capdamunt no creix.** Comparem el mateix grup de "
+                 f"{len(dyn)} grans operadors el 2020 i el 2024."
                  if _ca else
-                 "**¿Se estrecha la cúspide? La concentración dentro del club de los grandes, 2020 → 2024.** "
-                 f"Mismo conjunto de {len(dyn)} operadores con cuentas en ambos años."))
-    dd1, dd2, dd3 = st.columns(3)
-    dd1.metric(("Quota del líder (mostra)" if _ca else "Cuota del líder (muestra)"),
-               fpct(cr1_24c, 1, sign=False),
-               delta=f"{cr1_24c - cr1_20:+.1f} pp".replace(".", ","), delta_color="off")
-    dd2.metric("CR4", fpct(cr4_24c, 1, sign=False),
-               delta=f"{cr4_24c - cr4_20:+.1f} pp".replace(".", ","), delta_color="off")
-    dd3.metric("HHI", f"{fnum(hhi_24c)}",
-               delta=f"{hhi_24c - hhi_20:+.0f}", delta_color="off",
-               help=(">1.500 = concentrat" if _ca else ">1.500 = concentrado"))
+                 "**La concentración en la cúspide no crece.** Comparamos el mismo grupo de "
+                 f"{len(dyn)} grandes operadores en 2020 y 2024."))
+    _lbl = ["Líder", "CR4", "CR10"]
+    _y20 = [cr1_20, cr4_20, cr10_20]
+    _y24 = [cr1_24c, cr4_24c, cr10_24c]
+    figdin = go.Figure()
+    figdin.add_trace(go.Bar(name="2020", x=_lbl, y=_y20, marker_color=GRAY,
+                            text=[fpct(v, 1, sign=False) for v in _y20], textposition="outside", textfont=dict(size=11)))
+    figdin.add_trace(go.Bar(name="2024", x=_lbl, y=_y24, marker_color=BRAND,
+                            text=[fpct(v, 1, sign=False) for v in _y24], textposition="outside", textfont=dict(size=11)))
+    apply_layout(figdin, yaxis_title="% sobre la mostra de grans" if _ca else "% sobre la muestra de grandes",
+                 height=340, margin=dict(l=50, r=20, t=20, b=40))
+    figdin.update_layout(barmode="group")
+    figdin.update_yaxes(range=[0, 88])
+    st.plotly_chart(figdin, use_container_width=True)
     insight(
-        (f"Aquí cal ser honestos amb les dades: dins la mostra de grans, la cúspide <strong>no s'estreny</strong>. "
-         f"Entre 2020 i 2024 el CR4 baixa de {fpct(cr4_20,1,sign=False)} a {fpct(cr4_24c,1,sign=False)} i l'HHI de "
-         f"{fnum(hhi_20)} a {fnum(hhi_24c)}, perquè la resta de grans operadors ha crescut una mica més de pressa que "
-         f"el líder ({fpct(_g_lead,1)} vs {fpct(_g_rest,1)} de facturació acumulada). La concentració al capdamunt és "
-         f"<strong>alta i estable, no creixent</strong>. <strong>La divergència de debò no és gran-contra-més-gran, sinó "
-         f"el bloc dels grans contra el petit comerç</strong> — i això es veu a la pestanya següent."
+        (f"Les tres mesures de concentració <strong>baixen lleugerament</strong> entre 2020 i 2024 "
+         f"(l'HHI passa de {fnum(hhi_20)} a {fnum(hhi_24c)}): el grup de grans no s'està concentrant més. "
+         "<strong>La separació de debò no és entre grans, sinó entre el bloc dels grans i el petit comerç</strong> "
+         "— i això es veu a la pestanya «L'oligopoli accelera»."
          if _ca else
-         f"Aquí hay que ser honestos con los datos: dentro de la muestra de grandes, la cúspide <strong>no se estrecha</strong>. "
-         f"Entre 2020 y 2024 el CR4 baja de {fpct(cr4_20,1,sign=False)} a {fpct(cr4_24c,1,sign=False)} y el HHI de "
-         f"{fnum(hhi_20)} a {fnum(hhi_24c)}, porque el resto de grandes operadores ha crecido algo más rápido que "
-         f"el líder ({fpct(_g_lead,1)} vs {fpct(_g_rest,1)} de facturación acumulada). La concentración en la cúspide es "
-         f"<strong>alta y estable, no creciente</strong>. <strong>La divergencia de verdad no es grande-contra-más-grande, sino "
-         f"el bloque de los grandes contra el pequeño comercio</strong> — y eso se ve en la pestaña siguiente.")
+         f"Las tres medidas de concentración <strong>bajan ligeramente</strong> entre 2020 y 2024 "
+         f"(el HHI pasa de {fnum(hhi_20)} a {fnum(hhi_24c)}): el grupo de grandes no se está concentrando más. "
+         "<strong>La separación de verdad no es entre grandes, sino entre el bloque de los grandes y el pequeño comercio</strong> "
+         "— y eso se ve en la pestaña «El oligopolio acelera».")
     )
+    st.caption((f"Panell constant de {len(dyn)} operadors amb comptes els dos anys; per això les xifres difereixen "
+                "lleugerament de les de dalt, calculades sobre la mostra completa."
+                if _ca else
+                f"Panel constante de {len(dyn)} operadores con cuentas en ambos años; por eso las cifras difieren "
+                "ligeramente de las de arriba, calculadas sobre la muestra completa."))
 
 # ── TAB 2: L'OLIGOPOLI ACCELERA (dinàmica de formats, ICM) ──
 with tab_din:
