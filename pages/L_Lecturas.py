@@ -80,12 +80,12 @@ PULSO_CSS = """
     line-height: 1.5;
     color: #555;
     max-width: 720px;
-    margin: 0 0 40px 0;
-    padding-bottom: 32px;
+    margin: 0 0 16px 0;
+    padding-bottom: 24px;
     border-bottom: 1px solid #d0d0d0;
 }
 
-.pulso-section { margin: 44px 0 32px 0; }
+.pulso-section { margin: 24px 0 32px 0; }
 
 .pulso-section-label {
     font-family: 'Archivo Narrow', sans-serif;
