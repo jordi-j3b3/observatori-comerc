@@ -17,7 +17,7 @@ page_header()
 _ca = st.session_state.lang == "ca"
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def _load():
     return fetch_press()
 
@@ -29,8 +29,8 @@ with btn_col:
     st.write("")  # spacer per alinear vertical
     if st.button(
         ("Actualitzar" if _ca else "Actualizar"),
-        help=("Forçar la recàrrega dels feeds (cache 1h)"
-              if _ca else "Forzar la recarga de los feeds (caché 1h)"),
+        help=("Forçar la recàrrega dels feeds (cache 30 min)"
+              if _ca else "Forzar la recarga de los feeds (caché 30 min)"),
         use_container_width=True,
     ):
         _load.clear()
@@ -160,9 +160,9 @@ if cerca.strip():
     df_f = df_f[mask]
 
 st.caption(
-    f"{len(df_f)} notícies · actualitzat cada hora"
+    f"{len(df_f)} notícies · actualitzat cada 30 min"
     if _ca else
-    f"{len(df_f)} noticias · actualizado cada hora"
+    f"{len(df_f)} noticias · actualizado cada 30 min"
 )
 
 # ─── ESTIL ──────────────────────────────────────────────────
