@@ -1,7 +1,7 @@
 """Pàgina: Líders del comerç (CNAE 47) — anatomia de la concentració.
 Mostra de grans empreses (comptes del Registre Mercantil) + dinàmica de formats (ICM).
 Es publiquen xifres absolutes i quotes: són fets públics del Registre Mercantil.
-L'export SABI verbatim NO es redistribueix (queda al raw, gitignored)."""
+L'export verbatim del proveïdor de dades NO es redistribueix (queda al raw, gitignored)."""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -95,14 +95,14 @@ intro(
      f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturació el 2024 — el "
      f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de tot el sector</strong> (denominador EAS {eas_any}). "
      f"La resta es reparteix entre desenes de milers d'empreses. Aquí no fem un rànquing d'empreses: fem "
-     f"l'<strong>anatomia de la concentració</strong> que hi ha al darrere de la tesi de l'oligopoli."
+     f"l'<strong>anatomia de la concentració</strong> del sector."
      if _ca else
      f"Una <strong>muestra de los {d['nombre'].nunique()} grandes operadores del comercio minorista</strong> (CNAE 47) "
      f"a partir de las <strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Suman "
      f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturación en 2024 — el "
      f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de todo el sector</strong> (denominador EAS {eas_any}). "
      f"El resto se reparte entre decenas de miles de empresas. Aquí no hacemos un ranking de empresas: hacemos "
-     f"la <strong>anatomía de la concentración</strong> que hay detrás de la tesis del oligopolio.")
+     f"la <strong>anatomía de la concentración</strong> del sector.")
 )
 
 k1, k2, k3, k4 = st.columns(4)
@@ -125,7 +125,7 @@ k4.metric(("La mostra, sobre el sector" if _ca else "La muestra, sobre el sector
 
 tab_conc, tab_din, tab_efi, tab_mostra = st.tabs([
     ("Concentració" if _ca else "Concentración"),
-    ("L'oligopoli accelera" if _ca else "El oligopolio acelera"),
+    ("Dinàmica per formats" if _ca else "Dinámica por formatos"),
     ("Rendibilitat i creixement" if _ca else "Rentabilidad y crecimiento"),
     ("La mostra completa" if _ca else "La muestra completa"),
 ])
@@ -147,8 +147,8 @@ with tab_conc:
     apply_layout(figc, xaxis_title="Facturació 2024 (M€)" if _ca else "Facturación 2024 (M€)",
                  height=560, margin=dict(l=160, r=80, t=20, b=40), showlegend=False)
     st.plotly_chart(figc, use_container_width=True)
-    source("Comptes dipositats al Registre Mercantil (SABI). Càlcul propi" if _ca
-           else "Cuentas depositadas en el Registro Mercantil (SABI). Cálculo propio")
+    source("Comptes dipositats al Registre Mercantil . Càlcul propi" if _ca
+           else "Cuentas depositadas en el Registro Mercantil . Cálculo propio")
     st.caption(("**Per què no hi surt Inditex?** El perímetre és el CNAE 47 (comerç al detall). Inditex SA és "
                 "el grup tèxtil consolidat (fabricació + majorista), no una empresa de comerç al detall: incloure'l "
                 "barrejaria verticals i duplicaria, perquè les seves cadenes de botigues a Espanya (Bershka, "
@@ -172,14 +172,14 @@ with tab_conc:
          f"(EAS {eas_any}): aproximadament <strong>1 de cada {round(100/quota_lider_sector)} euros</strong>. Factura més que "
          f"els <strong>{_nbeat} operadors següents plegats</strong> i {_ratio2}× el segon. "
          f"Els quatre primers (CR4) sumen el {fpct(cr4,1,sign=False)} i l'HHI és de {fnum(hhi)}: una "
-         f"estructura clarament concentrada al capdamunt, encara que la mostra només sigui el {fpct(quota_mostra_sector,1,sign=False)} del sector."
+         f"estructura concentrada al capdamunt, encara que la mostra només sigui el {fpct(quota_mostra_sector,1,sign=False)} del sector."
          if _ca else
          f"<strong>{d['nombre'].iloc[0]}</strong> factura por sí sola el <strong>{fpct(cr1,1,sign=False)}</strong> de toda la muestra de "
          f"grandes y representa el <strong>{fpct(quota_lider_sector,1,sign=False)} de todo el comercio minorista español</strong> "
          f"(EAS {eas_any}): aproximadamente <strong>1 de cada {round(100/quota_lider_sector)} euros</strong>. Factura más que "
          f"los <strong>{_nbeat} operadores siguientes juntos</strong> y {_ratio2}× el segundo. "
          f"Los cuatro primeros (CR4) suman el {fpct(cr4,1,sign=False)} y el HHI es de {fnum(hhi)}: una "
-         f"estructura claramente concentrada en la cúspide, aunque la muestra sea solo el {fpct(quota_mostra_sector,1,sign=False)} del sector.")
+         f"estructura concentrada en la cúspide, aunque la muestra sea solo el {fpct(quota_mostra_sector,1,sign=False)} del sector.")
     )
     st.caption(("Quota dins la mostra = sobre els grans del gràfic. Quota sobre el sector = sobre la xifra de negoci "
                 f"total del CNAE 47 (EAS {eas_any}). No són el mateix; les distingim sempre."
@@ -199,10 +199,10 @@ with tab_conc:
     cr1_20, cr4_20, cr10_20, hhi_20 = _conc_shares("ing_2020")
     cr1_24c, cr4_24c, cr10_24c, hhi_24c = _conc_shares("ing_2024")
 
-    st.markdown(("**La concentració al capdamunt no creix.** Comparem el mateix grup de "
+    st.markdown(("**Evolució de la concentració, 2020–2024.** Comparem el mateix grup de "
                  f"{len(dyn)} grans operadors el 2020 i el 2024."
                  if _ca else
-                 "**La concentración en la cúspide no crece.** Comparamos el mismo grupo de "
+                 "**Evolución de la concentración, 2020–2024.** Comparamos el mismo grupo de "
                  f"{len(dyn)} grandes operadores en 2020 y 2024."))
     _lbl = ["Líder", "CR4", "CR10"]
     _y20 = [cr1_20, cr4_20, cr10_20]
@@ -220,13 +220,13 @@ with tab_conc:
     insight(
         (f"Les tres mesures de concentració <strong>baixen lleugerament</strong> entre 2020 i 2024 "
          f"(l'HHI passa de {fnum(hhi_20)} a {fnum(hhi_24c)}): el grup de grans no s'està concentrant més. "
-         "<strong>La separació de debò no és entre grans, sinó entre el bloc dels grans i el petit comerç</strong> "
-         "— i això es veu a la pestanya «L'oligopoli accelera»."
+         "<strong>La separació principal no és entre grans, sinó entre el bloc dels grans i el petit comerç</strong> "
+         "(vegeu «Dinàmica per formats»)."
          if _ca else
          f"Las tres medidas de concentración <strong>bajan ligeramente</strong> entre 2020 y 2024 "
          f"(el HHI pasa de {fnum(hhi_20)} a {fnum(hhi_24c)}): el grupo de grandes no se está concentrando más. "
-         "<strong>La separación de verdad no es entre grandes, sino entre el bloque de los grandes y el pequeño comercio</strong> "
-         "— y eso se ve en la pestaña «El oligopolio acelera».")
+         "<strong>La separación principal no es entre grandes, sino entre el bloque de los grandes y el pequeño comercio</strong> "
+         "(véase «Dinámica por formatos»).")
     )
     st.caption((f"Panell constant de {len(dyn)} operadors amb comptes els dos anys; per això les xifres difereixen "
                 "lleugerament de les de dalt, calculades sobre la mostra completa."
@@ -234,7 +234,7 @@ with tab_conc:
                 f"Panel constante de {len(dyn)} operadores con cuentas en ambos años; por eso las cifras difieren "
                 "ligeramente de las de arriba, calculadas sobre la muestra completa."))
 
-# ── TAB 2: L'OLIGOPOLI ACCELERA (dinàmica de formats, ICM) ──
+# ── TAB 2: DINÀMICA PER FORMATS (ICM) ──
 with tab_din:
     icm = _icm_modos()
     if icm is None:
@@ -251,11 +251,11 @@ with tab_din:
         STYLE = {"Grandes cadenas": (BRAND, 3.2), "Empresas unilocalizadas": (RED, 3.2),
                  "Pequeñas cadenas": (GRAY_DARK, 1.6), "Grandes Superficies": (GRAY, 1.6)}
         lbl = MODO_CA if _ca else MODO_ES
-        st.markdown(("**El que el SABI no veu: la dinàmica entre formats.** Índex de xifra de negoci del comerç "
-                     "(base 2016 = 100). Les <strong>grans cadenes</strong> s'enfilen; el <strong>petit comerç</strong> es queda enrere."
+        st.markdown(("**Dinàmica per formats de distribució.** Índex de xifra de negoci del comerç "
+                     "(base 2016 = 100). Les <strong>grans cadenes</strong> creixen molt per sobre del <strong>petit comerç</strong>."
                      if _ca else
-                     "**Lo que el SABI no ve: la dinámica entre formatos.** Índice de cifra de negocio del comercio "
-                     "(base 2016 = 100). Las <strong>grandes cadenas</strong> se disparan; el <strong>pequeño comercio</strong> se queda atrás."),
+                     "**Dinámica por formatos de distribución.** Índice de cifra de negocio del comercio "
+                     "(base 2016 = 100). Las <strong>grandes cadenas</strong> crecen muy por encima del <strong>pequeño comercio</strong>."),
                     unsafe_allow_html=True)
         figd = go.Figure()
         for modo in ["Grandes Superficies", "Pequeñas cadenas", "Empresas unilocalizadas", "Grandes cadenas"]:
@@ -282,19 +282,17 @@ with tab_din:
                   fpct(icm["var12"]["Grandes cadenas"], 1),
                   help=("variació anual mitjana dels últims 12 mesos" if _ca else "variación anual media de los últimos 12 meses"))
         insight(
-            (f"Aquí és on es veu la tesi. Des de 2016 les <strong>grans cadenes</strong> han fet créixer la facturació un "
+            (f"Des de 2016 les <strong>grans cadenes</strong> han fet créixer la facturació un "
              f"<strong>{fpct(gc,0)}</strong>, mentre que la <strong>botiga unilocalitzada</strong> —el petit comerç— s'ha quedat al "
              f"<strong>{fpct(uni,0)}</strong>. L'últim any la distància continua: grans cadenes "
              f"{fpct(icm['var12']['Grandes cadenas'],1)} vs petit comerç {fpct(icm['var12']['Empresas unilocalizadas'],1)}. "
-             f"<strong>El SABI ens diu qui són els grans (el nivell); l'ICM ens diu que s'estan separant (la dinàmica).</strong> "
-             f"Els colossos de la pestanya anterior són, precisament, aquestes grans cadenes."
+             f"<strong>Els comptes del Registre Mercantil identifiquen qui són els grans (el nivell); l'ICM mostra que els formats s'estan separant (la dinàmica).</strong>"
              if _ca else
-             f"Aquí es donde se ve la tesis. Desde 2016 las <strong>grandes cadenas</strong> han hecho crecer la facturación un "
+             f"Desde 2016 las <strong>grandes cadenas</strong> han hecho crecer la facturación un "
              f"<strong>{fpct(gc,0)}</strong>, mientras que la <strong>tienda unilocalizada</strong> —el pequeño comercio— se ha quedado en el "
              f"<strong>{fpct(uni,0)}</strong>. El último año la distancia continúa: grandes cadenas "
              f"{fpct(icm['var12']['Grandes cadenas'],1)} vs pequeño comercio {fpct(icm['var12']['Empresas unilocalizadas'],1)}. "
-             f"<strong>El SABI nos dice quiénes son los grandes (el nivel); el ICM nos dice que se están separando (la dinámica).</strong> "
-             f"Los colosos de la pestaña anterior son, precisamente, esas grandes cadenas.")
+             f"<strong>Las cuentas del Registro Mercantil identifican quiénes son los grandes (el nivel); el ICM muestra que los formatos se están separando (la dinámica).</strong>")
         )
         st.page_link("pages/0b_ICM.py",
                      label=("Veure tota la sèrie ICM per modo de distribució →" if _ca
@@ -315,10 +313,10 @@ with tab_efi:
     med_marge = ef["marge_ebitda"].median()
     big4_med = ef.sort_values("ing_2024", ascending=False).head(4)["marge_ebitda"].median()
     top_marge_names = ", ".join(ef.sort_values("marge_ebitda", ascending=False).head(3)["nombre"])
-    st.markdown(("**La mida no compra marge.** Cada bombolla és una empresa: facturació (eix X, escala log) "
+    st.markdown(("**Facturació enfront del marge, per empresa.** Cada bombolla és una empresa: facturació (eix X, escala log) "
                  "enfront del marge EBITDA; la mida de la bombolla és la plantilla."
                  if _ca else
-                 "**El tamaño no compra margen.** Cada burbuja es una empresa: facturación (eje X, escala log) "
+                 "**Facturación frente al margen, por empresa.** Cada burbuja es una empresa: facturación (eje X, escala log) "
                  "frente al margen EBITDA; el tamaño de la burbuja es la plantilla."))
     figm = go.Figure()
     for s in sorted(ef["subsector"].unique()):
@@ -343,19 +341,19 @@ with tab_efi:
     st.plotly_chart(figm, use_container_width=True)
     source("Comptes dipositats al Registre Mercantil. Càlcul propi" if _ca else "Cuentas depositadas en el Registro Mercantil. Cálculo propio")
     insight(
-        (f"El rànquing per mida amaga que <strong>la mida i el marge no van junts</strong>: la correlació entre "
-         f"facturació i marge és pràcticament nul·la. Els marges més gruixuts no són dels gegants del volum, sinó "
+        (f"Facturació i marge <strong>no van lligats</strong>: la correlació entre tots dos és pràcticament nul·la. "
+         f"Els marges més gruixuts no són dels operadors de més volum, sinó "
          f"d'operadors mitjans de luxe, joieria, òptica i moda ({top_marge_names}). Els quatre majors per facturació "
          f"tenen un marge EBITDA medià del <strong>{fpct(big4_med,1,sign=False)}</strong>, per sota de la mediana de la "
-         f"mostra ({fpct(med_marge,1,sign=False)}): <strong>el seu poder ve del volum i de la quota, no del marge "
-         f"unitari</strong>. És l'angle que un rànquing de facturació, per si sol, no mostra."
+         f"mostra ({fpct(med_marge,1,sign=False)}): <strong>el seu pes ve del volum i de la quota, no del marge "
+         f"unitari</strong>. Un rànquing ordenat només per facturació no recull aquesta diferència."
          if _ca else
-         f"El ranking por tamaño oculta que <strong>el tamaño y el margen no van juntos</strong>: la correlación entre "
-         f"facturación y margen es prácticamente nula. Los márgenes más gruesos no son de los gigantes del volumen, sino "
+         f"Facturación y margen <strong>no van ligados</strong>: la correlación entre ambos es prácticamente nula. "
+         f"Los márgenes más gruesos no son de los operadores de más volumen, sino "
          f"de operadores medianos de lujo, joyería, óptica y moda ({top_marge_names}). Los cuatro mayores por facturación "
          f"tienen un margen EBITDA mediano del <strong>{fpct(big4_med,1,sign=False)}</strong>, por debajo de la mediana de la "
-         f"muestra ({fpct(med_marge,1,sign=False)}): <strong>su poder viene del volumen y de la cuota, no del margen "
-         f"unitario</strong>. Es el ángulo que un ranking de facturación, por sí solo, no muestra.")
+         f"muestra ({fpct(med_marge,1,sign=False)}): <strong>su peso viene del volumen y de la cuota, no del margen "
+         f"unitario</strong>. Un ranking ordenado solo por facturación no recoge esta diferencia.")
     )
     st.markdown("---")
 
@@ -450,14 +448,14 @@ with tab_mostra:
             ("Cost pers./vendes %" if _ca else "Coste pers./ventas %"): st.column_config.NumberColumn(format="%.1f"),
             "CAGR 20-24 %": st.column_config.NumberColumn(format="%.1f"),
         })
-    source("Comptes anuals dipositats al Registre Mercantil (SABI). Càlcul propi" if _ca
-           else "Cuentas anuales depositadas en el Registro Mercantil (SABI). Cálculo propio")
+    source("Comptes anuals dipositats al Registre Mercantil . Càlcul propi" if _ca
+           else "Cuentas anuales depositadas en el Registro Mercantil . Cálculo propio")
     st.caption(("Facturació i plantilla són dades públiques del Registre Mercantil. CAGR buit = empresa amb ruptura "
                 "de sèrie (reorganització) o sense comptes per als dos anys."
                 if _ca else
                 "Facturación y plantilla son datos públicos del Registro Mercantil. CAGR vacío = empresa con ruptura "
                 "de serie (reorganización) o sin cuentas para ambos años."))
 
-page_meta("Comptes anuals dipositats al Registre Mercantil (SABI, 2020-2024) · INE ICM per modo · EAS (denominador sectorial) · mostra de grans empreses CNAE 47" if _ca
-          else "Cuentas anuales depositadas en el Registro Mercantil (SABI, 2020-2024) · INE ICM por modo · EAS (denominador sectorial) · muestra de grandes empresas CNAE 47",
+page_meta("Comptes anuals dipositats al Registre Mercantil (2020-2024) · INE ICM per modo · EAS (denominador sectorial) · mostra de grans empreses CNAE 47" if _ca
+          else "Cuentas anuales depositadas en el Registro Mercantil (2020-2024) · INE ICM por modo · EAS (denominador sectorial) · muestra de grandes empresas CNAE 47",
           st.session_state.lang)
