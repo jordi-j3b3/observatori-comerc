@@ -149,6 +149,17 @@ with tab_conc:
     st.plotly_chart(figc, use_container_width=True)
     source("Comptes dipositats al Registre Mercantil (SABI). Càlcul propi" if _ca
            else "Cuentas depositadas en el Registro Mercantil (SABI). Cálculo propio")
+    st.caption(("**Per què no hi surt Inditex?** El perímetre és el CNAE 47 (comerç al detall). Inditex SA és "
+                "el grup tèxtil consolidat (fabricació + majorista), no una empresa de comerç al detall: incloure'l "
+                "barrejaria verticals i duplicaria, perquè les seves cadenes de botigues a Espanya (Bershka, "
+                "Stradivarius…) ja compten dins el sector i hi surten pel seu compte. Un rànquing que el posa al "
+                "capdamunt no és comparable amb una mostra neta de CNAE 47."
+                if _ca else
+                "**¿Por qué no aparece Inditex?** El perímetro es el CNAE 47 (comercio minorista). Inditex SA es "
+                "el grupo textil consolidado (fabricación + mayorista), no una empresa de comercio minorista: incluirlo "
+                "mezclaría verticales y duplicaría, porque sus cadenas de tiendas en España (Bershka, Stradivarius…) "
+                "ya cuentan dentro del sector y aparecen por su cuenta. Un ranking que lo sitúa en lo más alto no es "
+                "comparable con una muestra limpia de CNAE 47."))
 
     c1, c2, c3 = st.columns(3)
     c1.metric(("Quota del líder (mostra)" if _ca else "Cuota del líder (muestra)"), fpct(cr1, 1, sign=False))
