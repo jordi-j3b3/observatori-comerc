@@ -1225,18 +1225,34 @@ def process_lideres():
         yoy = (s / s.shift(1)).dropna()
         return bool((yoy > 4.5).any() or (yoy < 0.22).any())
 
-    last = d[d["any"] == 2024].set_index("nombre")
+    # Per empresa, prenem la fila de l'any més recent disponible amb facturació.
+    # Algunes filials grans (Lidl, Eroski) tanquen exercici després que les altres
+    # i el 2024 encara no està dipositat; sense aquest fallback queden fora de la
+    # foto i el missatge de la pàgina perd dues peces clau de l'argumentari.
+    ANYS_PREF = [2024, 2023, 2022, 2021, 2020]
     base = d[d["any"] == 2020].set_index("nombre")["ingresos"]
     recs = []
-    for nom, c in last.iterrows():
+    for nom, grp in d.groupby("nombre"):
+        c = None
+        snapshot_any = None
+        for y in ANYS_PREF:
+            sub = grp[grp["any"] == y]
+            if not sub.empty and pd.notna(sub.iloc[0]["ingresos"]):
+                c = sub.iloc[0]
+                snapshot_any = y
+                break
+        if c is None:
+            continue
         I = c["ingresos"]
         ta = c["totalactivo"]
         brk = _break(nom)
         ing20 = base.get(nom, float("nan"))
         cagr = (((I / ing20) ** 0.25 - 1) * 100
-                if (pd.notna(I) and pd.notna(ing20) and ing20 > 0 and not brk) else float("nan"))
+                if (pd.notna(I) and pd.notna(ing20) and ing20 > 0 and not brk
+                    and snapshot_any == 2024) else float("nan"))
         recs.append({
             "nombre": _pretty_name(nom), "subsector": c["subsector"], "cnae": c["cnae"],
+            "snapshot_any": snapshot_any,
             "ing_2024": I, "ing_2020": ing20, "empleados": c["empleados"],
             "marge_ebitda": c["ebitda"] / I * 100 if I else float("nan"),
             "marge_ebit": c["ebit"] / I * 100 if I else float("nan"),
