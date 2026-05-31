@@ -478,16 +478,17 @@ def fetch_bsd_total():
 def fetch_bsd_sizeclas():
     """
     bd_size: distribució per mida d'empresa (sizeclas 0, 1-4, 5-9, GE10) per G47.
-    Retorna ENT_NR i EMP_NR per ES + UE27.
+    Retorna ENT_NR i EMP_NR per als 27 estats UE + agregats (UE-27, Eurozona).
+    Cobertura: sèrie completa des de 2021 (marc metodològic UE 2019/2152).
     """
     params = [
         ("nace_r2", "G47"),
         ("age", "TOTAL"),
-        ("geo", "ES"),
-        ("geo", "EU27_2020"),
         ("indic_sbs", "ENT_NR"),
         ("indic_sbs", "EMP_NR"),
     ]
+    for c in COUNTRIES:
+        params.append(("geo", c))
     for s in ["0", "1-4", "5-9", "GE10"]:
         params.append(("sizeclas", s))
 
