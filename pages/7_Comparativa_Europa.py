@@ -699,22 +699,35 @@ with tab4:
                 key="cmp_eu_finestra",
             )
 
-        paisos_opcionals = ["DE", "FR", "IT", "PT", "NL", "BE"]
-        pais_lbl = {
-            "DE": "Alemanya" if _ca else "Alemania",
-            "FR": "França" if _ca else "Francia",
-            "IT": "Itàlia" if _ca else "Italia",
-            "PT": "Portugal",
-            "NL": "Països Baixos" if _ca else "Países Bajos",
-            "BE": "Bèlgica" if _ca else "Bélgica",
+        # Tots els 27 estats UE disponibles a la sèrie mensual (ES + agregats sempre presents)
+        _PAIS_LBL_CA = {
+            "AT": "Àustria", "BE": "Bèlgica", "BG": "Bulgària", "CY": "Xipre", "CZ": "Txèquia",
+            "DE": "Alemanya", "DK": "Dinamarca", "EE": "Estònia", "EL": "Grècia", "FI": "Finlàndia",
+            "FR": "França", "HR": "Croàcia", "HU": "Hongria", "IE": "Irlanda", "IT": "Itàlia",
+            "LT": "Lituània", "LU": "Luxemburg", "LV": "Letònia", "MT": "Malta",
+            "NL": "Països Baixos", "PL": "Polònia", "PT": "Portugal", "RO": "Romania",
+            "SE": "Suècia", "SI": "Eslovènia", "SK": "Eslovàquia",
         }
+        _PAIS_LBL_ES = {
+            "AT": "Austria", "BE": "Bélgica", "BG": "Bulgaria", "CY": "Chipre", "CZ": "Chequia",
+            "DE": "Alemania", "DK": "Dinamarca", "EE": "Estonia", "EL": "Grecia", "FI": "Finlandia",
+            "FR": "Francia", "HR": "Croacia", "HU": "Hungría", "IE": "Irlanda", "IT": "Italia",
+            "LT": "Lituania", "LU": "Luxemburgo", "LV": "Letonia", "MT": "Malta",
+            "NL": "Países Bajos", "PL": "Polonia", "PT": "Portugal", "RO": "Rumanía",
+            "SE": "Suecia", "SI": "Eslovenia", "SK": "Eslovaquia",
+        }
+        _pais_lbl_map = _PAIS_LBL_CA if _ca else _PAIS_LBL_ES
+        paisos_opcionals = sorted(
+            {c for c in df_mens["pais_codi"].dropna().unique()
+             if c in _pais_lbl_map}
+        )
         with cc2:
             extra_sel = st.multiselect(
                 ("Comparar amb altres països (opcional)" if _ca
                  else "Comparar con otros países (opcional)"),
                 options=paisos_opcionals,
-                default=[],
-                format_func=lambda c: pais_lbl.get(c, c),
+                default=["DE", "FR", "IT"],
+                format_func=lambda c: _pais_lbl_map.get(c, c),
                 key="cmp_eu_paisos",
             )
 
