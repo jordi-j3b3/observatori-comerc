@@ -6,10 +6,86 @@ Jerarquia de fonts:
   3. Excel local — nomes per a la carrega inicial (els Excel no es pugen a GitHub)
 """
 import os
+import json
 import pandas as pd
 from data.fetchers import ine, eurostat, cnmc
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
+
+
+# ─── Sistema de detecció automàtica de fallades (Nivell 1) ─────────────────
+#
+# Cada process_* funcio crítica anota la font d'on ha obtingut les dades al
+# diccionari global _FETCH_STATUS. Al final de process_all() es valida que
+# totes les fonts crítiques tinguin estat 'ok' (= dades obtingudes des de
+# l'API primària, no des de cache de seguretat). Si alguna ha caigut a
+# 'fallback' o 'error', el processador surt amb codi 1 → el workflow de
+# GitHub Actions falla → GitHub envia notificació per email a l'autor del
+# commit. Així ens assabentem AUTOMÀTICAMENT quan una API canvia.
+
+_FETCH_STATUS = {}
+
+# Fonts que han d'actualitzar-se obligatoriament des de l'API primaria cada dia.
+# Si alguna cau a cache de seguretat, el workflow ha de fer fail per avisar.
+# Resta de fonts: la cache servirà mentre es resolen.
+CRITICAL_SOURCES = {
+    "pib_vab",                  # INE — pes G47 al PIB
+    "empreses",                 # INE — DIRCE
+    "productivitat",            # INE — EEE Comercio
+    "ecommerce",                # CNMC — comerç electronic
+    "europa_vab",               # Eurostat — pes G47 UE
+    "europa_retail_mensual",    # Eurostat — sts_trtu_m
+    "icm",                      # INE — Índices de Comercio al por Menor
+    "icm_distribucion",         # INE — ICM per modo de distribució
+    "cdmge",                    # INE — comerç diari grans empreses
+}
+
+
+def _record_status(name, estat, font="api", missatge=""):
+    """Registra l'estat d'una font de dades.
+
+    estat: 'ok' (dades fresques des de l'API), 'fallback' (cache o Excel),
+           'error' (cap font ha funcionat).
+    """
+    _FETCH_STATUS[name] = {"estat": estat, "font": font, "missatge": str(missatge)[:200]}
+
+
+def _assert_critical_ok():
+    """Comprova que totes les fonts critiques s'hagin actualitzat des de l'API.
+
+    Persisteix l'estat a fetch_status.json i, si alguna critica ha caigut
+    a fallback o error, surt amb codi 1 per fer fallar el workflow.
+    """
+    ensure_cache_dir()
+    status_path = os.path.join(CACHE_DIR, "fetch_status.json")
+    with open(status_path, "w", encoding="utf-8") as f:
+        json.dump(_FETCH_STATUS, f, indent=2, ensure_ascii=False, sort_keys=True)
+
+    problemes = []
+    for name in sorted(CRITICAL_SOURCES):
+        s = _FETCH_STATUS.get(name)
+        if s is None:
+            problemes.append(f"{name}: NO EXECUTAT")
+        elif s["estat"] != "ok":
+            msg = s.get("missatge", "")[:80]
+            problemes.append(f"{name}: {s['estat'].upper()} via {s.get('font','?')} ({msg})")
+
+    if problemes:
+        print()
+        print("=" * 68)
+        print("  ALERTA: FONTS CRITIQUES NO ACTUALITZADES DES DE L'API PRIMARIA")
+        print("=" * 68)
+        for p in problemes:
+            print(f"  - {p}")
+        print("=" * 68)
+        print("  El workflow es fa fallar perque les dades servides poden estar")
+        print("  obsoletes. Reviseu el fetcher corresponent (canvi d'API, endpoint")
+        print("  retirat, credencials caducades, etc).")
+        print("=" * 68)
+        raise SystemExit(1)
+
+    print()
+    print(f"  [OK] {len(CRITICAL_SOURCES)} fonts critiques actualitzades des de l'API.")
 
 
 def ensure_cache_dir():
@@ -402,18 +478,22 @@ def process_pib_vab():
     """
     print("  Font 1: API INE")
     df = fetch_pib_vab_from_api()
-
-    if df.empty:
+    if not df.empty:
+        _record_status("pib_vab", "ok", "api_ine", f"{len(df)} files")
+    else:
         print("  Font 2: Cache existent")
         df = load_cache("pib_vab")
-
-    if df.empty:
-        print("  Font 3: Excel local")
-        df = load_excel_pib()
-
-    if df.empty:
-        print("  Cap font disponible per PIB/VAB")
-        return pd.DataFrame()
+        if not df.empty:
+            _record_status("pib_vab", "fallback", "cache", "API INE buida")
+        else:
+            print("  Font 3: Excel local")
+            df = load_excel_pib()
+            if not df.empty:
+                _record_status("pib_vab", "fallback", "excel", "API i cache buides")
+            else:
+                _record_status("pib_vab", "error", "cap", "Cap font ha funcionat")
+                print("  Cap font disponible per PIB/VAB")
+                return pd.DataFrame()
 
     # Calcular metriques derivades
     if "vab_cnae47_corrents" in df.columns and "vab_total_corrents" in df.columns:
@@ -436,39 +516,43 @@ def process_empreses():
     """
     print("  Font 1: API INE")
     df = fetch_empreses_from_api()
-
-    if df.empty:
+    if not df.empty:
+        _record_status("empreses", "ok", "api_ine", f"{len(df)} files")
+    else:
         print("  Font 2: Cache existent")
         df = load_cache("empreses")
+        if not df.empty:
+            _record_status("empreses", "fallback", "cache", "API INE buida")
+        else:
+            print("  Font 3: Excel local")
+            df_pib = load_excel_pib()
+            df_cat = load_excel_empreses_cat()
 
-    if df.empty:
-        print("  Font 3: Excel local")
-        df_pib = load_excel_pib()
-        df_cat = load_excel_empreses_cat()
+            records = []
+            if not df_pib.empty and "empreses" in df_pib.columns:
+                for _, row in df_pib.iterrows():
+                    if pd.notna(row.get("empreses")):
+                        records.append({
+                            "territori": "espanya",
+                            "any": int(row["any"]),
+                            "empreses": int(row["empreses"]),
+                        })
 
-        records = []
-        if not df_pib.empty and "empreses" in df_pib.columns:
-            for _, row in df_pib.iterrows():
-                if pd.notna(row.get("empreses")):
+            if not df_cat.empty:
+                for _, row in df_cat.iterrows():
                     records.append({
-                        "territori": "espanya",
+                        "territori": row["territori"],
                         "any": int(row["any"]),
                         "empreses": int(row["empreses"]),
                     })
 
-        if not df_cat.empty:
-            for _, row in df_cat.iterrows():
-                records.append({
-                    "territori": row["territori"],
-                    "any": int(row["any"]),
-                    "empreses": int(row["empreses"]),
-                })
-
-        df = pd.DataFrame(records)
-
-    if df.empty:
-        print("  Cap font disponible per empreses")
-        return pd.DataFrame()
+            df = pd.DataFrame(records)
+            if not df.empty:
+                _record_status("empreses", "fallback", "excel", "API i cache buides")
+            else:
+                _record_status("empreses", "error", "cap", "Cap font ha funcionat")
+                print("  Cap font disponible per empreses")
+                return pd.DataFrame()
 
     # ── Afegir població i densitat comercial ──
     print("  Obtenint dades de població...")
@@ -512,18 +596,22 @@ def process_productivitat():
     """
     print("  Font 1: API INE")
     df = fetch_productivitat_from_api()
-
-    if df.empty:
+    if not df.empty:
+        _record_status("productivitat", "ok", "api_ine", f"{len(df)} files")
+    else:
         print("  Font 2: Cache existent")
         df = load_cache("productivitat")
-
-    if df.empty:
-        print("  Font 3: Excel local")
-        df = load_excel_productivitat()
-
-    if df.empty:
-        print("  Cap font disponible per productivitat")
-        return pd.DataFrame()
+        if not df.empty:
+            _record_status("productivitat", "fallback", "cache", "API INE buida")
+        else:
+            print("  Font 3: Excel local")
+            df = load_excel_productivitat()
+            if not df.empty:
+                _record_status("productivitat", "fallback", "excel", "API i cache buides")
+            else:
+                _record_status("productivitat", "error", "cap", "Cap font ha funcionat")
+                print("  Cap font disponible per productivitat")
+                return pd.DataFrame()
 
     save_cache(df, "productivitat")
     return df
@@ -538,18 +626,22 @@ def process_ecommerce():
     """
     print("  Font 1: API CNMC")
     df = fetch_ecommerce_from_api()
-
-    if df.empty:
+    if not df.empty:
+        _record_status("ecommerce", "ok", "api_cnmc", f"{len(df)} files")
+    else:
         print("  Font 2: Cache existent")
         df = load_cache("ecommerce")
-
-    if df.empty:
-        print("  Font 3: Excel local")
-        df = cnmc.fetch_ecommerce_from_excel()
-
-    if df.empty:
-        print("  Cap font disponible per e-commerce")
-        return pd.DataFrame()
+        if not df.empty:
+            _record_status("ecommerce", "fallback", "cache", "API CNMC buida")
+        else:
+            print("  Font 3: Excel local")
+            df = cnmc.fetch_ecommerce_from_excel()
+            if not df.empty:
+                _record_status("ecommerce", "fallback", "excel", "API i cache buides")
+            else:
+                _record_status("ecommerce", "error", "cap", "Cap font ha funcionat")
+                print("  Cap font disponible per e-commerce")
+                return pd.DataFrame()
 
     if "ecommerce_total_eur" in df.columns and "ecommerce_cnae47_eur" in df.columns:
         df["pes_cnae47_ecommerce"] = df["ecommerce_cnae47_eur"] / df["ecommerce_total_eur"]
@@ -580,22 +672,24 @@ def process_europa():
 
     print("  Font 1: API Eurostat")
     df = fetch_europa_from_api()
-
     if not df.empty:
         # Assegurar noms en catala
         df["pais"] = df["pais_codi"].map(COUNTRY_NAMES_CA).fillna(df["pais"])
-
-    if df.empty:
+        _record_status("europa_vab", "ok", "api_eurostat", f"{len(df)} files")
+    else:
         print("  Font 2: Cache existent")
         df = load_cache("europa_vab")
-
-    if df.empty:
-        print("  Font 3: Excel local")
-        df = _load_europa_from_excel(COUNTRY_NAMES_CA)
-
-    if df.empty:
-        print("  Cap font disponible per Europa")
-        return pd.DataFrame()
+        if not df.empty:
+            _record_status("europa_vab", "fallback", "cache", "API Eurostat buida")
+        else:
+            print("  Font 3: Excel local")
+            df = _load_europa_from_excel(COUNTRY_NAMES_CA)
+            if not df.empty:
+                _record_status("europa_vab", "fallback", "excel", "API i cache buides")
+            else:
+                _record_status("europa_vab", "error", "cap", "Cap font ha funcionat")
+                print("  Cap font disponible per Europa")
+                return pd.DataFrame()
 
     save_cache(df, "europa_vab")
     return df
@@ -1010,16 +1104,23 @@ def process_europa_retail_mensual():
         df = eurostat.fetch_retail_volume_monthly()
     except Exception as e:
         print(f"  Error API Eurostat retail mensual: {e}")
-        return load_cache("europa_retail_mensual")
+        df_cache = load_cache("europa_retail_mensual")
+        _record_status("europa_retail_mensual", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
 
     if df.empty:
         print("  AVIS: sense dades; mantenint cache existent")
-        return load_cache("europa_retail_mensual")
+        df_cache = load_cache("europa_retail_mensual")
+        _record_status("europa_retail_mensual", "fallback" if not df_cache.empty else "error",
+                       "cache", "API Eurostat sts_trtu_m buida")
+        return df_cache
 
     df = df.sort_values(["pais_codi", "periode"]).reset_index(drop=True)
     # Variacio interanual: index_volum vs el mateix mes de l'any anterior (12 mesos enrere)
     df["yoy"] = df.groupby("pais_codi")["index_volum"].pct_change(periods=12) * 100
     save_cache(df, "europa_retail_mensual")
+    _record_status("europa_retail_mensual", "ok", "api_eurostat", f"{len(df)} files")
     return df
 
 
@@ -1288,8 +1389,12 @@ def process_cdmge():
     df = ine.fetch_cdmge()
     if df.empty:
         print("  AVIS: cap dada CDMGE; mantenint cache existent")
-        return load_cache("cdmge")
+        df_cache = load_cache("cdmge")
+        _record_status("cdmge", "fallback" if not df_cache.empty else "error",
+                       "cache", "API INE CDMGE buida")
+        return df_cache
     save_cache(df, "cdmge")
+    _record_status("cdmge", "ok", "api_ine", f"{len(df)} files")
     return df
 
 
@@ -1312,8 +1417,12 @@ def process_icm():
     df = ine.fetch_icm()
     if df.empty:
         print("  AVIS: cap dada ICM; mantenint cache existent")
-        return load_cache("icm")
+        df_cache = load_cache("icm")
+        _record_status("icm", "fallback" if not df_cache.empty else "error",
+                       "cache", "API INE ICM buida")
+        return df_cache
     save_cache(df, "icm")
+    _record_status("icm", "ok", "api_ine", f"{len(df)} files")
     return df
 
 
@@ -1346,8 +1455,12 @@ def process_icm_distribucion():
     df = ine.fetch_icm_distribucion()
     if df.empty:
         print("  AVIS: cap dada ICM distribució; mantenint cache existent")
-        return load_cache("icm_distribucion")
+        df_cache = load_cache("icm_distribucion")
+        _record_status("icm_distribucion", "fallback" if not df_cache.empty else "error",
+                       "cache", "API INE ICM distribució buida")
+        return df_cache
     save_cache(df, "icm_distribucion")
+    _record_status("icm_distribucion", "ok", "api_ine", f"{len(df)} files")
     return df
 
 
@@ -1561,6 +1674,9 @@ def process_all():
 
     print("\n12. Detectant novetats per al bloc d'alertes de la home:")
     record_dataset_updates()
+
+    print("\n13. Validant que les fonts critiques s'hagin actualitzat des de l'API:")
+    _assert_critical_ok()
 
     print("\nProcessament complet!")
 
