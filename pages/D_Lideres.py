@@ -123,6 +123,18 @@ k4.metric(("La mostra, sobre el sector" if _ca else "La muestra, sobre el sector
                 if _ca else
                 f"Los {len(d)} grandes = {fpct(quota_mostra_sector,1,sign=False)} del sector; el resto, decenas de miles de empresas"))
 
+st.caption(
+    ("**CR4** = suma de la quota dels 4 operadors més grans. "
+     "**HHI** (Herfindahl-Hirschman) = suma dels quadrats de les quotes de tot el mercat; "
+     "rangs antitrust de referència (DOJ-EUA i Comissió Europea): <1.500 poc concentrat, "
+     "1.500–2.500 moderadament concentrat, >2.500 molt concentrat."
+     if _ca else
+     "**CR4** = suma de la cuota de los 4 operadores más grandes. "
+     "**HHI** (Herfindahl-Hirschman) = suma de los cuadrados de las cuotas de todo el mercado; "
+     "rangos antitrust de referencia (DOJ-EUA y Comisión Europea): <1.500 poco concentrado, "
+     "1.500–2.500 moderadamente concentrado, >2.500 muy concentrado.")
+)
+
 tab_conc, tab_din, tab_efi, tab_mostra = st.tabs([
     ("Concentració" if _ca else "Concentración"),
     ("Dinàmica per formats" if _ca else "Dinámica por formatos"),
@@ -355,6 +367,140 @@ with tab_efi:
          f"muestra ({fpct(med_marge,1,sign=False)}): <strong>su peso viene del volumen y de la cuota, no del margen "
          f"unitario</strong>. Un ranking ordenado solo por facturación no recoge esta diferencia.")
     )
+    st.markdown("---")
+
+    # ── Marges per model de negoci — focus alimentació ────────────────
+    st.markdown(("**Marges per model de negoci · alimentació.** La concentració per si sola no diu si "
+                 "el sector \"esprem marges\" o no. Aquí classifiquem els grans operadors d'alimentació "
+                 "per model de negoci i mostrem el marge EBITDA real."
+                 if _ca else
+                 "**Márgenes por modelo de negocio · alimentación.** La concentración por sí sola no dice si "
+                 "el sector \"exprime márgenes\" o no. Aquí clasificamos a los grandes operadores de "
+                 "alimentación por modelo de negocio y mostramos el margen EBITDA real."))
+
+    # Classificació editorial per model (manual; basat en estructura comercial i de format)
+    MODEL_MAP = {
+        "Mercadona":     "Premium-volum (marca pròpia + format compacte)",
+        "Lidl":          "Discount madur (marca pròpia + central UE)",
+        "Dia":           "Discount en recuperació",
+        "Aldi":          "Discount en escalat",
+        "Carrefour":     "Hipermercat tradicional",
+        "Alcampo":       "Hipermercat tradicional",
+        "Eroski":        "Cooperatiu",
+        "Consum":        "Cooperatiu",
+        "Bon Preu":      "Regional premium",
+        "Ahorramás":     "Regional premium",
+    }
+    MODEL_MAP_ES = {
+        "Mercadona":     "Premium-volumen (marca propia + formato compacto)",
+        "Lidl":          "Discount maduro (marca propia + central UE)",
+        "Dia":           "Discount en recuperación",
+        "Aldi":          "Discount en escalado",
+        "Carrefour":     "Hipermercado tradicional",
+        "Alcampo":       "Hipermercado tradicional",
+        "Eroski":        "Cooperativo",
+        "Consum":        "Cooperativo",
+        "Bon Preu":      "Regional premium",
+        "Ahorramás":     "Regional premium",
+    }
+    MODEL_COLOR = {
+        "Premium-volum (marca pròpia + format compacte)": "#0055A4",
+        "Discount madur (marca pròpia + central UE)":     "#1ABC9C",
+        "Discount en recuperació":                          "#16A085",
+        "Discount en escalat":                              "#27AE60",
+        "Hipermercat tradicional":                          "#E74C3C",
+        "Cooperatiu":                                       "#9B59B6",
+        "Regional premium":                                 "#F39C12",
+        "Premium-volumen (marca propia + formato compacto)": "#0055A4",
+        "Discount maduro (marca propia + central UE)":      "#1ABC9C",
+        "Discount en recuperación":                          "#16A085",
+        "Discount en escalado":                              "#27AE60",
+        "Hipermercado tradicional":                          "#E74C3C",
+        "Cooperativo":                                       "#9B59B6",
+    }
+    model_map = MODEL_MAP if _ca else MODEL_MAP_ES
+
+    d_mod = d.dropna(subset=["ing_2024", "marge_ebitda"]).copy()
+    d_mod = d_mod[d_mod["nombre"].isin(model_map.keys())].copy()
+    d_mod["model"] = d_mod["nombre"].map(model_map)
+    d_mod["meur"] = d_mod["ing_2024"] / 1000
+    d_mod = d_mod.sort_values("marge_ebitda", ascending=True)
+
+    # Etiquetes amb any de snapshot (Lidl/Eroski són 2023)
+    def _lab(row):
+        y = int(row["snapshot_any"]) if pd.notna(row.get("snapshot_any")) else None
+        any_tag = f"  ({y})" if y and y != 2024 else ""
+        return f"{row['nombre']}{any_tag}"
+
+    d_mod["lab"] = d_mod.apply(_lab, axis=1)
+
+    fig_mod = go.Figure(go.Bar(
+        y=d_mod["lab"], x=d_mod["marge_ebitda"], orientation="h",
+        marker_color=[MODEL_COLOR.get(m, "#999") for m in d_mod["model"]],
+        text=[f"{v:.1f}%" for v in d_mod["marge_ebitda"]],
+        textposition="outside", textfont=dict(size=11),
+        customdata=np.stack([d_mod["meur"], d_mod["model"]], axis=-1),
+        hovertemplate=("<b>%{y}</b><br>EBITDA %{x:.2f}%<br>"
+                       "Facturació %{customdata[0]:,.0f} M€<br>Model: %{customdata[1]}<extra></extra>"
+                       if _ca else
+                       "<b>%{y}</b><br>EBITDA %{x:.2f}%<br>"
+                       "Facturación %{customdata[0]:,.0f} M€<br>Modelo: %{customdata[1]}<extra></extra>"),
+    ))
+    apply_layout(fig_mod,
+        xaxis_title=("Marge EBITDA (% sobre facturació, darrer any disponible)" if _ca
+                     else "Margen EBITDA (% sobre facturación, último año disponible)"),
+        height=520, margin=dict(l=200, r=70, t=20, b=40), showlegend=False)
+    fig_mod.update_xaxes(range=[-2, 12])
+    st.plotly_chart(fig_mod, use_container_width=True)
+
+    # Llegenda manual amb la classificació
+    models_present = sorted({m for m in d_mod["model"]}, key=lambda x: d_mod[d_mod["model"] == x]["marge_ebitda"].max(), reverse=True)
+    leg_html = "<div style='font-size:12px; color:#555; margin-top:-8px;'>"
+    for m in models_present:
+        c = MODEL_COLOR.get(m, "#999")
+        leg_html += f"<span style='display:inline-block; width:10px; height:10px; background:{c}; margin-right:5px; margin-left:18px;'></span>{m}"
+    leg_html += "</div>"
+    st.markdown(leg_html, unsafe_allow_html=True)
+
+    source("Comptes dipositats al Registre Mercantil · Càlcul propi. Lidl i Eroski: dades 2023 (2024 encara no dipositat). "
+           "Classificació per model: editorial J3B3."
+           if _ca else
+           "Cuentas depositadas en el Registro Mercantil · Cálculo propio. Lidl y Eroski: datos 2023 (2024 aún no depositado). "
+           "Clasificación por modelo: editorial J3B3.")
+
+    # Insight tied to Force 4 of the framework
+    merc = d_mod[d_mod["nombre"] == "Mercadona"]["marge_ebitda"].iloc[0] if "Mercadona" in d_mod["nombre"].values else None
+    lidl = d_mod[d_mod["nombre"] == "Lidl"]["marge_ebitda"].iloc[0] if "Lidl" in d_mod["nombre"].values else None
+    carr = d_mod[d_mod["nombre"] == "Carrefour"]["marge_ebitda"].iloc[0] if "Carrefour" in d_mod["nombre"].values else None
+    alcm = d_mod[d_mod["nombre"] == "Alcampo"]["marge_ebitda"].iloc[0] if "Alcampo" in d_mod["nombre"].values else None
+    aldi = d_mod[d_mod["nombre"] == "Aldi"]["marge_ebitda"].iloc[0] if "Aldi" in d_mod["nombre"].values else None
+
+    if _ca:
+        insight_txt = (
+            "Tres lectures contraintuïtives que el gràfic deixa fer. "
+            f"<strong>(1)</strong> Mercadona ({merc:.1f}%) i Lidl ({lidl:.1f}%) tenen marges <strong>gairebé idèntics</strong>: el descompte madur "
+            "amb marca pròpia i central de compres europea opera amb la mateixa rendibilitat que el premium-volum espanyol. "
+            f"<strong>(2)</strong> Carrefour ({carr:.1f}%) i Alcampo ({alcm:.1f}%) — els hipermercats tradicionals — operen amb marges la meitat de prims, "
+            "i Aldi en escalat encara és per sota. <strong>El cas espanyol no és \"descompte = marge prim\"</strong>: és "
+            "<strong>hipermercat tradicional = marge prim</strong>. "
+            f"<strong>(3)</strong> Conseqüència per al pes del comerç al PIB: la consolidació via supermercat compacte (Mercadona-Lidl model) "
+            "manté el VAB retail per euro consumit; una consolidació via hipermercat tradicional el comprimiria. "
+            "Espanya no ha seguit aquest segon camí — i això és part de per què el seu pes G47 no s'ha desplomat com l'alemany."
+        )
+    else:
+        insight_txt = (
+            "Tres lecturas contraintuitivas que el gráfico permite extraer. "
+            f"<strong>(1)</strong> Mercadona ({merc:.1f}%) y Lidl ({lidl:.1f}%) tienen márgenes <strong>casi idénticos</strong>: el discount maduro "
+            "con marca propia y central de compras europea opera con la misma rentabilidad que el premium-volumen español. "
+            f"<strong>(2)</strong> Carrefour ({carr:.1f}%) y Alcampo ({alcm:.1f}%) — los hipermercados tradicionales — operan con márgenes la mitad de finos, "
+            "y Aldi en escalado aún por debajo. <strong>El caso español no es \"discount = margen fino\"</strong>: es "
+            "<strong>hipermercado tradicional = margen fino</strong>. "
+            f"<strong>(3)</strong> Consecuencia para el peso del comercio en el PIB: la consolidación vía supermercado compacto (Mercadona-Lidl) "
+            "mantiene el VAB retail por euro consumido; una consolidación vía hipermercado tradicional lo comprimiría. "
+            "España no ha seguido ese segundo camino — y eso explica en parte por qué su peso G47 no se ha desplomado como el alemán."
+        )
+    insight(insight_txt)
+
     st.markdown("---")
 
     st.markdown(("**Mapa de posicionament dels subsectors** — productivitat vs marge (mediana, 3+ empreses)"
