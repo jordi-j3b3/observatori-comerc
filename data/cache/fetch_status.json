@@ -1,0 +1,47 @@
+{
+  "cdmge": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "12563 files"
+  },
+  "ecommerce": {
+    "estat": "ok",
+    "font": "api_cnmc",
+    "missatge": "13 files"
+  },
+  "empreses": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "324 files"
+  },
+  "europa_retail_mensual": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "2947 files"
+  },
+  "europa_vab": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "868 files"
+  },
+  "icm": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "48177 files"
+  },
+  "icm_distribucion": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "3840 files"
+  },
+  "pib_vab": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "30 files"
+  },
+  "productivitat": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "7 files"
+  }
+}
