@@ -6,8 +6,11 @@ import requests
 import pandas as pd
 import io
 
-# ID del recurs CSV: volum de negoci per rames d'activitat
-VOLUM_NEGOCI_CSV_ID = "fddca89f-d2ee-4de3-81ce-c17d3dd4b81d"
+# ID del recurs CSV: volum de negoci del comerc electronic per rames d'activitat
+# Actualitzat 2026-05-31: l'antic ID (fddca89f-d2ee-4de3-81ce-c17d3dd4b81d)
+# retornava 403 Authorization Error. La CNMC ha reidentificat el recurs com a
+# part del dataset ds_14116_1 (mateixes columnes, mateix format).
+VOLUM_NEGOCI_CSV_ID = "ec53a970-07c9-4dac-8fb4-bdabfd7f2808"
 DUMP_URL = "https://catalogodatos.cnmc.es/datastore/dump"
 
 # Codis CNAE que pertanyen al comerç minorista (47)
@@ -31,7 +34,15 @@ def fetch_ecommerce():
     Retorna volum de negoci anual: total i CNAE 47.
     """
     url = f"{DUMP_URL}/{VOLUM_NEGOCI_CSV_ID}"
-    resp = requests.get(url, timeout=120)
+    # CNMC bloqueja peticions sense User-Agent (retorna 403/500 al UA per defecte
+    # de python-requests). Forcem un UA de navegador.
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.0) "
+                      "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                      "Observatori-Comerc/1.0",
+        "Accept": "text/csv,application/json,*/*",
+    }
+    resp = requests.get(url, headers=headers, timeout=120)
     if resp.status_code != 200:
         print(f"CNMC error {resp.status_code}")
         return pd.DataFrame()
