@@ -181,6 +181,19 @@ PULSO_CSS = """
 }
 .pulso-noticia-body p:last-child { margin-bottom: 0; }
 
+.pulso-link {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 0.86rem;
+    color: #6a6a6a;
+    text-decoration: none;
+    border-bottom: 1px solid #d0d0d0;
+    transition: color 0.15s, border-color 0.15s;
+}
+.pulso-link:hover {
+    color: #003366;
+    border-bottom-color: #003366;
+}
+
 /* DADES — taula austera amb barres negres + Espanya groc */
 .pulso-data-intro {
     font-family: 'Inter', sans-serif;
@@ -331,6 +344,11 @@ def extract_meta(md: str) -> tuple[dict, str]:
 
 
 def md_inline(text: str) -> str:
+    text = re.sub(
+        r"\[([^\]]+)\]\(([^)]+)\)",
+        r'<a href="\2" target="_blank" rel="noopener" class="pulso-link">\1</a>',
+        text,
+    )
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
     return text
