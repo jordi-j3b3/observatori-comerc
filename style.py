@@ -1328,14 +1328,57 @@ def page_meta(sources, lang="es"):
     )
 
 
+_BREVO_LIST_ID = 4  # newsletter-observatorio (Brevo)
+
+
+def _brevo_subscribe(email: str) -> tuple[bool, str]:
+    """POST /v3/contacts. Retorna (ok, error_code) per a l'UI."""
+    import sys
+    import requests
+
+    api_key = ""
+    try:
+        api_key = st.secrets.get("BREVO_API_KEY", "")
+    except (FileNotFoundError, AttributeError):
+        pass
+    api_key = api_key or os.environ.get("BREVO_API_KEY", "")
+    if not api_key:
+        return False, "no_api_key"
+    try:
+        r = requests.post(
+            "https://api.brevo.com/v3/contacts",
+            headers={
+                "api-key": api_key,
+                "content-type": "application/json",
+                "accept": "application/json",
+            },
+            json={
+                "email": email,
+                "listIds": [_BREVO_LIST_ID],
+                "updateEnabled": True,
+            },
+            timeout=15,
+        )
+    except requests.RequestException as e:
+        print(f"[newsletter_form] Network error: {type(e).__name__}", file=sys.stderr)
+        return False, "network"
+    if r.status_code in (200, 201, 204):
+        return True, ""
+    if r.status_code == 400 and "duplicate" in r.text.lower():
+        return True, ""
+    print(
+        f"[newsletter_form] Brevo {r.status_code}: {r.text[:300]}",
+        file=sys.stderr,
+    )
+    return False, f"api_{r.status_code}"
+
+
 def newsletter_form(lang="es", compact=False):
-    """Caixa de subscripció al butlletí trimestral (MailerLite embed).
+    """Caixa de subscripció al butlletí (Brevo, llista newsletter-observatorio).
 
     compact=False: caixa gran amb capçalera (al peu d'Inici).
     compact=True: només descripció breu + form (per usar dins popover).
     """
-    import streamlit.components.v1 as components
-
     _ca = lang == "ca"
     eyebrow = "Butlletí" if _ca else "Boletín"
     title = ("Rep El Pulso cada dilluns"
@@ -1354,17 +1397,22 @@ def newsletter_form(lang="es", compact=False):
     desc_compact = ("El Pulso cada dilluns i el resum d'observatori cada trimestre. Una sola subscripció."
                     if _ca else
                     "El Pulso cada lunes y el resumen del observatorio cada trimestre. Una sola suscripción.")
-    foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb MailerLite."
+    foot = ("Pots donar-te de baixa en qualsevol moment. Email gestionat amb Brevo."
             if _ca else
-            "Puedes darte de baja en cualquier momento. Email gestionado con MailerLite.")
+            "Puedes darte de baja en cualquier momento. Email gestionado con Brevo.")
     placeholder = "Adreça electrònica" if _ca else "Correo electrónico"
     submit_label = "Subscriu-me" if _ca else "Suscríbeme"
     ok_title = "Gràcies!" if _ca else "¡Gracias!"
-    ok_desc = ("T'hem enviat un correu de confirmació. Cal que el confirmis "
-               "per activar la subscripció."
+    ok_desc = ("Ja estàs subscrit. El proper dilluns rebràs El Pulso al teu correu."
                if _ca else
-               "Te hemos enviado un correo de confirmación. Debes confirmarlo "
-               "para activar la suscripción.")
+               "Ya estás suscrito. El próximo lunes recibirás El Pulso en tu correo.")
+    err_invalid = "Adreça no vàlida." if _ca else "Dirección no válida."
+    err_generic = ("No s'ha pogut completar la subscripció. Torna-ho a provar més tard."
+                   if _ca else
+                   "No se ha podido completar la suscripción. Inténtalo de nuevo más tarde.")
+    err_config = ("Servei no disponible. Avisa l'administrador."
+                  if _ca else
+                  "Servicio no disponible. Avisa al administrador.")
 
     if not compact:
         st.markdown(
@@ -1384,18 +1432,33 @@ def newsletter_form(lang="es", compact=False):
             unsafe_allow_html=True,
         )
 
-    html_path = os.path.join(os.path.dirname(__file__), "assets", "newsletter_mailerlite.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        snippet = f.read()
-    snippet = (snippet
-               .replace("__SUCCESS_TITLE__", "")
-               .replace("__SUCCESS_DESC__", "")
-               .replace("__EMAIL_PLACEHOLDER__", placeholder)
-               .replace("__SUBMIT_LABEL__", submit_label)
-               .replace("__SUCCESS_OK_TITLE__", ok_title)
-               .replace("__SUCCESS_OK_DESC__", ok_desc))
+    form_key = f"newsletter_form_{'compact' if compact else 'full'}_{lang}"
+    with st.form(form_key, clear_on_submit=True):
+        col_input, col_button = st.columns([3, 1])
+        with col_input:
+            email_raw = st.text_input(
+                placeholder,
+                key=f"{form_key}_email",
+                label_visibility="collapsed",
+                placeholder=placeholder,
+            )
+        with col_button:
+            submitted = st.form_submit_button(submit_label, use_container_width=True)
 
-    components.html(snippet, height=160, scrolling=False)
+    if submitted:
+        email = (email_raw or "").strip().lower()
+        valid = ("@" in email and "." in email.split("@")[-1] and len(email) <= 254)
+        if not valid:
+            st.error(err_invalid)
+        else:
+            ok, err = _brevo_subscribe(email)
+            if ok:
+                st.success(f"**{ok_title}** {ok_desc}")
+            elif err == "no_api_key":
+                st.error(err_config)
+            else:
+                st.error(err_generic)
+
     foot_style = ("font-size:11px; color:#999; font-family:'DM Sans',sans-serif; margin-top:4px;"
                   if compact else "")
     if compact:
