@@ -319,10 +319,12 @@ def extract_meta(md: str) -> tuple[dict, str]:
             elif key == "titular":
                 meta["titular"] = m.group(2).strip()
             body_start = i + 1
+        elif not line:
+            continue
         elif line == "---" and body_start > 0:
             body_start = i + 1
             break
-        elif line and body_start == 0:
+        else:
             break
     body = "\n".join(lines[body_start:]).lstrip("\n")
     return meta, body
