@@ -1052,9 +1052,19 @@ def process_subsectors():
     try:
         df_eas = ine.fetch_eas_subsectors()
         if not df_eas.empty:
-            df_eas["nom"] = df_eas["codi"].map(ine.CNAE_47_SUBSECTORS).fillna("CNAE 47 total")
-            save_cache(df_eas, "subsectors_eas")
-            print(f"  EAS: {len(df_eas)} files, anys {df_eas['any'].min()}-{df_eas['any'].max()}")
+            df_eas["codi"] = df_eas["codi"].astype(str)
+            # 3 dígits (i total 47): cache principal, consumidors existents sense canvis.
+            df_eas3 = df_eas[df_eas["codi"].str.len() <= 3].copy()
+            df_eas3["nom"] = df_eas3["codi"].map(ine.CNAE_47_SUBSECTORS).fillna("CNAE 47 total")
+            save_cache(df_eas3, "subsectors_eas")
+            print(f"  EAS: {len(df_eas3)} files, anys {df_eas3['any'].min()}-{df_eas3['any'].max()}")
+            # 4 dígits del grup d'alimentació (472): cache separada per al desglossament.
+            df_472 = df_eas[df_eas["codi"].str.len() == 4].copy()
+            if not df_472.empty:
+                df_472["nom"] = df_472["codi"].map(ine.CNAE_472_SUBSECTORS).fillna(df_472["codi"])
+                save_cache(df_472, "subsectors_472")
+                print(f"  EAS 472 (4 dígits): {len(df_472)} files, {df_472['codi'].nunique()} classes, "
+                      f"anys {df_472['any'].min()}-{df_472['any'].max()}")
         else:
             print("  EAS: sense dades, mantenint cache")
     except Exception as e:

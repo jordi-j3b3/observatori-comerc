@@ -712,6 +712,25 @@ CNAE_47_API_NAMES = {
     "47":  "Comercio al por menor, excepto de vehículos de motor y motocicletas",
 }
 
+# CNAE 47 a 4 dígits — fills del grup d'alimentació (472). Noms exactes API INE (T=76818),
+# per poder desglossar l'evolució de peixateries, carnisseries, fruiteries, forns, etc.
+CNAE_472_API_NAMES = {
+    "4721": "Comercio al por menor de frutas y hortalizas en establecimientos especializados",
+    "4722": "Comercio al por menor de carne y productos cárnicos en establecimientos especializados",
+    "4723": "Comercio al por menor de pescados y mariscos en establecimientos especializados",
+    "4724": "Comercio al por menor de pan y productos de panadería, confitería y pastelería en establecimientos especializados",
+    "4725": "Comercio al por menor de bebidas en establecimientos especializados",
+    "4726": "Comercio al por menor de productos de tabaco en establecimientos especializados",
+    "4729": "Otro comercio al por menor de productos alimenticios en establecimientos especializados",
+}
+
+# Etiqueta per a la columna 'nom' de la cache (la pàgina té les seves pròpies ca/es).
+CNAE_472_SUBSECTORS = {
+    "4721": "Fruiteries", "4722": "Carnisseries", "4723": "Peixateries",
+    "4724": "Forns i pastisseries", "4725": "Begudes",
+    "4726": "Estancs (tabac)", "4729": "Altres aliments",
+}
+
 COICOP_GROUPS = {
     "01": "Alimentos y bebidas no alcohólicas",
     "02": "Bebidas alcohólicas, tabaco y estupefacientes",
@@ -784,7 +803,8 @@ def fetch_eas_subsectors():
         "Inversión en activos materiales": "inversio",
         "Número de empresas": "n_empreses_eas",
     }
-    NAME_TO_CODI = {v: k for k, v in CNAE_47_API_NAMES.items()}
+    # Inclou els 4 dígits del grup 472 perquè el desglossament d'alimentació tingui dades.
+    NAME_TO_CODI = {v: k for k, v in {**CNAE_47_API_NAMES, **CNAE_472_API_NAMES}.items()}
 
     results = {}
     for serie in data:
