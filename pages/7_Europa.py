@@ -9,6 +9,31 @@ from style import (inject_css, setup_lang, page_header, insight, intro, source, 
                    fnum, fpct, apply_layout, highlight_expander,
                    PURPLE, RED, BLUE, GREEN, ORANGE, GRAY)
 
+# Noms de països bilingües (ca, es) i accentuats, per a selectors i llegendes.
+# (Les dades de la cache porten el nom només en català i sense accent.)
+PAIS_NOMS = {
+    "EU27_2020": ("UE-27", "UE-27"), "EA20": ("Eurozona", "Eurozona"),
+    "ES": ("Espanya", "España"),
+    "BE": ("Bèlgica", "Bélgica"), "BG": ("Bulgària", "Bulgaria"),
+    "CZ": ("Txèquia", "Chequia"), "DK": ("Dinamarca", "Dinamarca"),
+    "DE": ("Alemanya", "Alemania"), "EE": ("Estònia", "Estonia"),
+    "IE": ("Irlanda", "Irlanda"), "EL": ("Grècia", "Grecia"),
+    "FR": ("França", "Francia"), "HR": ("Croàcia", "Croacia"),
+    "IT": ("Itàlia", "Italia"), "CY": ("Xipre", "Chipre"),
+    "LV": ("Letònia", "Letonia"), "LT": ("Lituània", "Lituania"),
+    "LU": ("Luxemburg", "Luxemburgo"), "HU": ("Hongria", "Hungría"),
+    "MT": ("Malta", "Malta"), "NL": ("Països Baixos", "Países Bajos"),
+    "AT": ("Àustria", "Austria"), "PL": ("Polònia", "Polonia"),
+    "PT": ("Portugal", "Portugal"), "RO": ("Romania", "Rumanía"),
+    "SI": ("Eslovènia", "Eslovenia"), "SK": ("Eslovàquia", "Eslovaquia"),
+    "FI": ("Finlàndia", "Finlandia"), "SE": ("Suècia", "Suecia"),
+}
+
+def nom_pais(code, ca=True, fallback=None):
+    if code in PAIS_NOMS:
+        return PAIS_NOMS[code][0 if ca else 1]
+    return fallback if fallback else code
+
 inject_css()
 t = setup_lang(show_selector=False)
 page_header()
@@ -142,22 +167,24 @@ with tab1:
                 key="europa_retail_finestra",
             )
 
-        paisos_opcionals = ["DE", "FR", "IT", "PT", "NL", "BE"]
-        pais_lbl = {
-            "DE": "Alemanya" if _ca else "Alemania",
-            "FR": "França" if _ca else "Francia",
-            "IT": "Itàlia" if _ca else "Italia",
-            "PT": "Portugal",
-            "NL": "Països Baixos" if _ca else "Países Bajos",
-            "BE": "Bèlgica" if _ca else "Bélgica",
-        }
+        # Nom de país segons idioma (amb les dades com a últim recurs).
+        noms_pais_data = dict(zip(df_m["pais_codi"], df_m["pais"]))
+        nom = lambda c: nom_pais(c, _ca, noms_pais_data.get(c))
+        # Opcions = tots els països disponibles a la cache, excepte ES i els dos agregats
+        # que ja es mostren sempre. Ordenats per nom. Així queden seleccionables els 27
+        # estats membres de la UE (Grècia inclosa), no només un subconjunt fix.
+        paisos_opcionals = sorted(
+            [c for c in df_m["pais_codi"].unique()
+             if c not in ("ES", "EA20", "EU27_2020")],
+            key=nom,
+        )
         with cc2:
             extra_sel = st.multiselect(
                 "Comparar amb altres països (opcional)" if _ca
                 else "Comparar con otros países (opcional)",
                 options=paisos_opcionals,
                 default=[],
-                format_func=lambda c: pais_lbl.get(c, c),
+                format_func=nom,
                 key="europa_retail_paisos",
             )
 
@@ -174,6 +201,15 @@ with tab1:
         }
         # Per defecte només 3 línies (ES + dues referències agregades)
         paisos_visibles = ["EA20", "EU27_2020"] + extra_sel + ["ES"]
+        # Color per als països extres sense color fix assignat (paleta cíclica).
+        PALETTE_EXTRA = ["#e67e22", "#2980b9", "#27ae60", "#c0392b", "#9b59b6",
+                         "#16a085", "#d35400", "#f39c12", "#1abc9c", "#34495e",
+                         "#e74c3c", "#2ecc71"]
+        extra_colors, _ie = {}, 0
+        for _c in extra_sel:
+            if _c not in color_m:
+                extra_colors[_c] = PALETTE_EXTRA[_ie % len(PALETTE_EXTRA)]
+                _ie += 1
 
         fig_m = go.Figure()
         for code in paisos_visibles:
@@ -183,9 +219,9 @@ with tab1:
             es_destacat = (code == "ES")
             fig_m.add_trace(go.Scatter(
                 x=sub["dt"], y=sub["index_volum"],
-                mode="lines", name=sub["pais"].iloc[0],
+                mode="lines", name=nom(code),
                 line=dict(
-                    color=color_m.get(code, "#999"),
+                    color=color_m.get(code) or extra_colors.get(code, "#999"),
                     width=3.4 if es_destacat else 2.0,
                 ),
             ))
@@ -294,7 +330,7 @@ with tab1:
                       for c in df_yoy["pais_codi"]]
         fig_yoy = go.Figure()
         fig_yoy.add_trace(go.Bar(
-            y=df_yoy["pais"], x=df_yoy["yoy"],
+            y=[nom(c) for c in df_yoy["pais_codi"]], x=df_yoy["yoy"],
             orientation="h",
             marker_color=colors_yoy,
             text=[fpct(v, 1) for v in df_yoy["yoy"]],
