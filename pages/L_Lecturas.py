@@ -408,7 +408,7 @@ def render_cifra(content: str) -> str:
 
 
 def render_noticias(content: str) -> str:
-    label = ("Tres notícies amb angle" if _ca else "Tres noticias con ángulo")
+    label = ("Tres notícies comentades" if _ca else "Tres noticias comentadas")
     pattern = re.compile(
         r"\*\*(?P<titol>[^*]+?)\*\*\s*\n"
         r"\*(?P<fuente>[^*]+?)\*\s*\n+"
@@ -556,11 +556,11 @@ st.title("El Pulso de la setmana" if _ca else "El Pulso de la semana")
 st.markdown(
     '<div class="pulso-intro">'
     + ("Cada dilluns, una mirada concisa al moment del consum minorista a Espanya i Europa: "
-       "una xifra, tres notícies amb angle, dades comparades i una predicció signada. "
+       "una xifra, tres notícies comentades, dades comparades i una predicció signada. "
        "A dalt tens l'última edició; a sota, l'arxiu de les anteriors."
        if _ca else
        "Cada lunes, una mirada concisa al momento del consumo minorista en España y Europa: "
-       "una cifra, tres noticias con ángulo, datos comparados y una predicción firmada. "
+       "una cifra, tres noticias comentadas, datos comparados y una predicción firmada. "
        "Arriba tienes la última edición; debajo, el archivo de las anteriores.")
     + "</div>",
     unsafe_allow_html=True,

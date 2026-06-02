@@ -1385,13 +1385,13 @@ def newsletter_form(lang="es", compact=False):
              if _ca else "Recibe El Pulso cada lunes")
     desc = ("Subscriu-te una vegada i rep dues cadències al teu correu: "
             "cada dilluns, <strong>El Pulso de la setmana</strong> —una xifra, "
-            "tres notícies amb angle i una predicció signada—; cada trimestre, "
+            "tres notícies comentades i una predicció signada—; cada trimestre, "
             "el <strong>resum complet de l'observatori</strong> amb les xifres "
             "noves del comerç minorista i les conclusions destacades."
             if _ca else
             "Suscríbete una vez y recibe dos cadencias en tu correo: "
             "cada lunes, <strong>El Pulso de la semana</strong> —una cifra, "
-            "tres noticias con ángulo y una predicción firmada—; cada trimestre, "
+            "tres noticias comentadas y una predicción firmada—; cada trimestre, "
             "el <strong>resumen completo del observatorio</strong> con las cifras "
             "nuevas del comercio minorista y las conclusiones destacadas.")
     desc_compact = ("El Pulso cada dilluns i el resum d'observatori cada trimestre. Una sola subscripció."
