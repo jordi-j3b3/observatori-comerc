@@ -270,10 +270,11 @@ st.markdown("---")
 
 # ─── TABS ────────────────────────────────────────────────────
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     ("Estructura empresarial" if _ca else "Estructura empresarial"),
     ("Activitat i productivitat" if _ca else "Actividad y productividad"),
     ("Demanda (despesa famílies)" if _ca else "Demanda (gasto familias)"),
+    ("Detall alimentació" if _ca else "Detalle alimentación"),
 ])
 
 # ============================================================
@@ -781,93 +782,6 @@ with tab2:
             )
             insight(txt)
 
-        # ── Desglossament del grup d'alimentació (472) a 4 dígits ──
-        if not df_472.empty:
-            st.divider()
-            st.subheader(
-                "Detall del grup d'alimentació (472): evolució per especialitat" if _ca
-                else "Detalle del grupo de alimentación (472): evolución por especialidad"
-            )
-            st.caption(
-                "Comerç especialitzat a 4 dígits CNAE: peixateries, carnisseries, fruiteries, forns, "
-                "begudes, estancs i altres. Magnituds anuals a preus corrents." if _ca
-                else "Comercio especializado a 4 dígitos CNAE: pescaderías, carnicerías, fruterías, "
-                     "panaderías, bebidas, estancos y otros. Magnitudes anuales a precios corrientes."
-            )
-
-            LABELS_472 = {
-                "4721": ("Fruiteries", "Fruterías"),
-                "4722": ("Carnisseries", "Carnicerías"),
-                "4723": ("Peixateries", "Pescaderías"),
-                "4724": ("Forns i pastisseries", "Panaderías y pastelerías"),
-                "4725": ("Begudes", "Bebidas"),
-                "4726": ("Estancs (tabac)", "Estancos (tabaco)"),
-                "4729": ("Altres aliments", "Otros alimentos"),
-            }
-            lbl472 = lambda c: LABELS_472.get(c, (c, c))[0 if _ca else 1]
-
-            METRICS_472 = {
-                "xifra_negoci":    ("Xifra de negoci", "Cifra de negocios"),
-                "n_empreses_eas":  ("Nombre d'empreses", "Número de empresas"),
-                "personal_ocupat": ("Persones ocupades", "Personas ocupadas"),
-            }
-            mkey = st.selectbox(
-                "Magnitud", options=list(METRICS_472.keys()),
-                format_func=lambda k: METRICS_472[k][0 if _ca else 1],
-                key="metric_472",
-            )
-
-            d472 = df_472[df_472[mkey].notna()].copy()
-            is_money = (mkey == "xifra_negoci")
-            palette = [PURPLE, RED, "#2980b9", GREEN, ORANGE, "#16a085", "#8E44AD"]
-            fig472 = go.Figure()
-            for i, c in enumerate(sorted(d472["codi"].unique())):
-                sub = d472[d472["codi"] == c].sort_values("any")
-                yv = sub[mkey] / 1e6 if is_money else sub[mkey]
-                fig472.add_trace(go.Scatter(
-                    x=sub["any"], y=yv, mode="lines+markers", name=lbl472(c),
-                    line=dict(color=palette[i % len(palette)], width=2.5),
-                ))
-            apply_layout(fig472,
-                yaxis_title=(("Milions €" if is_money else
-                              ("Empreses" if mkey == "n_empreses_eas" else "Persones")) if _ca
-                             else ("Millones €" if is_money else
-                              ("Empresas" if mkey == "n_empreses_eas" else "Personas"))),
-                height=440,
-            )
-            fig472.update_xaxes(dtick=1)
-            st.plotly_chart(fig472, use_container_width=True)
-            source(
-                "INE, Enquesta Estructural d'Empreses Sector Comerç, taula 76818 (CNAE 4 dígits)" if _ca
-                else "INE, Encuesta Estructural de Empresas Sector Comercio, tabla 76818 (CNAE 4 dígitos)"
-            )
-
-            # Insight: especialitat que més i menys creix al període
-            yr0, yr1 = int(d472["any"].min()), int(d472["any"].max())
-            variacions = []
-            for c in d472["codi"].unique():
-                s = d472[d472["codi"] == c]
-                v0 = s[s["any"] == yr0][mkey]
-                v1 = s[s["any"] == yr1][mkey]
-                if not v0.empty and not v1.empty and v0.iloc[0]:
-                    variacions.append((lbl472(c), (v1.iloc[0] / v0.iloc[0] - 1) * 100))
-            if variacions:
-                variacions.sort(key=lambda x: x[1], reverse=True)
-                best, worst = variacions[0], variacions[-1]
-                mlabel = METRICS_472[mkey][0 if _ca else 1].lower()
-                if _ca:
-                    insight(
-                        f"Entre {yr0} i {yr1}, en {mlabel}, l'especialitat que més creix és "
-                        f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) i la que menys, "
-                        f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
-                    )
-                else:
-                    insight(
-                        f"Entre {yr0} y {yr1}, en {mlabel}, la especialidad que más crece es "
-                        f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) y la que menos, "
-                        f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
-                    )
-
 # ============================================================
 # TAB 3: DEMANDA - EPF
 # ============================================================
@@ -1194,3 +1108,95 @@ page_meta(
     "INE: Directorio Central de Empresas (T=73019), Encuesta Estructural de Empresas Sector Comercio (T=76818), Encuesta de Presupuestos Familiares (T=75003)",
     st.session_state.lang,
 )
+
+# ============================================================
+# TAB 4: DETALL ALIMENTACIÓ (472) - EAS 4 dígits
+# ============================================================
+with tab4:
+    if df_472.empty:
+        st.info("Sense dades disponibles." if _ca else "Sin datos disponibles.")
+    else:
+        st.subheader(
+            "Detall del grup d'alimentació (472): evolució per especialitat" if _ca
+            else "Detalle del grupo de alimentación (472): evolución por especialidad"
+        )
+        st.caption(
+            "Comerç especialitzat a 4 dígits CNAE: peixateries, carnisseries, fruiteries, forns, "
+            "begudes, estancs i altres. Magnituds anuals a preus corrents." if _ca
+            else "Comercio especializado a 4 dígitos CNAE: pescaderías, carnicerías, fruterías, "
+                 "panaderías, bebidas, estancos y otros. Magnitudes anuales a precios corrientes."
+        )
+
+        LABELS_472 = {
+            "4721": ("Fruiteries", "Fruterías"),
+            "4722": ("Carnisseries", "Carnicerías"),
+            "4723": ("Peixateries", "Pescaderías"),
+            "4724": ("Forns i pastisseries", "Panaderías y pastelerías"),
+            "4725": ("Begudes", "Bebidas"),
+            "4726": ("Estancs (tabac)", "Estancos (tabaco)"),
+            "4729": ("Altres aliments", "Otros alimentos"),
+        }
+        lbl472 = lambda c: LABELS_472.get(c, (c, c))[0 if _ca else 1]
+
+        METRICS_472 = {
+            "xifra_negoci":    ("Xifra de negoci", "Cifra de negocios"),
+            "n_empreses_eas":  ("Nombre d'empreses", "Número de empresas"),
+            "personal_ocupat": ("Persones ocupades", "Personas ocupadas"),
+        }
+        mkey = st.selectbox(
+            "Magnitud", options=list(METRICS_472.keys()),
+            format_func=lambda k: METRICS_472[k][0 if _ca else 1],
+            key="metric_472",
+        )
+
+        d472 = df_472[df_472[mkey].notna()].copy()
+        is_money = (mkey == "xifra_negoci")
+        palette = [PURPLE, RED, "#2980b9", GREEN, ORANGE, "#16a085", "#8E44AD"]
+        fig472 = go.Figure()
+        for i, c in enumerate(sorted(d472["codi"].unique())):
+            sub = d472[d472["codi"] == c].sort_values("any")
+            yv = sub[mkey] / 1e6 if is_money else sub[mkey]
+            fig472.add_trace(go.Scatter(
+                x=sub["any"], y=yv, mode="lines+markers", name=lbl472(c),
+                line=dict(color=palette[i % len(palette)], width=2.5),
+            ))
+        apply_layout(fig472,
+            yaxis_title=(("Milions €" if is_money else
+                          ("Empreses" if mkey == "n_empreses_eas" else "Persones")) if _ca
+                         else ("Millones €" if is_money else
+                          ("Empresas" if mkey == "n_empreses_eas" else "Personas"))),
+            height=440,
+        )
+        fig472.update_xaxes(dtick=1)
+        st.plotly_chart(fig472, use_container_width=True)
+        source(
+            "INE, Enquesta Estructural d'Empreses Sector Comerç, taula 76818 (CNAE 4 dígits)" if _ca
+            else "INE, Encuesta Estructural de Empresas Sector Comercio, tabla 76818 (CNAE 4 dígitos)"
+        )
+
+        # Insight: especialitat que més i menys creix al període
+        yr0, yr1 = int(d472["any"].min()), int(d472["any"].max())
+        variacions = []
+        for c in d472["codi"].unique():
+            s = d472[d472["codi"] == c]
+            v0 = s[s["any"] == yr0][mkey]
+            v1 = s[s["any"] == yr1][mkey]
+            if not v0.empty and not v1.empty and v0.iloc[0]:
+                variacions.append((lbl472(c), (v1.iloc[0] / v0.iloc[0] - 1) * 100))
+        if variacions:
+            variacions.sort(key=lambda x: x[1], reverse=True)
+            best, worst = variacions[0], variacions[-1]
+            mlabel = METRICS_472[mkey][0 if _ca else 1].lower()
+            if _ca:
+                insight(
+                    f"Entre {yr0} i {yr1}, en {mlabel}, l'especialitat que més creix és "
+                    f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) i la que menys, "
+                    f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
+                )
+            else:
+                insight(
+                    f"Entre {yr0} y {yr1}, en {mlabel}, la especialidad que más crece es "
+                    f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) y la que menos, "
+                    f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
+                )
+
