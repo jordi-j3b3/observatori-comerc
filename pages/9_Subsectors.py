@@ -1121,12 +1121,14 @@ with tab4:
             else "Detalle del grupo de alimentación (472): análisis por especialidad"
         )
         st.caption(
-            "Tria una especialitat per veure'n l'evolució 2018-2024 (facturació, establiments i "
-            "ocupació). El gràfic s'indexa a l'any inicial (=100) per fer visibles les dinàmiques "
-            "relatives. Font: INE, Enquesta Estructural d'Empreses (taula 76818), preus corrents." if _ca
-            else "Elige una especialidad para ver su evolución 2018-2024 (facturación, establecimientos "
-                 "y ocupación). El gráfico se indexa al año inicial (=100) para hacer visibles las "
-                 "dinámicas relativas. Fuente: INE, Encuesta Estructural de Empresas (tabla 76818)."
+            "Tria una especialitat per veure'n l'evolució 2018-2024. El gràfic s'indexa a l'any "
+            "inicial (=100) i mostra la facturació a preus corrents (nominal) i constants (deflactada "
+            "per IPC general): el solc entre totes dues és l'efecte de la inflació. "
+            "Font: INE, Enquesta Estructural d'Empreses (taula 76818) + IPC (taula 50902)." if _ca
+            else "Elige una especialidad para ver su evolución 2018-2024. El gráfico se indexa al año "
+                 "inicial (=100) y muestra la facturación a precios corrientes (nominal) y constantes "
+                 "(deflactada con IPC general): la brecha entre ambas es el efecto de la inflación. "
+                 "Fuente: INE, Encuesta Estructural de Empresas (tabla 76818) + IPC (tabla 50902)."
         )
 
         LABELS_472 = {
@@ -1160,20 +1162,37 @@ with tab4:
         e0, e1 = r0["n_empreses_eas"], r1["n_empreses_eas"]
         o0, o1 = r0["personal_ocupat"], r1["personal_ocupat"]
         df_pct, de_pct, do_pct = _delta(f0, f1), _delta(e0, e1), _delta(o0, o1)
+        has_real = ("xifra_negoci_constants" in d.columns
+                    and pd.notna(r0.get("xifra_negoci_constants"))
+                    and pd.notna(r1.get("xifra_negoci_constants")))
+        if has_real:
+            fc0, fc1 = r0["xifra_negoci_constants"], r1["xifra_negoci_constants"]
+            dfr_pct = _delta(fc0, fc1)
 
         # KPIs (últim any + variació respecte de l'any inicial)
-        k1, k2, k3 = st.columns(3)
-        k1.metric(("Facturació" if _ca else "Facturación") + f" {yr1}",
-                  f"{fnum(f1 / 1e6)} M€", fpct(df_pct, 1))
-        k2.metric(("Establiments" if _ca else "Establecimientos") + f" {yr1}",
-                  fnum(e1), fpct(de_pct, 1))
-        k3.metric(("Ocupació" if _ca else "Ocupación") + f" {yr1}",
-                  fnum(o1), fpct(do_pct, 1))
+        if has_real:
+            k1, k2, k3, k4 = st.columns(4)
+            k1.metric(("Facturació nominal" if _ca else "Facturación nominal") + f" {yr1}",
+                      f"{fnum(f1 / 1e6)} M€", fpct(df_pct, 1))
+            k2.metric(("Facturació real" if _ca else "Facturación real") + f" {yr0}-{yr1}",
+                      fpct(dfr_pct, 1))
+            k3.metric(("Establiments" if _ca else "Establecimientos") + f" {yr1}",
+                      fnum(e1), fpct(de_pct, 1))
+            k4.metric(("Ocupació" if _ca else "Ocupación") + f" {yr1}",
+                      fnum(o1), fpct(do_pct, 1))
+        else:
+            k1, k2, k3 = st.columns(3)
+            k1.metric(("Facturació" if _ca else "Facturación") + f" {yr1}",
+                      f"{fnum(f1 / 1e6)} M€", fpct(df_pct, 1))
+            k2.metric(("Establiments" if _ca else "Establecimientos") + f" {yr1}",
+                      fnum(e1), fpct(de_pct, 1))
+            k3.metric(("Ocupació" if _ca else "Ocupación") + f" {yr1}",
+                      fnum(o1), fpct(do_pct, 1))
 
         # Gràfic indexat (base any inicial = 100): fa visible la divergència
         fig = go.Figure()
         for col, name, color in (
-            ("xifra_negoci", "Facturació" if _ca else "Facturación", PURPLE),
+            ("xifra_negoci", "Facturació (nominal)" if _ca else "Facturación (nominal)", PURPLE),
             ("n_empreses_eas", "Establiments" if _ca else "Establecimientos", ORANGE),
             ("personal_ocupat", "Ocupació" if _ca else "Ocupación", GREEN),
         ):
@@ -1182,6 +1201,16 @@ with tab4:
                 fig.add_trace(go.Scatter(
                     x=d["any"], y=d[col] / base * 100, mode="lines+markers",
                     name=name, line=dict(color=color, width=2.8),
+                ))
+        # Facturació a preus constants (puntejada): el solc respecte de la nominal és la inflació.
+        if has_real:
+            base_c = d[d["any"] == yr0]["xifra_negoci_constants"].iloc[0]
+            if base_c:
+                fig.add_trace(go.Scatter(
+                    x=d["any"], y=d["xifra_negoci_constants"] / base_c * 100,
+                    mode="lines+markers",
+                    name=("Facturació (constant)" if _ca else "Facturación (constante)"),
+                    line=dict(color=PURPLE, width=2.2, dash="dash"),
                 ))
         fig.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"))
         apply_layout(fig, yaxis_title=f"Índex ({yr0}=100)", height=420)
@@ -1222,11 +1251,24 @@ with tab4:
                      "una evolución <strong>mixta</strong>")
 
         puja = lambda x, ca: (("puja" if x >= 0 else "cau") if ca else ("sube" if x >= 0 else "cae"))
+        if has_real:
+            inf_dif = df_pct - dfr_pct  # punts de diferència nominal − real (efecte preus)
+            tot_infl_ca = "tot el creixement nominal és inflació" if (df_pct > 0 and dfr_pct <= 0) else "la inflació n'explica bona part"
+            tot_infl_es = "todo el crecimiento nominal es inflación" if (df_pct > 0 and dfr_pct <= 0) else "la inflación explica buena parte"
+            real_ca = (f" En termes <strong>reals</strong> (deflactat per IPC, base {yr0}), però, la facturació "
+                       f"{puja(dfr_pct, 1)} un <strong>{fpct(abs(dfr_pct), 1, sign=False)}</strong>: "
+                       f"{tot_infl_ca} ({fpct(abs(inf_dif), 1, sign=False)} de diferència).")
+            real_es = (f" En términos <strong>reales</strong> (deflactado con IPC, base {yr0}), en cambio, la facturación "
+                       f"{puja(dfr_pct, 0)} un <strong>{fpct(abs(dfr_pct), 1, sign=False)}</strong>: "
+                       f"{tot_infl_es} ({fpct(abs(inf_dif), 1, sign=False)} de diferencia).")
+        else:
+            real_ca = real_es = ""
         if _ca:
             analisi = (
                 f"Entre {yr0} i {yr1}, les <strong>{sec.lower()}</strong> mostren {patro}. "
-                f"La facturació {puja(df_pct, 1)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
-                f"(fins a {fnum(f1 / 1e6)} M€), els establiments {puja(de_pct, 1)} un "
+                f"La facturació nominal {puja(df_pct, 1)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
+                f"(fins a {fnum(f1 / 1e6)} M€).{real_ca} "
+                f"Els establiments {puja(de_pct, 1)} un "
                 f"<strong>{fpct(abs(de_pct), 1, sign=False)}</strong> i l'ocupació {puja(do_pct, 1)} un "
                 f"<strong>{fpct(abs(do_pct), 1, sign=False)}</strong>."
                 "<br><br>"
@@ -1242,8 +1284,9 @@ with tab4:
         else:
             analisi = (
                 f"Entre {yr0} y {yr1}, las <strong>{sec.lower()}</strong> muestran {patro}. "
-                f"La facturación {puja(df_pct, 0)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
-                f"(hasta {fnum(f1 / 1e6)} M€), los establecimientos {puja(de_pct, 0)} un "
+                f"La facturación nominal {puja(df_pct, 0)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
+                f"(hasta {fnum(f1 / 1e6)} M€).{real_es} "
+                f"Los establecimientos {puja(de_pct, 0)} un "
                 f"<strong>{fpct(abs(de_pct), 1, sign=False)}</strong> y la ocupación {puja(do_pct, 0)} un "
                 f"<strong>{fpct(abs(do_pct), 1, sign=False)}</strong>."
                 "<br><br>"

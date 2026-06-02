@@ -1062,6 +1062,19 @@ def process_subsectors():
             df_472 = df_eas[df_eas["codi"].str.len() == 4].copy()
             if not df_472.empty:
                 df_472["nom"] = df_472["codi"].map(ine.CNAE_472_SUBSECTORS).fillna(df_472["codi"])
+                # Facturació a preus constants (IPC general, base = primer any de la sèrie),
+                # mateix criteri que PIB/VAB i Productivitat: real[base] = nominal, real <= nominal després.
+                ipc = fetch_ipc_annual()
+                if not ipc.empty:
+                    ipc_map = dict(zip(ipc["any"].astype(int), ipc["ipc_mitjana"]))
+                    base_any = int(df_472["any"].min())
+                    ipc_base = ipc_map.get(base_any)
+                    if ipc_base:
+                        df_472["xifra_negoci_constants"] = df_472.apply(
+                            lambda r: r["xifra_negoci"] * ipc_base / ipc_map[int(r["any"])]
+                            if ipc_map.get(int(r["any"])) and pd.notna(r["xifra_negoci"]) else None,
+                            axis=1,
+                        )
                 save_cache(df_472, "subsectors_472")
                 print(f"  EAS 472 (4 dígits): {len(df_472)} files, {df_472['codi'].nunique()} classes, "
                       f"anys {df_472['any'].min()}-{df_472['any'].max()}")
