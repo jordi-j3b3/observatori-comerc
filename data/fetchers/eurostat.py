@@ -288,8 +288,12 @@ def fetch_retail_volume_monthly():
     Es retorna el nivell index (base 2021=100). La variacio interanual es
     calcula al processor a partir d'aquest index.
     Publicacio mensual amb retard ~45 dies.
+
+    Ampliat 2026-05 als 27 estats UE perque la comparativa europea del
+    dashboard pugui oferir qualsevol pais (es necessitava EL i altres
+    per a la ponencia 2026).
     """
-    countries = ["EA20", "EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "BE"]
+    countries = COUNTRIES  # 27 estats UE + UE-27 + Eurozona
     params = [
         ("nace_r2", "G47"),
         ("indic_bt", "VOL_SLS"),
