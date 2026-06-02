@@ -8,3 +8,7 @@ data/predicciones/
 
 # Dades font crues (export SABI verbatim) — fora del repo públic
 data/raw/
+
+# Entorn virtual i fitxers de sistema
+.venv/
+.DS_Store
