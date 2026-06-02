@@ -1117,14 +1117,16 @@ with tab4:
         st.info("Sense dades disponibles." if _ca else "Sin datos disponibles.")
     else:
         st.subheader(
-            "Detall del grup d'alimentació (472): evolució per especialitat" if _ca
-            else "Detalle del grupo de alimentación (472): evolución por especialidad"
+            "Detall del grup d'alimentació (472): anàlisi per especialitat" if _ca
+            else "Detalle del grupo de alimentación (472): análisis por especialidad"
         )
         st.caption(
-            "Comerç especialitzat a 4 dígits CNAE: peixateries, carnisseries, fruiteries, forns, "
-            "begudes, estancs i altres. Magnituds anuals a preus corrents." if _ca
-            else "Comercio especializado a 4 dígitos CNAE: pescaderías, carnicerías, fruterías, "
-                 "panaderías, bebidas, estancos y otros. Magnitudes anuales a precios corrientes."
+            "Tria una especialitat per veure'n l'evolució 2018-2024 (facturació, establiments i "
+            "ocupació). El gràfic s'indexa a l'any inicial (=100) per fer visibles les dinàmiques "
+            "relatives. Font: INE, Enquesta Estructural d'Empreses (taula 76818), preus corrents." if _ca
+            else "Elige una especialidad para ver su evolución 2018-2024 (facturación, establecimientos "
+                 "y ocupación). El gráfico se indexa al año inicial (=100) para hacer visibles las "
+                 "dinámicas relativas. Fuente: INE, Encuesta Estructural de Empresas (tabla 76818)."
         )
 
         LABELS_472 = {
@@ -1138,65 +1140,121 @@ with tab4:
         }
         lbl472 = lambda c: LABELS_472.get(c, (c, c))[0 if _ca else 1]
 
-        METRICS_472 = {
-            "xifra_negoci":    ("Xifra de negoci", "Cifra de negocios"),
-            "n_empreses_eas":  ("Nombre d'empreses", "Número de empresas"),
-            "personal_ocupat": ("Persones ocupades", "Personas ocupadas"),
-        }
-        mkey = st.selectbox(
-            "Magnitud", options=list(METRICS_472.keys()),
-            format_func=lambda k: METRICS_472[k][0 if _ca else 1],
-            key="metric_472",
+        # Selector d'especialitat (ordre: peix, carn, fruita, forn, begudes, tabac, altres)
+        ordre = ["4723", "4722", "4721", "4724", "4725", "4726", "4729"]
+        codis = [c for c in ordre if c in df_472["codi"].unique()]
+        sel = st.selectbox(
+            "Especialitat" if _ca else "Especialidad",
+            options=codis, format_func=lbl472, key="sec_472",
         )
 
-        d472 = df_472[df_472[mkey].notna()].copy()
-        is_money = (mkey == "xifra_negoci")
-        palette = [PURPLE, RED, "#2980b9", GREEN, ORANGE, "#16a085", "#8E44AD"]
-        fig472 = go.Figure()
-        for i, c in enumerate(sorted(d472["codi"].unique())):
-            sub = d472[d472["codi"] == c].sort_values("any")
-            yv = sub[mkey] / 1e6 if is_money else sub[mkey]
-            fig472.add_trace(go.Scatter(
-                x=sub["any"], y=yv, mode="lines+markers", name=lbl472(c),
-                line=dict(color=palette[i % len(palette)], width=2.5),
-            ))
-        apply_layout(fig472,
-            yaxis_title=(("Milions €" if is_money else
-                          ("Empreses" if mkey == "n_empreses_eas" else "Persones")) if _ca
-                         else ("Millones €" if is_money else
-                          ("Empresas" if mkey == "n_empreses_eas" else "Personas"))),
-            height=440,
-        )
-        fig472.update_xaxes(dtick=1)
-        st.plotly_chart(fig472, use_container_width=True)
+        d = df_472[df_472["codi"] == sel].sort_values("any")
+        yr0, yr1 = int(d["any"].min()), int(d["any"].max())
+        r0, r1 = d[d["any"] == yr0].iloc[0], d[d["any"] == yr1].iloc[0]
+        sec = lbl472(sel)
+
+        def _delta(a, b):
+            return (b / a - 1) * 100 if a else float("nan")
+
+        f0, f1 = r0["xifra_negoci"], r1["xifra_negoci"]
+        e0, e1 = r0["n_empreses_eas"], r1["n_empreses_eas"]
+        o0, o1 = r0["personal_ocupat"], r1["personal_ocupat"]
+        df_pct, de_pct, do_pct = _delta(f0, f1), _delta(e0, e1), _delta(o0, o1)
+
+        # KPIs (últim any + variació respecte de l'any inicial)
+        k1, k2, k3 = st.columns(3)
+        k1.metric(("Facturació" if _ca else "Facturación") + f" {yr1}",
+                  f"{fnum(f1 / 1e6)} M€", fpct(df_pct, 1))
+        k2.metric(("Establiments" if _ca else "Establecimientos") + f" {yr1}",
+                  fnum(e1), fpct(de_pct, 1))
+        k3.metric(("Ocupació" if _ca else "Ocupación") + f" {yr1}",
+                  fnum(o1), fpct(do_pct, 1))
+
+        # Gràfic indexat (base any inicial = 100): fa visible la divergència
+        fig = go.Figure()
+        for col, name, color in (
+            ("xifra_negoci", "Facturació" if _ca else "Facturación", PURPLE),
+            ("n_empreses_eas", "Establiments" if _ca else "Establecimientos", ORANGE),
+            ("personal_ocupat", "Ocupació" if _ca else "Ocupación", GREEN),
+        ):
+            base = d[d["any"] == yr0][col].iloc[0]
+            if base:
+                fig.add_trace(go.Scatter(
+                    x=d["any"], y=d[col] / base * 100, mode="lines+markers",
+                    name=name, line=dict(color=color, width=2.8),
+                ))
+        fig.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"))
+        apply_layout(fig, yaxis_title=f"Índex ({yr0}=100)", height=420)
+        fig.update_xaxes(dtick=1)
+        st.plotly_chart(fig, use_container_width=True)
         source(
             "INE, Enquesta Estructural d'Empreses Sector Comerç, taula 76818 (CNAE 4 dígits)" if _ca
             else "INE, Encuesta Estructural de Empresas Sector Comercio, tabla 76818 (CNAE 4 dígitos)"
         )
 
-        # Insight: especialitat que més i menys creix al període
-        yr0, yr1 = int(d472["any"].min()), int(d472["any"].max())
-        variacions = []
-        for c in d472["codi"].unique():
-            s = d472[d472["codi"] == c]
-            v0 = s[s["any"] == yr0][mkey]
-            v1 = s[s["any"] == yr1][mkey]
-            if not v0.empty and not v1.empty and v0.iloc[0]:
-                variacions.append((lbl472(c), (v1.iloc[0] / v0.iloc[0] - 1) * 100))
-        if variacions:
-            variacions.sort(key=lambda x: x[1], reverse=True)
-            best, worst = variacions[0], variacions[-1]
-            mlabel = METRICS_472[mkey][0 if _ca else 1].lower()
-            if _ca:
-                insight(
-                    f"Entre {yr0} i {yr1}, en {mlabel}, l'especialitat que més creix és "
-                    f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) i la que menys, "
-                    f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
-                )
-            else:
-                insight(
-                    f"Entre {yr0} y {yr1}, en {mlabel}, la especialidad que más crece es "
-                    f"<strong>{best[0]}</strong> ({fpct(best[1], 1)}) y la que menos, "
-                    f"<strong>{worst[0]}</strong> ({fpct(worst[1], 1)})."
-                )
+        # ── Anàlisi desenvolupada per especialitat ──
+        size0, size1 = (f0 / e0 if e0 else 0), (f1 / e1 if e1 else 0)
+        ds_pct = _delta(size0, size1)
+        emp0, emp1 = (o0 / e0 if e0 else 0), (o1 / e1 if e1 else 0)
+        emp0_s, emp1_s = f"{emp0:.1f}".replace(".", ","), f"{emp1:.1f}".replace(".", ",")
+        fo0, fo1 = (f0 / o0 if o0 else 0), (f1 / o1 if o1 else 0)
+        dfo_pct = _delta(fo0, fo1)
+        tot_f1 = df_472[df_472["any"] == yr1]["xifra_negoci"].sum()
+        share = f1 / tot_f1 * 100 if tot_f1 else 0
+
+        if de_pct < -1 and df_pct > 1:
+            patro = ("una dinàmica de <strong>consolidació</strong>: la facturació creix mentre el "
+                     "nombre d'establiments es redueix") if _ca else (
+                     "una dinámica de <strong>consolidación</strong>: la facturación crece mientras "
+                     "el número de establecimientos se reduce")
+        elif de_pct > 1 and df_pct > 1:
+            patro = ("una fase d'<strong>expansió</strong>: creixen alhora la facturació i el nombre "
+                     "d'establiments") if _ca else (
+                     "una fase de <strong>expansión</strong>: crecen a la vez la facturación y el "
+                     "número de establecimientos")
+        elif df_pct < -1 and de_pct < -1:
+            patro = ("un <strong>retrocés</strong>: cauen tant la facturació com el nombre "
+                     "d'establiments") if _ca else (
+                     "un <strong>retroceso</strong>: caen tanto la facturación como el número de "
+                     "establecimientos")
+        else:
+            patro = ("una evolució <strong>mixta</strong>") if _ca else (
+                     "una evolución <strong>mixta</strong>")
+
+        puja = lambda x, ca: (("puja" if x >= 0 else "cau") if ca else ("sube" if x >= 0 else "cae"))
+        if _ca:
+            analisi = (
+                f"Entre {yr0} i {yr1}, les <strong>{sec.lower()}</strong> mostren {patro}. "
+                f"La facturació {puja(df_pct, 1)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
+                f"(fins a {fnum(f1 / 1e6)} M€), els establiments {puja(de_pct, 1)} un "
+                f"<strong>{fpct(abs(de_pct), 1, sign=False)}</strong> i l'ocupació {puja(do_pct, 1)} un "
+                f"<strong>{fpct(abs(do_pct), 1, sign=False)}</strong>."
+                "<br><br>"
+                f"<strong>Lectura estructural.</strong> La facturació mitjana per establiment ha passat de "
+                f"{fnum(size0 / 1e3)} a {fnum(size1 / 1e3)} milers d'euros ({fpct(ds_pct, 1)}); cada "
+                f"establiment ocupa ara {emp1_s} persones de mitjana (era {emp0_s} el {yr0}). "
+                f"La facturació per persona ocupada {puja(dfo_pct, 1)} un "
+                f"{fpct(abs(dfo_pct), 1, sign=False)}, senyal de "
+                f"{'guany' if dfo_pct >= 0 else 'pèrdua'} de productivitat aparent. "
+                f"L'especialitat concentra el <strong>{fpct(share, 1, sign=False)}</strong> de la "
+                f"facturació del comerç d'alimentació especialitzat (grup 472)."
+            )
+        else:
+            analisi = (
+                f"Entre {yr0} y {yr1}, las <strong>{sec.lower()}</strong> muestran {patro}. "
+                f"La facturación {puja(df_pct, 0)} un <strong>{fpct(abs(df_pct), 1, sign=False)}</strong> "
+                f"(hasta {fnum(f1 / 1e6)} M€), los establecimientos {puja(de_pct, 0)} un "
+                f"<strong>{fpct(abs(de_pct), 1, sign=False)}</strong> y la ocupación {puja(do_pct, 0)} un "
+                f"<strong>{fpct(abs(do_pct), 1, sign=False)}</strong>."
+                "<br><br>"
+                f"<strong>Lectura estructural.</strong> La facturación media por establecimiento ha pasado de "
+                f"{fnum(size0 / 1e3)} a {fnum(size1 / 1e3)} miles de euros ({fpct(ds_pct, 1)}); cada "
+                f"establecimiento ocupa ahora {emp1_s} personas de media (era {emp0_s} en {yr0}). "
+                f"La facturación por persona ocupada {puja(dfo_pct, 0)} un "
+                f"{fpct(abs(dfo_pct), 1, sign=False)}, señal de "
+                f"{'ganancia' if dfo_pct >= 0 else 'pérdida'} de productividad aparente. "
+                f"La especialidad concentra el <strong>{fpct(share, 1, sign=False)}</strong> de la "
+                f"facturación del comercio de alimentación especializado (grupo 472)."
+            )
+        insight(analisi)
 
