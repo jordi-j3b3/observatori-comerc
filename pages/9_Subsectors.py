@@ -819,7 +819,7 @@ with tab2:
 
             d472 = df_472[df_472[mkey].notna()].copy()
             is_money = (mkey == "xifra_negoci")
-            palette = [PURPLE, RED, BLUE, GREEN, ORANGE, "#16a085", "#8E44AD"]
+            palette = [PURPLE, RED, "#2980b9", GREEN, ORANGE, "#16a085", "#8E44AD"]
             fig472 = go.Figure()
             for i, c in enumerate(sorted(d472["codi"].unique())):
                 sub = d472[d472["codi"] == c].sort_values("any")
