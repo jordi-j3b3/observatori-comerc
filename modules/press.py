@@ -87,6 +87,21 @@ FEEDS = [
      "q=site%3Aviaempresa.cat+(comer%C3%A7+OR+retail+OR+minorista+OR+distribuci%C3%B3+OR+consum+OR+botiga+OR+supermercat)"
      "&hl=ca&gl=ES&ceid=ES:ca",
      "multisector", "generalista", True),
+
+    ("google_inforetail",
+     "InfoRetail (via Google News)",
+     "https://news.google.com/rss/search?q=site%3Ainforetail.es&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "sectorial", False),
+
+    ("google_preferente",
+     "Preferente (via Google News)",
+     "https://news.google.com/rss/search?q=site%3Apreferente.com&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "sectorial", False),
+
+    ("google_elconfidencial",
+     "El Confidencial — Economia (via Google News)",
+     "https://news.google.com/rss/search?q=site%3Aelconfidencial.com+(%22comercio+minorista%22+OR+retail+OR+supermercado+OR+%22gran+consumo%22+OR+%22distribuci%C3%B3n+comercial%22)&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "generalista", True),
 ]
 
 
@@ -333,6 +348,9 @@ _COVERED_DOMAINS = (
     "viaempresa.cat",   # via google_viaempresa
     # (b) editors retirats per reserva de mineria de dades (no reintroduir)
     "expansion.com", "lavanguardia.com", "cincodias.elpais.com", "elpais.com", "alimarket.es",
+    "inforetail.es",      # via google_inforetail
+    "preferente.com",     # via google_preferente
+    "elconfidencial.com", # via google_elconfidencial
 )
 # Google News posa la font com a sufix del títol: "Titular - domini.com".
 _TITLE_SRC_RE = re.compile(r"\s[-–]\s([\w.\-]+\.\w{2,})\s*$")
