@@ -14,6 +14,11 @@
     "font": "api_ine",
     "missatge": "324 files"
   },
+  "estructura_comerc": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "62 files"
+  },
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
