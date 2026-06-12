@@ -204,7 +204,16 @@ def _fmt_data(d):
 
 # ─── LLISTA ──────────────────────────────────────────────────
 MAX_ITEMS = 100
-items_to_show = df_f.head(MAX_ITEMS)
+# Límit per font: evita que una font de molt volum (p. ex. AGECU via Google News)
+# domini el recull i empenyi avall la resta. df_f ja ve ordenat per data desc,
+# així que head() per grup conserva els més recents de cada font.
+PER_FONT_CAP = 6
+_total_filtrat = len(df_f)
+items_to_show = (
+    df_f.groupby("font", group_keys=False).head(PER_FONT_CAP)
+        .sort_values("data", ascending=False, na_position="last")
+        .head(MAX_ITEMS)
+)
 
 for _, row in items_to_show.iterrows():
     tipus = row["tipus"]
@@ -221,11 +230,13 @@ for _, row in items_to_show.iterrows():
     )
     st.markdown(html, unsafe_allow_html=True)
 
-if len(df_f) > MAX_ITEMS:
+if _total_filtrat > len(items_to_show):
     st.caption(
-        f"Mostrant {MAX_ITEMS} de {len(df_f)} resultats. Afina filtres per veure'n més."
+        f"Mostrant {len(items_to_show)} de {_total_filtrat} resultats "
+        f"(màx. {PER_FONT_CAP} per font). Afina filtres per veure'n més."
         if _ca else
-        f"Mostrando {MAX_ITEMS} de {len(df_f)} resultados. Afina filtros para ver más."
+        f"Mostrando {len(items_to_show)} de {_total_filtrat} resultados "
+        f"(máx. {PER_FONT_CAP} por fuente). Afina filtros para ver más."
     )
 
 st.divider()
