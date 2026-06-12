@@ -1,6 +1,7 @@
 """Pàgina d'inici: hero amb número-xoc + tesi vigent, KPIs, Pols diari, cards de
 navegació per dimensió, conclusions executives, butlletí."""
 import json
+import re
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -25,17 +26,40 @@ def load_data(name):
 
 @st.cache_data(ttl=3600)
 def load_tesi(sig=None):
-    # `sig` (mida, mtime del fitxer) busca la caché: quan el mirall reescriu
-    # tesi_vigent.json a cada enviament, la home reflecteix la tesi nova sense
-    # esperar el TTL ni un reinici.
-    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tesi_vigent.json")
-    if not os.path.exists(p):
-        return None
+    # La tesi vigent de la home = titular de l'ÚLTIMA edició del Pulso, llegit
+    # directament de l'arxiu mirall (data/newsletter/semana-*.md) — la MATEIXA
+    # font que L_Lecturas. Així home i Pulso no poden divergir mai. Abans depenia
+    # de tesi_vigent.json, que una recuperació manual d'edició (enviament via
+    # Brevo que salta mirror.py) podia deixar enrere. `sig` = llista d'edicions:
+    # quan n'entra una de nova, la caché es refresca a l'instant.
+    ndir = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
     try:
-        with open(p, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
+        mds = sorted(
+            (f for f in os.listdir(ndir)
+             if f.startswith("semana-") and f.endswith(".md")),
+            reverse=True,
+        )
+    except OSError:
         return None
+    for fname in mds:
+        mdate = re.match(r"semana-(\d{4}-\d{2}-\d{2})\.md$", fname)
+        if not mdate:
+            continue
+        try:
+            with open(os.path.join(ndir, fname), "r", encoding="utf-8") as f:
+                text = f.read()
+        except OSError:
+            continue
+        mt = re.search(r"(?m)^\*\*Titular:\*\*\s*(.+)$", text)
+        if not mt:
+            continue
+        return {
+            "titol": mt.group(1).strip(),
+            "data_publicacio": mdate.group(1),
+            "autor": "Observatorio del Comercio · J3B3 Consulting",
+            "enllac_pulso": None,
+        }
+    return None
 
 df_pib = load_data("pib_vab")
 df_empreses = load_data("empreses")
@@ -106,11 +130,13 @@ if not _pulse_fresc and not df_icm.empty and "ambit" in df_icm.columns:
 
 # ─── HERO: NÚMERO-XOC (esquerra) + TESI VIGENT (dreta) ─────────
 
-_tesi_json_path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "tesi_vigent.json")
-_tesi = load_tesi(
-    (os.path.getsize(_tesi_json_path), int(os.path.getmtime(_tesi_json_path)))
-    if os.path.exists(_tesi_json_path) else None
-)
+_ndir = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
+try:
+    _sig = tuple(sorted(f for f in os.listdir(_ndir)
+                        if f.startswith("semana-") and f.endswith(".md")))
+except OSError:
+    _sig = ()
+_tesi = load_tesi(_sig)
 _tesi_titol = None
 _tesi_data = None
 _tesi_autor = "Observatorio del Comercio · J3B3 Consulting"
