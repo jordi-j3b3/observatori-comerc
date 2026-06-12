@@ -62,6 +62,30 @@ FEEDS = [
      "https://ccam.gencat.cat/ca/actualitat/rss/index.html",
      "institucional", "institucional", False),
 
+    # ── Associacions del sector (2026-06-12) ──
+    # ANGED i APRESCO tenen RSS directe (verificat 200). AGECU i ANCECO bloquegen
+    # el bot (403) i s'ingereixen via Google News: AGECU per site: (blog actiu de
+    # comerç urbà, filtrat per keywords); ANCECO per nom (sense RSS, baix volum).
+    # Filtrem amb keywords els que poden portar contingut corporatiu no-retail.
+    ("anged",
+     "ANGED — Grans empreses de distribució",
+     "https://anged.es/feed/",
+     "multisector", "sectorial", True),
+    ("apresco",
+     "APRESCO — Propietaris d'espais comercials",
+     "https://www.apresco.es/feed/",
+     "multisector", "sectorial", True),
+    ("google_agecu",
+     "AGECU — Gerència de centres urbans (via Google News)",
+     "https://news.google.com/rss/search?q=site%3Aagecu.es&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "sectorial", True),
+    ("google_anceco",
+     "ANCECO — Centrals de compra (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=%22ANCECO%22+(%22centrales+de+compra%22+OR+%22central+de+compras%22)"
+     "&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "sectorial", False),
+
     # Google News com a substitut de feeds amb anti-bot (Modaes, El Economista,
     # Viaempresa). Tots filtren per KEYWORDS i ANTI_KEYWORDS per evitar drift
     # cap a temàtiques no-retail (energia, agro, etc.).
@@ -93,10 +117,9 @@ FEEDS = [
      "https://news.google.com/rss/search?q=site%3Ainforetail.es&hl=es-ES&gl=ES&ceid=ES:es",
      "multisector", "sectorial", False),
 
-    ("google_preferente",
-     "Preferente (via Google News)",
-     "https://news.google.com/rss/search?q=site%3Apreferente.com&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "sectorial", False),
+    # Preferente RETIRAT (2026-06-12): és premsa turística/hotelera; les seves
+    # notícies no aporten valor al resum de comerç al detall. Es manté
+    # preferente.com a _COVERED_DOMAINS perquè tampoc aflori via google_retail.
 
     ("google_elconfidencial",
      "El Confidencial — Economia (via Google News)",
@@ -349,8 +372,12 @@ _COVERED_DOMAINS = (
     # (b) editors retirats per reserva de mineria de dades (no reintroduir)
     "expansion.com", "lavanguardia.com", "cincodias.elpais.com", "elpais.com", "alimarket.es",
     "inforetail.es",      # via google_inforetail
-    "preferente.com",     # via google_preferente
+    "preferente.com",     # suprimit (premsa turística, no aporta valor; 2026-06-12)
     "elconfidencial.com", # via google_elconfidencial
+    "anged.es",           # feed directe propi
+    "apresco.es",         # feed directe propi
+    "agecu.es",           # via google_agecu
+    "anceco.com",         # via google_anceco
 )
 # Google News posa la font com a sufix del títol: "Titular - domini.com".
 _TITLE_SRC_RE = re.compile(r"\s[-–]\s([\w.\-]+\.\w{2,})\s*$")

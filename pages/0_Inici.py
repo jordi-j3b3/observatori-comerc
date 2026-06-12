@@ -5,11 +5,10 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os, sys
-from datetime import datetime, date, timedelta
-from io import BytesIO
+from datetime import date
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, fnum, fpct, cagr,
+from style import (inject_css, setup_lang, page_header, fnum, fpct,
                    page_meta, newsletter_form, highlight_expander)
 
 inject_css()
@@ -137,7 +136,10 @@ if _tesi:
         _tesi_data = None
 
 _avui = date.today()
-_tesi_obsoleta = (_tesi_data is None) or ((_avui - _tesi_data).days > 10)
+# Una tesi editorial datada no caduca als 10 dies: es mostra sempre l'última
+# disponible amb la seva data (el lector jutja la vigència). Només es considera
+# "absent" si no hi ha tesi o data vàlida; en aquest cas no s'omple amb soroll.
+_tesi_obsoleta = (_tesi_data is None)
 
 hero_l, hero_r = st.columns([3, 2], gap="large")
 
@@ -269,82 +271,24 @@ with hero_r:
                    else "Leer el Pulso de la semana →"),
         )
     else:
-        # Tesi obsoleta/absent: en lloc d'un "aviat disponible" gris,
-        # mostrem 3 dades calentes del cache (sense inventar text).
-        _hot_lines = []
-        # 1) Pols diari 30d (només si és fresc; si no, l'ICM ja entra a sota)
-        if _pulse_fresc:
-            _lbl_pd = ("Pols 30d (vendes diàries grans empreses)"
-                       if _ca else "Pulso 30d (ventas diarias grandes empresas)")
-            _hot_lines.append((_lbl_pd, fpct(_pulse["avg_30"], 1)))
-        elif _icm_hero is not None:
-            _lbl_icm = ("Comerç al detall · ICM YoY"
-                        if _ca else "Comercio minorista · ICM YoY")
-            _hot_lines.append((_lbl_icm, fpct(_icm_hero["valor"], 1)))
-        # 2) ICM Grandes Superficies última var_anual
-        if not df_distrib.empty and "modo" in df_distrib.columns:
-            _d = df_distrib[(df_distrib["tipus"] == "real") &
-                            (df_distrib["indicador"] == "var_anual") &
-                            (df_distrib["modo"] == "Grandes Superficies")].copy()
-            _d["data"] = pd.to_datetime(_d["data"], errors="coerce")
-            _d = _d.dropna(subset=["data", "valor"]).sort_values("data")
-            if not _d.empty:
-                _last = _d.iloc[-1]
-                _lbl_gs = ("Grans superfícies · ICM YoY"
-                           if _ca else "Grandes Superficies · ICM YoY")
-                _hot_lines.append((_lbl_gs, fpct(float(_last["valor"]), 1)))
-        # 3) Eurostat ES vs UE-27, última diferència
-        if not df_eu_m.empty and "yoy" in df_eu_m.columns:
-            _eu_last_mes = df_eu_m["periode"].max()
-            _es = df_eu_m[(df_eu_m["pais_codi"] == "ES") &
-                          (df_eu_m["periode"] == _eu_last_mes)]
-            _ue = df_eu_m[(df_eu_m["pais_codi"] == "EU27_2020") &
-                          (df_eu_m["periode"] == _eu_last_mes)]
-            if not _es.empty and not _ue.empty:
-                _es_v = float(_es.iloc[0]["yoy"]) if pd.notna(_es.iloc[0]["yoy"]) else None
-                _ue_v = float(_ue.iloc[0]["yoy"]) if pd.notna(_ue.iloc[0]["yoy"]) else None
-                if _es_v is not None and _ue_v is not None:
-                    _diff = _es_v - _ue_v
-                    _lbl_eu = ("ES vs UE-27 (Eurostat YoY)"
-                               if _ca else "ES vs UE-27 (Eurostat YoY)")
-                    _hot_lines.append((_lbl_eu,
-                                        f"{fpct(_es_v, 1)} vs {fpct(_ue_v, 1)} ({fpct(_diff, 1)})"))
-
-        if _hot_lines:
-            _hot_html = "".join(
-                f"<div style='display:flex; justify-content:space-between; "
-                f"padding:6px 0; border-bottom:1px solid rgba(0,51,102,0.08); "
-                f"font-size:12.5px;'>"
-                f"<span style='color:#6a6a6a;'>{lbl}</span>"
-                f"<span style='font-family:Archivo Narrow,sans-serif; font-weight:700; "
-                f"color:#003366;'>{val}</span></div>"
-                for lbl, val in _hot_lines
-            )
-        else:
-            _hot_html = ""
-
-        _pending_lbl = ("Pendent d'actualitzar" if _ca else "Pendiente de actualizar")
-        _live_lbl = ("Mentrestant, dades del cache:" if _ca
-                     else "Mientras tanto, datos del caché:")
+        # Sense tesi disponible (cas excepcional): bloc net amb l'enllaç al Pulso,
+        # sense "pendent d'actualitzar" ni dades de cache (eren soroll).
         st.markdown(
             f"""
-            <div style="background:rgba(0,51,102,0.02); border-top:3px solid #c0c0c0;
-                        padding:16px 18px 12px 18px; margin-top:18px;
-                        font-family:'Inter',sans-serif;">
+            <div style="background:#ffffff; border-top:3px solid #003366;
+                        padding:18px 18px 14px 18px; margin-top:18px;
+                        font-family:'Inter',sans-serif;
+                        background-color:rgba(0,51,102,0.03);">
                 <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
                             font-weight:700; text-transform:uppercase;
-                            color:#6a6a6a; margin-bottom:4px;">
+                            color:#003366; margin-bottom:10px;">
                     {_eyebrow_r}
                 </div>
-                <div style="color:#6a6a6a; font-size:12.5px; margin-bottom:12px;">
-                    {_pending_lbl}
+                <div style="color:#003366; font-size:15px; font-weight:600;
+                            line-height:1.35; font-family:'Archivo Narrow',sans-serif;">
+                    {"La lectura de la setmana, al Pulso." if _ca
+                     else "La lectura de la semana, en el Pulso."}
                 </div>
-                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.72rem;
-                            font-weight:700; text-transform:uppercase; color:#6a6a6a;
-                            opacity:0.7; margin-bottom:6px;">
-                    {_live_lbl}
-                </div>
-                {_hot_html}
             </div>
             """,
             unsafe_allow_html=True,
@@ -709,225 +653,6 @@ with highlight_expander(
 
 st.divider()
 newsletter_form(st.session_state.lang)
-
-# ─── BOTÓ DESCÀRREGA EXCEL (al peu) ───────────────────────────
-
-
-def _build_excel():
-    buf = BytesIO()
-    wb = None
-    try:
-        import xlsxwriter
-        wb = xlsxwriter.Workbook(buf, {"in_memory": True, "nan_inf_to_errors": True})
-    except ImportError:
-        return None
-
-    hdr_fmt = wb.add_format({"bold": True, "bg_color": "#003366", "font_color": "white",
-                              "border": 1, "font_name": "Calibri", "font_size": 11})
-    cell_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11})
-    num_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "#,##0"})
-    pct_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "0.00%"})
-    dec_fmt = wb.add_format({"border": 1, "font_name": "Calibri", "font_size": 11, "num_format": "#,##0.0"})
-
-    def _write_header(ws, cols, row=0):
-        for c, name in enumerate(cols):
-            ws.write(row, c, name, hdr_fmt)
-
-    # --- 1. PIB i VAB ---
-    if not df_pib.empty:
-        ws = wb.add_worksheet("PIB i VAB")
-        cols = ["Any", "VAB nominal (M EUR)", "VAB real (M EUR)", "Pes s/ PIB"]
-        _write_header(ws, cols)
-        rows_pib = df_pib.sort_values("any")
-        for i, (_, r) in enumerate(rows_pib.iterrows(), 1):
-            ws.write(i, 0, int(r["any"]), cell_fmt)
-            ws.write(i, 1, r.get("vab_cnae47_corrents"), num_fmt)
-            ws.write(i, 2, r.get("vab_cnae47_constants"), num_fmt)
-            ws.write(i, 3, r.get("pes_cnae47"), pct_fmt)
-        n = len(rows_pib)
-        ws.set_column(0, 0, 8)
-        ws.set_column(1, 2, 20)
-        ws.set_column(3, 3, 14)
-
-        chart = wb.add_chart({"type": "line"})
-        chart.add_series({"name": "VAB nominal", "categories": ["PIB i VAB", 1, 0, n, 0],
-                          "values": ["PIB i VAB", 1, 1, n, 1], "line": {"color": "#003366", "width": 2.5}})
-        chart.add_series({"name": "VAB real", "categories": ["PIB i VAB", 1, 0, n, 0],
-                          "values": ["PIB i VAB", 1, 2, n, 2], "line": {"color": "#c0392b", "width": 2.5}})
-        chart.set_title({"name": "VAB CNAE 47 (M EUR)"})
-        chart.set_x_axis({"name": "Any"})
-        chart.set_y_axis({"name": "M EUR"})
-        chart.set_size({"width": 620, "height": 380})
-        chart.set_legend({"position": "bottom"})
-        ws.insert_chart("F2", chart)
-
-    # --- 2. Empreses ---
-    if not df_empreses.empty:
-        ws = wb.add_worksheet("Empreses")
-        cols = ["Territori", "Any", "Empreses", "Poblacio", "Empreses/1.000 hab."]
-        _write_header(ws, cols)
-        rows_emp = df_empreses.sort_values(["territori", "any"])
-        for i, (_, r) in enumerate(rows_emp.iterrows(), 1):
-            ws.write(i, 0, r["territori"], cell_fmt)
-            ws.write(i, 1, int(r["any"]), cell_fmt)
-            ws.write(i, 2, int(r["empreses"]) if pd.notna(r["empreses"]) else None, num_fmt)
-            ws.write(i, 3, int(r["poblacio"]) if pd.notna(r.get("poblacio")) else None, num_fmt)
-            ws.write(i, 4, r.get("empreses_per_1000hab"), dec_fmt)
-        ws.set_column(0, 0, 28)
-        ws.set_column(1, 1, 8)
-        ws.set_column(2, 4, 18)
-
-        esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
-        if len(esp) >= 2:
-            ws2_name = "Empreses_ES"
-            ws2 = wb.add_worksheet(ws2_name)
-            _write_header(ws2, ["Any", "Empreses"])
-            for i, (_, r) in enumerate(esp.iterrows(), 1):
-                ws2.write(i, 0, int(r["any"]), cell_fmt)
-                ws2.write(i, 1, int(r["empreses"]), num_fmt)
-            ne = len(esp)
-            chart = wb.add_chart({"type": "line"})
-            chart.add_series({"name": "Empreses Espanya", "categories": [ws2_name, 1, 0, ne, 0],
-                              "values": [ws2_name, 1, 1, ne, 1], "line": {"color": "#003366", "width": 2.5}})
-            chart.set_title({"name": "Empreses CNAE 47 - Espanya"})
-            chart.set_size({"width": 620, "height": 380})
-            chart.set_legend({"position": "none"})
-            ws2.insert_chart("D2", chart)
-            ws2.set_column(0, 0, 8)
-            ws2.set_column(1, 1, 14)
-
-    # --- 3. Productivitat ---
-    if not df_prod.empty:
-        ws = wb.add_worksheet("Productivitat")
-        cols = ["Any", "Personal ocupat", "Hores treballades", "Productivitat (EUR/h)",
-                "Quota salarial", "Cost laboral/ocupat"]
-        _write_header(ws, cols)
-        rows_p = df_prod.sort_values("any")
-        for i, (_, r) in enumerate(rows_p.iterrows(), 1):
-            ws.write(i, 0, int(r["any"]), cell_fmt)
-            ws.write(i, 1, r.get("personal_ocupat"), num_fmt)
-            ws.write(i, 2, r.get("hores_treballades"), num_fmt)
-            ws.write(i, 3, r.get("productivitat_va_hora"), dec_fmt)
-            ws.write(i, 4, r.get("quota_salarial"), pct_fmt)
-            ws.write(i, 5, r.get("cost_laboral_per_ocupat"), num_fmt)
-        np_ = len(rows_p)
-        ws.set_column(0, 0, 8)
-        ws.set_column(1, 5, 22)
-
-        chart = wb.add_chart({"type": "line"})
-        chart.add_series({"name": "Productivitat (EUR/h)", "categories": ["Productivitat", 1, 0, np_, 0],
-                          "values": ["Productivitat", 1, 3, np_, 3], "line": {"color": "#003366", "width": 2.5}})
-        chart.set_title({"name": "Productivitat VA/hora (EUR)"})
-        chart.set_size({"width": 620, "height": 380})
-        chart.set_legend({"position": "none"})
-        ws.insert_chart("H2", chart)
-
-    # --- 4. E-commerce ---
-    if not df_ecommerce.empty:
-        ws = wb.add_worksheet("E-commerce")
-        cols = ["Any", "E-commerce total (EUR)", "E-commerce CNAE 47 (EUR)", "Pes CNAE 47"]
-        _write_header(ws, cols)
-        rows_ec = df_ecommerce.sort_values("any")
-        for i, (_, r) in enumerate(rows_ec.iterrows(), 1):
-            ws.write(i, 0, int(r["any"]), cell_fmt)
-            ws.write(i, 1, r.get("ecommerce_total_eur"), num_fmt)
-            ws.write(i, 2, r.get("ecommerce_cnae47_eur"), num_fmt)
-            ws.write(i, 3, r.get("pes_cnae47_ecommerce"), pct_fmt)
-        nec = len(rows_ec)
-        ws.set_column(0, 0, 8)
-        ws.set_column(1, 2, 24)
-        ws.set_column(3, 3, 14)
-
-        chart = wb.add_chart({"type": "column"})
-        chart.add_series({"name": "E-commerce CNAE 47", "categories": ["E-commerce", 1, 0, nec, 0],
-                          "values": ["E-commerce", 1, 2, nec, 2], "fill": {"color": "#003366"}})
-        chart.set_title({"name": "E-commerce CNAE 47 (EUR)"})
-        chart.set_size({"width": 620, "height": 380})
-        chart.set_legend({"position": "none"})
-        ws.insert_chart("F2", chart)
-
-    # --- 5. Territori ---
-    if not df_territori.empty:
-        ws = wb.add_worksheet("Territori CCAA")
-        cols = ["Territori", "Any", "Locals", "Personal ocupat", "VAB estimat (EUR)",
-                "VAB Eurostat (EUR)", "Pes CNAE 47/PIB"]
-        _write_header(ws, cols)
-        rows_t = df_territori.sort_values(["territori", "any"])
-        for i, (_, r) in enumerate(rows_t.iterrows(), 1):
-            ws.write(i, 0, r["territori"], cell_fmt)
-            ws.write(i, 1, int(r["any"]), cell_fmt)
-            ws.write(i, 2, r.get("locals"), num_fmt)
-            ws.write(i, 3, r.get("personal_ocupat"), num_fmt)
-            ws.write(i, 4, r.get("vab_estimat"), num_fmt)
-            ws.write(i, 5, r.get("vab_eurostat"), num_fmt)
-            ws.write(i, 6, r.get("pes_cnae47_pib"), pct_fmt)
-        ws.set_column(0, 0, 28)
-        ws.set_column(1, 1, 8)
-        ws.set_column(2, 6, 20)
-
-        terr_last = df_territori[
-            (df_territori["territori"] != "espanya") &
-            df_territori["pes_cnae47_pib"].notna()
-        ]
-        if not terr_last.empty:
-            yr_max = terr_last["any"].max()
-            tdata = terr_last[terr_last["any"] == yr_max].sort_values("pes_cnae47_pib", ascending=False)
-            ws2_name = "Pes CCAA"
-            ws2 = wb.add_worksheet(ws2_name)
-            _write_header(ws2, ["CCAA", "Pes CNAE 47/PIB"])
-            for i, (_, r) in enumerate(tdata.iterrows(), 1):
-                ws2.write(i, 0, r["territori"], cell_fmt)
-                ws2.write(i, 1, r["pes_cnae47_pib"], pct_fmt)
-            nt = len(tdata)
-            ws2.set_column(0, 0, 28)
-            ws2.set_column(1, 1, 18)
-
-            chart = wb.add_chart({"type": "bar"})
-            chart.add_series({"name": f"Pes CNAE 47/PIB ({int(yr_max)})",
-                              "categories": [ws2_name, 1, 0, nt, 0],
-                              "values": [ws2_name, 1, 1, nt, 1],
-                              "fill": {"color": "#003366"}})
-            chart.set_title({"name": f"Pes del comerç al detall sobre el PIB ({int(yr_max)})"})
-            chart.set_size({"width": 700, "height": 480})
-            chart.set_legend({"position": "none"})
-            chart.set_y_axis({"reverse": True})
-            ws2.insert_chart("D2", chart)
-
-    # --- 6. Europa ---
-    if not df_europa.empty:
-        ws = wb.add_worksheet("Europa")
-        cols = ["Pais", "Codi", "Any", "VAB CNAE 47 (M EUR)", "VAB total (M EUR)", "Pes CNAE 47"]
-        _write_header(ws, cols)
-        rows_eu = df_europa.sort_values(["pais", "any"])
-        for i, (_, r) in enumerate(rows_eu.iterrows(), 1):
-            ws.write(i, 0, r.get("pais", ""), cell_fmt)
-            ws.write(i, 1, r.get("pais_codi", ""), cell_fmt)
-            ws.write(i, 2, int(r["any"]), cell_fmt)
-            ws.write(i, 3, r.get("vab_meur"), num_fmt)
-            ws.write(i, 4, r.get("vab_total_meur"), num_fmt)
-            ws.write(i, 5, r.get("pes_cnae47"), pct_fmt)
-        ws.set_column(0, 0, 18)
-        ws.set_column(1, 1, 8)
-        ws.set_column(2, 2, 8)
-        ws.set_column(3, 5, 22)
-
-    wb.close()
-    buf.seek(0)
-    return buf
-
-
-st.divider()
-_excel_buf = _build_excel()
-if _excel_buf:
-    st.download_button(
-        label=("Descarregar Excel amb totes les dades" if _ca
-               else "Descargar Excel con todos los datos"),
-        data=_excel_buf,
-        file_name="observatori_comerc_detall.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-else:
-    st.info("xlsxwriter no disponible" if _ca else "xlsxwriter no disponible")
 
 # ─── SIGNATURA JBJ ─────────────────────────────────────────────
 
