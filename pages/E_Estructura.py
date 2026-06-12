@@ -100,10 +100,11 @@ def _proj_bridge(col):
     return xs, ys
 
 
-def _line(fig, x, y, name, color, dash=None, width=3):
+def _line(fig, x, y, name, color, dash=None, width=3, hover=None):
     fig.add_trace(go.Scatter(
         x=x, y=y, name=name, mode="lines",
-        line=dict(color=color, width=width, dash=dash)))
+        line=dict(color=color, width=width, dash=dash),
+        hovertemplate=f"{hover or name}: %{{y:.1f}} %<extra></extra>"))
 
 
 tab_sint, tab_bs, tab_on = st.tabs([
@@ -180,7 +181,8 @@ with tab_bs:
     _line(fig, _bh["any"], _bh["bens_share"],
           "Béns" if _ca else "Bienes", PURPLE)
     bx, by = _proj_bridge("bens_share")
-    _line(fig, bx, by, "Béns (projecció)" if _ca else "Bienes (proyección)", PURPLE, dash="dash")
+    _line(fig, bx, by, "Béns (proj.)" if _ca else "Bienes (proy.)", PURPLE, dash="dash",
+          hover="Béns, projecció" if _ca else "Bienes, proyección")
     _sh = hist.dropna(subset=["serveis_share"])
     _line(fig, _sh["any"], _sh["serveis_share"],
           "Serveis" if _ca else "Servicios", GRAY, width=2)
@@ -188,11 +190,15 @@ with tab_bs:
     if not preds.empty:
         fig.add_trace(go.Scatter(
             x=preds["horitzo"], y=preds["valor"], mode="markers",
-            name=("Predicció registrada (25/05/2026)" if _ca
-                  else "Predicción registrada (25/05/2026)"),
+            name=("Predicció" if _ca else "Predicción"),
             marker=dict(color=RED, size=10, symbol="diamond"),
+            customdata=preds["banda"],
             error_y=dict(type="data", array=preds["banda"], visible=True,
-                         color=RED, thickness=1.5, width=6)))
+                         color=RED, thickness=1.5, width=6),
+            hovertemplate=(
+                "Predicció registrada: %{y:.1f} % ± %{customdata:.1f}<extra></extra>"
+                if _ca else
+                "Predicción registrada: %{y:.1f} % ± %{customdata:.1f}<extra></extra>")))
     # Anotació del bot COVID
     _covid = hist[hist["any"] == 2020]
     if not _covid.empty:
@@ -225,21 +231,31 @@ with tab_bs:
         st.markdown("**Predicció registrada i falsable**" if _ca
                     else "**Predicción registrada y falsable**")
         _flat = float(preds["benchmark_flat"].iloc[0])
-        _dpred = preds["data_prediccio"].iloc[0]
+        _mesos = (["gener", "febrer", "març", "abril", "maig", "juny", "juliol",
+                   "agost", "setembre", "octubre", "novembre", "desembre"] if _ca else
+                  ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+                   "agosto", "septiembre", "octubre", "noviembre", "diciembre"])
+        try:
+            _y, _m, _d = preds["data_prediccio"].iloc[0].split("-")
+            _dpred = f"{int(_d)} de {_mesos[int(_m) - 1]} de {_y}"
+        except (ValueError, IndexError):
+            _dpred = preds["data_prediccio"].iloc[0]
         st.caption(
-            (f"El {_dpred} vam registrar aquests valors com a predicció datada i "
-             f"falsable (rombes vermells al gràfic, amb la seva banda). Es resolen "
-             f"amb Eurostat (nama_10_fcs) a mesura que es publica cada exercici. El "
-             f"<em>benchmark</em> a batre és el «sense canvi» ({_flat:.1f} %): el model "
-             f"encerta si la realitat s'acosta més a la trajectòria decreixent que a la "
-             f"hipòtesi que la quota de béns es manté plana."
+            (f"**Què vol dir això?** El {_dpred}, abans de saber com aniria, vam deixar "
+             f"per escrit quant esperem que pesin els béns dins la despesa de les llars "
+             f"el 2026, 2027, 2030 i 2035 (els rombes vermells del gràfic, cadascun amb "
+             f"el seu marge). Cada any, quan Eurostat publiqui la xifra real, podràs "
+             f"comprovar aquí si vam encertar. I la prova és exigent: només comptarà com "
+             f"a encert si la realitat segueix la **baixada** que anticipem, no la sortida "
+             f"fàcil que tot es quedi com avui ({_flat:.1f} %)."
              if _ca else
-             f"El {_dpred} registramos estos valores como predicción fechada y "
-             f"falsable (rombos rojos en el gráfico, con su banda). Se resuelven con "
-             f"Eurostat (nama_10_fcs) a medida que se publica cada ejercicio. El "
-             f"<em>benchmark</em> a batir es el «sin cambio» ({_flat:.1f} %): el modelo "
-             f"acierta si la realidad se acerca más a la trayectoria decreciente que a "
-             f"la hipótesis de que la cuota de bienes se mantiene plana."),
+             f"**¿Qué significa esto?** El {_dpred}, antes de saber cómo iría, dejamos "
+             f"por escrito cuánto esperamos que pesen los bienes en el gasto de los "
+             f"hogares en 2026, 2027, 2030 y 2035 (los rombos rojos del gráfico, cada "
+             f"uno con su margen). Cada año, cuando Eurostat publique la cifra real, "
+             f"podrás comprobar aquí si acertamos. Y la prueba es exigente: solo contará "
+             f"como acierto si la realidad sigue la **bajada** que anticipamos, no la "
+             f"salida fácil de que todo se quede como hoy ({_flat:.1f} %)."),
         )
         _disp = pd.DataFrame({
             ("Any" if _ca else "Año"): preds["horitzo"].astype(int),
