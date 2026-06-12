@@ -1,0 +1,12 @@
+{
+ "bens_slope_pp_any": -0.309,
+ "bens_r2": 0.914,
+ "online_slope_pp_any": 0.583,
+ "online_r2": 0.98,
+ "ultim_any_real": 2024,
+ "covid_exclos": [
+  2020,
+  2021,
+  2022
+ ]
+}

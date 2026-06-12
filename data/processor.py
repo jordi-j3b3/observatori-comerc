@@ -1636,6 +1636,97 @@ def record_dataset_updates():
     print(f"  Registre d'actualitzacions: {nous} novetat(s) detectada(es)")
 
 
+def process_estructura_comerc():
+    """Trajectòria estructural del comerç (ES): el DOBLE PINÇAMENT.
+
+    Quota del comerç físic de béns sobre el consum de les llars =
+        quota de béns (↓, els serveis guanyen) × (1 − penetració online ↑).
+    Dues forces lentes i PROJECTABLES (a diferència del soroll mensual):
+      - quota de béns: Eurostat nama_10_fcs (fetch_estructura_consum).
+      - penetració online: e-commerce CNAE47 / consum de béns (cache ecommerce).
+    El COVID 2020-2022 distorsiona (serveis suprimits → béns inflats) i s'exclou
+    de l'ajust. Projecció lineal + log-odds (banda) fins 2035.
+    Escriu estructura_comerc.csv + estructura_comerc_meta.json.
+    """
+    import numpy as np
+    COVID = {2020, 2021, 2022}
+    HORIZON = list(range(2026, 2036))
+
+    print("  Font: Eurostat nama_10_fcs (consum de les llars per durabilitat)")
+    try:
+        est = eurostat.fetch_estructura_consum()
+    except Exception as e:
+        est = pd.DataFrame()
+        print(f"  Error Eurostat nama_10_fcs: {e}")
+    if est.empty:
+        est = load_cache("estructura_consum")
+        if not est.empty:
+            _record_status("estructura_comerc", "fallback", "cache", "Eurostat buit")
+        else:
+            _record_status("estructura_comerc", "error", "cap", "Eurostat nama_10_fcs buit")
+            return pd.DataFrame()
+    else:
+        save_cache(est, "estructura_consum")
+        _record_status("estructura_comerc", "ok", "api_eurostat", f"{len(est)} files")
+
+    es = est[est["pais_codi"] == "ES"][["any", "bens_meur", "bens_share"]].copy()
+    ec = load_cache("ecommerce")
+    ec = ec[ec["any"] < 2025][["any", "ecommerce_cnae47_eur"]]  # 2025 incomplet
+    m = es.merge(ec, on="any")
+    m["online_pen"] = m["ecommerce_cnae47_eur"] / 1e6 / m["bens_meur"] * 100
+
+    def fit(years, vals):
+        A = np.column_stack([np.ones(len(years)), years])
+        bl, *_ = np.linalg.lstsq(A, vals, rcond=None)
+        p = np.clip(vals / 100, 1e-4, 1 - 1e-4)
+        bz, *_ = np.linalg.lstsq(A, np.log(p / (1 - p)), rcond=None)
+        lin = lambda y: float(bl[0] + bl[1] * y)
+        logit = lambda y: float(100 / (1 + np.exp(-(bz[0] + bz[1] * y))))
+        r2 = 1 - ((vals - A @ bl) ** 2).sum() / ((vals - vals.mean()) ** 2).sum()
+        return lin, logit, float(bl[1]), float(r2)
+
+    g_tr = es[~es["any"].isin(COVID)]
+    o_tr = m[~m["any"].isin(COVID)]
+    g_lin, g_log, g_sl, g_r2 = fit(g_tr["any"].values.astype(float),
+                                   g_tr["bens_share"].values.astype(float))
+    o_lin, o_log, o_sl, o_r2 = fit(o_tr["any"].values.astype(float),
+                                   o_tr["online_pen"].values.astype(float))
+
+    def fisic(y, mode):
+        g = (g_lin if mode == "lin" else g_log)(y)
+        o = (o_lin if mode == "lin" else o_log)(y)
+        return g * (1 - o / 100)
+
+    rows = []
+    for _, r in m.iterrows():
+        rows.append({"any": int(r["any"]), "tipus": "historic",
+                     "bens_share": round(float(r["bens_share"]), 2),
+                     "serveis_share": round(100 - float(r["bens_share"]), 2),
+                     "online_pen": round(float(r["online_pen"]), 2),
+                     "comerc_fisic_share": round(float(r["bens_share"]) * (1 - float(r["online_pen"]) / 100), 2),
+                     "comerc_fisic_logodds": ""})
+    for y in HORIZON:
+        rows.append({"any": y, "tipus": "projeccio",
+                     "bens_share": round(g_lin(y), 2),
+                     "serveis_share": round(100 - g_lin(y), 2),
+                     "online_pen": round(o_lin(y), 2),
+                     "comerc_fisic_share": round(fisic(y, "lin"), 2),
+                     "comerc_fisic_logodds": round(fisic(y, "log"), 2)})
+    df = pd.DataFrame(rows)
+    save_cache(df, "estructura_comerc")
+
+    meta = {
+        "bens_slope_pp_any": round(g_sl, 3), "bens_r2": round(g_r2, 3),
+        "online_slope_pp_any": round(o_sl, 3), "online_r2": round(o_r2, 3),
+        "ultim_any_real": int(m["any"].max()),
+        "covid_exclos": sorted(COVID),
+    }
+    with open(os.path.join(CACHE_DIR, "estructura_comerc_meta.json"), "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=1)
+    print(f"  béns {g_sl:+.2f}pp/any (R²{g_r2:.2f}) · online {o_sl:+.2f}pp/any (R²{o_r2:.2f})")
+    return df
+
+
 def process_all():
     """Executa tot el processament."""
     print("Processant dades...")
@@ -1691,6 +1782,9 @@ def process_all():
 
     print("\n10. Estructura empresarial G47 (Eurostat bd_size):")
     process_estructura_retail()
+
+    print("\n10b. Trajectòria estructural del comerç (béns→serveis × online):")
+    process_estructura_comerc()
 
     print("\n11. Registrant data actualitzacio:")
     save_last_update()

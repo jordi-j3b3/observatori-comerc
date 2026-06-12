@@ -81,6 +81,10 @@ p_ec = st.Page(
     "pages/5_Ecommerce.py",
     title=("Digitalització" if _ca else "Digitalización"),
 )
+p_estructura = st.Page(
+    "pages/E_Estructura.py",
+    title=("Trajectòria estructural" if _ca else "Trayectoria estructural"),
+)
 p_europa = st.Page(
     "pages/7_Comparativa_Europa.py",
     title=("Comparativa Europa" if _ca else "Comparativa Europa"),
@@ -115,7 +119,7 @@ nav = {
     SEC_HOME: [p_inici],
     SEC_EDITORIAL: [p_lecturas],
     SEC_PULSO: [p_pols, p_icm],
-    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_europa],
+    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_estructura, p_europa],
     SEC_DETALL: [p_subs, p_lideres, p_terr],
     SEC_RECURSOS: [p_metod, p_premsa],
 }

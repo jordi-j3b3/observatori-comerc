@@ -536,6 +536,52 @@ def fetch_bsd_survival():
     return df[["pais", "pais_codi", "any", "age", "survival_pc"]].dropna()
 
 
+def fetch_estructura_consum():
+    """
+    nama_10_fcs: despesa en consum final de les llars per durabilitat (preus
+    corrents, M EUR). Permet calcular la quota de BÉNS vs SERVEIS del consum,
+    base de la tesi estructural ("el comerç es redistribueix, no s'enfonsa").
+      - P311_S14 béns duradors · P312_S14 semiduradors · P313_S14 no duradors
+      - P314_S14 serveis
+    Béns = P311+P312+P313; Serveis = P314. Retorna ES i EU/EA per a comparativa.
+    """
+    items = ["P311_S14", "P312_S14", "P313_S14", "P314_S14"]
+    params = [("unit", "CP_MEUR"), ("geo", "ES"), ("geo", "EA20")]
+    for it in items:
+        params.append(("na_item", it))
+
+    data = _fetch_eurostat("nama_10_fcs", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "any", "TIME_PERIOD": "any", "geo": "pais_codi"})
+    df["any"] = pd.to_numeric(df["any"], errors="coerce")
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    df = df.dropna(subset=["any", "valor", "na_item"])
+
+    rows = []
+    for (codi, any_), g in df.groupby(["pais_codi", "any"]):
+        v = g.set_index("na_item")["valor"]
+        if not set(items) <= set(v.index):
+            continue
+        bens = float(v[["P311_S14", "P312_S14", "P313_S14"]].sum())
+        serveis = float(v["P314_S14"])
+        tot = bens + serveis
+        if tot <= 0:
+            continue
+        rows.append({
+            "pais_codi": codi,
+            "pais": COUNTRY_NAMES.get(codi, codi),
+            "any": int(any_),
+            "bens_meur": round(bens, 1),
+            "serveis_meur": round(serveis, 1),
+            "bens_share": round(bens / tot * 100, 2),
+            "serveis_share": round(serveis / tot * 100, 2),
+        })
+    return pd.DataFrame(rows).sort_values(["pais_codi", "any"]).reset_index(drop=True)
+
+
 if __name__ == "__main__":
     print("Testejant API Eurostat...")
 
