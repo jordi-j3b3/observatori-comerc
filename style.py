@@ -1043,6 +1043,27 @@ def inject_css():
         }
     </style>
     """, unsafe_allow_html=True)
+    _inject_analytics()
+
+
+def _inject_analytics():
+    """Injecta script d'analítica Plausible si PLAUSIBLE_DOMAIN és definit.
+
+    Activació: afegir PLAUSIBLE_DOMAIN als Secrets del Streamlit Cloud
+    (Settings → Secrets), amb el domini del dashboard com a valor
+    (p.ex. 'observatori-comerc.streamlit.app' o 'observatori.j3b3.com').
+
+    Plausible és GDPR-compliant: sense cookies, sense banner de consentiment,
+    dades agregades úniques. Pla Starter: https://plausible.io (9 €/mes).
+    """
+    domain = os.environ.get("PLAUSIBLE_DOMAIN", "").strip()
+    if not domain:
+        return
+    st.markdown(
+        f'<script defer data-domain="{domain}" '
+        f'src="https://plausible.io/js/script.js"></script>',
+        unsafe_allow_html=True,
+    )
 
 
 def page_header():

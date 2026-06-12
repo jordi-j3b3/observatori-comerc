@@ -24,6 +24,7 @@ CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
 # commit. Així ens assabentem AUTOMÀTICAMENT quan una API canvia.
 
 _FETCH_STATUS = {}
+_VALIDATION_WARNINGS = []
 
 # Fonts que han d'actualitzar-se obligatoriament des de l'API primaria cada dia.
 # Si alguna cau a cache de seguretat, el workflow ha de fer fail per avisar.
@@ -70,6 +71,24 @@ def _assert_critical_ok():
             msg = s.get("missatge", "")[:80]
             problemes.append(f"{name}: {s['estat'].upper()} via {s.get('font','?')} ({msg})")
 
+    # ── GitHub Step Summary (visible a Actions UI sense haver de buscar logs) ──
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        with open(summary_path, "a", encoding="utf-8") as f:
+            f.write("## Estat de les fonts de dades\n\n")
+            f.write("| Font | Estat | Via | Missatge |\n")
+            f.write("|------|-------|-----|----------|\n")
+            for sname, s in sorted(_FETCH_STATUS.items()):
+                icon = "✅" if s["estat"] == "ok" else ("⚠️" if s["estat"] == "fallback" else "❌")
+                f.write(f"| `{sname}` | {icon} {s['estat']} | {s.get('font','?')} "
+                        f"| {s.get('missatge','')[:80]} |\n")
+            if _VALIDATION_WARNINGS:
+                f.write("\n## Avisos de validació de contingut\n\n")
+                for w in _VALIDATION_WARNINGS:
+                    f.write(f"- ⚠️ {w}\n")
+            else:
+                f.write("\n*Sense avisos de validació de contingut.*\n")
+
     if problemes:
         print()
         print("=" * 68)
@@ -86,6 +105,68 @@ def _assert_critical_ok():
 
     print()
     print(f"  [OK] {len(CRITICAL_SOURCES)} fonts critiques actualitzades des de l'API.")
+    if _VALIDATION_WARNINGS:
+        print(f"  [AVIS] {len(_VALIDATION_WARNINGS)} avisos de validació de contingut:")
+        for w in _VALIDATION_WARNINGS:
+            print(f"    - {w}")
+
+
+def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0):
+    """Valida que una sèrie tingui prou dades i cap valor absurd.
+
+    Registra avisos a _VALIDATION_WARNINGS (no fa fallar el workflow,
+    però apareixen al Step Summary i als logs per a revisió manual).
+
+    Args:
+        df:          DataFrame a validar.
+        col:         Columna numèrica a inspeccionar.
+        name:        Nom de la font (per al log).
+        min_rows:    Mínim de files amb valor no-NaN exigit.
+        max_nan_pct: Fracció màxima de NaN tolerada (0–1).
+        max_jump:    Ratio màxim acceptable entre valors consecutius.
+                     Un salt de 10× o més és probable error de dades.
+    Returns:
+        True si la sèrie sembla vàlida; False si hi ha un problema seriós.
+    """
+    if df is None or df.empty:
+        _VALIDATION_WARNINGS.append(f"{name}/{col}: DataFrame buit")
+        return False
+    if col not in df.columns:
+        _VALIDATION_WARNINGS.append(f"{name}/{col}: columna absent al CSV")
+        return False
+
+    series = df[col]
+    n_total = len(series)
+    n_valid = int(series.notna().sum())
+
+    if n_valid < min_rows:
+        _VALIDATION_WARNINGS.append(
+            f"{name}/{col}: massa poques files ({n_valid} no-NaN de {n_total}; mínim {min_rows})"
+        )
+        return False
+
+    nan_pct = 1.0 - n_valid / n_total if n_total > 0 else 1.0
+    if nan_pct > max_nan_pct:
+        _VALIDATION_WARNINGS.append(
+            f"{name}/{col}: {nan_pct:.0%} NaN ({n_total - n_valid}/{n_total} files)"
+        )
+        return False
+
+    # Detecció de salts bruscos (possible canvi de taula o error d'escala)
+    numeric = pd.to_numeric(series, errors="coerce").dropna()
+    if len(numeric) > 1:
+        nonzero = numeric[numeric != 0]
+        if len(nonzero) > 1:
+            ratios = (nonzero / nonzero.shift(1)).abs().dropna()
+            max_ratio = float(ratios.max())
+            if max_ratio > max_jump:
+                _VALIDATION_WARNINGS.append(
+                    f"{name}/{col}: salt inesperat de {max_ratio:.1f}× entre "
+                    f"valors consecutius (possible canvi d'escala o metodologia)"
+                )
+                # Avís, no error: pot ser un canvi metodològic legítim.
+
+    return True
 
 
 def ensure_cache_dir():
@@ -503,6 +584,7 @@ def process_pib_vab():
         if col in df.columns:
             df[f"var_{col}"] = df[col].pct_change()
 
+    _is_valid_series(df, "vab_cnae47_corrents", "pib_vab")
     save_cache(df, "pib_vab")
     return df
 
@@ -1158,13 +1240,20 @@ def process_digitalitzacio_comerc():
         df = eurostat.fetch_digitalitzacio_comerc()
     except Exception as e:
         print(f"  Error API Eurostat digitalització: {e}")
-        return load_cache("digitalitzacio_comerc")
+        df_cache = load_cache("digitalitzacio_comerc")
+        _record_status("digitalitzacio_comerc", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
 
     if df.empty:
         print("  AVIS: sense dades digitalització; mantenint cache existent")
-        return load_cache("digitalitzacio_comerc")
+        df_cache = load_cache("digitalitzacio_comerc")
+        _record_status("digitalitzacio_comerc", "fallback" if not df_cache.empty else "error",
+                       "cache", "API Eurostat TIC buida")
+        return df_cache
 
     save_cache(df, "digitalitzacio_comerc")
+    _record_status("digitalitzacio_comerc", "ok", "api_eurostat", f"{len(df)} registres")
     print(f"  Digitalització comerç: {len(df)} registres")
     return df
 
@@ -1180,13 +1269,20 @@ def process_ocupacio_comerc():
         df = eurostat.fetch_ocupacio_comerc()
     except Exception as e:
         print(f"  Error API Eurostat ocupació: {e}")
-        return load_cache("ocupacio_comerc")
+        df_cache = load_cache("ocupacio_comerc")
+        _record_status("ocupacio_comerc", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
 
     if df.empty:
         print("  AVIS: sense dades ocupació LFS; mantenint cache existent")
-        return load_cache("ocupacio_comerc")
+        df_cache = load_cache("ocupacio_comerc")
+        _record_status("ocupacio_comerc", "fallback" if not df_cache.empty else "error",
+                       "cache", "API Eurostat lfsa_egan22d buida")
+        return df_cache
 
     save_cache(df, "ocupacio_comerc")
+    _record_status("ocupacio_comerc", "ok", "api_eurostat", f"{len(df)} registres")
     print(f"  Ocupació comerç (sexe/edat): {len(df)} registres")
     return df
 
@@ -1416,6 +1512,7 @@ def process_cdmge():
         _record_status("cdmge", "fallback" if not df_cache.empty else "error",
                        "cache", "API INE CDMGE buida")
         return df_cache
+    _is_valid_series(df, "valor", "cdmge")
     save_cache(df, "cdmge")
     _record_status("cdmge", "ok", "api_ine", f"{len(df)} files")
     return df
@@ -1444,6 +1541,7 @@ def process_icm():
         _record_status("icm", "fallback" if not df_cache.empty else "error",
                        "cache", "API INE ICM buida")
         return df_cache
+    _is_valid_series(df, "valor", "icm")
     save_cache(df, "icm")
     _record_status("icm", "ok", "api_ine", f"{len(df)} files")
     return df

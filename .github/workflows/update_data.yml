@@ -27,14 +27,9 @@ jobs:
             pip install openpyxl                            
 
         - name: Fetch and process data
-          run: |                                                                                                                                                                                                                                                                
+          run: |
             cd $GITHUB_WORKSPACE
-            python -c "                                                                                                                                                                                                                                                         
-            import sys                                      
-            sys.path.insert(0, '.')
-            from data.processor import process_all
-            process_all()                                                                                                                                                                                                                                                       
-            "
+            python data/processor.py
                                                                                                                                                                                                                                                                                 
         - name: Commit updated data                         
           run: |
