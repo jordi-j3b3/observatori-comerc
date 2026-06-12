@@ -1,0 +1,5 @@
+id,data_prediccio,horitzo,metrica,valor,banda,benchmark_flat,estat,valor_real,data_resolucio,font
+P011,2026-05-25,2026,Quota de béns en consum de les llars,37.8,0.5,38.2,pendent,,,Eurostat nama_10_fcs
+P012,2026-05-25,2027,Quota de béns en consum de les llars,37.5,0.6,38.2,pendent,,,Eurostat nama_10_fcs
+P013,2026-05-25,2030,Quota de béns en consum de les llars,36.6,1.0,38.2,pendent,,,Eurostat nama_10_fcs
+P014,2026-05-25,2035,Quota de béns en consum de les llars,35.0,1.5,38.2,pendent,,,Eurostat nama_10_fcs

@@ -16,7 +16,7 @@ import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source,
-                   fpct, apply_layout, PURPLE, GREEN, GRAY)
+                   fpct, apply_layout, PURPLE, GREEN, GRAY, RED)
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -27,6 +27,7 @@ _ca = st.session_state.lang == "ca"
 _CACHE = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
 _CSV = os.path.join(_CACHE, "estructura_comerc.csv")
 _META = os.path.join(_CACHE, "estructura_comerc_meta.json")
+_PRED = os.path.join(_CACHE, "prediccions_estructura.csv")
 
 
 @st.cache_data(ttl=3600)
@@ -44,9 +45,19 @@ def load_estructura(sig):
     return df, meta
 
 
+@st.cache_data(ttl=3600)
+def load_prediccions(sig):
+    if not os.path.exists(_PRED):
+        return pd.DataFrame()
+    return pd.read_csv(_PRED)
+
+
 _sig = ((os.path.getsize(_CSV), int(os.path.getmtime(_CSV)))
         if os.path.exists(_CSV) else (0, 0))
 df, meta = load_estructura(_sig)
+_psig = ((os.path.getsize(_PRED), int(os.path.getmtime(_PRED)))
+         if os.path.exists(_PRED) else (0, 0))
+preds = load_prediccions(_psig)
 
 st.title("Trajectòria estructural del comerç" if _ca
          else "Trayectoria estructural del comercio")
@@ -173,6 +184,15 @@ with tab_bs:
     _sh = hist.dropna(subset=["serveis_share"])
     _line(fig, _sh["any"], _sh["serveis_share"],
           "Serveis" if _ca else "Servicios", GRAY, width=2)
+    # Prediccions registrades i datades (P011-P014) com a marcadors amb banda
+    if not preds.empty:
+        fig.add_trace(go.Scatter(
+            x=preds["horitzo"], y=preds["valor"], mode="markers",
+            name=("Predicció registrada (25/05/2026)" if _ca
+                  else "Predicción registrada (25/05/2026)"),
+            marker=dict(color=RED, size=10, symbol="diamond"),
+            error_y=dict(type="data", array=preds["banda"], visible=True,
+                         color=RED, thickness=1.5, width=6)))
     # Anotació del bot COVID
     _covid = hist[hist["any"] == 2020]
     if not _covid.empty:
@@ -199,6 +219,37 @@ with tab_bs:
          "un tercio. El 2020-21 es la única excepción —el confinamiento suprimió el "
          "consumo de servicios e infló el de bienes temporalmente—, y por eso se excluye "
          "del ajuste. Una vez normalizado, la deriva retoma justo donde estaba."))
+
+    if not preds.empty:
+        st.divider()
+        st.markdown("**Predicció registrada i falsable**" if _ca
+                    else "**Predicción registrada y falsable**")
+        _flat = float(preds["benchmark_flat"].iloc[0])
+        _dpred = preds["data_prediccio"].iloc[0]
+        st.caption(
+            (f"El {_dpred} vam registrar aquests valors com a predicció datada i "
+             f"falsable (rombes vermells al gràfic, amb la seva banda). Es resolen "
+             f"amb Eurostat (nama_10_fcs) a mesura que es publica cada exercici. El "
+             f"<em>benchmark</em> a batre és el «sense canvi» ({_flat:.1f} %): el model "
+             f"encerta si la realitat s'acosta més a la trajectòria decreixent que a la "
+             f"hipòtesi que la quota de béns es manté plana."
+             if _ca else
+             f"El {_dpred} registramos estos valores como predicción fechada y "
+             f"falsable (rombos rojos en el gráfico, con su banda). Se resuelven con "
+             f"Eurostat (nama_10_fcs) a medida que se publica cada ejercicio. El "
+             f"<em>benchmark</em> a batir es el «sin cambio» ({_flat:.1f} %): el modelo "
+             f"acierta si la realidad se acerca más a la trayectoria decreciente que a "
+             f"la hipótesis de que la cuota de bienes se mantiene plana."),
+        )
+        _disp = pd.DataFrame({
+            ("Any" if _ca else "Año"): preds["horitzo"].astype(int),
+            ("Predicció" if _ca else "Predicción"):
+                preds.apply(lambda r: f"{r['valor']:.1f} % ± {r['banda']:.1f}", axis=1),
+            ("Estat" if _ca else "Estado"): preds["estat"],
+            ("Valor real" if _ca else "Valor real"):
+                preds["valor_real"].apply(lambda v: "—" if pd.isna(v) else f"{float(v):.1f} %"),
+        })
+        st.dataframe(_disp, hide_index=True, use_container_width=True)
 
 # ════════════════════════════════════════════ TAB 3 · ONLINE
 with tab_on:
