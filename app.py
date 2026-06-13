@@ -48,7 +48,7 @@ p_inici = st.Page(
 
 # POLS — Pols diari, Pols mensual i Pulso setmanal (editorial)
 p_lecturas = st.Page(
-    "pages/L_Lecturas.py",
+    "pages/L_Editorial.py",
     title=("Pulso de la setmana" if _ca else "Pulso de la semana"),
 )
 

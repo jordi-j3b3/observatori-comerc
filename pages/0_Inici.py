@@ -296,7 +296,7 @@ with hero_r:
             unsafe_allow_html=True,
         )
         st.page_link(
-            "pages/L_Lecturas.py",
+            "pages/L_Editorial.py",
             label=("Llegir el Pulso de la setmana →" if _ca
                    else "Leer el Pulso de la semana →"),
         )
@@ -324,7 +324,7 @@ with hero_r:
             unsafe_allow_html=True,
         )
         st.page_link(
-            "pages/L_Lecturas.py",
+            "pages/L_Editorial.py",
             label=("Veure el Pulso de la setmana →" if _ca
                    else "Ver el Pulso de la semana →"),
         )
@@ -411,15 +411,13 @@ if _recents:
         )
     st.markdown(
         f"""
-        <div style="border-top:3px solid #f5d800; background:rgba(245,216,0,0.06);
-                    padding:16px 18px 8px 18px; margin:6px 0 22px;
-                    font-family:'Inter',sans-serif;">
+        <div style="border-top:3px solid #f5d800; padding:12px 0 8px 0;
+                    margin:6px 0 22px; font-family:'Inter',sans-serif;">
             <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
-                        font-weight:700; text-transform:uppercase; color:#003366;
-                        margin-bottom:2px;">
+                        font-weight:700; text-transform:uppercase; color:#f59e0b;
+                        margin-bottom:6px;">
                 {_nov_eyebrow}
             </div>
-            <div style="font-size:12px; color:#6a6a6a; margin-bottom:8px;">{_nov_sub}</div>
             {_items_html}
         </div>
         """,
@@ -442,10 +440,9 @@ _orient_es = (
 )
 st.markdown(
     f"""
-    <div style="background:rgba(0,51,102,0.04); border-left:3px solid #003366;
-                padding:12px 16px; margin:0 0 4px 0;
-                font-family:'Inter',sans-serif; font-size:13px; line-height:1.55;
-                color:#1a1a1a;">
+    <div style="border-top:1px solid rgba(0,51,102,0.15); padding:10px 0 4px 0;
+                margin:0 0 4px 0; font-family:'Inter',sans-serif; font-size:13px;
+                line-height:1.55; color:#4a4a4a;">
         {_orient_ca if _ca else _orient_es}
     </div>
     """,
@@ -499,7 +496,12 @@ def _spark(values, color="#003366"):
     return fig
 
 
-def _card_header(eyebrow, kpi, sub):
+def _card_header(eyebrow, kpi, sub, context=""):
+    _ctx = (
+        f"<div style=\"font-size:12px; color:#4a6080; font-style:italic; "
+        f"line-height:1.45; margin-top:8px; margin-bottom:2px;\">{context}</div>"
+        if context else ""
+    )
     return (
         f"<div style=\"border-top:2px solid #003366; padding:14px 0 2px 0;\">"
         f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:0.78rem; "
@@ -508,6 +510,7 @@ def _card_header(eyebrow, kpi, sub):
         f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:1.55rem; "
         f"font-weight:700; line-height:1.05; color:#003366; letter-spacing:-0.5px;\">{kpi}</div>"
         f"<div style=\"font-size:11.5px; color:#6a6a6a; margin-top:4px;\">{sub}</div>"
+        f"{_ctx}"
         f"</div>"
     )
 
@@ -536,7 +539,10 @@ with row1[0]:
             _kpi = f"{fnum(_last['vab_cnae47_corrents'])} M€"
             _sub = (f"VAB nominal {int(_last['any'])}" if not _ca
                     else f"VAB nominal {int(_last['any'])}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("Aporta el ~4,8% del PIB. Espanya supera la mitjana de la UE‑27 per novè any consecutiu."
+                    if _ca else
+                    "Aporta el ~4,8% del PIB. España supera la media de la UE‑27 por noveno año consecutivo.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = (_rows["vab_cnae47_constants"].dropna().tolist()
                            if "vab_cnae47_constants" in _rows.columns
                            and _rows["vab_cnae47_constants"].notna().any()
@@ -562,7 +568,10 @@ with row1[1]:
             _kpi = fnum(int(_last["empreses"]))
             _sub = (f"Empreses CNAE 47 · {int(_last['any'])}" if _ca
                     else f"Empresas CNAE 47 · {int(_last['any'])}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("La concentració accelera: les grans cadenes guanyen quota als establiments independents."
+                    if _ca else
+                    "La concentración acelera: las grandes cadenas ganan cuota a los establecimientos independientes.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = _esp["empreses"].tolist()
             st.plotly_chart(_spark(_spark_vals), use_container_width=True,
                             config={"displayModeBar": False})
@@ -585,7 +594,10 @@ with row1[2]:
             _kpi = f"{fnum(_last['productivitat_va_hora'], 1)} €/h"
             _sub = (f"VA per hora · {int(_last['any'])}" if _ca
                     else f"VA por hora · {int(_last['any'])}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("Per sota del promig industrial. Supermercats tripliquen la productivitat del comerç especialitzat."
+                    if _ca else
+                    "Por debajo del promedio industrial. Los supermercados triplican la productividad del comercio especializado.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = _rows["productivitat_va_hora"].tolist()
             st.plotly_chart(_spark(_spark_vals), use_container_width=True,
                             config={"displayModeBar": False})
@@ -608,7 +620,10 @@ with row2[0]:
             _kpi = f"{fnum(_last['ecommerce_cnae47_eur']/1e9, 1)} Md€"
             _sub = (f"Volum CNAE 47 · {int(_last['any'])}" if _ca
                     else f"Volumen CNAE 47 · {int(_last['any'])}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("Creixement de doble dígit. Ha passat del 4,9% al 12,4% de la xifra de negoci del sector en una dècada."
+                    if _ca else
+                    "Crecimiento de doble dígito. Ha pasado del 4,9% al 12,4% de la cifra de negocio del sector en una década.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = _rows["ecommerce_cnae47_eur"].tolist()
             st.plotly_chart(_spark(_spark_vals), use_container_width=True,
                             config={"displayModeBar": False})
@@ -634,7 +649,10 @@ with row2[1]:
             _kpi = f"{fpct(_top['pes_cnae47_pib']*100, 1, sign=False)} – {fpct(_bot['pes_cnae47_pib']*100, 1, sign=False)}"
             _sub = (f"Pes s/ PIB · rang CCAA · {_yr}" if _ca
                     else f"Peso s/ PIB · rango CCAA · {_yr}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("Balears lidera; Astúries tanca. La bretxa territorial s'ha eixamplat respecte la dècada anterior."
+                    if _ca else
+                    "Baleares lidera; Asturias cierra. La brecha territorial se ha ampliado respecto a la década anterior.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = _yr_data.sort_values("pes_cnae47_pib")["pes_cnae47_pib"].tolist()
             st.plotly_chart(_spark(_spark_vals), use_container_width=True,
                             config={"displayModeBar": False})
@@ -660,7 +678,10 @@ with row2[2]:
             _kpi = f"{fpct(_delta, 2)}"
             _sub = (f"ES vs UE-27 · pes s/ PIB · {_yr}" if _ca
                     else f"ES vs UE-27 · peso s/ PIB · {_yr}")
-            st.markdown(_card_header(_lbl, _kpi, _sub), unsafe_allow_html=True)
+            _ctx = ("Espanya supera la mitjana europea 9 dels últims 10 anys. La bretxa creix per sobre la UE."
+                    if _ca else
+                    "España supera la media europea 9 de los últimos 10 años. La brecha crece por encima de la UE.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
             _spark_vals = [v*100 for v in _es["pes_cnae47"].tolist()]
             st.plotly_chart(_spark(_spark_vals), use_container_width=True,
                             config={"displayModeBar": False})
