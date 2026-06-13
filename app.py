@@ -18,7 +18,7 @@ st.logo(
     size="large",
 )
 
-from style import inject_css, setup_lang, newsletter_form, render_lang_selector
+from style import inject_css, setup_lang, render_lang_selector
 
 inject_css()
 t = setup_lang(show_selector=False)  # el selector es renderitza al peu del sidebar
@@ -33,10 +33,10 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
 # Etiquetes de seccions (capçaleres del sidebar)
 SEC_HOME = "Inicio" if not _ca else "Inici"
-SEC_EDITORIAL = "Editorial"  # mateix en ca i es
-SEC_PULSO = "Pulso" if not _ca else "Pols"
+SEC_POLS = "Pulso" if not _ca else "Pols"
 SEC_RADIO = "Radiografía" if not _ca else "Radiografia"
-SEC_DETALL = "Detalle" if not _ca else "Detall"
+SEC_EUROPA = "Europa"
+SEC_ANALISI = "Análisis" if not _ca else "Anàlisi"
 SEC_RECURSOS = "Recursos"
 
 # HOME
@@ -46,13 +46,13 @@ p_inici = st.Page(
     default=True,
 )
 
-# LECTURAS (placeholder Fase 2)
+# POLS — Pols diari, Pols mensual i Pulso setmanal (editorial)
 p_lecturas = st.Page(
     "pages/L_Lecturas.py",
     title=("Pulso de la setmana" if _ca else "Pulso de la semana"),
 )
 
-# RADIOGRAFIA — comença amb Pols diari (conjuntural diari), segueixen sèries anuals
+# RADIOGRAFIA — sèries anuals estructurals
 p_pols = st.Page(
     "pages/0a_Pols_diari.py",
     title=("Pols diari" if _ca else "Pulso diario"),
@@ -90,7 +90,7 @@ p_europa = st.Page(
     title=("Comparativa Europa" if _ca else "Comparativa Europa"),
 )
 
-# DETALL
+# ANÀLISI
 p_subs = st.Page(
     "pages/9_Subsectors.py",
     title=("Subsectors" if _ca else "Subsectores"),
@@ -117,10 +117,10 @@ p_premsa = st.Page(
 # Construcció del diccionari de navegació
 nav = {
     SEC_HOME: [p_inici],
-    SEC_EDITORIAL: [p_lecturas],
-    SEC_PULSO: [p_pols, p_icm],
-    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_estructura, p_europa],
-    SEC_DETALL: [p_subs, p_lideres, p_terr],
+    SEC_POLS: [p_pols, p_icm, p_lecturas],
+    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_estructura],
+    SEC_EUROPA: [p_europa],
+    SEC_ANALISI: [p_subs, p_lideres, p_terr],
     SEC_RECURSOS: [p_metod, p_premsa],
 }
 
@@ -131,7 +131,7 @@ if LOCAL_ONLY:
         "pages/A_Municipis.py",
         title=("Municipis (local)" if _ca else "Municipios (local)"),
     )
-    nav[SEC_DETALL].append(p_municipis)
+    nav[SEC_ANALISI].append(p_municipis)
 
 # position="hidden": amaguem la nav nativa (no plegable) i en construïm una
 # de pròpia amb grups plegables al sidebar.
@@ -142,7 +142,7 @@ pg = st.navigation(nav, position="hidden")
 with st.sidebar:
     # Navegació per àmbits. Cada àmbit és un expander; s'obre automàticament
     # el que conté la pàgina activa perquè el sidebar no creixi sense control.
-    # A la home (sense àmbit propi) s'obre Radiografia, el contingut principal.
+    # A la home (sense àmbit propi) s'obre Pols, el contingut més immediat.
     _active_title = pg.title
     _on_home = _active_title in [_p.title for _p in nav.get(SEC_HOME, [])]
     for _sec, _sec_pages in nav.items():
@@ -151,48 +151,10 @@ with st.sidebar:
                 st.page_link(_pp)
             continue
         _is_open = (any(_pp.title == _active_title for _pp in _sec_pages)
-                    or (_on_home and _sec == SEC_RADIO))
+                    or (_on_home and _sec == SEC_POLS))
         with st.expander(_sec, expanded=_is_open):
             for _pp in _sec_pages:
                 st.page_link(_pp)
-
-    st.divider()
-
-    # Butlletí: CTA tipogràfic dins el sidebar (sense embed MailerLite,
-    # que forçava una caixa blanca lletja sobre el blau marí). El form
-    # complet segueix a la home i a la pàgina Pulso.
-    _nl_eyebrow = "Butlletí" if _ca else "Boletín"
-    _nl_title = "Rep El Pulso cada dilluns" if _ca else "Recibe El Pulso cada lunes"
-    _nl_desc = ("El Pulso setmanal + resum trimestral al teu correu. "
-                "Subscriu-te des de la pàgina d'inici."
-                if _ca else
-                "El Pulso semanal + resumen trimestral en tu correo. "
-                "Suscríbete desde la página de inicio.")
-    st.markdown(
-        f"""
-        <div style="font-family:'Inter',sans-serif; padding:0 4px; color:#ffffff;">
-            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.78rem;
-                        font-weight:700; text-transform:uppercase; color:#ffffff;
-                        opacity:0.7; margin-bottom:10px;">
-                {_nl_eyebrow}
-            </div>
-            <div style="font-family:'Archivo Narrow',sans-serif; font-size:1.05rem;
-                        font-weight:700; color:#ffffff; margin-bottom:8px;
-                        line-height:1.2;
-                        background: linear-gradient(180deg, transparent 0%, transparent 60%,
-                                    rgba(245, 216, 0, 0.55) 60%, rgba(245, 216, 0, 0.55) 92%,
-                                    transparent 92%);
-                        display: inline;">
-                {_nl_title}
-            </div>
-            <div style="font-size:12px; line-height:1.55; color:#ffffff; opacity:0.85;
-                        margin: 10px 0 0 0;">
-                {_nl_desc}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
 
     st.divider()
 

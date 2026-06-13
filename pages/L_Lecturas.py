@@ -14,7 +14,7 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header, newsletter_form  # noqa: E402
+from style import inject_css, setup_lang, page_header  # noqa: E402
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -621,9 +621,5 @@ else:
                     st.markdown(f'<p class="pulso-preheader">{preheader}</p>',
                                 unsafe_allow_html=True)
                 render_body(body)
-
-# ─── CTA SUBSCRIPCIÓ ────────────────────────────────────────────
-st.divider()
-newsletter_form(lang=st.session_state.lang, compact=False)
 
 st.caption("Observatorio del Comercio · J3B3 Consulting")

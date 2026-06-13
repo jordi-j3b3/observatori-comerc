@@ -422,6 +422,32 @@ if _recents:
         unsafe_allow_html=True,
     )
 
+# ─── ORIENTACIÓ (primer cop) ───────────────────────────────────
+
+_orient_ca = (
+    "Primer cop aquí? Comença pel <strong>Pols diari</strong> per veure el termòmetre "
+    "immediat del consum, o explora les sis radiografies de sota per entendre "
+    "l'estructura del sector. El <strong>Pulso setmanal</strong> connecta les dades "
+    "amb el cicle econòmic."
+)
+_orient_es = (
+    "¿Primera visita? Empieza por el <strong>Pulso diario</strong> para ver el termómetro "
+    "inmediato del consumo, o explora las seis radiografías de abajo para entender "
+    "la estructura del sector. El <strong>Pulso semanal</strong> conecta los datos "
+    "con el ciclo económico."
+)
+st.markdown(
+    f"""
+    <div style="background:rgba(0,51,102,0.04); border-left:3px solid #003366;
+                padding:12px 16px; margin:0 0 4px 0;
+                font-family:'Inter',sans-serif; font-size:13px; line-height:1.55;
+                color:#1a1a1a;">
+        {_orient_ca if _ca else _orient_es}
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 # ─── CARDS DE NAVEGACIÓ (6 dimensions, grid 3x2) ───────────────
 
 st.divider()
