@@ -40,7 +40,7 @@ Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del 
 
 ---
 
-## Racionalitzar la navegació
+## ~~Racionalitzar la navegació~~ FET 2026-06-13 (commit 1fe2a61)
 
 **Origen**: diagnosi UX 2026-06-12.
 
@@ -67,7 +67,7 @@ Avui cada pàgina llegeix els CSV directament amb `pd.read_csv`. Crear `data/loa
 
 ---
 
-## Neteja tècnica
+## ~~Neteja tècnica~~ FET 2026-06-13 (commit 5a387f9)
 
 **Origen**: diagnosi motor intern i arquitectura 2026-06-12.
 
