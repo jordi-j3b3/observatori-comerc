@@ -18,7 +18,7 @@ st.logo(
     size="large",
 )
 
-from style import inject_css, setup_lang, render_lang_selector
+from style import inject_css, setup_lang, render_lang_selector, newsletter_form
 
 inject_css()
 t = setup_lang(show_selector=False)  # el selector es renderitza al peu del sidebar
@@ -33,6 +33,7 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
 # Etiquetes de seccions (capçaleres del sidebar)
 SEC_HOME = "Inicio" if not _ca else "Inici"
+SEC_EDITORIAL = "Editorial"
 SEC_POLS = "Pulso" if not _ca else "Pols"
 SEC_RADIO = "Radiografía" if not _ca else "Radiografia"
 SEC_EUROPA = "Europa"
@@ -117,7 +118,8 @@ p_premsa = st.Page(
 # Construcció del diccionari de navegació
 nav = {
     SEC_HOME: [p_inici],
-    SEC_POLS: [p_pols, p_icm, p_lecturas],
+    SEC_EDITORIAL: [p_lecturas],
+    SEC_POLS: [p_pols, p_icm],
     SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_estructura],
     SEC_EUROPA: [p_europa],
     SEC_ANALISI: [p_subs, p_lideres, p_terr],
@@ -155,6 +157,9 @@ with st.sidebar:
         with st.expander(_sec, expanded=_is_open):
             for _pp in _sec_pages:
                 st.page_link(_pp)
+
+    st.divider()
+    newsletter_form(st.session_state.lang, compact=True)
 
     st.divider()
 
