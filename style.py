@@ -1445,6 +1445,40 @@ def newsletter_form(lang="es", compact=False, sidebar=False):
             f' color:#ffffff;">{label_sidebar}</span></div>',
             unsafe_allow_html=True,
         )
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebar"] [data-testid="stForm"] {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+            [data-testid="stSidebar"] .stTextInput > div > div > input {
+                background: rgba(255,255,255,0.10) !important;
+                border: 1px solid rgba(255,255,255,0.30) !important;
+                color: #ffffff !important;
+                border-radius: 0 !important;
+            }
+            [data-testid="stSidebar"] .stTextInput > div > div > input::placeholder {
+                color: rgba(255,255,255,0.45) !important;
+            }
+            [data-testid="stSidebar"] [data-testid="stFormSubmitButton"] button {
+                background-color: #E8B33A !important;
+                color: #003366 !important;
+                border: none !important;
+                font-weight: 700 !important;
+                border-radius: 0 !important;
+                font-size: 0.78rem !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.04em !important;
+            }
+            [data-testid="stSidebar"] [data-testid="stFormSubmitButton"] button:hover {
+                background-color: #c89b2a !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
         form_key = f"newsletter_form_sidebar_{lang}"
         with st.form(form_key, clear_on_submit=True):
             email_raw = st.text_input(
