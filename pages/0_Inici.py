@@ -19,9 +19,13 @@ t = setup_lang(show_selector=False)
 
 @st.cache_data(ttl=3600)
 def load_data(name):
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", f"{name}.csv")
-    if os.path.exists(path):
-        return pd.read_csv(path)
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, f"{name}.parquet")
+    if os.path.exists(pq):
+        return pd.read_parquet(pq)
+    csv = os.path.join(base, f"{name}.csv")
+    if os.path.exists(csv):
+        return pd.read_csv(csv)
     return pd.DataFrame()
 
 @st.cache_data(ttl=3600)

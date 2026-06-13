@@ -175,15 +175,20 @@ def ensure_cache_dir():
 
 def save_cache(df, name):
     ensure_cache_dir()
-    path = os.path.join(CACHE_DIR, f"{name}.csv")
-    df.to_csv(path, index=False)
-    print(f"  Desat: {path} ({len(df)} files)")
+    pq = os.path.join(CACHE_DIR, f"{name}.parquet")
+    csv = os.path.join(CACHE_DIR, f"{name}.csv")
+    df.to_parquet(pq, index=False)
+    df.to_csv(csv, index=False)
+    print(f"  Desat: {name}.parquet + {name}.csv ({len(df)} files)")
 
 
 def load_cache(name):
-    path = os.path.join(CACHE_DIR, f"{name}.csv")
-    if os.path.exists(path):
-        return pd.read_csv(path)
+    pq = os.path.join(CACHE_DIR, f"{name}.parquet")
+    if os.path.exists(pq):
+        return pd.read_parquet(pq)
+    csv = os.path.join(CACHE_DIR, f"{name}.csv")
+    if os.path.exists(csv):
+        return pd.read_csv(csv)
     return pd.DataFrame()
 
 

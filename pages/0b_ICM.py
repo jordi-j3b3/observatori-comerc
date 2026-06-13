@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source,
                    page_meta, fnum, fpct, apply_layout, highlight_expander,
                    format_mes_any,
-                   PURPLE, RED, GREEN, GRAY_DARK, YELLOW, PALETTE)
+                   PURPLE, RED, GREEN, GRAY_DARK)
 
 inject_css()
 t = setup_lang(show_selector=False)
@@ -26,20 +26,30 @@ _ca = st.session_state.lang == "ca"
 
 @st.cache_data(ttl=3600)
 def load_icm():
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "icm.csv")
-    if not os.path.exists(path):
-        return pd.DataFrame()
-    df = pd.read_csv(path)
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, "icm.parquet")
+    if os.path.exists(pq):
+        df = pd.read_parquet(pq)
+    else:
+        csv = os.path.join(base, "icm.csv")
+        if not os.path.exists(csv):
+            return pd.DataFrame()
+        df = pd.read_csv(csv)
     df["data"] = pd.to_datetime(df["data"], errors="coerce")
     return df.dropna(subset=["data"])
 
 
 @st.cache_data(ttl=3600)
 def load_icm_distribucion():
-    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "icm_distribucion.csv")
-    if not os.path.exists(path):
-        return pd.DataFrame()
-    df = pd.read_csv(path)
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, "icm_distribucion.parquet")
+    if os.path.exists(pq):
+        df = pd.read_parquet(pq)
+    else:
+        csv = os.path.join(base, "icm_distribucion.csv")
+        if not os.path.exists(csv):
+            return pd.DataFrame()
+        df = pd.read_csv(csv)
     df["data"] = pd.to_datetime(df["data"], errors="coerce")
     return df.dropna(subset=["data"])
 
