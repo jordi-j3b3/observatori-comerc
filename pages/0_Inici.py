@@ -411,11 +411,11 @@ if _recents:
         )
     st.markdown(
         f"""
-        <div style="border-top:3px solid #f5d800; padding:12px 0 8px 0;
+        <div style="border-top:1px solid rgba(0,51,102,0.12); padding:10px 0 6px 0;
                     margin:6px 0 22px; font-family:'Inter',sans-serif;">
-            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
-                        font-weight:700; text-transform:uppercase; color:#f59e0b;
-                        margin-bottom:6px;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.75rem;
+                        font-weight:700; text-transform:uppercase; letter-spacing:0.10em;
+                        color:#003366; opacity:0.7; margin-bottom:6px;">
                 {_nov_eyebrow}
             </div>
             {_items_html}
@@ -423,31 +423,6 @@ if _recents:
         """,
         unsafe_allow_html=True,
     )
-
-# ─── ORIENTACIÓ (primer cop) ───────────────────────────────────
-
-_orient_ca = (
-    "Primer cop aquí? Comença pel <strong>Pols diari</strong> per veure el termòmetre "
-    "immediat del consum, o explora les sis radiografies de sota per entendre "
-    "l'estructura del sector. El <strong>Pulso setmanal</strong> connecta les dades "
-    "amb el cicle econòmic."
-)
-_orient_es = (
-    "¿Primera visita? Empieza por el <strong>Pulso diario</strong> para ver el termómetro "
-    "inmediato del consumo, o explora las seis radiografías de abajo para entender "
-    "la estructura del sector. El <strong>Pulso semanal</strong> conecta los datos "
-    "con el ciclo económico."
-)
-st.markdown(
-    f"""
-    <div style="border-top:1px solid rgba(0,51,102,0.15); padding:10px 0 4px 0;
-                margin:0 0 4px 0; font-family:'Inter',sans-serif; font-size:13px;
-                line-height:1.55; color:#4a4a4a;">
-        {_orient_ca if _ca else _orient_es}
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 # ─── CARDS DE NAVEGACIÓ (6 dimensions, grid 3x2) ───────────────
 
