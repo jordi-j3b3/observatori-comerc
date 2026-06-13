@@ -159,7 +159,7 @@ with st.sidebar:
                 st.page_link(_pp)
 
     st.divider()
-    newsletter_form(st.session_state.lang, compact=True)
+    newsletter_form(st.session_state.lang, sidebar=True)
 
     st.divider()
 

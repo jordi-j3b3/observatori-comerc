@@ -1394,11 +1394,12 @@ def _brevo_subscribe(email: str) -> tuple[bool, str]:
     return False, f"api_{r.status_code}"
 
 
-def newsletter_form(lang="es", compact=False):
+def newsletter_form(lang="es", compact=False, sidebar=False):
     """Caixa de subscripció al butlletí (Brevo, llista newsletter-observatorio).
 
     compact=False: caixa gran amb capçalera (al peu d'Inici).
     compact=True: només descripció breu + form (per usar dins popover).
+    sidebar=True: versió mínima per al sidebar (etiqueta + input + botó apilats).
     """
     _ca = lang == "ca"
     eyebrow = "Butlletí" if _ca else "Boletín"
@@ -1434,6 +1435,39 @@ def newsletter_form(lang="es", compact=False):
     err_config = ("Servei no disponible. Avisa l'administrador."
                   if _ca else
                   "Servicio no disponible. Avisa al administrador.")
+
+    if sidebar:
+        label_sidebar = "El Pulso cada dilluns" if _ca else "El Pulso cada lunes"
+        st.markdown(
+            f'<div style="border-top:2px solid #E8B33A; padding-top:8px; margin-bottom:10px;">'
+            f'<span style="font-family:\'Archivo Narrow\',sans-serif; font-size:0.82rem;'
+            f' font-weight:700; text-transform:uppercase; letter-spacing:0.05em;'
+            f' color:#ffffff;">{label_sidebar}</span></div>',
+            unsafe_allow_html=True,
+        )
+        form_key = f"newsletter_form_sidebar_{lang}"
+        with st.form(form_key, clear_on_submit=True):
+            email_raw = st.text_input(
+                placeholder,
+                key=f"{form_key}_email",
+                label_visibility="collapsed",
+                placeholder=placeholder,
+            )
+            submitted = st.form_submit_button(submit_label, use_container_width=True)
+        if submitted:
+            email = (email_raw or "").strip().lower()
+            valid = ("@" in email and "." in email.split("@")[-1] and len(email) <= 254)
+            if not valid:
+                st.error(err_invalid)
+            else:
+                ok, err = _brevo_subscribe(email)
+                if ok:
+                    st.success(f"**{ok_title}** {ok_desc}")
+                elif err == "no_api_key":
+                    st.error(err_config)
+                else:
+                    st.error(err_generic)
+        return
 
     if not compact:
         st.markdown(

@@ -274,13 +274,12 @@ with hero_r:
         _tesi_data_fmt = _tesi_data.strftime("%d/%m/%Y")
         st.markdown(
             f"""
-            <div style="background:#ffffff; border-top:3px solid #003366;
+            <div style="border-top:3px solid #E8B33A;
                         padding:18px 18px 14px 18px; margin-top:18px;
-                        font-family:'Inter',sans-serif;
-                        background-color:rgba(0,51,102,0.03);">
+                        font-family:'Inter',sans-serif;">
                 <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
                             font-weight:700; text-transform:uppercase;
-                            color:#003366; margin-bottom:10px;">
+                            color:#C89B2A; margin-bottom:10px;">
                     {_eyebrow_r}
                 </div>
                 <div style="color:#003366; font-size:17px; font-weight:600;
@@ -301,17 +300,14 @@ with hero_r:
                    else "Leer el Pulso de la semana →"),
         )
     else:
-        # Sense tesi disponible (cas excepcional): bloc net amb l'enllaç al Pulso,
-        # sense "pendent d'actualitzar" ni dades de cache (eren soroll).
         st.markdown(
             f"""
-            <div style="background:#ffffff; border-top:3px solid #003366;
+            <div style="border-top:3px solid #E8B33A;
                         padding:18px 18px 14px 18px; margin-top:18px;
-                        font-family:'Inter',sans-serif;
-                        background-color:rgba(0,51,102,0.03);">
+                        font-family:'Inter',sans-serif;">
                 <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
                             font-weight:700; text-transform:uppercase;
-                            color:#003366; margin-bottom:10px;">
+                            color:#C89B2A; margin-bottom:10px;">
                     {_eyebrow_r}
                 </div>
                 <div style="color:#003366; font-size:15px; font-weight:600;
@@ -471,19 +467,25 @@ def _spark(values, color="#003366"):
     return fig
 
 
-def _card_header(eyebrow, kpi, sub, context=""):
+_C_NAVY = "#003366"
+_C_AMBER = "#C89B2A"  # ambre fosc (llegible sobre blanc)
+_C_AMBER_BORDER = "#E8B33A"  # ambre viu per a bordes
+
+
+def _card_header(eyebrow, kpi, sub, context="", color=_C_NAVY):
     _ctx = (
         f"<div style=\"font-size:12px; color:#4a6080; font-style:italic; "
         f"line-height:1.45; margin-top:8px; margin-bottom:2px;\">{context}</div>"
         if context else ""
     )
+    _kpi_color = color if color != _C_AMBER_BORDER else _C_AMBER
     return (
-        f"<div style=\"border-top:2px solid #003366; padding:14px 0 2px 0;\">"
+        f"<div style=\"border-top:2px solid {color}; padding:14px 0 2px 0;\">"
         f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:0.78rem; "
-        f"font-weight:700; text-transform:uppercase; color:#003366; opacity:0.7; "
+        f"font-weight:700; text-transform:uppercase; color:{color}; opacity:0.85; "
         f"margin-bottom:6px;\">{eyebrow}</div>"
         f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:1.55rem; "
-        f"font-weight:700; line-height:1.05; color:#003366; letter-spacing:-0.5px;\">{kpi}</div>"
+        f"font-weight:700; line-height:1.05; color:{_kpi_color}; letter-spacing:-0.5px;\">{kpi}</div>"
         f"<div style=\"font-size:11.5px; color:#6a6a6a; margin-top:4px;\">{sub}</div>"
         f"{_ctx}"
         f"</div>"
@@ -506,6 +508,7 @@ row2 = st.columns(3, gap="medium")
 # ── Card 1: PIB i VAB ─────────────────────────────────────────
 with row1[0]:
     _lbl = "PIB i VAB" if _ca else "PIB y VAB"
+    _c1 = _C_NAVY
     if (not df_pib.empty
             and "vab_cnae47_corrents" in df_pib.columns):
         _rows = df_pib.dropna(subset=["vab_cnae47_corrents"]).sort_values("any")
@@ -517,13 +520,13 @@ with row1[0]:
             _ctx = ("Aporta el ~4,8% del PIB. Espanya supera la mitjana de la UE‑27 per novè any consecutiu."
                     if _ca else
                     "Aporta el ~4,8% del PIB. España supera la media de la UE‑27 por noveno año consecutivo.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c1), unsafe_allow_html=True)
             _spark_vals = (_rows["vab_cnae47_constants"].dropna().tolist()
                            if "vab_cnae47_constants" in _rows.columns
                            and _rows["vab_cnae47_constants"].notna().any()
                            else _rows["vab_cnae47_corrents"].tolist())
             if len(_spark_vals) >= 2:
-                st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                st.plotly_chart(_spark(_spark_vals, color=_c1), use_container_width=True,
                                 config={"displayModeBar": False})
             st.page_link("pages/1_PIB_i_VAB.py",
                          label=("Evolució i pes sobre PIB →" if _ca
@@ -536,6 +539,7 @@ with row1[0]:
 # ── Card 2: Empreses ──────────────────────────────────────────
 with row1[1]:
     _lbl = "Empreses" if _ca else "Empresas"
+    _c2 = _C_AMBER_BORDER
     if not df_empreses.empty:
         _esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
         if len(_esp) >= 2:
@@ -546,9 +550,9 @@ with row1[1]:
             _ctx = ("La concentració accelera: les grans cadenes guanyen quota als establiments independents."
                     if _ca else
                     "La concentración acelera: las grandes cadenas ganan cuota a los establecimientos independientes.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c2), unsafe_allow_html=True)
             _spark_vals = _esp["empreses"].tolist()
-            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+            st.plotly_chart(_spark(_spark_vals, color=_c2), use_container_width=True,
                             config={"displayModeBar": False})
             st.page_link("pages/2_Empreses.py",
                          label=("Densitat per CCAA →" if _ca
@@ -561,6 +565,7 @@ with row1[1]:
 # ── Card 3: Productivitat ─────────────────────────────────────
 with row1[2]:
     _lbl = "Productivitat" if _ca else "Productividad"
+    _c3 = _C_NAVY
     if (not df_prod.empty
             and "productivitat_va_hora" in df_prod.columns):
         _rows = df_prod.dropna(subset=["productivitat_va_hora"]).sort_values("any")
@@ -572,9 +577,9 @@ with row1[2]:
             _ctx = ("Per sota del promig industrial. Supermercats tripliquen la productivitat del comerç especialitzat."
                     if _ca else
                     "Por debajo del promedio industrial. Los supermercados triplican la productividad del comercio especializado.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c3), unsafe_allow_html=True)
             _spark_vals = _rows["productivitat_va_hora"].tolist()
-            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+            st.plotly_chart(_spark(_spark_vals, color=_c3), use_container_width=True,
                             config={"displayModeBar": False})
             st.page_link("pages/4_Productivitat.py",
                          label=("Quota salarial i costos →" if _ca
@@ -587,6 +592,7 @@ with row1[2]:
 # ── Card 4: E-commerce ────────────────────────────────────────
 with row2[0]:
     _lbl = "E-commerce"
+    _c4 = _C_AMBER_BORDER
     if (not df_ecommerce.empty
             and "ecommerce_cnae47_eur" in df_ecommerce.columns):
         _rows = df_ecommerce.dropna(subset=["ecommerce_cnae47_eur"]).sort_values("any")
@@ -598,9 +604,9 @@ with row2[0]:
             _ctx = ("Creixement de doble dígit. Ha passat del 4,9% al 12,4% de la xifra de negoci del sector en una dècada."
                     if _ca else
                     "Crecimiento de doble dígito. Ha pasado del 4,9% al 12,4% de la cifra de negocio del sector en una década.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c4), unsafe_allow_html=True)
             _spark_vals = _rows["ecommerce_cnae47_eur"].tolist()
-            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+            st.plotly_chart(_spark(_spark_vals, color=_c4), use_container_width=True,
                             config={"displayModeBar": False})
             st.page_link("pages/5_Ecommerce.py",
                          label=("Pes online sobre total →" if _ca
@@ -613,6 +619,7 @@ with row2[0]:
 # ── Card 5: Territori ─────────────────────────────────────────
 with row2[1]:
     _lbl = "Territori" if _ca else "Territorio"
+    _c5 = _C_NAVY
     if (not df_territori.empty
             and "pes_cnae47_pib" in df_territori.columns):
         _terr = df_territori[df_territori["territori"] != "espanya"].dropna(subset=["pes_cnae47_pib"])
@@ -627,9 +634,9 @@ with row2[1]:
             _ctx = ("Balears lidera; Astúries tanca. La bretxa territorial s'ha eixamplat respecte la dècada anterior."
                     if _ca else
                     "Baleares lidera; Asturias cierra. La brecha territorial se ha ampliado respecto a la década anterior.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c5), unsafe_allow_html=True)
             _spark_vals = _yr_data.sort_values("pes_cnae47_pib")["pes_cnae47_pib"].tolist()
-            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+            st.plotly_chart(_spark(_spark_vals, color=_c5), use_container_width=True,
                             config={"displayModeBar": False})
             st.page_link("pages/6_Territori.py",
                          label=("Mapa i estimació per CCAA →" if _ca
@@ -642,6 +649,7 @@ with row2[1]:
 # ── Card 6: Europa ────────────────────────────────────────────
 with row2[2]:
     _lbl = "Europa"
+    _c6 = _C_AMBER_BORDER
     if not df_europa.empty and "pes_cnae47" in df_europa.columns:
         _es = df_europa[df_europa["pais_codi"] == "ES"].sort_values("any")
         _eu = df_europa[df_europa["pais_codi"] == "EU27_2020"].sort_values("any")
@@ -656,9 +664,9 @@ with row2[2]:
             _ctx = ("Espanya supera la mitjana europea 9 dels últims 10 anys. La bretxa creix per sobre la UE."
                     if _ca else
                     "España supera la media europea 9 de los últimos 10 años. La brecha crece por encima de la UE.")
-            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx, color=_c6), unsafe_allow_html=True)
             _spark_vals = [v*100 for v in _es["pes_cnae47"].tolist()]
-            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+            st.plotly_chart(_spark(_spark_vals, color=_c6), use_container_width=True,
                             config={"displayModeBar": False})
             st.page_link("pages/7_Comparativa_Europa.py",
                          label=("Comparativa amb la UE-27 →" if _ca
