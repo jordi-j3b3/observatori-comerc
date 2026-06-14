@@ -4,6 +4,11 @@
     "font": "api_ine",
     "missatge": "12653 files"
   },
+  "digitalitzacio_comerc": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "59 registres"
+  },
   "ecommerce": {
     "estat": "ok",
     "font": "api_cnmc",
@@ -38,6 +43,11 @@
     "estat": "ok",
     "font": "api_ine",
     "missatge": "3840 files"
+  },
+  "ocupacio_comerc": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "648 registres"
   },
   "pib_vab": {
     "estat": "ok",
