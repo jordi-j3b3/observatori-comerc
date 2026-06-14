@@ -1807,7 +1807,7 @@ def process_estructura_comerc():
                      "serveis_share": round(100 - float(r["bens_share"]), 2),
                      "online_pen": round(float(r["online_pen"]), 2),
                      "comerc_fisic_share": round(float(r["bens_share"]) * (1 - float(r["online_pen"]) / 100), 2),
-                     "comerc_fisic_logodds": ""})
+                     "comerc_fisic_logodds": np.nan})
     for y in HORIZON:
         rows.append({"any": y, "tipus": "projeccio",
                      "bens_share": round(g_lin(y), 2),
