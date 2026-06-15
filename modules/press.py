@@ -17,17 +17,23 @@ import feedparser
 import pandas as pd
 
 
-# (id, nom, url, area, tipus, requereix_filtre)
+# (id, nom, url, area, tipus, requereix_filtre, segment)
+# Segments per a la regla de diversitat del Bloc 2:
+#   gran_distribucio   — operadors d'escala nacional (cadenes, grans superfícies)
+#   petit_comerc       — comerç de proximitat, petit i mitjà comerç, comerç urbà
+#   centres_comercials — centres comercials, retail parks, espais comercials col·lectius
+#   institucional      — organismes públics, estadística oficial
+#   general            — fonts generalistes o multisegment sense assignació clara
 FEEDS = [
     ("distribucion_actualidad",
      "Distribución Actualidad",
      "https://www.distribucionactualidad.com/feed/",
-     "multisector", "sectorial", False),
+     "multisector", "sectorial", False, "gran_distribucio"),
 
     ("diffusion_sport",
      "Diffusion Sport — Punt de venda",
      "https://www.diffusionsport.com/punto-de-venta/feed/",
-     "multisector", "sectorial", False),
+     "multisector", "sectorial", False, "gran_distribucio"),
 
     # Feed global de Diffusion Sport (sector esports). Filtrem per
     # KEYWORDS perquè inclou també producte/marques pures sense angle
@@ -35,7 +41,7 @@ FEEDS = [
     ("diffusion_sport_global",
      "Diffusion Sport — Global",
      "https://www.diffusionsport.com/feed/",
-     "multisector", "sectorial", True),
+     "multisector", "sectorial", True, "gran_distribucio"),
 
     # ── Fonts RETIRADES per reserva de mineria de dades / IA (2026-05-27) ──
     # Aquests editors reserven expressament l'extracció i el tractament
@@ -52,15 +58,15 @@ FEEDS = [
     ("ine",
      "INE — Notes de premsa",
      "https://www.ine.es/dyngs/Prensa/es/rssNovedades.xml",
-     "institucional", "institucional", True),
+     "institucional", "institucional", True, "institucional"),
     ("idescat",
      "Idescat — Novetats",
      "https://www.idescat.cat/novetats/?m=rss",
-     "institucional", "institucional", True),
+     "institucional", "institucional", True, "institucional"),
     ("ccam_gencat",
      "CCAM — Consorci de Comerç, Artesania i Moda (Generalitat)",
      "https://ccam.gencat.cat/ca/actualitat/rss/index.html",
-     "institucional", "institucional", False),
+     "institucional", "institucional", False, "institucional"),
 
     # ── Associacions del sector (2026-06-12) ──
     # ANGED i APRESCO tenen RSS directe (verificat 200). AGECU i ANCECO bloquegen
@@ -70,21 +76,45 @@ FEEDS = [
     ("anged",
      "ANGED — Grans empreses de distribució",
      "https://anged.es/feed/",
-     "multisector", "sectorial", True),
+     "multisector", "sectorial", True, "gran_distribucio"),
     ("apresco",
      "APRESCO — Propietaris d'espais comercials",
      "https://www.apresco.es/feed/",
-     "multisector", "sectorial", True),
+     "multisector", "sectorial", True, "centres_comercials"),
     ("google_agecu",
      "AGECU — Gerència de centres urbans (via Google News)",
      "https://news.google.com/rss/search?q=site%3Aagecu.es&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "sectorial", True),
+     "multisector", "sectorial", True, "petit_comerc"),
     ("google_anceco",
      "ANCECO — Centrals de compra (via Google News)",
      "https://news.google.com/rss/search?"
      "q=%22ANCECO%22+(%22centrales+de+compra%22+OR+%22central+de+compras%22)"
      "&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "sectorial", False),
+     "multisector", "sectorial", False, "petit_comerc"),
+
+    # ── Fonts noves 2026-06-15 ──
+    # CEC: Confederación Española de Comercio, representant del comerç urbà i de
+    # proximitat d'Espanya. RSS verificat actiu (cec-comercio.org/feed/). Baix volum
+    # (última entrada set-2025); filtrem amb keywords per evitar contingut corporatiu
+    # no-retail. URL correcta: cec-comercio.org (cec.es i cec-comercio.es apunten a
+    # entitats no relacionades: empleadors de La Corunya i un portal d'empreses).
+    ("cec",
+     "CEC — Confederación Española de Comercio",
+     "https://cec-comercio.org/feed/",
+     "multisector", "sectorial", True, "petit_comerc"),
+
+    # ACES (Asociación Española de Centros y Parques Comerciales): no té RSS directe
+    # accessible. Cobertura via Google News: cerca específica per ACES + centres
+    # comercials. aces.es i acescentroscomerciales.es no resolen a feeds vàlids
+    # (l'anterior és l'Associació Catalana d'Entitats de Salut). ROADMAP: verificar
+    # domini oficial ACES i afegir feed directe quan estigui disponible.
+    ("google_aces",
+     "ACES — Centres Comercials (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=%22ACES%22+(%22centros+comerciales%22+OR+%22centros+y+parques+comerciales%22+"
+     "OR+%22retail+park%22+OR+%22parque+comercial%22)"
+     "&hl=es-ES&gl=ES&ceid=ES:es",
+     "multisector", "sectorial", True, "centres_comercials"),
 
     # Google News com a substitut de feeds amb anti-bot (Modaes, El Economista,
     # Viaempresa). Tots filtren per KEYWORDS i ANTI_KEYWORDS per evitar drift
@@ -94,7 +124,7 @@ FEEDS = [
      "https://news.google.com/rss/search?"
      "q=%22comercio+minorista%22+OR+%22comer%C3%A7+al+detall%22+OR+%22retail+Espa%C3%B1a%22+OR+%22distribuci%C3%B3n+comercial%22"
      "&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "agregador", True),
+     "multisector", "agregador", True, "general"),
     # Modaes: omes. El feed directe te anti-bot i Google News no
     # indexa els titulars (retorna nomes "- Modaes" buit). La cobertura
     # de moda es manté via Alimarket non-food, Diffusion Sport i la
@@ -104,18 +134,18 @@ FEEDS = [
      "https://news.google.com/rss/search?"
      "q=site%3Aeleconomista.es+(%22comercio+minorista%22+OR+retail+OR+%22distribuci%C3%B3n+comercial%22+OR+supermercados+OR+tiendas+OR+%22gran+consumo%22)"
      "&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "generalista", True),
+     "multisector", "generalista", True, "general"),
     ("google_viaempresa",
      "Viaempresa (via Google News)",
      "https://news.google.com/rss/search?"
      "q=site%3Aviaempresa.cat+(comer%C3%A7+OR+retail+OR+minorista+OR+distribuci%C3%B3+OR+consum+OR+botiga+OR+supermercat)"
      "&hl=ca&gl=ES&ceid=ES:ca",
-     "multisector", "generalista", True),
+     "multisector", "generalista", True, "general"),
 
     ("google_inforetail",
      "InfoRetail (via Google News)",
      "https://news.google.com/rss/search?q=site%3Ainforetail.es&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "sectorial", False),
+     "multisector", "sectorial", False, "general"),
 
     # Preferente RETIRAT (2026-06-12): és premsa turística/hotelera; les seves
     # notícies no aporten valor al resum de comerç al detall. Es manté
@@ -124,7 +154,7 @@ FEEDS = [
     ("google_elconfidencial",
      "El Confidencial — Economia (via Google News)",
      "https://news.google.com/rss/search?q=site%3Aelconfidencial.com+(%22comercio+minorista%22+OR+retail+OR+supermercado+OR+%22gran+consumo%22+OR+%22distribuci%C3%B3n+comercial%22)&hl=es-ES&gl=ES&ceid=ES:es",
-     "multisector", "generalista", True),
+     "multisector", "generalista", True, "general"),
 ]
 
 
@@ -378,6 +408,7 @@ _COVERED_DOMAINS = (
     "apresco.es",         # feed directe propi
     "agecu.es",           # via google_agecu
     "anceco.com",         # via google_anceco
+    "cec-comercio.org",   # feed directe propi
 )
 # Google News posa la font com a sufix del títol: "Titular - domini.com".
 _TITLE_SRC_RE = re.compile(r"\s[-–]\s([\w.\-]+\.\w{2,})\s*$")
@@ -414,7 +445,7 @@ def _source_domain(entry, titol, link):
 
 
 def _fetch_one(feed_cfg):
-    feed_id, nom, url, area, tipus, needs_filter = feed_cfg
+    feed_id, nom, url, area, tipus, needs_filter, segment = feed_cfg
     try:
         parsed = feedparser.parse(url, request_headers={"User-Agent": _UA})
     except Exception:
@@ -443,6 +474,7 @@ def _fetch_one(feed_cfg):
             "font_id": feed_id,
             "area": area,
             "tipus": tipus,
+            "segment": segment,
             "titol": titol,
             "snippet": snippet,
             "link": link,
@@ -459,7 +491,7 @@ def fetch_press():
     for f in FEEDS:
         rows.extend(_fetch_one(f))
 
-    cols = ["data", "font", "font_id", "area", "tipus", "titol", "snippet", "link"]
+    cols = ["data", "font", "font_id", "area", "tipus", "segment", "titol", "snippet", "link"]
     if not rows:
         return pd.DataFrame(columns=cols)
 
@@ -481,4 +513,5 @@ def fetch_press():
             .drop(columns=["_norm", "_trust"]))
 
     df = df.sort_values("data", ascending=False, na_position="last").reset_index(drop=True)
+    df["segment"] = df["segment"].fillna("general")
     return df[cols]
