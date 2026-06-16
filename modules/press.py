@@ -23,6 +23,7 @@ import pandas as pd
 #   petit_comerc       — comerç de proximitat, petit i mitjà comerç, comerç urbà
 #   centres_comercials — centres comercials, retail parks, espais comercials col·lectius
 #   institucional      — organismes públics, estadística oficial
+#   macro              — bancs centrals, política monetària, indicadors macro
 #   general            — fonts generalistes o multisegment sense assignació clara
 FEEDS = [
     ("distribucion_actualidad",
@@ -115,6 +116,41 @@ FEEDS = [
      "OR+%22retail+park%22+OR+%22parque+comercial%22)"
      "&hl=es-ES&gl=ES&ceid=ES:es",
      "multisector", "sectorial", True, "centres_comercials"),
+
+    # ── Fonts macro: BCE i política monetària (afegit 2026-06-16) ──────────────
+    # El BCE i el Banco de España generen fets que afecten directament el consum
+    # minorista (tipos de interès, inflació, crèdit al consum). Cap dels feeds
+    # sectorials/generalistes actuals els capta de manera fiable: el Google News
+    # retail exigeix paraules retail que sovint falten als comunicats oficials; i
+    # la cobertura mediàtica arriba fragmentada i tard.
+    #
+    # requereix_filtre=False: els feeds/queries ja estan pre-filtrats temàticament;
+    # aplicar KEYWORDS (retail) descartaria precisament el que volem capturar.
+    # ANTI_HARD no s'aplica (lín. 487: "if needs_filter and ..."), però ECB/BdE
+    # no publiquen alertes sanitàries ni notícies de defensa, de manera que
+    # ometre ANTI_HARD no genera falsos positius en la pràctica.
+    #
+    # ECB Statistical Press Releases: estadística d'interès (tipus d'interès
+    # bancaris, agregats monetaris M3, actes del Consell de Govern). Feed RSS XML
+    # actiu (verificat 2026-06-16, HTTP 200, 3 entrades recents confirmades per
+    # WebFetch). En anglès; el model pot interpretar el context sense traducció.
+    ("ecb_statpress",
+     "ECB — Statistical Press Releases",
+     "https://www.ecb.europa.eu/rss/statpress.html",
+     "macro", "institucional", False, "macro"),
+
+    # Google News BCE/macro en castellà: cobertura mediàtica espanyola de les
+    # decisions del BCE i del Banco de España (Banco de España: RSS bde.es trencada
+    # verificat 2026-06-16, tot el domini redirigeix a app.bde.es → 404).
+    # La cerca sense filtre retail captura notícies com "El BCE sube tipos al 2,25%"
+    # que els feeds generalistes filtrats per retail no detecten.
+    ("google_bce_macro",
+     "BCE / Política monetaria — impacte consum (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=(BCE+OR+%22Banco+Central+Europeo%22+OR+%22tipos+de+inter%C3%A9s%22+"
+     "OR+%22pol%C3%ADtica+monetaria%22+OR+eur%C3%ADbor+OR+%22Banco+de+Espa%C3%B1a%22)"
+     "&hl=es-ES&gl=ES&ceid=ES:es",
+     "macro", "institucional", False, "macro"),
 
     # Comerç Barcelona (Consorci de Comerç de Barcelona / Ajuntament de Barcelona):
     # no té RSS directe verificat al domini comerc.barcelona. Cobertura via
