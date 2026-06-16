@@ -116,6 +116,28 @@ FEEDS = [
      "&hl=es-ES&gl=ES&ceid=ES:es",
      "multisector", "sectorial", True, "centres_comercials"),
 
+    # Comerç Barcelona (Consorci de Comerç de Barcelona / Ajuntament de Barcelona):
+    # no té RSS directe verificat al domini comerc.barcelona. Cobertura via
+    # Google News. ROADMAP: verificar comerc.barcelona/feed/ i afegir feed directe.
+    ("google_comerc_barcelona",
+     "Comerç Barcelona (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=(site%3Acomerc.barcelona+OR+%22Consorci+de+Comer%C3%A7%22+"
+     "OR+%22comer%C3%A7+de+Barcelona%22+OR+%22comer%C3%A7+urbà+Barcelona%22)"
+     "&hl=ca&gl=ES&ceid=ES:ca",
+     "multisector", "institucional", True, "petit_comerc"),
+
+    # Comertia (Associació de Franquícia i Retail Catalunya):
+    # no té RSS directe verificat al domini comertia.com. Cobertura via
+    # Google News. ROADMAP: verificar comertia.com/feed/ i afegir feed directe.
+    ("google_comertia",
+     "Comertia — Franquícia i Retail Catalunya (via Google News)",
+     "https://news.google.com/rss/search?"
+     "q=(site%3Acomertia.com+OR+%22Comertia%22+"
+     "OR+%22franqu%C3%ADcia+Catalunya%22+OR+%22retail+català%22)"
+     "&hl=ca&gl=ES&ceid=ES:ca",
+     "multisector", "sectorial", True, "petit_comerc"),
+
     # Google News com a substitut de feeds amb anti-bot (Modaes, El Economista,
     # Viaempresa). Tots filtren per KEYWORDS i ANTI_KEYWORDS per evitar drift
     # cap a temàtiques no-retail (energia, agro, etc.).
