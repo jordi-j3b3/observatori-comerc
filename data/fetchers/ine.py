@@ -47,7 +47,11 @@ def _fetch_table(table_id, nult=None, retries=8, det=None):
             time.sleep(15)
         elif resp.status_code == 429:
             time.sleep(30)
+        elif 500 <= resp.status_code < 600:
+            # Error de servidor (502, 503, etc) — reintentar
+            time.sleep(15)
         else:
+            # Error de client (404, 400, etc) — fallar
             resp.raise_for_status()
 
     print(f"    Fallida INE T={table_id} (timeout o error de servidor). Retornant dades buides.")
