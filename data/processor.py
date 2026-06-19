@@ -1191,7 +1191,12 @@ def process_ipc():
     Necessari per deflactar series d'alta frequencia (com CDMGE).
     """
     print("  Carregant IPC mensual (taula 50902)...")
-    df = ine.fetch_ipc()
+    try:
+        df = ine.fetch_ipc()
+    except Exception as e:
+        print(f"  AVIS: error IPC API ({e}); mantenint cache existent")
+        return load_cache("ipc")
+
     if df.empty:
         print("  AVIS: cap dada IPC; mantenint cache existent")
         return load_cache("ipc")

@@ -26,7 +26,12 @@ def _fetch_table(table_id, nult=None, retries=8, det=None):
         params["det"] = det
 
     for attempt in range(retries):
-        resp = requests.get(url, params=params, timeout=120)
+        try:
+            resp = requests.get(url, params=params, timeout=120)
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            time.sleep(15)
+            continue
+
         if resp.status_code == 200:
             data = resp.json()
             # Petició encara en cua retornada amb 200 i cos d'estat
@@ -45,7 +50,8 @@ def _fetch_table(table_id, nult=None, retries=8, det=None):
         else:
             resp.raise_for_status()
 
-    raise Exception(f"No s'han pogut obtenir dades de la taula {table_id} després de {retries} intents")
+    print(f"    Fallida INE T={table_id} (timeout o error de servidor). Retornant dades buides.")
+    return []
 
 
 def _parse_ine_series(data):
