@@ -41,8 +41,8 @@
    "detected_at": "2026-05-29"
   },
   "cdmge": {
-   "last_data": "2026-05-15",
-   "detected_at": "2026-06-05"
+   "last_data": "2026-05-31",
+   "detected_at": "2026-06-19"
   },
   "ipc": {
    "last_data": "2025",
@@ -62,6 +62,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "cdmge",
+   "label_ca": "Pols diari",
+   "label_es": "Pulso diario",
+   "last_data": "2026-05-31",
+   "detected_at": "2026-06-19"
+  },
   {
    "dataset": "cdmge",
    "label_ca": "Pols diari",
