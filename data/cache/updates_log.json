@@ -37,8 +37,8 @@
    "detected_at": "2026-05-22"
   },
   "europa_retail_mensual": {
-   "last_data": "2026-04",
-   "detected_at": "2026-05-29"
+   "last_data": "2026-05",
+   "detected_at": "2026-06-26"
   },
   "cdmge": {
    "last_data": "2026-05-31",
@@ -62,6 +62,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "europa_retail_mensual",
+   "label_ca": "Comerç a Europa (mensual)",
+   "label_es": "Comercio en Europa (mensual)",
+   "last_data": "2026-05",
+   "detected_at": "2026-06-26"
+  },
   {
    "dataset": "cdmge",
    "label_ca": "Pols diari",
