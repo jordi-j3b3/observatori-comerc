@@ -1673,7 +1673,14 @@ DATASETS_VIGILATS = {
     "ocupacio_comerc": {"col": "any", "ca": "Ocupació per sexe i edat", "es": "Ocupación por sexo y edad"},
     "cdmge":                 {"col": "data",    "ca": "Pols diari",                 "es": "Pulso diario"},
     "ipc":                   {"col": "any",     "ca": "IPC",                        "es": "IPC"},
-    "subsectors_dirce":      {"col": "any",     "ca": "Subsectors",                 "es": "Subsectores"},
+    "subsectors_dirce":      {"col": "any",     "ca": "Subsectors (oferta, DIRCE)",  "es": "Subsectores (oferta, DIRCE)"},
+    "subsectors_eas":        {"col": "any",     "ca": "Subsectors (oferta, EAS)",    "es": "Subsectores (oferta, EAS)"},
+    "subsectors_epf":        {"col": "any",     "ca": "Pressupostos familiars (EPF)", "es": "Presupuestos Familiares (EPF)"},
+    "subsectors_472":        {"col": "any",     "ca": "Subsectors d'alimentació (472)", "es": "Subsectores de alimentación (472)"},
+    "estructura_consum":     {"col": "any",     "ca": "Consum: béns i serveis (Eurostat)", "es": "Consumo: bienes y servicios (Eurostat)"},
+    "estructura_retail":     {"col": "any",     "ca": "Estructura del comerç a la UE (SBS)", "es": "Estructura del comercio en la UE (SBS)"},
+    "estructura_retail_mida": {"col": "any",    "ca": "Comerç UE per mida d'empresa", "es": "Comercio UE por tamaño de empresa"},
+    "estructura_retail_supervivencia": {"col": "any", "ca": "Supervivència d'empreses (UE)", "es": "Supervivencia de empresas (UE)"},
 }
 
 

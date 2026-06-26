@@ -59,9 +59,24 @@
   "ocupacio_comerc": {
    "last_data": "2025",
    "detected_at": "2026-05-25"
+  },
+  "subsectors_eas": {
+   "last_data": "2024",
+   "detected_at": "2026-06-26"
+  },
+  "subsectors_epf": {
+   "last_data": "2025",
+   "detected_at": "2026-06-26"
   }
  },
  "events": [
+  {
+   "dataset": "subsectors_epf",
+   "label_ca": "Pressupostos familiars (EPF)",
+   "label_es": "Presupuestos Familiares (EPF)",
+   "last_data": "2025",
+   "detected_at": "2026-06-26"
+  },
   {
    "dataset": "europa_retail_mensual",
    "label_ca": "Comerç a Europa (mensual)",
