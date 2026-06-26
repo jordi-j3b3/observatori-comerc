@@ -8,6 +8,7 @@ Estrategia:
 - Agregadors (Google News): consultes ja focalitzades en l'eix retail/consum.
 """
 from __future__ import annotations
+import json
 import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -15,6 +16,7 @@ from urllib.parse import urlparse
 
 import feedparser
 import pandas as pd
+import requests
 
 
 # (id, nom, url, area, tipus, requereix_filtre, segment)
@@ -573,3 +575,86 @@ def fetch_press():
     df = df.sort_values("data", ascending=False, na_position="last").reset_index(drop=True)
     df["segment"] = df["segment"].fillna("general")
     return df[cols]
+
+
+# ── Resolució d'enllaços de Google News ──────────────────────────────────────
+# Els feeds de Google News retornen URLs de redirecció (news.google.com/rss/
+# articles/CBMi…) amb un token opac que NO es pot descodificar localment: cal una
+# crida a l'API interna batchexecute de Google. Resolem-los a la URL real de
+# l'editor només per als pocs enllaços que entren al butlletí final (no a tot el
+# recull, que seria desenes de crides). Qualsevol error retorna l'enllaç original
+# sense petar: un enllaç de Google News funciona, només és lleig.
+
+_GNEWS_RE = re.compile(r"https://news\.google\.com/rss/articles/[A-Za-z0-9_\-]+")
+# Cookies de consentiment: sense elles la pàgina de l'article és el mur de
+# consentiment EU i no exposa la signatura (data-n-a-sg) que necessita l'API.
+_GNEWS_COOKIES = {
+    "CONSENT": "YES+cb",
+    "SOCS": "CAESEwgDEgk0ODE3Nzk3MjQaAmVuIAEaBgiA_LyaBg",
+}
+
+
+def resolve_google_news_url(url: str, timeout: int = 12) -> str:
+    """Resol una URL de redirecció de Google News a la URL real de l'editor.
+
+    Retorna la URL original si no és un enllaç de Google News o si la resolució
+    falla per qualsevol motiu (xarxa, format canviat, token caducat…).
+    """
+    if "news.google.com/rss/articles/" not in url:
+        return url
+    try:
+        art = url.split("/articles/", 1)[1].split("?", 1)[0]
+        s = requests.Session()
+        s.headers["User-Agent"] = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        )
+        for k, v in _GNEWS_COOKIES.items():
+            s.cookies.set(k, v, domain=".google.com")
+        r = s.get(
+            f"https://news.google.com/rss/articles/{art}?hl=en-US&gl=US&ceid=US:en",
+            timeout=timeout,
+        )
+        sg = re.search(r'data-n-a-sg="([^"]+)"', r.text)
+        ts = re.search(r'data-n-a-ts="([^"]+)"', r.text)
+        aid = re.search(r'data-n-a-id="([^"]+)"', r.text)
+        if not (sg and ts):
+            return url
+        payload = [[[
+            "Fbv4je",
+            json.dumps(["garturlreq",
+                        [["X", "X", ["X", "X"], None, None, 1, 1, "US:en", None, 1,
+                          None, None, None, None, None, 0, 1],
+                         "X", "X", 1, [1, 1, 1], 1, 1, None, 0, 0, None, 0],
+                        (aid.group(1) if aid else art), ts.group(1), sg.group(1)]),
+        ]]]
+        r2 = s.post(
+            "https://news.google.com/_/DotsSplashUi/data/batchexecute",
+            data="f.req=" + requests.utils.quote(json.dumps(payload)),
+            timeout=timeout,
+            headers={"Content-Type":
+                     "application/x-www-form-urlencoded;charset=UTF-8"},
+        )
+        m = re.search(r'\[\\"garturlres\\",\\"(.*?)\\"', r2.text)
+        if not m:
+            return url
+        return m.group(1).encode().decode("unicode_escape")
+    except Exception:
+        return url
+
+
+def resolve_links_in_text(text: str, timeout: int = 12) -> tuple[str, int]:
+    """Substitueix totes les URLs de Google News d'un text per l'enllaç real de
+    l'editor. Retorna (text_resolt, nombre d'enllaços resolts amb èxit). Cada URL
+    es resol un sol cop encara que aparegui més d'una vegada.
+    """
+    cache: dict[str, str] = {}
+    resolts = 0
+    for u in dict.fromkeys(_GNEWS_RE.findall(text)):
+        nou = resolve_google_news_url(u, timeout=timeout)
+        cache[u] = nou
+        if nou != u:
+            resolts += 1
+    for u, nou in cache.items():
+        if nou != u:
+            text = text.replace(u, nou)
+    return text, resolts
