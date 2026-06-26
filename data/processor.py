@@ -1683,6 +1683,17 @@ DATASETS_VIGILATS = {
     "estructura_retail_supervivencia": {"col": "any", "ca": "Supervivència d'empreses (UE)", "es": "Supervivencia de empresas (UE)"},
 }
 
+# Caches .csv que NO es vigilen a propòsit (amb el motiu). Serveix perquè
+# check_unwatched_caches() no els marqui com a oblidats. Si afegeixes una font
+# nova al pipeline, dona-la d'alta a DATASETS_VIGILATS o, si no toca vigilar-la,
+# aquí amb el motiu.
+CACHES_NO_VIGILATS = {
+    "estructura_comerc",        # sèrie projectada fins al 2035: el marcador no és una dada real
+    "prediccions_estructura",   # projeccions internes pròpies, no una font externa
+    "lideres_empreses",         # export manual SABI, sense columna de data i ritme irregular
+    "municipal",                # només local (OBSERVATORI_LOCAL=1), no es publica
+}
+
 
 def _dataset_last_marker(name, col):
     """Retorna un string que identifica la última dada de la sèrie d'un
@@ -1749,6 +1760,23 @@ def record_dataset_updates():
     with open(path, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=1)
     print(f"  Registre d'actualitzacions: {nous} novetat(s) detectada(es)")
+    check_unwatched_caches()
+
+
+def check_unwatched_caches():
+    """Avisa de caches .csv que no es vigilen ni són a la llista d'exclusions.
+    Evita que una font nova del pipeline es quedi fora del bloc Novetats sense
+    que ningú se n'adoni. Només avisa (no atura el pipeline)."""
+    if not os.path.isdir(CACHE_DIR):
+        return []
+    presents = {f[:-4] for f in os.listdir(CACHE_DIR) if f.endswith(".csv")}
+    oblidats = sorted(presents - set(DATASETS_VIGILATS) - CACHES_NO_VIGILATS)
+    if oblidats:
+        print("  AVÍS: caches sense vigilar (ni a CACHES_NO_VIGILATS). "
+              "Dona'ls d'alta a DATASETS_VIGILATS o exclou-los amb el motiu:")
+        for c in oblidats:
+            print(f"    - {c}")
+    return oblidats
 
 
 def process_estructura_comerc():
