@@ -25,12 +25,12 @@
    "detected_at": "2026-05-22"
   },
   "icm": {
-   "last_data": "2026-04-01",
-   "detected_at": "2026-05-28"
+   "last_data": "2026-05-01",
+   "detected_at": "2026-06-29"
   },
   "icm_distribucion": {
-   "last_data": "2026-04-01",
-   "detected_at": "2026-05-28"
+   "last_data": "2026-05-01",
+   "detected_at": "2026-06-29"
   },
   "eaes": {
    "last_data": "2023",
@@ -90,6 +90,20 @@
   }
  },
  "events": [
+  {
+   "dataset": "icm_distribucion",
+   "label_ca": "ICM per format de venda",
+   "label_es": "ICM por formato de venta",
+   "last_data": "2026-05-01",
+   "detected_at": "2026-06-29"
+  },
+  {
+   "dataset": "icm",
+   "label_ca": "Pols mensual (ICM)",
+   "label_es": "Pulso mensual (ICM)",
+   "last_data": "2026-05-01",
+   "detected_at": "2026-06-29"
+  },
   {
    "dataset": "subsectors_epf",
    "label_ca": "Pressupostos familiars (EPF)",
