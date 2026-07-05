@@ -29,11 +29,14 @@ _VALIDATION_WARNINGS = []
 # Fonts que han d'actualitzar-se obligatoriament des de l'API primaria cada dia.
 # Si alguna cau a cache de seguretat, el workflow ha de fer fail per avisar.
 # Resta de fonts: la cache servirà mentre es resolen.
+#
+# NOTA: "ecommerce" (CNMC) està exclòs intencionadament. La CNMC publica dades
+# amb freqüència trimestral; la cache és el fallback esperat la majoria de dies.
+# Un fallback de la CNMC no implica cap problema d'actualització.
 CRITICAL_SOURCES = {
     "pib_vab",                  # INE — pes G47 al PIB
     "empreses",                 # INE — DIRCE
     "productivitat",            # INE — EEE Comercio
-    "ecommerce",                # CNMC — comerç electronic
     "europa_vab",               # Eurostat — pes G47 UE
     "europa_retail_mensual",    # Eurostat — sts_trtu_m
     "icm",                      # INE — Índices de Comercio al por Menor
