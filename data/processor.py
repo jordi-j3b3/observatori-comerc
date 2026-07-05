@@ -114,7 +114,8 @@ def _assert_critical_ok():
             print(f"    - {w}")
 
 
-def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0):
+def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0,
+                     group_by=None):
     """Valida que una sèrie tingui prou dades i cap valor absurd.
 
     Registra avisos a _VALIDATION_WARNINGS (no fa fallar el workflow,
@@ -126,8 +127,14 @@ def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0):
         name:        Nom de la font (per al log).
         min_rows:    Mínim de files amb valor no-NaN exigit.
         max_nan_pct: Fracció màxima de NaN tolerada (0–1).
-        max_jump:    Ratio màxim acceptable entre valors consecutius.
-                     Un salt de 10× o més és probable error de dades.
+        max_jump:    Ratio màxim acceptable entre valors consecutius dins
+                     una mateixa sèrie. Un salt de 10× o més és probable
+                     error de dades.
+        group_by:    Columna (o llista de columnes) que identifica cada
+                     sèrie independent dins el DataFrame. Quan s'indica,
+                     els ratios es calculen dins cada grup per evitar
+                     falsos positius als límits entre sèries concatenades
+                     (ex: icm té ~300 sèries amb escales dispars).
     Returns:
         True si la sèrie sembla vàlida; False si hi ha un problema seriós.
     """
@@ -155,19 +162,30 @@ def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0):
         )
         return False
 
-    # Detecció de salts bruscos (possible canvi de taula o error d'escala)
-    numeric = pd.to_numeric(series, errors="coerce").dropna()
-    if len(numeric) > 1:
+    # Detecció de salts bruscos (possible canvi de taula o error d'escala).
+    # Si group_by indica la columna de sèrie, el ratio es calcula dins cada
+    # grup per no creuar límits entre sèries d'escales diferents.
+    def _max_ratio_in(values):
+        numeric = pd.to_numeric(values, errors="coerce").dropna()
+        if len(numeric) < 2:
+            return 0.0
         nonzero = numeric[numeric != 0]
-        if len(nonzero) > 1:
-            ratios = (nonzero / nonzero.shift(1)).abs().dropna()
-            max_ratio = float(ratios.max())
-            if max_ratio > max_jump:
-                _VALIDATION_WARNINGS.append(
-                    f"{name}/{col}: salt inesperat de {max_ratio:.1f}× entre "
-                    f"valors consecutius (possible canvi d'escala o metodologia)"
-                )
-                # Avís, no error: pot ser un canvi metodològic legítim.
+        if len(nonzero) < 2:
+            return 0.0
+        return float((nonzero / nonzero.shift(1)).abs().dropna().max())
+
+    if group_by is not None and group_by in df.columns:
+        max_ratio = float(df.groupby(group_by, sort=False)[col]
+                          .apply(_max_ratio_in).max())
+    else:
+        max_ratio = _max_ratio_in(series)
+
+    if max_ratio > max_jump:
+        _VALIDATION_WARNINGS.append(
+            f"{name}/{col}: salt inesperat de {max_ratio:.1f}× entre "
+            f"valors consecutius (possible canvi d'escala o metodologia)"
+        )
+        # Avís, no error: pot ser un canvi metodològic legítim.
 
     return True
 
@@ -1525,7 +1543,7 @@ def process_cdmge():
         _record_status("cdmge", "fallback" if not df_cache.empty else "error",
                        "cache", "API INE CDMGE buida")
         return df_cache
-    _is_valid_series(df, "valor", "cdmge")
+    _is_valid_series(df, "valor", "cdmge", group_by="indicador")
     save_cache(df, "cdmge")
     _record_status("cdmge", "ok", "api_ine", f"{len(df)} files")
     return df
@@ -1554,7 +1572,12 @@ def process_icm():
         _record_status("icm", "fallback" if not df_cache.empty else "error",
                        "cache", "API INE ICM buida")
         return df_cache
-    _is_valid_series(df, "valor", "icm")
+    # Validem només les sèries d'índex (base 2021=100). Les derivades
+    # (var_mensual, var_anual, var_mitjana_acum) poden tenir valors prop de zero
+    # seguits de pics estacionals grans (ex: 0.1% nov → 24.2% des), cosa que
+    # dispara falsos positius per ràtio sense indicar cap canvi d'escala real.
+    df_idx = df[df["indicador"] == "index"] if "indicador" in df.columns else df
+    _is_valid_series(df_idx, "valor", "icm", group_by="serie_id")
     save_cache(df, "icm")
     _record_status("icm", "ok", "api_ine", f"{len(df)} files")
     return df
