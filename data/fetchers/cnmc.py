@@ -7,10 +7,12 @@ import pandas as pd
 import io
 
 # ID del recurs CSV: volum de negoci del comerc electronic per rames d'activitat
-# Actualitzat 2026-05-31: l'antic ID (fddca89f-d2ee-4de3-81ce-c17d3dd4b81d)
-# retornava 403 Authorization Error. La CNMC ha reidentificat el recurs com a
-# part del dataset ds_14116_1 (mateixes columnes, mateix format).
-VOLUM_NEGOCI_CSV_ID = "ec53a970-07c9-4dac-8fb4-bdabfd7f2808"
+# Actualitzat 2026-07-06: l'ID anterior (ec53a970-07c9-4dac-8fb4-bdabfd7f2808,
+# dataset ds_14116_1) retornava 404. La CNMC ha tornat a reidentificar el recurs
+# dins el dataset ds_24264_1 ("Evolución trimestral del volumen de negocio del
+# comercio electrónico por ramas de actividad"), mateixes columnes i format.
+# Historial: fddca89f… (403) → ec53a970… (404) → recurs actual.
+VOLUM_NEGOCI_CSV_ID = "7b7e963f-a8d8-4897-bd19-d96a086a6019"
 DUMP_URL = "https://catalogodatos.cnmc.es/datastore/dump"
 
 # Codis CNAE que pertanyen al comerç minorista (47)
