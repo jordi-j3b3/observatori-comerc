@@ -10,9 +10,9 @@
     "missatge": "59 registres"
   },
   "ecommerce": {
-    "estat": "fallback",
-    "font": "cache",
-    "missatge": "API CNMC buida"
+    "estat": "ok",
+    "font": "api_cnmc",
+    "missatge": "13 files"
   },
   "empreses": {
     "estat": "ok",
