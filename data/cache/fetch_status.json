@@ -2,7 +2,7 @@
   "cdmge": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "12717 files"
+    "missatge": "12808 files"
   },
   "digitalitzacio_comerc": {
     "estat": "ok",
@@ -10,9 +10,9 @@
     "missatge": "59 registres"
   },
   "ecommerce": {
-    "estat": "ok",
-    "font": "api_cnmc",
-    "missatge": "13 files"
+    "estat": "fallback",
+    "font": "cache",
+    "missatge": "API CNMC buida"
   },
   "empreses": {
     "estat": "ok",
@@ -27,7 +27,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8908 files"
+    "missatge": "8916 files"
   },
   "europa_vab": {
     "estat": "ok",
