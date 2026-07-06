@@ -410,6 +410,14 @@ def _clean_snippet(text, n=240):
     if not text:
         return ""
     text = re.sub(r"<[^>]+>", " ", text)
+    # Elimina el peu boilerplate dels feeds WordPress/Yoast que s'arrossega al
+    # summary: "The post <títol> appeared first on <lloc>. <tagline>…" i
+    # l'equivalent castellà "La entrada <títol> se publicó primero en <lloc>…".
+    # Sempre és al final; s'elimina des d'aquí fins al final (inclou el tagline).
+    text = re.sub(
+        r"\s*(?:The post\b.*?\bappeared first on\b"
+        r"|La entrada\b.*?\bse public[oó] primero en\b).*$",
+        "", text, flags=re.IGNORECASE | re.DOTALL)
     text = re.sub(r"\s+", " ", text).strip()
     return (text[:n] + "…") if len(text) > n else text
 
