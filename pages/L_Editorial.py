@@ -445,6 +445,11 @@ def render_noticias(content: str) -> str:
 
 
 def render_datos(content: str) -> str:
+    # El model escriu els valors negatius amb el signe menys tipogràfic
+    # U+2212 ("−"), que el regex de bullets ([+-]) i el parse a float no
+    # reconeixen → les branques negatives (p.ex. Combustible −6,9%) es
+    # perdien del gràfic. El normalitzem a guió ASCII abans de parsejar.
+    content = content.replace("−", "-")
     label = ("Dades de la setmana" if _ca else "Datos de la semana")
     intro_m = re.search(r"\*\*Datos:\*\*\s*(.+)", content)
     intro = intro_m.group(1).strip() if intro_m else ""

@@ -136,8 +136,15 @@ if not _pulse_fresc and not df_icm.empty and "ambit" in df_icm.columns:
 
 _ndir = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
 try:
-    _sig = tuple(sorted(f for f in os.listdir(_ndir)
-                        if f.startswith("semana-") and f.endswith(".md")))
+    # Signatura sensible al CONTINGUT (nom + mtime), no només al nom: si una
+    # edició ja publicada es corregeix (p.ex. es re-mirra la versió realment
+    # enviada sobre el mateix fitxer setmanal), el nom no canvia però sí el
+    # mtime → la caché de load_tesi es refresca igualment.
+    _sig = tuple(sorted(
+        (f, int(os.path.getmtime(os.path.join(_ndir, f))))
+        for f in os.listdir(_ndir)
+        if f.startswith("semana-") and f.endswith(".md")
+    ))
 except OSError:
     _sig = ()
 _tesi = load_tesi(_sig)
