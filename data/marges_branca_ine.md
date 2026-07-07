@@ -1,4 +1,4 @@
-# Marges per branca — font INE (`marges_branca_ine.csv`)
+# Marges per branca — font INE (`cache/marges_branca_ine.csv`)
 
 ## Què és
 
@@ -6,6 +6,14 @@ Marge brut d'explotació sobre vendes (%) per branca del comerç minorista
 espanyol (CNAE 47 a 3 dígits), sèrie anual 2018–2024. Font primària oficial,
 descarregable per API. **Substitueix** l'estimació de PATECO
 (`marges_branca.csv`).
+
+## Generació (auto-actualitzable)
+
+Es genera al workflow diari via `processor.py::process_marges_branca()`, que
+crida `ine.fetch_marges_branca()` i desa `data/cache/marges_branca_ine.csv`
+(+ `.parquet`). Mateix patró que la resta de fonts anuals (EAS, DIRCE...): quan
+l'INE publica un any nou, la propera execució l'incorpora; si l'API falla, es
+manté la cache anterior. Està vigilat a `DATASETS_VIGILATS` (bloc Novetats).
 
 ## Definició
 
@@ -24,11 +32,9 @@ s'estima.
 - **INE — Estadística Estructural d'Empreses: Sector Comercio** (evolució de
   l'antiga *Encuesta Anual de Comercio*), taula **76818**, Total Nacional.
 - API JSON: `https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/76818`
-- Reproduïble amb `data/fetchers/ine.py::fetch_marges_branca()`. Regenerar:
-  ```python
-  import sys; sys.path.insert(0, "data/fetchers"); import ine
-  ine.fetch_marges_branca().to_csv(...)  # + columnes font i verificat
-  ```
+- Reproduïble amb `data/fetchers/ine.py::fetch_marges_branca()`. La generació al
+  cache la fa `processor.py::process_marges_branca()` (vegeu apartat anterior);
+  s'executa sola al workflow diari.
 
 ## Cobertura
 

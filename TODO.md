@@ -94,8 +94,9 @@ Avui cada pàgina llegeix els CSV directament amb `pd.read_csv`. Crear `data/loa
 
 **Consumidors**: el pipeline de la newsletter (j3b3-newsletter) ja apunta `marges_origen` a `marges_branca_ine.csv`; l'estimació PATECO (`marges_branca.csv`) queda marcada com a substituïda.
 
+**Reg automàtic**: FET. `processor.py::process_marges_branca()` (pas 7b de `process_all()`) regenera `data/cache/marges_branca_ine.csv` al workflow diari, mateix patró que EAS (reescriu si l'API torna dades, manté cache si falla). Vigilat a `DATASETS_VIGILATS` (bloc Novetats). El fitxer ha passat de `data/` arrel a `data/cache/`.
+
 **Pendent**:
-- **Reg automàtic**: `marges_branca_ine.csv` es regenera cridant `fetch_marges_branca()` a mà. Per fer-lo 100% auto-actualitzable, afegir una passa al `processor.py` (i al workflow diari) que reescrigui el fitxer. Ara mateix la font ja és per API, però la generació no està enganxada al cron.
 - **Branca 478 (mercadillos)**: l'INE no en publica dades a la 76818; queda fora de la sèrie. Buscar si hi ha una altra taula que la cobreixi, o documentar-ho com a límit permanent.
 - **Definició de marge**: l'INE dona EBE/vendes (gross operating rate); PATECO usa una definició pròpia que dona xifres més altes en algunes branques. Confirmar si per als lliurables interessa replicar la definició de PATECO (marge comercial brut vendes−compres) o mantenir la de l'INE.
 

@@ -1205,6 +1205,35 @@ def process_subsectors():
         print(f"  Error EPF: {e}")
 
 
+MARGES_FONT = ("INE, EEE Comercio (Encuesta Anual de Comercio), taula 76818 · "
+               "https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/76818")
+
+
+def process_marges_branca():
+    """
+    Marges per branca del comerç minorista (INE, EEE Comercio / Encuesta Anual
+    de Comercio, T=76818). marge = EBE / xifra de negoci × 100 per branca CNAE 47
+    a 3 dígits (471-479, excepte 478 que l'INE no publica), sèrie anual des de 2018.
+
+    Font oficial anual; substitueix l'estimació PATECO. La consumeix el pipeline
+    de la newsletter (bloc 3 'marges_branca'). Mateix patró que EAS: si l'API
+    torna dades es reescriu la cache; si torna buit, es manté la cache anterior.
+    """
+    try:
+        df = ine.fetch_marges_branca()
+        if not df.empty:
+            df["font"] = MARGES_FONT
+            df["verificat"] = True
+            df = df[["any", "cnae", "branca", "marge_vendes_pct", "font", "verificat"]]
+            save_cache(df, "marges_branca_ine")
+            print(f"  Marges branca: {len(df)} files, {df['cnae'].nunique()} branques, "
+                  f"anys {df['any'].min()}-{df['any'].max()}")
+        else:
+            print("  Marges branca: sense dades, mantenint cache")
+    except Exception as e:
+        print(f"  Error marges branca: {e}")
+
+
 def process_ipc():
     """
     IPC general nacional, sèrie mensual base 2021=100 (T=50902).
@@ -1703,6 +1732,7 @@ DATASETS_VIGILATS = {
     "subsectors_eas":        {"col": "any",     "ca": "Subsectors (oferta, EAS)",    "es": "Subsectores (oferta, EAS)"},
     "subsectors_epf":        {"col": "any",     "ca": "Pressupostos familiars (EPF)", "es": "Presupuestos Familiares (EPF)"},
     "subsectors_472":        {"col": "any",     "ca": "Subsectors d'alimentació (472)", "es": "Subsectores de alimentación (472)"},
+    "marges_branca_ine":     {"col": "any",     "ca": "Marges per branca",           "es": "Márgenes por rama"},
     "estructura_consum":     {"col": "any",     "ca": "Consum: béns i serveis (Eurostat)", "es": "Consumo: bienes y servicios (Eurostat)"},
     "estructura_retail":     {"col": "any",     "ca": "Estructura del comerç a la UE (SBS)", "es": "Estructura del comercio en la UE (SBS)"},
     "estructura_retail_mida": {"col": "any",    "ca": "Comerç UE per mida d'empresa", "es": "Comercio UE por tamaño de empresa"},
@@ -1933,6 +1963,9 @@ def process_all():
 
     print("\n7. Subsectors CNAE 47 (DIRCE + EAS + EPF):")
     process_subsectors()
+
+    print("\n7b. Marges per branca (INE EEE Comercio, T=76818):")
+    process_marges_branca()
 
     print("\n8. IPC mensual (per deflactor):")
     process_ipc()
