@@ -54,6 +54,25 @@ Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del 
 
 ---
 
+## Arquitectura d'informació v2
+
+**Origen**: la nav de 2026-06-13 (7 seccions) tenia fronteres borroses (Pols/Radiografia/Anàlisi).
+
+**Opció A — FET 2026-07-06** (working tree, pendent de desplegar): reagrupar+reanomenar a **6 seccions per pregunta del visitant** a `app.py`, sense fusionar pàgines ni canviar URLs:
+- **L'actualitat**: Pols diari · ICM · El Pulso · Premsa
+- **El sector**: PIB i VAB · Empreses · Ocupació · Productivitat · Subsectors
+- **Canal i concentració**: E-commerce · Estructura · Líders
+- **El territori**: Europa · Territori · Municipis (local)
+- **Sobre**: Metodologia
+
+**Opció B — pendent** (fer DINS el rollout premium, ~1-1,5 dia): fusionar pàgines afins via pestanyes per baixar de ~16 a ~11 pàgines:
+- Pols diari + ICM → una sola pàgina "El pols del comerç" (pestanyes diari/mensual).
+- Empreses + Ocupació + Productivitat → una "Empreses, ocupació i productivitat".
+- E-commerce + Estructura → una "Consum i canal".
+Canvia URLs → afegir redireccions o revisar enllaços interns/externs. Aprofitar per repensar cada pàgina fusionada amb el patró premium (no fer-ho dos cops).
+
+---
+
 ## Capa comuna de dades (`data/loader.py`)
 
 **Origen**: diagnosi arquitectura 2026-06-12.
@@ -64,6 +83,16 @@ Avui cada pàgina llegeix els CSV directament amb `pd.read_csv`. Crear `data/loa
 - Preparació per a una futura API de dades (canvi de `source="csv"` a `source="api"` sense tocar cap pàgina).
 
 **Estimació**: mig dia.
+
+---
+
+## Marges per branca des de l'Encuesta Anual de Comercio (INE)
+
+**Estat**: pendent d'implementar.
+
+**Objectiu**: integrar l'**Encuesta Anual de Comercio** de l'INE com a font oficial dels marges sobre vendes per branca comercial. Substituirà les dades estimades de PATECO (IDC 26/27) que ara viuen a `data/marges_branca.csv`, actualment `verificat=False` per ser una lectura de captura de pantalla.
+
+**Un cop implementada**: recalcular `data/marges_branca.csv` amb la sèrie oficial de l'INE (font primària, auto-actualitzable), posar `verificat=True` i actualitzar `data/marges_branca.md`. Això activa automàticament l'angle editorial de marges al pipeline de la newsletter (mode de bloc 3 `marges_branca`), que avui queda latent per manca de verificació.
 
 ---
 
