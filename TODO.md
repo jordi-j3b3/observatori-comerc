@@ -92,6 +92,8 @@ Avui cada pàgina llegeix els CSV directament amb `pd.read_csv`. Crear `data/loa
 
 **Fet**: la font és l'**EEE Comercio / Encuesta Anual de Comercio** de l'INE, taula **76818** (Total Nacional, CNAE 47 a 3 dígits), que publica EBE i xifra de negoci per branca. El marge = EBE/xifra de negoci × 100. Creat `data/marges_branca_ine.csv` (branques 471–479 excepte 478, anys 2018–2024, `verificat=True`) via `ine.py::fetch_marges_branca()`, documentat a `data/marges_branca_ine.md`.
 
+**Consumidors**: el pipeline de la newsletter (j3b3-newsletter) ja apunta `marges_origen` a `marges_branca_ine.csv`; l'estimació PATECO (`marges_branca.csv`) queda marcada com a substituïda.
+
 **Pendent**:
 - **Reg automàtic**: `marges_branca_ine.csv` es regenera cridant `fetch_marges_branca()` a mà. Per fer-lo 100% auto-actualitzable, afegir una passa al `processor.py` (i al workflow diari) que reescrigui el fitxer. Ara mateix la font ja és per API, però la generació no està enganxada al cron.
 - **Branca 478 (mercadillos)**: l'INE no en publica dades a la 76818; queda fora de la sèrie. Buscar si hi ha una altra taula que la cobreixi, o documentar-ho com a límit permanent.

@@ -1,5 +1,17 @@
 # Marges sobre vendes per branca comercial (`marges_branca.csv`)
 
+> ## ⛔ SUBSTITUÏT — no fer servir
+>
+> Aquest fitxer (estimació PATECO llegida de captura, `verificat=False`) ha estat
+> **substituït per `marges_branca_ine.csv`** (font oficial INE, Encuesta Anual de
+> Comercio, `verificat=True`). El pipeline de la newsletter ja apunta a la sèrie
+> INE (`marges_origen` a `config/settings.yaml` del repo j3b3-newsletter).
+>
+> Es conserva només com a **referència històrica** de què deia PATECO: la font INE
+> usa una definició diferent (EBE/vendes) i no cobreix la branca 478 (mercadillos),
+> que aquí sí figurava com a estimació. No l'injecta cap procés ni s'ha de publicar.
+> Veure `marges_branca_ine.md`.
+
 ## Què és
 
 Marge sobre vendes (%) de les branques del comerç minorista espanyol (agregació
