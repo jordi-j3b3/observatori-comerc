@@ -87,6 +87,10 @@
   "estructura_retail_supervivencia": {
    "last_data": "2023",
    "detected_at": "2026-06-27"
+  },
+  "marges_branca_ine": {
+   "last_data": "2024",
+   "detected_at": "2026-07-07"
   }
  },
  "events": [
