@@ -88,11 +88,14 @@ Avui cada pàgina llegeix els CSV directament amb `pd.read_csv`. Crear `data/loa
 
 ## Marges per branca des de l'Encuesta Anual de Comercio (INE)
 
-**Estat**: pendent d'implementar.
+**Estat**: Fase 1 FETA. Font localitzada i descarregada; queda el reg automàtic.
 
-**Objectiu**: integrar l'**Encuesta Anual de Comercio** de l'INE com a font oficial dels marges sobre vendes per branca comercial. Substituirà les dades estimades de PATECO (IDC 26/27) que ara viuen a `data/marges_branca.csv`, actualment `verificat=False` per ser una lectura de captura de pantalla.
+**Fet**: la font és l'**EEE Comercio / Encuesta Anual de Comercio** de l'INE, taula **76818** (Total Nacional, CNAE 47 a 3 dígits), que publica EBE i xifra de negoci per branca. El marge = EBE/xifra de negoci × 100. Creat `data/marges_branca_ine.csv` (branques 471–479 excepte 478, anys 2018–2024, `verificat=True`) via `ine.py::fetch_marges_branca()`, documentat a `data/marges_branca_ine.md`.
 
-**Un cop implementada**: recalcular `data/marges_branca.csv` amb la sèrie oficial de l'INE (font primària, auto-actualitzable), posar `verificat=True` i actualitzar `data/marges_branca.md`. Això activa automàticament l'angle editorial de marges al pipeline de la newsletter (mode de bloc 3 `marges_branca`), que avui queda latent per manca de verificació.
+**Pendent**:
+- **Reg automàtic**: `marges_branca_ine.csv` es regenera cridant `fetch_marges_branca()` a mà. Per fer-lo 100% auto-actualitzable, afegir una passa al `processor.py` (i al workflow diari) que reescrigui el fitxer. Ara mateix la font ja és per API, però la generació no està enganxada al cron.
+- **Branca 478 (mercadillos)**: l'INE no en publica dades a la 76818; queda fora de la sèrie. Buscar si hi ha una altra taula que la cobreixi, o documentar-ho com a límit permanent.
+- **Definició de marge**: l'INE dona EBE/vendes (gross operating rate); PATECO usa una definició pròpia que dona xifres més altes en algunes branques. Confirmar si per als lliurables interessa replicar la definició de PATECO (marge comercial brut vendes−compres) o mantenir la de l'INE.
 
 ---
 

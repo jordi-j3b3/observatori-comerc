@@ -741,6 +741,21 @@ CNAE_472_SUBSECTORS = {
     "4726": "Estancs (tabac)", "4729": "Altres aliments",
 }
 
+# Etiquetes legibles (català) per a les branques del fitxer de marges per branca.
+# Mapeig conceptual amb les branques que PATECO anomena N470-N479.
+CNAE_47_MARGES_LABELS = {
+    "471": "Establiments no especialitzats (súper i hiper)",
+    "472": "Aliments, begudes i tabac (especialitzat)",
+    "473": "Combustible (gasolineres)",
+    "474": "Equips TIC",
+    "475": "Equipament de la llar",
+    "476": "Articles culturals i recreatius",
+    "477": "Altres articles (moda, calçat, etc.)",
+    "478": "Punts de venda i mercadillos",
+    "479": "Comerç no en establiment (internet)",
+    "47":  "Comerç al detall (total CNAE 47)",
+}
+
 COICOP_GROUPS = {
     "01": "Alimentos y bebidas no alcohólicas",
     "02": "Bebidas alcohólicas, tabaco y estupefacientes",
@@ -863,6 +878,70 @@ def fetch_eas_subsectors():
             df[col] = df[col] * 1000
 
     return df.sort_values(["codi", "any"]).reset_index(drop=True)
+
+
+def fetch_marges_branca(incloure_total=False):
+    """
+    Marge brut d'explotació sobre vendes per branca del comerç minorista.
+    Font: EEE Comercio / Encuesta Anual de Comercio (INE, taula 76818),
+    Total Nacional, CNAE 47 a 3 dígits. Sèrie anual des de 2018.
+
+    marge_vendes_pct = Excedente bruto de explotación / Cifra de negocios * 100
+
+    És el "gross operating rate" estàndard de les estadístiques estructurals
+    d'empreses (EBE/xifra de negoci): quant de cada euro venut queda com a
+    excedent d'explotació abans d'amortitzacions i resultat financer.
+
+    Retorna columnes: any, cnae, branca, marge_vendes_pct.
+    Nota: la branca 478 (mercadillos) no té dada publicada per l'INE (no apareix
+    a la taula), així que queda fora de la sèrie.
+    """
+    data = _fetch_table(76818, nult=10)
+    if not isinstance(data, list):
+        return pd.DataFrame()
+
+    NAME2CODI = {v: k for k, v in CNAE_47_API_NAMES.items()}
+    MAGS = {"Excedente bruto de explotación": "ebe", "Cifra de negocios": "cn"}
+
+    vals = {}  # (codi, any) -> {ebe, cn}
+    for serie in data:
+        nombre = serie.get("Nombre", "")
+        if not nombre.startswith("Total Nacional."):
+            continue
+        magnitud = next((m for m in MAGS if f". {m}." in nombre), None)
+        if magnitud is None:
+            continue
+        try:
+            after = nombre.split(f". {magnitud}.", 1)[1]
+            nom_cnae = after.rsplit(". Dato base", 1)[0].strip()
+        except IndexError:
+            continue
+        codi = NAME2CODI.get(nom_cnae)
+        if codi is None:
+            continue
+        for obs in serie.get("Data", []):
+            v = obs.get("Valor")
+            a = obs.get("Anyo")
+            if v is None or a is None:
+                continue
+            vals.setdefault((codi, int(a)), {})[MAGS[magnitud]] = v
+
+    rows = []
+    for (codi, any_), d in vals.items():
+        if not incloure_total and codi == "47":
+            continue
+        if "ebe" in d and "cn" in d and d["cn"]:
+            rows.append({
+                "any": any_,
+                "cnae": codi,
+                "branca": CNAE_47_MARGES_LABELS.get(codi, codi),
+                "marge_vendes_pct": round(d["ebe"] / d["cn"] * 100, 1),
+            })
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    return df.sort_values(["cnae", "any"]).reset_index(drop=True)
 
 
 def fetch_epf_coicop():
