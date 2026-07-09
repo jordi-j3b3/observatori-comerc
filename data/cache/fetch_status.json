@@ -27,12 +27,12 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8916 files"
+    "missatge": "8917 files"
   },
   "europa_vab": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "870 files"
+    "missatge": "871 files"
   },
   "icm": {
     "estat": "ok",
