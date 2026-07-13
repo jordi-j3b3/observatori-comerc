@@ -378,15 +378,24 @@ def parse_sections(body: str) -> list[tuple[str, str]]:
 # ─── Renderers per bloc ─────────────────────────────────────────
 
 def render_cifra(content: str) -> str:
-    cifra_m = re.search(r"\*\*Cifra:\*\*\s*(.+)", content)
+    # Mode P2 etiqueta el camp **El dato:** (pot portar la frase completa,
+    # p.ex. "−0,4% ventas reales... (variación interanual)") en lugar de
+    # **Cifra:** (mode P1, solo el número). Si hi ha text darrere del
+    # número/unitat, es trasllada al Context — vegeu scripts/compose.py.
+    cifra_m = re.search(r"\*\*(?:Cifra|El dato):\*\*\s*(.+)", content)
     ctx_m = re.search(r"\*\*Contexto:\*\*\s*(.+)", content)
     fnt_m = re.search(r"\*\*Fuente:\*\*\s*(.+)", content)
     cifra = cifra_m.group(1).strip() if cifra_m else ""
     ctx = ctx_m.group(1).strip() if ctx_m else ""
     fnt = fnt_m.group(1).strip() if fnt_m else ""
 
+    vm = re.match(r"^([+\-−]?\s*\d[\d.,]*\s*(?:%|pp|p\.p\.))\s*(.*)$", cifra)
+    if vm and vm.group(2):
+        cifra = vm.group(1).strip()
+        ctx = f"{vm.group(2).strip()} · {ctx}" if ctx else vm.group(2).strip()
+
     prosa = re.sub(
-        r"^\*\*(Cifra|Contexto|Fuente):\*\*.+$\n?",
+        r"^\*\*(Cifra|El dato|Contexto|Fuente):\*\*.+$\n?",
         "", content, flags=re.MULTILINE,
     ).strip()
 
