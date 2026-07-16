@@ -127,7 +127,7 @@ df_nac_real = df[(df["ambit"] == "nacional") &
                  (df["branca"] == BRANCA_GENERAL_47)]
 df_nac_nom = df[(df["ambit"] == "nacional") &
                 (df["tipus"] == "nominal") &
-                (df["branca"] == BRANCA_NETA)]
+                (df["branca"] == BRANCA_GENERAL_47)]
 df_nac_ocu = df[(df["ambit"] == "nacional") &
                 (df["tipus"] == "ocupacio") &
                 (df["branca"] == BRANCA_GENERAL_47)]
@@ -199,7 +199,7 @@ with tab1:
 
     df_serie_real = df_nac_real[df_nac_real["indicador"] == "var_anual"].sort_values("data")
     df_serie_nom = df[(df["ambit"] == "nacional") & (df["tipus"] == "nominal") &
-                      (df["branca"] == BRANCA_NETA) &
+                      (df["branca"] == BRANCA_GENERAL_47) &
                       (df["indicador"] == "var_anual")].sort_values("data")
 
     if per_n < 999:
@@ -241,9 +241,9 @@ with tab1:
     # podria mostrar "Mar 2026" en anglès). Ticks com 03/2026.
     fig_evo.update_xaxes(tickformat="%m/%Y")
     st.plotly_chart(fig_evo, use_container_width=True)
-    source("INE, Índices de Comercio al por Menor (ICM). Sense estacions de servei (47 sense 473)"
+    source("INE, Índices de Comercio al por Menor (ICM). General CNAE 47"
            if _ca else
-           "INE, Índices de Comercio al por Menor (ICM). Sin estaciones de servicio (47 sin 473)")
+           "INE, Índices de Comercio al por Menor (ICM). General CNAE 47")
 
     # Insight evolució
     if not df_serie_real.empty and len(df_serie_real) >= 2:
@@ -340,9 +340,9 @@ with tab3:
             margin=dict(l=200, r=80, t=30, b=50),
         )
         st.plotly_chart(fig_cc, use_container_width=True)
-        source(f"INE, ICM per CCAA. Cifra de negoci a preus constants — {format_mes_any(_last_dt, 'ca')}"
+        source(f"INE, ICM per CCAA. Cifra de negoci a preus constants (General CNAE 47) — {format_mes_any(_last_dt, 'ca')}"
                if _ca else
-               f"INE, ICM por CCAA. Cifra de negocio a precios constantes — {format_mes_any(_last_dt, 'es')}")
+               f"INE, ICM por CCAA. Cifra de negocio a precios constantes (General CNAE 47) — {format_mes_any(_last_dt, 'es')}")
 
 with tab4:
     st.header("Variació anual per format de venda" if _ca
