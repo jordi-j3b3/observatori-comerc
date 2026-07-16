@@ -120,17 +120,32 @@ BRANCA_LBL_ES = {
 }
 BRANCA_LBL = BRANCA_LBL_CA if _ca else BRANCA_LBL_ES
 
+# ─── Selector d'àmbit (com l'INE: general o sense estacions de servei) ──
+_branca_options = {
+    BRANCA_GENERAL_47: ("General (amb estacions de servei)" if _ca
+                        else "General (con estaciones de servicio)"),
+    BRANCA_NETA: ("Sense estacions de servei (47 sense 473)" if _ca
+                  else "Sin estaciones de servicio (47 sin 473)"),
+}
+BRANCA_SEL = st.radio(
+    ("Àmbit del comerç" if _ca else "Ámbito del comercio"),
+    list(_branca_options.keys()),
+    format_func=lambda b: _branca_options[b],
+    index=0, horizontal=True, key="icm_branca_sel",
+)
+_branca_font_lbl = BRANCA_LBL[BRANCA_SEL]
+
 # ─── KPIs nacionals ────────────────────────────────────────────
 
 df_nac_real = df[(df["ambit"] == "nacional") &
                  (df["tipus"] == "real") &
-                 (df["branca"] == BRANCA_GENERAL_47)]
+                 (df["branca"] == BRANCA_SEL)]
 df_nac_nom = df[(df["ambit"] == "nacional") &
                 (df["tipus"] == "nominal") &
-                (df["branca"] == BRANCA_GENERAL_47)]
+                (df["branca"] == BRANCA_SEL)]
 df_nac_ocu = df[(df["ambit"] == "nacional") &
                 (df["tipus"] == "ocupacio") &
-                (df["branca"] == BRANCA_GENERAL_47)]
+                (df["branca"] == BRANCA_SEL)]
 
 # Última dada del general real (índex + variació anual)
 _last_real_idx = df_nac_real[df_nac_real["indicador"] == "index"].sort_values("data")
@@ -199,7 +214,7 @@ with tab1:
 
     df_serie_real = df_nac_real[df_nac_real["indicador"] == "var_anual"].sort_values("data")
     df_serie_nom = df[(df["ambit"] == "nacional") & (df["tipus"] == "nominal") &
-                      (df["branca"] == BRANCA_GENERAL_47) &
+                      (df["branca"] == BRANCA_SEL) &
                       (df["indicador"] == "var_anual")].sort_values("data")
 
     if per_n < 999:
@@ -241,9 +256,7 @@ with tab1:
     # podria mostrar "Mar 2026" en anglès). Ticks com 03/2026.
     fig_evo.update_xaxes(tickformat="%m/%Y")
     st.plotly_chart(fig_evo, use_container_width=True)
-    source("INE, Índices de Comercio al por Menor (ICM). General CNAE 47"
-           if _ca else
-           "INE, Índices de Comercio al por Menor (ICM). General CNAE 47")
+    source(f"INE, Índices de Comercio al por Menor (ICM). {_branca_font_lbl}")
 
     # Insight evolució
     if not df_serie_real.empty and len(df_serie_real) >= 2:
@@ -316,7 +329,7 @@ with tab3:
     df_ccaa = df[(df["ambit"] != "nacional") &
                  (df["tipus"] == "real") &
                  (df["indicador"] == "var_anual") &
-                 (df["branca"] == BRANCA_GENERAL_47) &
+                 (df["branca"] == BRANCA_SEL) &
                  (df["data"] == _last_dt)].copy()
     df_ccaa = df_ccaa.drop_duplicates(subset=["ambit"]).sort_values("valor", ascending=True)
 
@@ -340,9 +353,9 @@ with tab3:
             margin=dict(l=200, r=80, t=30, b=50),
         )
         st.plotly_chart(fig_cc, use_container_width=True)
-        source(f"INE, ICM per CCAA. Cifra de negoci a preus constants (General CNAE 47) — {format_mes_any(_last_dt, 'ca')}"
+        source(f"INE, ICM per CCAA. Cifra de negoci a preus constants ({_branca_font_lbl}) — {format_mes_any(_last_dt, 'ca')}"
                if _ca else
-               f"INE, ICM por CCAA. Cifra de negocio a precios constantes (General CNAE 47) — {format_mes_any(_last_dt, 'es')}")
+               f"INE, ICM por CCAA. Cifra de negocio a precios constantes ({_branca_font_lbl}) — {format_mes_any(_last_dt, 'es')}")
 
 with tab4:
     st.header("Variació anual per format de venda" if _ca
