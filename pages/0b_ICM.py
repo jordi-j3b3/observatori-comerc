@@ -316,6 +316,7 @@ with tab3:
     df_ccaa = df[(df["ambit"] != "nacional") &
                  (df["tipus"] == "real") &
                  (df["indicador"] == "var_anual") &
+                 (df["branca"] == BRANCA_GENERAL_47) &
                  (df["data"] == _last_dt)].copy()
     df_ccaa = df_ccaa.drop_duplicates(subset=["ambit"]).sort_values("valor", ascending=True)
 
