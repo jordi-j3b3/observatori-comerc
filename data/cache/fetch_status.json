@@ -2,7 +2,7 @@
   "cdmge": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "12868 files"
+    "missatge": "12958 files"
   },
   "digitalitzacio_comerc": {
     "estat": "ok",
@@ -27,7 +27,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8923 files"
+    "missatge": "8925 files"
   },
   "europa_vab": {
     "estat": "ok",

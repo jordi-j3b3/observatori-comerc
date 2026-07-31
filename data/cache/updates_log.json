@@ -41,8 +41,8 @@
    "detected_at": "2026-07-25"
   },
   "cdmge": {
-   "last_data": "2026-06-30",
-   "detected_at": "2026-07-24"
+   "last_data": "2026-07-15",
+   "detected_at": "2026-07-31"
   },
   "ipc": {
    "last_data": "2025",
@@ -94,6 +94,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "cdmge",
+   "label_ca": "Pols diari",
+   "label_es": "Pulso diario",
+   "last_data": "2026-07-15",
+   "detected_at": "2026-07-31"
+  },
   {
    "dataset": "icm_distribucion",
    "label_ca": "ICM per format de venda",
