@@ -2,6 +2,31 @@
 
 Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del dia a dia (això va a les memòries del repo Claude).
 
+## ICM per CCAA: sèrie en brut, no CVEC — no quadra amb Idescat
+
+**Origen**: detectat 2026-08-02 comparant Catalunya/Balears (juny 2026) amb l'ICD d'Idescat (https://www.idescat.cat/pub/?id=icd).
+
+**Problema**: `fetch_icm()` (`data/fetchers/ine.py:1042`, taules INE 60096/59787/60110/60111) usa la sèrie **en brut**, sense ajustar per estacionalitat i efecte calendari. Ho delata la pròpia magnitud: variació mensual de +4,4/+4,5% en un sol mes (Catalunya, juny 2026), impossible en una sèrie ja desestacionalitzada. Idescat, en canvi, publica per Catalunya la seva pròpia sèrie **CVEC** (corregida d'efectes estacionals i de calendari) i els números no coincideixen:
+
+| Catalunya, juny 2026, sense estacions de servei | Nosaltres (brut) | Idescat (CVEC) |
+|---|---|---|
+| Real, interanual | −0,4% | −2,6% |
+| Nominal, interanual | +1,9% | −0,2% |
+
+**Inconsistència interna**: `fetch_icm_distribucion()` (taula INE 75809, usada a `pages/0b_ICM.py` pestanya 4, "modos de distribució") **sí** és CVEC — el nom de sèrie INE porta explícitament "Datos ajustados de estacionalidad y calendario". És a dir, dins el mateix dashboard convivim amb dues bases d'ajust diferents: la pestanya 3 (CCAA, `df_ccaa` a `pages/0b_ICM.py:397`) en brut, la pestanya 4 (modos) ajustada.
+
+**Causa arrel**: l'INE no publica oficialment una taula CCAA ja desestacionalitzada (60110/60111 només donen la sèrie bruta). Idescat calcula el seu propi ajust regional; no és una taula pública reutilitzable directament via API INE.
+
+**Opcions pendents de decidir**:
+1. Etiquetar la pestanya 3 (mapa CCAA) com "dades sense desestacionalitzar" — fix ràpid, honestedat mínima.
+2. Substituir per variació interanual únicament a la UI (pateix menys per calendari que la mensual, tot i no eliminar-lo del tot).
+3. Explorar si Idescat exposa la seva sèrie CVEC via API pública reutilitzable (només Catalunya, no la resta de CCAA — no resoldria el rànquing sencer).
+4. Aplicar un ajust propi (STL/X13 via `statsmodels`) — més feina i risc de introduir un mètode no oficial, a evitar si es pot.
+
+**Nota**: el rànquing relatiu entre CCAA el mateix mes probablement es manté prou robust (l'efecte calendari és comú a totes), però el **valor exacte del percentatge** no s'ha de presentar com a comparable amb fonts CVEC (Idescat, premsa, Comertia).
+
+---
+
 ## Multi-idioma per subdomini
 
 **Estat**: opció validada, implementació pendent.

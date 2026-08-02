@@ -484,6 +484,97 @@ with tab4:
                         f"o se modera."
                     )
 
+        # ─── Ocupació per modo ──────────────────────────────
+        st.markdown("---")
+        if _ca:
+            st.markdown(
+                "**Ocupació** per modo de distribució (nombre de treballadors, "
+                "variació anual). Mateixa font i desglossament que la cifra de negoci."
+            )
+        else:
+            st.markdown(
+                "**Ocupación** por modo de distribución (número de trabajadores, "
+                "variación anual). Misma fuente y desglose que la cifra de negocio."
+            )
+
+        _do = df_distrib[(df_distrib["tipus"] == "ocupacio") &
+                         (df_distrib["indicador"] == "var_anual")].copy()
+        _do = _do.sort_values("data")
+
+        if _do.empty:
+            st.info("Encara no hi ha dades d'ocupació per modo a la cache."
+                    if _ca else
+                    "Aún no hay datos de empleo por modo en la caché.")
+        else:
+            _last_dt_o = _do["data"].max()
+            _last_o = _do[_do["data"] == _last_dt_o]
+            st.caption(
+                ("Darrera dada disponible: " if _ca else "Último dato disponible: ")
+                + format_mes_any(_last_dt_o, st.session_state.lang)
+            )
+            _cols_o = st.columns(4)
+            for i, m in enumerate(_modo_order):
+                with _cols_o[i]:
+                    _row = _last_o[_last_o["modo"] == m]
+                    if not _row.empty:
+                        _v = float(_row.iloc[0]["valor"])
+                        st.metric(_modo_lbl[m], fpct(_v, 1))
+                    else:
+                        st.metric(_modo_lbl[m], "—")
+
+            _cutoff_o = _last_dt_o - pd.Timedelta(days=365 * 3)
+            _do_plot = _do[_do["data"] >= _cutoff_o]
+
+            fig_o = go.Figure()
+            for m in _modo_order:
+                _serie = _do_plot[_do_plot["modo"] == m].sort_values("data")
+                if _serie.empty:
+                    continue
+                _lbl_serie = [format_mes_any(d, st.session_state.lang) for d in _serie["data"]]
+                fig_o.add_trace(go.Scatter(
+                    x=_serie["data"], y=_serie["valor"],
+                    mode="lines+markers",
+                    name=_modo_lbl[m],
+                    line=dict(color=_colors_d[m], width=2.4),
+                    marker=dict(size=4),
+                    customdata=_lbl_serie,
+                    hovertemplate=f"<b>{_modo_lbl[m]}</b><br>%{{customdata}}: %{{y:+.1f}}%<extra></extra>",
+                ))
+            fig_o.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+            apply_layout(fig_o,
+                yaxis_title=("Variació anual ocupació (%)" if _ca else "Variación anual empleo (%)"),
+                height=420,
+            )
+            fig_o.update_xaxes(tickformat="%m/%Y")
+            st.plotly_chart(fig_o, use_container_width=True)
+            source(("INE, ICM ocupació per modo de distribució (taula 60115).") if _ca else
+                   ("INE, ICM empleo por modo de distribución (tabla 60115)."))
+
+            if not _last_o.empty:
+                _by_modo_o = {m: float(_last_o[_last_o["modo"] == m].iloc[0]["valor"])
+                            for m in _modo_order if not _last_o[_last_o["modo"] == m].empty}
+                if len(_by_modo_o) >= 2:
+                    _best_o = max(_by_modo_o, key=_by_modo_o.get)
+                    _worst_o = min(_by_modo_o, key=_by_modo_o.get)
+                    if _ca:
+                        insight(
+                            f"A <strong>{format_mes_any(_last_dt_o, 'ca')}</strong>, "
+                            f"l'ocupació creix més a <strong>{_modo_lbl[_best_o]}</strong> "
+                            f"({fpct(_by_modo_o[_best_o], 1)}) i cau més a "
+                            f"<strong>{_modo_lbl[_worst_o]}</strong> ({fpct(_by_modo_o[_worst_o], 1)}). "
+                            f"Quan vendes i ocupació cauen alhora en un mateix format, "
+                            f"la desacceleració és estructural, no només de preus."
+                        )
+                    else:
+                        insight(
+                            f"En <strong>{format_mes_any(_last_dt_o, 'es')}</strong>, "
+                            f"el empleo crece más en <strong>{_modo_lbl[_best_o]}</strong> "
+                            f"({fpct(_by_modo_o[_best_o], 1)}) y cae más en "
+                            f"<strong>{_modo_lbl[_worst_o]}</strong> ({fpct(_by_modo_o[_worst_o], 1)}). "
+                            f"Cuando ventas y empleo caen a la vez en un mismo formato, "
+                            f"la desaceleración es estructural, no solo de precios."
+                        )
+
 # ─── Expander: evolució ocupació ──────────────────────────────
 
 _lbl_ocu_exp = ("Veure evolució de l'ocupació mensual"

@@ -1232,18 +1232,19 @@ def fetch_icm_distribucion():
     Taules INE:
       - 60105 (cifra negoci precios corrents × modo distribución)
       - 75809 (cifra negoci precios constantes × modo distribución)
+      - 60115 (ocupació mensual × modo distribución)
 
     Filtra ambit retail al total ("Comercio al por menor sin Estaciones de
     Servicio (47 sin 473)") — els subagregats alimentació/resto queden fora.
 
     Retorna DataFrame amb columnes:
       - serie_id (nom complet INE)
-      - tipus ("real" / "nominal")
+      - tipus ("real" / "nominal" / "ocupacio")
       - modo ("Empresas unilocalizadas" / "Pequeñas cadenas" / "Grandes cadenas" / "Grandes superficies" / "General")
       - indicador ("index" / "var_mensual" / "var_anual" / "var_mitjana_acum")
       - any, mes, data, valor
     """
-    TABLES = [(60105, "nominal"), (75809, "real")]
+    TABLES = [(60105, "nominal"), (75809, "real"), (60115, "ocupacio")]
 
     INDICADOR_MAP = {
         "Índice": "index",

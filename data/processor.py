@@ -1635,9 +1635,10 @@ def process_icm_distribucion():
     2021=100. Modos: Empresas unilocalizadas, Pequeñas cadenas, Grandes
     cadenas, Grandes Superficies.
 
-    Taules INE: 60105 (nominal) + 75809 (real). Genera icm_distribucion.csv.
+    Taules INE: 60105 (nominal) + 75809 (real) + 60115 (ocupació).
+    Genera icm_distribucion.csv.
     """
-    print("  Carregant ICM per modo de distribució (60105+75809)...")
+    print("  Carregant ICM per modo de distribució (60105+75809+60115)...")
     df = ine.fetch_icm_distribucion()
     if df.empty:
         print("  AVIS: cap dada ICM distribució; mantenint cache existent")
