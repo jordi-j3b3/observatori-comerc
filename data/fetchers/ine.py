@@ -208,32 +208,138 @@ def fetch_empreses(ccaa=None):
     return pd.DataFrame(results)
 
 
-def fetch_ocupacio():
+def fetch_epa_retail():
     """
-    Taula 65123: Ocupats per sexe i branca d'activitat.
-    Retorna ocupats CNAE 47 trimestral.
-    """
-    data = _fetch_table(65123, nult=20)
+    EPA (Encuesta de Población Activa): ocupats, aturats i hores treballades
+    al comerç, per sexe i trimestre. Combina tres taules de granularitat
+    DIFERENT — cal llegir-ho abans d'interpretar les columnes:
 
-    results = []
+      - T=65123 "Ocupados por sexo y rama de actividad": arriba a CNAE 47
+        net ("Comercio al por menor, excepto de vehículos de motor y
+        motocicletas") -> columna ocupats_cnae47_milers.
+      - T=65249 "Parados por sexo y rama de actividad": l'INE NOMÉS
+        desglossa els aturats fins a la secció G ("Comercio al por mayor y
+        al por menor; reparación de vehículos de motor y motocicletas"),
+        que inclou també l'engròs i la reparació de vehicles, no només
+        CNAE 47. No hi ha cap taula EPA amb aturats a 2 dígits (47) —
+        verificat contra el llistat complet de taules de l'operació EPA.
+        -> columna aturats_seccio_g_milers.
+      - T=65159 "Número medio de horas efectivas semanales trabajadas...":
+        pel mateix motiu de mostra, tampoc arriba a CNAE 47 net, només a
+        secció G. -> columna hores_setmana_seccio_g.
+
+    Per això només ocupats_cnae47_milers és CNAE 47 pur; les altres dues
+    inclouen comerç a l'engròs i reparació de vehicles a més del detall.
+    Sèrie disponible des de 2008 T1 (nult=80 per cobrir-la sencera).
+
+    Retorna columnes: any, trimestre (1-4), periode (YYYY-TQ), sexe
+    (total/homes/dones), ocupats_cnae47_milers, aturats_seccio_g_milers,
+    hores_setmana_seccio_g.
+    """
+    SEXES = {"Ambos sexos": "total", "Hombres": "homes", "Mujeres": "dones"}
+    CNAE47 = "Comercio al por menor, excepto de vehículos de motor y motocicletas"
+    SECCIO_G = "Comercio al por mayor y al por menor; reparación de vehículos de motor y motocicletas"
+
+    def _quarter(obs):
+        per = obs.get("FK_Periodo")
+        any_ = obs.get("Anyo")
+        val = obs.get("Valor")
+        if per is None or any_ is None or val is None:
+            return None
+        trimestre = int(per) - 18  # FK_Periodo 19-22 = T1-T4
+        if trimestre < 1 or trimestre > 4:
+            return None
+        return int(any_), trimestre, float(val)
+
+    results = {}
+
+    def _merge(table_id, branch_text, col_name, extra_filter=None):
+        data = _fetch_table(table_id, nult=80)
+        if not isinstance(data, list):
+            return
+        for serie in data:
+            nombre = serie.get("Nombre", "")
+            if branch_text not in nombre:
+                continue
+            if "Valor absoluto" not in nombre and "Número medio" not in nombre:
+                continue
+            if extra_filter and not extra_filter(nombre):
+                continue
+            sexe = next((v for k, v in SEXES.items() if k in nombre), None)
+            if sexe is None:
+                continue
+            for obs in serie.get("Data", []):
+                parsed = _quarter(obs)
+                if parsed is None:
+                    continue
+                any_, trimestre, val = parsed
+                key = (any_, trimestre, sexe)
+                if key not in results:
+                    results[key] = {"any": any_, "trimestre": trimestre, "sexe": sexe}
+                results[key][col_name] = val
+
+    _merge(65123, CNAE47, "ocupats_cnae47_milers")
+    _merge(65249, SECCIO_G, "aturats_seccio_g_milers")
+    # 65159 inclou situació professional (Total/Trabajador por cuenta propia/...);
+    # ". Total. " nomes apareix quan aquesta dimensio es "Total" (evita comptar
+    # només assalariats o autonoms).
+    _merge(65159, SECCIO_G, "hores_setmana_seccio_g", extra_filter=lambda n: ". Total. " in n)
+
+    df = pd.DataFrame(list(results.values()))
+    if df.empty:
+        return df
+    df["periode"] = df["any"].astype(str) + "-T" + df["trimestre"].astype(str)
+    return df.sort_values(["any", "trimestre", "sexe"]).reset_index(drop=True)
+
+
+def fetch_ipc_coicop():
+    """
+    Taula 76125: IPC nacional per grups ECOICOP ver.2, base 2021=100, mensual.
+    Selecciona l'índex general (referència) + els 3 grups més rellevants pel
+    comerç al detall: alimentació, vestit i calçat, parament de la llar.
+    Sèrie disponible des de gener de 2002 (límit de la reconstrucció ver.2;
+    nult=310 per cobrir-la sencera).
+
+    Retorna columnes: any, mes, periode (YYYY-MM), grup_codi (00/01/03/05),
+    grup, ipc.
+    """
+    GRUPS = {
+        "Índice general": ("00", "Índex general"),
+        "Alimentos y bebidas no alcohólicas": ("01", "Alimentació i begudes no alcohòliques"),
+        "Vestido y calzado": ("03", "Vestit i calçat"),
+        "Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar":
+            ("05", "Parament de la llar"),
+    }
+    data = _fetch_table(76125, nult=310)
     if not isinstance(data, list):
         return pd.DataFrame()
 
+    results = []
     for serie in data:
         nombre = serie.get("Nombre", "")
-        if "47" not in nombre:
+        parts = [p.strip() for p in nombre.rstrip(".").split(". ") if p.strip()]
+        if len(parts) != 3 or parts[0] != "Nacional" or parts[2] != "Índice":
             continue
-        if "Ambos sexos" not in nombre and "Total" not in nombre:
+        grup_info = GRUPS.get(parts[1])
+        if grup_info is None:
             continue
-
+        codi, label = grup_info
         for obs in serie.get("Data", []):
+            val = obs.get("Valor")
+            any_ = obs.get("Anyo")
+            mes = obs.get("FK_Periodo")
+            if val is None or any_ is None or mes is None:
+                continue
             results.append({
-                "any": obs.get("Anyo"),
-                "trimestre": obs.get("FK_Periodo"),
-                "ocupats_milers": obs.get("Valor"),
+                "any": int(any_), "mes": int(mes),
+                "grup_codi": codi, "grup": label, "ipc": float(val),
             })
 
-    return pd.DataFrame(results)
+    df = pd.DataFrame(results)
+    if not df.empty:
+        df["periode"] = df["any"].astype(str) + "-" + df["mes"].astype(str).str.zfill(2)
+        df = df.sort_values(["grup_codi", "any", "mes"]).reset_index(drop=True)
+    return df
 
 
 def fetch_ipc():
@@ -597,31 +703,6 @@ def fetch_poblacio():
                 prop = pob_ref[0] / total_ref
                 for y in anys_nous:
                     results.append({"territori": ccaa, "any": y, "poblacio": round(esp_series[y] * prop)})
-
-    return pd.DataFrame(results)
-
-
-def fetch_confianza():
-    """
-    Taula 36499: Índex de confiança del consumidor.
-    """
-    data = _fetch_table(36499, nult=20)
-
-    results = []
-    if not isinstance(data, list):
-        return pd.DataFrame()
-
-    for serie in data:
-        nombre = serie.get("Nombre", "")
-        if "confianza" not in nombre.lower() and "global" not in nombre.lower():
-            continue
-
-        for obs in serie.get("Data", []):
-            results.append({
-                "any": obs.get("Anyo"),
-                "mes": obs.get("FK_Periodo"),
-                "index_confianza": obs.get("Valor"),
-            })
 
     return pd.DataFrame(results)
 
@@ -1334,8 +1415,8 @@ if __name__ == "__main__":
     if not df.empty:
         print(df.head())
 
-    print("\n3. Ocupació:")
-    df = fetch_ocupacio()
+    print("\n3. EPA retail (ocupats/aturats/hores):")
+    df = fetch_epa_retail()
     print(f"   {len(df)} registres")
     if not df.empty:
         print(df.head())

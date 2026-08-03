@@ -435,6 +435,61 @@ def fetch_ocupacio_comerc():
             .reset_index(drop=True))
 
 
+# Component ei_bsco_m -> columna. BS-CSMCI és l'indicador compost (expectatives,
+# mitjana de 4 components a 12 mesos vista). Els altres 4 permeten distingir
+# situació actual (últims 12 mesos) d'expectatives (propers 12 mesos).
+_CONFIANCA_INDIC = {
+    "BS-CSMCI": "index_confianca",
+    "BS-FS-LY": "situacio_actual_financera",
+    "BS-GES-LY": "situacio_actual_economica",
+    "BS-FS-NY": "expectatives_financera",
+    "BS-GES-NY": "expectatives_economica",
+}
+
+
+def fetch_confianza_consumidor():
+    """
+    Dataset ei_bsco_m: enquesta de confiança del consumidor harmonitzada a
+    nivell UE (Business and Consumer Surveys, coordinada per la Comissió
+    Europea / DG ECFIN). NO existeix cap taula pròpia de l'INE per aquest
+    indicador — verificat cercant "confianza"/"consumidor" a les 112
+    operacions estadístiques de l'INE (wstempus): cap coincidència rellevant.
+    Espanya hi participa com a país enquestat, però la sèrie es publica a
+    Eurostat, no a INEbase.
+
+    Valors en balanç de respostes (-100 a +100: % positives menys % negatives).
+    Sèrie ES des de gener de 1980, ajustada estacionalment (s_adj=SA).
+
+    Retorna columnes: any, mes, periode (YYYY-MM), index_confianca
+    (indicador compost, expectatives a 12 mesos), situacio_actual_financera,
+    situacio_actual_economica, expectatives_financera, expectatives_economica.
+    """
+    params = [("geo", "ES"), ("s_adj", "SA"), ("unit", "BAL")]
+    params += [("indic", i) for i in _CONFIANCA_INDIC]
+
+    data = _fetch_eurostat("ei_bsco_m", params)
+    df = _parse_eurostat_json(data)
+    if df.empty:
+        return df
+
+    df = df.rename(columns={"time": "periode", "TIME_PERIOD": "periode"})
+    df["component"] = df["indic"].map(_CONFIANCA_INDIC)
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    df = df.dropna(subset=["component", "valor"])
+
+    piv = df.pivot_table(index="periode", columns="component", values="valor", aggfunc="first").reset_index()
+    piv.columns.name = None
+    periode_parts = piv["periode"].str.split("-", expand=True)
+    piv["any"] = pd.to_numeric(periode_parts[0], errors="coerce")
+    piv["mes"] = pd.to_numeric(periode_parts[1], errors="coerce")
+
+    cols = ["any", "mes", "periode"] + [c for c in _CONFIANCA_INDIC.values() if c in piv.columns]
+    return (piv[cols]
+            .dropna(subset=["any", "mes"])
+            .sort_values(["any", "mes"])
+            .reset_index(drop=True))
+
+
 # ─── BUSINESS DEMOGRAPHY (BSD) ────────────────────────────────
 # bd_size: demografia empresarial CNAE G47 anual.
 # Sèrie 2009-2023 viva, comparativa ES vs UE-27 vs grans economies.

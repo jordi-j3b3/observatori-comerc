@@ -1258,6 +1258,104 @@ def process_ipc():
     return df
 
 
+def process_ipc_coicop():
+    """
+    IPC per grups ECOICOP rellevants pel comerç (INE T=76125): alimentació,
+    vestit i calçat, parament de la llar + índex general de referència.
+    Mensual, base 2021=100, sèrie des de 2002. No crítica: si l'API falla,
+    es manté la cache existent en silenci.
+    """
+    print("  Carregant IPC per grups ECOICOP (taula 76125)...")
+    try:
+        df = ine.fetch_ipc_coicop()
+    except Exception as e:
+        print(f"  Error API IPC COICOP: {e}")
+        df_cache = load_cache("ipc_coicop")
+        _record_status("ipc_coicop", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
+
+    if df.empty:
+        print("  AVIS: sense dades IPC COICOP; mantenint cache existent")
+        df_cache = load_cache("ipc_coicop")
+        _record_status("ipc_coicop", "fallback" if not df_cache.empty else "error",
+                       "cache", "API INE IPC COICOP buida")
+        return df_cache
+
+    _is_valid_series(df, "ipc", "ipc_coicop", group_by="grup_codi")
+    save_cache(df, "ipc_coicop")
+    _record_status("ipc_coicop", "ok", "api_ine", f"{len(df)} files")
+    print(f"  IPC COICOP: {len(df)} files, {df['grup_codi'].nunique()} grups, "
+          f"{df['any'].min()}-{df['any'].max()}")
+    return df
+
+
+def process_epa_retail():
+    """
+    EPA — ocupats, aturats i hores treballades al comerç, per sexe (INE
+    T=65123+65249+65159). Només ocupats_cnae47_milers és CNAE 47 net; aturats
+    i hores només arriben a secció G (comerç a l'engròs + al detall +
+    reparació de vehicles) — l'INE no publica cap desglossament EPA a nivell
+    CNAE 47 per aquestes dues magnituds (vegeu docstring de
+    ine.fetch_epa_retail()). No crítica: fallback silenciós a cache.
+    """
+    print("  Carregant EPA retail (taules 65123+65249+65159)...")
+    try:
+        df = ine.fetch_epa_retail()
+    except Exception as e:
+        print(f"  Error API EPA: {e}")
+        df_cache = load_cache("epa_retail")
+        _record_status("epa_retail", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
+
+    if df.empty:
+        print("  AVIS: sense dades EPA; mantenint cache existent")
+        df_cache = load_cache("epa_retail")
+        _record_status("epa_retail", "fallback" if not df_cache.empty else "error",
+                       "cache", "API INE EPA buida")
+        return df_cache
+
+    _is_valid_series(df, "ocupats_cnae47_milers", "epa_retail", group_by="sexe")
+    _is_valid_series(df, "aturats_seccio_g_milers", "epa_retail", group_by="sexe")
+    save_cache(df, "epa_retail")
+    _record_status("epa_retail", "ok", "api_ine", f"{len(df)} files")
+    print(f"  EPA retail: {len(df)} files, {df['periode'].min()}-{df['periode'].max()}")
+    return df
+
+
+def process_confianza_consumidor():
+    """
+    Índex de confiança del consumidor (Eurostat ei_bsco_m, ES). No hi ha
+    taula pròpia de l'INE per aquest indicador — la sèrie harmonitzada UE es
+    publica a Eurostat (vegeu docstring de eurostat.fetch_confianza_consumidor()).
+    Inclou l'indicador compost i el desglossament situació actual /
+    expectatives. No crítica: fallback silenciós a cache.
+    """
+    print("  Carregant confiança del consumidor (Eurostat ei_bsco_m)...")
+    try:
+        df = eurostat.fetch_confianza_consumidor()
+    except Exception as e:
+        print(f"  Error API Eurostat confiança: {e}")
+        df_cache = load_cache("confianza_consumidor")
+        _record_status("confianza_consumidor", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio API: {e}")
+        return df_cache
+
+    if df.empty:
+        print("  AVIS: sense dades confiança; mantenint cache existent")
+        df_cache = load_cache("confianza_consumidor")
+        _record_status("confianza_consumidor", "fallback" if not df_cache.empty else "error",
+                       "cache", "API Eurostat ei_bsco_m buida")
+        return df_cache
+
+    _is_valid_series(df, "index_confianca", "confianza_consumidor")
+    save_cache(df, "confianza_consumidor")
+    _record_status("confianza_consumidor", "ok", "api_eurostat", f"{len(df)} files")
+    print(f"  Confiança consumidor: {len(df)} files, {df['periode'].min()}-{df['periode'].max()}")
+    return df
+
+
 def process_europa_retail_mensual():
     """
     Volum de vendes mensual del comerç minorista G47 per país (Eurostat sts_trtu_m).
@@ -1735,6 +1833,9 @@ DATASETS_VIGILATS = {
     "subsectors_472":        {"col": "any",     "ca": "Subsectors d'alimentació (472)", "es": "Subsectores de alimentación (472)"},
     "marges_branca_ine":     {"col": "any",     "ca": "Marges per branca",           "es": "Márgenes por rama"},
     "estructura_consum":     {"col": "any",     "ca": "Consum: béns i serveis (Eurostat)", "es": "Consumo: bienes y servicios (Eurostat)"},
+    "ipc_coicop":            {"col": "periode", "ca": "IPC per grups (alimentació, vestit, llar)", "es": "IPC por grupos (alimentación, vestido, hogar)"},
+    "epa_retail":            {"col": "periode", "ca": "EPA — ocupats, aturats i hores",  "es": "EPA — ocupados, parados y horas"},
+    "confianza_consumidor":  {"col": "periode", "ca": "Confiança del consumidor",     "es": "Confianza del consumidor"},
     "estructura_retail":     {"col": "any",     "ca": "Estructura del comerç a la UE (SBS)", "es": "Estructura del comercio en la UE (SBS)"},
     "estructura_retail_mida": {"col": "any",    "ca": "Comerç UE per mida d'empresa", "es": "Comercio UE por tamaño de empresa"},
     "estructura_retail_supervivencia": {"col": "any", "ca": "Supervivència d'empreses (UE)", "es": "Supervivencia de empresas (UE)"},
@@ -1970,6 +2071,15 @@ def process_all():
 
     print("\n8. IPC mensual (per deflactor):")
     process_ipc()
+
+    print("\n8b. IPC per grups ECOICOP (alimentació, vestit, llar):")
+    process_ipc_coicop()
+
+    print("\n8c. EPA retail — ocupats, aturats i hores:")
+    process_epa_retail()
+
+    print("\n8d. Confiança del consumidor (Eurostat ei_bsco_m):")
+    process_confianza_consumidor()
 
     print("\n9. CDMGE — comerc diari grans empreses:")
     process_cdmge()

@@ -17,11 +17,14 @@ INE_TABLES = {
     76818: "EAS — Subsectors CNAE 47",
     4721:  "DIRCE — Empreses municipals (CNAE G+I agregat)",
 
-    # Ocupació
-    65123: "EPA — Ocupats per branca d'activitat i sexe (CNAE 47)",
+    # Ocupació (EPA — ocupats CNAE 47 net; aturats/hores nomes a seccio G)
+    65123: "EPA — Ocupats per branca d'activitat i sexe (CNAE 47 net)",
+    65249: "EPA — Aturats per branca d'activitat i sexe (nomes secció G, no arriba a CNAE 47)",
+    65159: "EPA — Mitjana d'hores efectives setmanals per branca i sexe (nomes secció G)",
 
     # Preus
     50902: "IPC general mensual (base 2021=100) — per al deflactor",
+    76125: "IPC per grups ECOICOP ver.2, nacional, mensual (alimentació/vestit/llar/general)",
 
     # Estructura empresarial (EEE)
     36194: "EEE Comercio — cifra de negoci nacional per CNAE 47",
@@ -47,7 +50,8 @@ INE_TABLES = {
     56934: "Padró — Població per municipis (nova sèrie des de 2002)",
 
     # Indicadors addicionals
-    36499: "ICC — Índex de Confiança del Consumidor mensual",
+    # (Índex de Confiança del Consumidor: cap taula INE — la taula 36499 antiga
+    # ja no existeix (404). Font real: Eurostat ei_bsco_m, vegeu EUROSTAT_DATASETS.)
     75003: "EPF COICOP — despesa llars en alimentació i vestuari",
     28185: "EAES — Enquesta Anual d'Estructura Salarial",
 }
@@ -60,5 +64,6 @@ EUROSTAT_DATASETS = {
     "bd_size":       "Demografía empresarial per mida (empreses, assalariats, VAB, supervivència)",
     "sts_trtu_m":    "Estadística conjuntural — volum vendes retail mensual (base 2021=100)",
     "lfsa_egan22d":  "EPA europea — Ocupació per activitat NACE (CNAE 47)",
+    "ei_bsco_m":     "Índex de confiança del consumidor (Business and Consumer Surveys, ES)",
 }
 # Codis isoc_* (digitalització): múltiples datasets, veure fetchers/eurostat.py fetch_digitalitzacio_comerc()
