@@ -12,3 +12,7 @@ data/raw/
 # Entorn virtual i fitxers de sistema
 .venv/
 .DS_Store
+
+# Base de dades DuckDB pel chatbot — es genera a cada desplegament des dels
+# CSVs de data/cache/ (data/sql/migrate.py), no es committeja mai.
+observatori.duckdb

@@ -30,8 +30,13 @@ jobs:
           run: |
             cd $GITHUB_WORKSPACE
             python -m data.processor
-                                                                                                                                                                                                                                                                                
-        - name: Commit updated data                         
+
+        - name: Build DuckDB (capa de dades pel chatbot)
+          run: |
+            cd $GITHUB_WORKSPACE
+            python data/sql/migrate.py
+
+        - name: Commit updated data
           run: |
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'                                                                                                                                                                                                
