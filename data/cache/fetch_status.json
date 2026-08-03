@@ -4,6 +4,11 @@
     "font": "api_ine",
     "missatge": "12958 files"
   },
+  "confianza_consumidor": {
+    "estat": "ok",
+    "font": "api_eurostat",
+    "missatge": "482 files"
+  },
   "digitalitzacio_comerc": {
     "estat": "ok",
     "font": "api_eurostat",
@@ -19,6 +24,11 @@
     "font": "api_ine",
     "missatge": "324 files"
   },
+  "epa_retail": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "222 files"
+  },
   "estructura_comerc": {
     "estat": "ok",
     "font": "api_eurostat",
@@ -27,7 +37,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8937 files"
+    "missatge": "8938 files"
   },
   "europa_vab": {
     "estat": "ok",
@@ -42,7 +52,12 @@
   "icm_distribucion": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "3840 files"
+    "missatge": "6240 files"
+  },
+  "ipc_coicop": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "1176 files"
   },
   "ocupacio_comerc": {
     "estat": "ok",
