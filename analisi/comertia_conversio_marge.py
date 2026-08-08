@@ -79,6 +79,19 @@ FOCUS = {"475", "476"}
 # de marges, no la mescla dels seus socis, i aixo s'ha de dir al lliurable.
 REFERENCIA = "477"
 
+# Etiquetes curtes per al grafic. Les de l'INE no caben al marge i, a mes, aixi
+# comparteixen vocabulari amb el grafic de l'eix de demanda.
+CURT = {
+    "471": "Súper i hiper",
+    "472": "Alimentació especialitzada",
+    "473": "Gasolineres",
+    "474": "Equips TIC",
+    "475": "Equipament de la llar",
+    "476": "Oci i cultura",
+    "477": "Moda, calçat i altres",
+    "479": "Internet",
+}
+
 
 def compte_explotacio():
     """Destí de cada euro venut, en termes nominals, del compte d'explotació agregat."""
@@ -213,60 +226,69 @@ def main():
     t.round(2).to_csv(ruta_csv)
     ruta_svg = os.path.join(OUT_DIR, "conversio_marge.svg")
     with open(ruta_svg, "w", encoding="utf-8") as f:
-        f.write(_svg(t, a0, a1))
+        f.write(_svg(t, m, a1))
     euro.round(2).to_csv(os.path.join(OUT_DIR, "conversio_marge_euro.csv"),
                          index_label="any")
     print(f"\nTaula: {os.path.abspath(ruta_csv)}")
     print(f"Grafic: {os.path.abspath(ruta_svg)}")
 
 
-def _svg(t, a0, a1, amplada=720, alcada=380):
-    """Dispersió: creixement de vendes contra marge. On creixes i què t'hi deixes."""
-    PL, PR, PT, PB = 52, 24, 22, 44
-    xs, ys = t["vendes_pct"], t["marge_final"]
-    x0, x1 = float(xs.min()), float(xs.max())
-    y0, y1 = float(ys.min()), float(ys.max())
-    mx, my = (x1 - x0) * 0.18 or 5, (y1 - y0) * 0.22 or 2
-    x0, x1, y0, y1 = x0 - mx, x1 + mx, y0 - my, y1 + my
+def _svg(t, m, a1, amplada=700, alt_fila=25):
+    """Barres horitzontals: excedent brut sobre vendes per branca.
+
+    Mateixa forma que el gràfic de l'eix de demanda, perquè els dos es llegeixin com a
+    peces d'una mateixa sèrie. El senyal fi de cada barra marca el valor del primer any
+    disponible: ensenya que l'ordre de les branques no s'ha mogut en set anys sense
+    haver de dibuixar un segon gràfic.
+    """
+    anys = sorted(m.columns)
+    a_ini = anys[0]
+    marges_ini = {cnae: m.loc[(cnae, br), a_ini] for cnae, br in m.index}
+
+    d = t.sort_values("marge_final")
+    n = len(d)
+    PT, PB, PL = 32, 34, 210
+    alcada = PT + PB + n * alt_fila
+    hi = float(d["marge_final"].max()) * 1.14
+    ample_util = amplada - PL - 58
 
     def px(v):
-        return PL + (v - x0) * (amplada - PL - PR) / (x1 - x0)
-
-    def py(v):
-        return PT + (y1 - v) * (alcada - PT - PB) / (y1 - y0)
+        return PL + v * ample_util / hi
 
     p = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {amplada} {alcada}" '
          f'width="{amplada}" height="{alcada}" '
          f'font-family="Helvetica, Arial, sans-serif">',
          f'<rect width="{amplada}" height="{alcada}" fill="#ffffff"/>']
-    for v in range(0, int(y1) + 3, 2):
-        if y0 <= v <= y1:
-            p.append(f'<line x1="{PL}" y1="{py(v):.1f}" x2="{amplada - PR}" '
-                     f'y2="{py(v):.1f}" stroke="#ececec" stroke-width="1"/>')
-            p.append(f'<text x="{PL - 7}" y="{py(v) + 3.5:.1f}" font-size="10" '
-                     f'fill="#6a6a6a" text-anchor="end">{v}%</text>')
-    pas = 20
-    v = int(x0 // pas * pas)
-    while v <= x1:
-        if x0 <= v <= x1:
-            p.append(f'<text x="{px(v):.1f}" y="{alcada - 24}" font-size="10" '
-                     f'fill="#6a6a6a" text-anchor="middle">{v}%</text>')
-        v += pas
-    for cnae, f in t.iterrows():
-        destaca = cnae in FOCUS
-        color = "#b07d2b" if destaca else ("#003366" if cnae == REFERENCIA else "#9aa6b2")
-        x, y = px(f["vendes_pct"]), py(f["marge_final"])
-        p.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{6 if destaca or cnae == REFERENCIA else 4}" '
-                 f'fill="{color}"/>')
-        anc = "end" if x > amplada * 0.66 else "start"
-        dx = -9 if anc == "end" else 9
-        etiqueta = f["branca"][:34]
-        p.append(f'<text x="{x + dx:.1f}" y="{y + 3.5:.1f}" font-size="10.5" '
-                 f'fill="{color}" text-anchor="{anc}">{etiqueta}</text>')
-    p.append(f'<text x="{PL}" y="{alcada - 8}" font-size="10.5" fill="#37485a">'
-             f'Creixement de les vendes en volum {a0}–{a1} →</text>')
-    p.append(f'<text x="{PL - 40}" y="{PT - 8}" font-size="10.5" fill="#37485a">'
-             f'↑ Excedent brut sobre vendes, {a1}</text>')
+    for i, (cnae, f) in enumerate(d.iterrows()):
+        y = PT + i * alt_fila
+        v = float(f["marge_final"])
+        if cnae == REFERENCIA:
+            color, gruix = "#b07d2b", "700"
+        elif cnae in FOCUS:
+            color, gruix = "#003366", "700"
+        else:
+            color, gruix = "#c8d0d8", "400"
+        p.append(f'<rect x="{PL:.1f}" y="{y + 4:.1f}" width="{px(v) - PL:.1f}" '
+                 f'height="{alt_fila - 11}" fill="{color}"/>')
+        ini = marges_ini.get(cnae)
+        if ini is not None and pd.notna(ini):
+            xi = px(float(ini))
+            p.append(f'<line x1="{xi:.1f}" y1="{y + 2:.1f}" x2="{xi:.1f}" '
+                     f'y2="{y + alt_fila - 5:.1f}" stroke="#37485a" stroke-width="1.2"/>')
+        etiqueta = CURT.get(cnae, f["branca"])
+        p.append(f'<text x="{PL - 12}" y="{y + alt_fila / 2 + 2:.1f}" font-size="11.5" '
+                 f'fill="#37485a" text-anchor="end" font-weight="{gruix}">{etiqueta}</text>')
+        p.append(f'<text x="{px(v) + 6:.1f}" y="{y + alt_fila / 2 + 2:.1f}" '
+                 f'font-size="11.5" fill="{color if gruix == "700" else "#6a6a6a"}" '
+                 f'font-weight="{gruix}">{v:.1f}</text>')
+    p.append(f'<line x1="{PL:.1f}" y1="{PT}" x2="{PL:.1f}" y2="{PT + n * alt_fila}" '
+             f'stroke="#37485a" stroke-width="1"/>')
+    p.append(f'<text x="{PL - 12}" y="{PT - 13}" font-size="11" fill="#1a2b3a" '
+             f'text-anchor="end" font-weight="700">Cèntims per euro venut</text>')
+    p.append(f'<text x="{PL + 6}" y="{PT - 13}" font-size="11" fill="#6a6a6a">'
+             f'excedent brut sobre vendes per branca, {a1}</text>')
+    p.append(f'<text x="{PL - 12}" y="{alcada - 12}" font-size="10.5" fill="#9aa6b2" '
+             f'text-anchor="end">El senyal fi marca el {a_ini}</text>')
     p.append("</svg>")
     return "".join(p)
 

@@ -135,8 +135,8 @@ def _svg(t, a0, a1, amplada=700, alt_fila=25):
              f'text-anchor="end" font-weight="700">Volum consumit per llar</text>')
     p.append(f'<text x="{zero + 6:.1f}" y="{PT - 12}" font-size="11" fill="#6a6a6a">'
              f'variació {a0}–{a1}, a preus constants</text>')
-    p.append(f'<text x="{PL - 12}" y="{alcada - 12}" font-size="10.5" fill="#9aa6b2" '
-             f'text-anchor="end">En blau, el que es ven en una botiga</text>')
+    p.append(f'<text x="{zero + 6:.1f}" y="{alcada - 12}" font-size="10.5" fill="#9aa6b2" '
+             f'text-anchor="start">En blau, el que es ven en una botiga</text>')
     p.append("</svg>")
     return "".join(p)
 
