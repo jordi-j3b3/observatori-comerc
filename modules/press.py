@@ -165,14 +165,24 @@ FEEDS = [
      "&hl=ca&gl=ES&ceid=ES:ca",
      "multisector", "institucional", True, "petit_comerc"),
 
-    # Comertia (Associació de Franquícia i Retail Catalunya):
-    # no té RSS directe verificat al domini comertia.com. Cobertura via
-    # Google News. ROADMAP: verificar comertia.com/feed/ i afegir feed directe.
+    # Comertia (associació d'empreses familiars catalanes del comerç). El domini
+    # correcte és comertia.net: comertia.com és un marketplace B2B de proveïdors i
+    # dropshippers sense cap relació, i era la causa que aquesta font no captés res.
+    # RSS directe verificat 2026-08-08 (HTTP 200, application/rss+xml, notes de premsa
+    # mensuals de l'Indicador Comertia). L'avís legal de comertia.net no reserva la
+    # mineria de dades ni el tractament automatitzat, o sigui que l'ingesta és neta.
+    ("comertia",
+     "Comertia — Comerç familiar català",
+     "https://www.comertia.net/feed/",
+     "multisector", "sectorial", True, "petit_comerc"),
+
+    # Cobertura de tercers sobre Comertia (Viaempresa, El Nacional, etc.), que el feed
+    # propi no dona. Query corregida al domini bo el 2026-08-08.
     ("google_comertia",
-     "Comertia — Franquícia i Retail Catalunya (via Google News)",
+     "Comertia — repercussió a premsa (via Google News)",
      "https://news.google.com/rss/search?"
-     "q=(site%3Acomertia.com+OR+%22Comertia%22+"
-     "OR+%22franqu%C3%ADcia+Catalunya%22+OR+%22retail+català%22)"
+     "q=(site%3Acomertia.net+OR+%22Comertia%22+"
+     "OR+%22comer%C3%A7+familiar+catal%C3%A0%22+OR+%22retail+català%22)"
      "&hl=ca&gl=ES&ceid=ES:ca",
      "multisector", "sectorial", True, "petit_comerc"),
 
