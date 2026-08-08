@@ -160,3 +160,37 @@ Streamlit posa un sostre dur a la responsivitat. Millores realistes sense canvia
 **Estat**: bloquejat fins post 1 juny.
 
 L'intent de logo "Observatorio del Comercio Minorista" del 2026-05-15 es va revertir tant al dashboard com al newsletter. Els assets generats (commit `b573c3b`) queden a `brand/` com a referència, però el producte no els usa ara mateix. La marca és tipogràfica fins que es prengui decisió posterior al llançament. No reactivar res relacionat amb el logo sense decisió explícita.
+
+---
+
+## Indicador Comertia: contrast intern (fet 2026-08-08, obert el que se'n derivi)
+
+**Què hi ha**: `data/fetchers/comertia.py` (sèrie mensual de l'Indicador Comertia des de
+les seves notes de premsa, via l'API de WordPress de comertia.net) i
+`analisi/comertia_xcorr.py` (test de correlació creuada amb desfasaments contra l'ICM de
+l'INE). Cap dels dos entra al pipeline diari.
+
+**Regla de publicació**: les dades són de Comertia. La sortida va a `data/raw/comertia/`,
+ignorat pel git, i el repo públic no conté cap xifra seva. Res d'això surt al dashboard
+ni al newsletter sense permís explícit de Comertia.
+
+**Resultat del test** (35 mesos, set. 2023 – jul. 2026): l'Indicador Comertia és
+**coincident, no avançat**, contra el que ells afirmen als seus PDF. En primeres
+diferències el màxim és a k=0 (r=+0,56 amb Espanya nominal, p=0,001) i a k=+1 cau a zero
+o a negatiu; el test de Granger no li troba cap aportació sobre els retards propis de la
+sèrie oficial; la direcció del canvi mensual coincideix el 70% dels mesos el mateix mes i
+el 41-47% un mes després. El biaix de nivell mitjà contra les sèries nominals és zero:
+el forat sistemàtic de ~2 punts contra les reals és tot efecte preus. El seu valor real
+és el calendari, no la predicció: publiquen amb una mediana de 5 dies des del tancament
+del mes, unes tres setmanes abans que l'INE.
+
+**Pendents**:
+1. Refer el test quan surti l'ICM de juliol (finals d'agost) per contrastar la xifra que
+   Comertia ha publicat per aquell mes.
+2. Els mesos sense nota de premsa s'omplen a mà a `data/raw/comertia/overrides.json`
+   llegint el gràfic del PDF del mes següent. Cada mes nou, comprovar si cal.
+3. Comertia revisa xifres sense avisar: algun mes el valor de la nota de premsa i el del
+   gràfic del PDF del mes següent no coincideixen. Si mai es cita res, citar la nota de
+   premsa, que és text i no píxel.
+4. **Bloquejant si la col·laboració tira endavant**: el pendent de CVEC d'aquí sobre.
+   El marc de referència de Comertia és Idescat, i la nostra sèrie catalana és bruta.
