@@ -163,6 +163,97 @@ def compara(m, a0, a1):
     return t
 
 
+# Correspondencia entre els sectors que publica Comertia i les branques CNAE de la
+# taula de marges. Restauracio i Altres (serveis i automocio) queden fora: no son
+# CNAE 47 i no tenen marge comparable en aquesta taula. El desdoblament d'alimentacio
+# entre 471 i 472 es orientatiu i s'ha de dir al lliurable.
+SECTOR_A_CNAE = {
+    "Moda": "477",
+    "Complements Persona": "477",
+    "Equipament de la Llar": "475",
+    "Oci-Cultura": "476",
+    "Alimentació Bàsica": "471",
+    "Alimentació No Bàsica": "472",
+}
+FORA_CNAE47 = {"Restauració", "Altres"}
+
+
+def creixement_comertia(mesos=12):
+    """Creixement mitjà per sector de Comertia dels darrers mesos disponibles."""
+    sys.path.insert(0, os.path.join(DIR, ".."))
+    from data.fetchers import comertia
+
+    d = comertia.load_detall()
+    if d.empty:
+        d = comertia.build_detall(verbose=False)
+    if d.empty:
+        return pd.DataFrame()
+    c = d[d.indicador == "creixement"].copy()
+    c["data"] = pd.to_datetime(c["data"])
+    darrers = sorted(c["data"].unique())[-mesos:]
+    c = c[c["data"].isin(darrers)]
+    g = c.groupby("sector")["valor"].agg(["mean", "count"])
+    g.columns = ["creixement_mitja", "mesos"]
+    return g, (min(darrers), max(darrers))
+
+
+def _svg_comertia(t, ini, fi, amplada=700, alt_fila=26):
+    """Barres del creixement per sector de Comertia, amb el marge de cada branca."""
+    d = t.sort_values("creixement_mitja")
+    n = len(d)
+    PT, PB, PL = 34, 40, 200
+    alcada = PT + PB + n * alt_fila
+    lo = min(float(d["creixement_mitja"].min()), 0.0)
+    hi = max(float(d["creixement_mitja"].max()), 0.0)
+    span = max(hi - lo, 1e-9)
+    ample_util = amplada - PL - 132
+
+    def px(v):
+        return PL + (v - lo) * ample_util / span
+
+    zero = px(0)
+    col_marge = amplada - 96
+    p = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {amplada} {alcada}" '
+         f'width="{amplada}" height="{alcada}" '
+         f'font-family="Helvetica, Arial, sans-serif">',
+         f'<rect width="{amplada}" height="{alcada}" fill="#ffffff"/>']
+    for i, (sector, f) in enumerate(d.iterrows()):
+        y = PT + i * alt_fila
+        v = float(f["creixement_mitja"])
+        marge = f["marge"]
+        te_marge = pd.notna(marge)
+        color = "#003366" if te_marge else "#c8d0d8"
+        x0, x1 = (zero, px(v)) if v >= 0 else (px(v), zero)
+        p.append(f'<rect x="{x0:.1f}" y="{y + 5:.1f}" width="{max(x1 - x0, 0.5):.1f}" '
+                 f'height="{alt_fila - 12}" fill="{color}"/>')
+        p.append(f'<text x="{PL - 12}" y="{y + alt_fila / 2 + 2:.1f}" font-size="11.5" '
+                 f'fill="#37485a" text-anchor="end">{sector}</text>')
+        etx = x1 + 6 if v >= 0 else x0 - 6
+        anc = "start" if v >= 0 else "end"
+        p.append(f'<text x="{etx:.1f}" y="{y + alt_fila / 2 + 2:.1f}" font-size="11.5" '
+                 f'fill="{color}" text-anchor="{anc}">{v:+.1f}%</text>')
+        txt = f"{marge:.1f}" if te_marge else "—"
+        gruix = "700" if te_marge and marge >= 10 else "400"
+        p.append(f'<text x="{col_marge}" y="{y + alt_fila / 2 + 2:.1f}" font-size="11.5" '
+                 f'fill="{"#b07d2b" if te_marge else "#c8d0d8"}" text-anchor="middle" '
+                 f'font-weight="{gruix}">{txt}</text>')
+    p.append(f'<line x1="{zero:.1f}" y1="{PT}" x2="{zero:.1f}" y2="{PT + n * alt_fila}" '
+             f'stroke="#37485a" stroke-width="1"/>')
+    p.append(f'<text x="{PL - 12}" y="{PT - 14}" font-size="11" fill="#1a2b3a" '
+             f'text-anchor="end" font-weight="700">On creix Comertia</text>')
+    p.append(f'<text x="{zero + 6:.1f}" y="{PT - 14}" font-size="11" fill="#6a6a6a">'
+             f'mitjana {ini:%m/%y}–{fi:%m/%y}</text>')
+    p.append(f'<text x="{col_marge}" y="{PT - 14}" font-size="10.5" fill="#b07d2b" '
+             f'text-anchor="middle" font-weight="700">cèntims</text>')
+    p.append(f'<text x="{col_marge}" y="{PT - 3}" font-size="9.5" fill="#b07d2b" '
+             f'text-anchor="middle">per euro</text>')
+    p.append(f'<text x="{PL - 12}" y="{alcada - 14}" font-size="10.5" fill="#9aa6b2" '
+             f'text-anchor="end">Creixement declarat per Comertia; '
+             f'marge de la branca CNAE equivalent (INE)</text>')
+    p.append("</svg>")
+    return "".join(p)
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     euro, control = compte_explotacio()
@@ -221,6 +312,33 @@ def main():
     print(f"  Pitjor conversio del periode: {pitjor['branca'].iloc[0]} "
           f"({pitjor['bretxa'].iloc[0]:+.1f} punts). "
           f"Millor: {millor['branca'].iloc[0]} ({millor['bretxa'].iloc[0]:+.1f}).")
+
+    print("\n=== 5. Amb les dades de Comertia: on creixen contra el que paga ===")
+    cre = creixement_comertia()
+    if cre and not cre[0].empty:
+        g, (ini, fi) = cre
+        marge_final = {cnae: t.loc[cnae, "marge_final"] for cnae in t.index}
+        g["cnae"] = [SECTOR_A_CNAE.get(s) for s in g.index]
+        g["marge"] = [marge_final.get(c) if c else float("nan") for c in g["cnae"]]
+        print(f"  Mitjana dels darrers 12 mesos disponibles ({ini:%m/%Y}–{fi:%m/%Y}).")
+        print(g.sort_values("creixement_mitja", ascending=False).round(2).to_string())
+        comparable = g.dropna(subset=["marge"])
+        if len(comparable) >= 3:
+            r = comparable["creixement_mitja"].corr(comparable["marge"])
+            print(f"\n  Correlacio entre on creixen i el que paga la branca: r={r:+.2f} "
+                  f"({len(comparable)} sectors dins CNAE 47). Amb tan pocs punts es "
+                  f"indicatiu, no una prova: el que aguanta es l'ordre, no el coeficient.")
+        fora = [s for s in g.index if s in FORA_CNAE47]
+        if fora:
+            print(f"  Fora de CNAE 47 i sense marge comparable: {', '.join(fora)}.")
+        g.round(2).to_csv(os.path.join(OUT_DIR, "conversio_marge_comertia.csv"),
+                          index_label="sector")
+        ruta2 = os.path.join(OUT_DIR, "conversio_marge_comertia.svg")
+        with open(ruta2, "w", encoding="utf-8") as f:
+            f.write(_svg_comertia(g, ini, fi))
+        print(f"  Grafic: {os.path.abspath(ruta2)}")
+    else:
+        print("  Sense detall sectorial de Comertia: executa data/fetchers/comertia.py")
 
     ruta_csv = os.path.join(OUT_DIR, "conversio_marge.csv")
     t.round(2).to_csv(ruta_csv)

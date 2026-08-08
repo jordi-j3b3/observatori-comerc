@@ -162,6 +162,240 @@ def fetch_notes(max_pagines=6, timeout=30):
     return df.drop_duplicates(subset="data", keep="first").reset_index(drop=True)
 
 
+# ─── Detall sectorial (cos de la nota de premsa) ────────────────────────────
+#
+# El titular només porta la mitjana. El cos de cada nota porta dues coses més que no
+# hi ha en cap altra font: el creixement per sector i el pes de la venda en línia
+# sobre la facturació de cada sector. Cap de les dues es publica en sèrie enlloc.
+#
+# El text és prosa, no una taula, i canvia de forma cada mes. La regla d'aquest parser
+# és no endevinar mai: només s'accepta un valor quan el patró és inequívoc i quan el
+# nombre de sectors citats coincideix amb el de xifres. Un mes amb cobertura parcial és
+# un mes amb cobertura parcial; un mes amb un valor inventat contamina tota la sèrie.
+
+SECTORS = {
+    "moda": "Moda",
+    "complements persona": "Complements Persona",
+    "compl persona": "Complements Persona",
+    "alimentacio basica": "Alimentació Bàsica",
+    "alimentacio no basica": "Alimentació No Bàsica",
+    "oci-cultura": "Oci-Cultura",
+    "oci cultura": "Oci-Cultura",
+    "equipament de la llar": "Equipament de la Llar",
+    "equipament llar": "Equipament de la Llar",
+    "equip llar": "Equipament de la Llar",
+    "restauracio": "Restauració",
+    "altres": "Altres",
+}
+# Es prova primer el nom més llarg: si no, "alimentacio basica" engoliria
+# "alimentacio no basica".
+_CLAUS_SECTOR = sorted(SECTORS, key=len, reverse=True)
+
+# Marges de plausibilitat. El pes en línia és una proporció i no pot ser negatiu; el
+# febrer de 2026 la nota de Comertia en publica dos de negatius (Equip Llar −3,8%,
+# Moda −9%), que són impossibles com a pes i que aquest filtre deixa fora.
+LIMIT_CREIXEMENT = 60.0
+LIMIT_ONLINE = (0.0, 60.0)
+
+
+def _norm(s):
+    """Minúscules, sense accents i amb els separadors uniformats."""
+    s = s.replace("’", "'").replace("\xa0", " ")
+    s = "".join(c for c in unicodedata.normalize("NFD", s)
+                if unicodedata.category(c) != "Mn")
+    s = s.lower().replace(".", " ").replace("-", "-")
+    s = re.sub(r"-\s+", "-", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _sector_de(fragment):
+    n = _norm(fragment)
+    for clau in _CLAUS_SECTOR:
+        if clau in n:
+            return SECTORS[clau]
+    return None
+
+
+def _frases(text):
+    """Talla per frases protegint "Equip. Llar" i "Compl. Persona".
+
+    Aquests dos sectors s'abreugen amb un punt enmig del nom i qualsevol tall ingenu
+    per punt els parteix, deixant mitja frase sense sector.
+    """
+    t = text
+    for a, b in (("Equip. ", "Equip‧ "), ("Compl. ", "Compl‧ "),
+                 ("equip. ", "equip‧ "), ("compl. ", "compl‧ ")):
+        t = t.replace(a, b)
+    return [f.replace("‧", "").strip() for f in re.split(r"(?<=[.!?])\s+", t)]
+
+
+def _sectors_en_ordre(fragment):
+    """Sectors citats en un fragment, sense repetir i en ordre d'aparició."""
+    trobats, vistos = [], set()
+    for m in re.finditer(r"[A-Za-zÀ-ÿ'·\-\. ]{3,45}", fragment):
+        s = _sector_de(m.group(0))
+        if s and s not in vistos:
+            vistos.add(s)
+            trobats.append(s)
+    return trobats
+
+
+def _xifres(fragment):
+    return [float(x.replace(",", ".")) for x in
+            re.findall(r"(-?\d+(?:[,\.]\d+)?)\s*%", fragment)]
+
+
+def _parell_parentesi(frase):
+    """Patró dominant i més segur: 'Sector (12,3%)'."""
+    out = []
+    for m in re.finditer(r"([A-Za-zÀ-ÿ'·\-\. ]{3,45}?)\s*\((-?\d+(?:[,\.]\d+)?)\s*%\)",
+                         frase):
+        s = _sector_de(m.group(1))
+        if s:
+            out.append((s, float(m.group(2).replace(",", ".")), "parentesi"))
+    return out
+
+
+def _parell_llista(frase):
+    """Patró 'A, B i C han liderat ... amb 8,1%, 7,8% i 4,6%'.
+
+    Només s'aparella quan hi ha tants sectors com xifres. Si no quadren, no hi ha cap
+    manera segura de saber quina xifra és de qui i es descarta la frase sencera.
+    """
+    n = _norm(frase)
+    if not re.search(r"lidera|liderat|segueix|segueixen", n):
+        return []
+    tall = re.split(r"\bamb\b", frase)
+    if len(tall) < 2:
+        return []
+    sectors = _sectors_en_ordre(tall[0])
+    valors = _xifres("amb".join(tall[1:]))
+    if not sectors or len(sectors) != len(valors):
+        return []
+    negatiu = bool(re.search(r"descens|caiguda|patit|negatiu", n))
+    return [(s, -abs(v) if negatiu and v > 0 else v, "llista")
+            for s, v in zip(sectors, valors)]
+
+
+def _parell_descens(frase):
+    """'Moda ha patit un descens important amb un resultat del -1,2%'."""
+    n = _norm(frase)
+    if not re.search(r"descens|caiguda|resultat negatiu", n):
+        return []
+    sectors = _sectors_en_ordre(frase.split(" ha ")[0].split(" han ")[0])
+    valors = _xifres(frase)
+    if len(sectors) != len(valors) or not sectors:
+        return []
+    return [(s, -abs(v), "descens") for s, v in zip(sectors, valors)]
+
+
+def _parseja_cos(text):
+    """Retorna (creixement_per_sector, pes_online_per_sector) d'una nota."""
+    creix, online = {}, {}
+    for frase in _frases(text):
+        if "%" not in frase:
+            continue
+        n = _norm(frase)
+        if "pes en linia" in n or "pes online" in n or "linia respecte" in n:
+            parells = _parell_parentesi(frase)
+            # Si un sol valor de la frase és impossible com a proporció, la frase
+            # sencera és sospitosa i es descarta. El gener de 2026 la nota publica
+            # pesos negatius (Equip Llar −3,8%, Moda −9%) i, al mateix llistat,
+            # valors positius fora d'escala (Alimentació Bàsica 12,5% quan la resta
+            # de mesos ronda el 3%): sembla que aquell mes van publicar una altra
+            # cosa, no el pes. Salvar-ne la meitat seria pitjor que perdre'ls tots.
+            if parells and all(LIMIT_ONLINE[0] <= v <= LIMIT_ONLINE[1]
+                               for _, v, _ in parells):
+                for s, v, _ in parells:
+                    online.setdefault(s, v)
+            continue
+        for s, v, metode in (_parell_parentesi(frase) + _parell_llista(frase)
+                             + _parell_descens(frase)):
+            if abs(v) <= LIMIT_CREIXEMENT:
+                creix.setdefault(s, (v, metode))
+    return creix, online
+
+
+def fetch_detall_sectorial(max_pagines=6, timeout=30):
+    """Sèrie mensual per sector: creixement i pes de la venda en línia.
+
+    Retorna un DataFrame llarg amb data, sector, indicador ('creixement' o
+    'pes_online'), valor i metode (quin patró l'ha capturat, per poder auditar).
+    """
+    posts = []
+    for pagina in range(1, max_pagines + 1):
+        params = {"per_page": 100, "page": pagina, "_fields": "date,title,content"}
+        try:
+            resp = requests.get(API, params=params, headers=HEADERS, timeout=timeout)
+        except requests.RequestException as e:
+            print(f"Comertia: error de xarxa a la pagina {pagina}: {e}")
+            break
+        if resp.status_code == 400:
+            break
+        if resp.status_code != 200:
+            print(f"Comertia: HTTP {resp.status_code} a la pagina {pagina}")
+            break
+        lot = resp.json()
+        if not lot:
+            break
+        posts.extend(lot)
+
+    files = []
+    for p in posts:
+        titol = _neteja_titol(p["title"]["rendered"])
+        data_post = date.fromisoformat(p["date"][:10])
+        mes, _ = _parse_titol(titol, data_post)
+        if mes is None:
+            continue
+        text = _neteja_titol(p["content"]["rendered"])
+        creix, online = _parseja_cos(text)
+        for s, (v, metode) in creix.items():
+            files.append({"data": mes.isoformat(), "sector": s,
+                          "indicador": "creixement", "valor": v, "metode": metode})
+        for s, v in online.items():
+            files.append({"data": mes.isoformat(), "sector": s,
+                          "indicador": "pes_online", "valor": v, "metode": "parentesi"})
+
+    if not files:
+        return pd.DataFrame()
+    df = pd.DataFrame(files).drop_duplicates(subset=["data", "sector", "indicador"])
+    return df.sort_values(["data", "indicador", "sector"]).reset_index(drop=True)
+
+
+def build_detall(desa=True, verbose=True):
+    """Construeix el detall sectorial i informa de la cobertura mes a mes."""
+    df = fetch_detall_sectorial()
+    if df.empty:
+        if verbose:
+            print("Comertia: cap detall sectorial obtingut")
+        return df
+    if verbose:
+        for ind in ("creixement", "pes_online"):
+            g = df[df.indicador == ind]
+            if g.empty:
+                continue
+            per_mes = g.groupby("data").size()
+            print(f"Comertia {ind}: {len(per_mes)} mesos, "
+                  f"{per_mes.min()}-{per_mes.max()} sectors per mes "
+                  f"(mediana {per_mes.median():.0f} de {len(set(SECTORS.values()))})")
+            fluixos = per_mes[per_mes < 5]
+            if len(fluixos):
+                print(f"  Mesos amb menys de 5 sectors: "
+                      f"{', '.join(f'{k[:7]} ({v})' for k, v in fluixos.items())}")
+        print(f"  Metodes: {df.metode.value_counts().to_dict()}")
+    if desa:
+        os.makedirs(RAW_DIR, exist_ok=True)
+        df.to_csv(os.path.join(RAW_DIR, "detall_sectorial.csv"), index=False)
+        if verbose:
+            print(f"  Desat: {os.path.join(RAW_DIR, 'detall_sectorial.csv')}")
+    return df
+
+
+def load_detall():
+    ruta = os.path.join(RAW_DIR, "detall_sectorial.csv")
+    return pd.read_csv(ruta) if os.path.exists(ruta) else pd.DataFrame()
+
+
 def _carrega_overrides():
     if not os.path.exists(OVERRIDES_PATH):
         return {}
@@ -226,3 +460,5 @@ def load_serie():
 
 if __name__ == "__main__":
     build_serie()
+    print()
+    build_detall()
