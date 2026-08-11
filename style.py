@@ -2065,3 +2065,348 @@ def freshness_badge(datasets, lang="es"):
         f' · {lbl_data} {period}</span></div>',
         unsafe_allow_html=True,
     )
+
+
+# ─── PORTADA (editorial sec: filets, aire i tipografia; cap caixa) ──────────
+# Els blocs de la portada no porten requadre, ombra ni fons: la jerarquia surt
+# de la mida del tipus, dels filets d'1 px i de l'aire entre seccions. Carregar
+# inject_home_css() DESPRÉS d'inject_premium_page_css().
+
+def inject_home_css():
+    """CSS de la portada. Cap component amb caixa: només filets i espai."""
+    st.markdown("""
+    <style>
+    /* ── línia de marca i filets ── */
+    .h-brand {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11px; font-weight: 700; letter-spacing: .2em;
+        text-transform: uppercase; color: #9aa6b2;
+        padding-bottom: 12px; border-bottom: 1px solid #e4e9ee;
+    }
+    .h-rule { border-top: 1px solid #e4e9ee; margin: 0; }
+    .h-rule-strong { border-top: 2px solid #1a2b3a; margin: 0; }
+    .h-gap-s { height: 22px; }
+    .h-gap { height: 44px; }
+    .h-gap-l { height: 68px; }
+
+    /* ── titular de portada: més gran que el de les pàgines interiors ── */
+    .h-kick {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
+        text-transform: uppercase; color: #b07d2b;
+    }
+    .h-h1 {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: clamp(2.3rem, 5vw, 3.4rem) !important;
+        font-weight: 800 !important; letter-spacing: -.035em !important;
+        line-height: 1.03 !important; color: #1a2b3a !important;
+        margin: 18px 0 0 !important; max-width: 24ch;
+    }
+    .h-lede {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 17.5px; line-height: 1.6; color: #37485a;
+        margin: 20px 0 0; max-width: 52ch;
+    }
+
+    /* ── xifra-xoc en text, sense banda de fons ── */
+    .h-shock {
+        display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap;
+        margin: 4px 0 2px;
+    }
+    .h-shock-v {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: clamp(2.6rem, 5vw, 3.6rem); font-weight: 800;
+        letter-spacing: -.04em; line-height: 1; color: #0b3a66;
+        font-variant-numeric: tabular-nums;
+    }
+    .h-shock-v.neg { color: #b03a2e; }
+    .h-shock-l {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 15.5px; line-height: 1.5; color: #37485a; max-width: 44ch;
+    }
+    .h-shock-l b { color: #1a2b3a; font-weight: 700; }
+
+    /* ── xifres estructurals: sense cel·les ni separadors verticals ── */
+    .h-stats {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 30px 34px; margin: 26px 0 0;
+    }
+    .h-stat-v {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 2.15rem; font-weight: 800; letter-spacing: -.035em;
+        color: #1a2b3a; line-height: 1; font-variant-numeric: tabular-nums;
+    }
+    .h-stat-u { font-size: .95rem; font-weight: 700; color: #0b3a66; margin-left: 2px; }
+    .h-stat-l {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11.5px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: #5e6b78;
+        line-height: 1.5; margin-top: 12px; max-width: 24ch;
+    }
+    .h-stat-d {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 12.5px; font-weight: 600; margin-top: 6px;
+        font-variant-numeric: tabular-nums; color: #5e6b78;
+    }
+    .h-stat-d.up { color: #1f7a4d; }
+    .h-stat-d.down { color: #b03a2e; }
+    @media (max-width: 900px) { .h-stats { grid-template-columns: 1fr 1fr; } }
+
+    /* ── exhibits: kicker, titular-afirmació, nota i línia de font ── */
+    .h-exh-kick {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11px; font-weight: 700; letter-spacing: .16em;
+        text-transform: uppercase; color: #b07d2b; margin-bottom: 6px;
+    }
+    .h-exh-t {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: clamp(1.25rem, 2.3vw, 1.6rem); font-weight: 800;
+        letter-spacing: -.02em; line-height: 1.18; color: #1a2b3a;
+        max-width: 40ch;
+    }
+    .h-exh-n {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 15.5px; line-height: 1.6; color: #37485a;
+        margin: 14px 0 4px; max-width: 62ch;
+    }
+    .h-src {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11.5px; color: #9aa6b2; margin-top: 2px;
+        padding-top: 10px; border-top: 1px solid #eef1f5;
+    }
+    .h-legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 16px 0 0; }
+    .h-legend span {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 12.5px; font-weight: 600; color: #37485a;
+    }
+    .h-legend i { width: 22px; height: 3px; display: inline-block; }
+
+    /* ── intro de secció ── */
+    .h-sec-eyebrow {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
+        text-transform: uppercase; color: #b07d2b; margin-bottom: 12px;
+    }
+    .h-sec-h2 {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: clamp(1.5rem, 3vw, 2.15rem) !important;
+        font-weight: 800 !important; letter-spacing: -.028em !important;
+        line-height: 1.12 !important; color: #1a2b3a !important;
+        margin: 0 !important; max-width: 30ch;
+    }
+    .h-sec-p {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 16.5px; line-height: 1.6; color: #37485a;
+        margin: 14px 0 0; max-width: 60ch;
+    }
+
+    /* ── tesi editorial ── */
+    .h-quote {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: clamp(1.3rem, 2.2vw, 1.75rem); font-weight: 600;
+        line-height: 1.34; color: #1a2b3a; max-width: 34ch;
+        margin: 0 !important; padding: 0 !important;
+        border: none !important; background: none !important;
+        font-style: normal !important; quotes: none; opacity: 1 !important;
+    }
+    .h-quote::before, .h-quote::after { content: none !important; }
+    .h-quote-src {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 13px; font-weight: 600; color: #5e6b78; margin-top: 22px;
+    }
+    .h-quote-src::before {
+        content: ""; display: block; width: 44px; height: 2px;
+        background: #b07d2b; margin-bottom: 16px;
+    }
+    .h-quote-src .d { color: #0b3a66; }
+    .h-aside {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 16px; line-height: 1.68; color: #37485a; max-width: 58ch;
+    }
+    .h-aside p { margin: 0; }
+    .h-aside p + p { margin-top: 14px; }
+    .h-aside .ctx {
+        font-size: 12px; font-weight: 700; letter-spacing: .1em;
+        text-transform: uppercase; color: #9aa6b2; margin-bottom: 14px;
+    }
+
+    /* ── llista numerada de dimensions ── */
+    .h-field {
+        display: grid; grid-template-columns: 2.4rem 1fr; gap: 4px 14px;
+        padding: 22px 0 4px; border-top: 1px solid #e4e9ee; align-items: baseline;
+    }
+    .h-field-n {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 13px; font-weight: 800; color: #b07d2b;
+        font-variant-numeric: tabular-nums; letter-spacing: .06em;
+    }
+    .h-field-t {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 18px; font-weight: 800; color: #1a2b3a;
+        letter-spacing: -.02em; margin-bottom: 5px;
+    }
+    .h-field-p {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 14.5px; color: #5e6b78; line-height: 1.5; max-width: 44ch;
+    }
+
+    /* ── tira de novetats ── */
+    .h-upd-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        gap: 12px; padding: 8px 0; border-bottom: 1px solid #f2f4f7;
+        font-family: 'Manrope', system-ui, sans-serif;
+    }
+    .h-upd-row span.l { font-size: 13.5px; color: #37485a; }
+    .h-upd-row span.l b { color: #0b3a66; font-weight: 700; }
+    .h-upd-row span.r { font-size: 11.5px; color: #9aa6b2; white-space: nowrap; }
+
+    /* ── enllaços de navegació: text amb fletxa, sense fons de botó ── */
+    [data-testid="stPageLink"] a {
+        padding-left: 0 !important; background: none !important;
+    }
+    [data-testid="stPageLink"] p {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: 14.5px !important; font-weight: 700 !important;
+        color: #0b3a66 !important;
+    }
+    [data-testid="stPageLink"] a:hover p { color: #b07d2b !important; }
+
+    /* ── expander de la portada: sense caixa, només un filet a dalt ── */
+    [data-testid="stExpander"] details {
+        border: none !important; border-top: 1px solid #e4e9ee !important;
+        border-radius: 0 !important; background: none !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stExpander"] summary { padding-left: 0 !important; }
+
+    /* ── butlletí: el bloc gran només surt a la portada; fora la caixa ── */
+    .newsletter-block {
+        border-top: 2px solid #1a2b3a !important;
+        border-bottom: none !important; padding: 26px 0 6px !important;
+    }
+    .newsletter-block .newsletter-eyebrow {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: 11.5px !important; letter-spacing: .18em !important;
+        color: #b07d2b !important;
+    }
+    .newsletter-block h3 {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: clamp(1.5rem, 3vw, 2.15rem) !important;
+        font-weight: 800 !important; color: #1a2b3a !important;
+        letter-spacing: -.028em !important;
+    }
+    .newsletter-block .newsletter-desc {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-size: 16.5px !important; color: #37485a !important;
+    }
+    .newsletter-block .newsletter-desc strong {
+        background: none !important; font-weight: 700; color: #1a2b3a !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def home_rule(strong=False, space_before=0, space_after=0):
+    """Filet horitzontal de separació. strong=True per als talls de secció."""
+    _b = f'<div style="height:{space_before}px"></div>' if space_before else ""
+    _a = f'<div style="height:{space_after}px"></div>' if space_after else ""
+    st.markdown(
+        f'{_b}<div class="{"h-rule-strong" if strong else "h-rule"}"></div>{_a}',
+        unsafe_allow_html=True,
+    )
+
+
+def home_space(size="m"):
+    """Aire vertical entre blocs: 's' 22px, 'm' 44px, 'l' 68px."""
+    st.markdown(f'<div class="h-gap{"-s" if size == "s" else ("-l" if size == "l" else "")}"></div>',
+                unsafe_allow_html=True)
+
+
+def home_brandline(text):
+    """Línia de marca discreta al capdamunt de la portada."""
+    st.markdown(f'<div class="h-brand">{text}</div>', unsafe_allow_html=True)
+
+
+def home_hero(kick, titular, lede=None):
+    """Capçalera editorial de la portada: kicker, titular gran i entradeta."""
+    _l = f'<p class="h-lede">{lede}</p>' if lede else ""
+    st.markdown(
+        f'<div class="h-kick">{kick}</div>'
+        f'<h1 class="h-h1">{titular}</h1>{_l}',
+        unsafe_allow_html=True,
+    )
+
+
+def home_shock(value, label, negative=False):
+    """Xifra-xoc en text pla, amb la seva lectura al costat."""
+    st.markdown(
+        f'<div class="h-shock">'
+        f'<div class="h-shock-v{" neg" if negative else ""}">{value}</div>'
+        f'<div class="h-shock-l">{label}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def home_stats(items):
+    """Xifres estructurals de la portada.
+
+    items: llista de (value, unit, label, delta, direction) amb direction
+    'up' | 'down' | None.
+    """
+    cells = ""
+    for value, unit, label, delta, direction in items:
+        _u = f'<span class="h-stat-u">{unit}</span>' if unit else ""
+        _d = f'<div class="h-stat-d {direction or ""}">{delta}</div>' if delta else ""
+        cells += (f'<div><div class="h-stat-v">{value}{_u}</div>'
+                  f'<div class="h-stat-l">{label}</div>{_d}</div>')
+    st.markdown(f'<div class="h-stats">{cells}</div>', unsafe_allow_html=True)
+
+
+def home_section(eyebrow, title, text=None):
+    """Intro de secció de la portada."""
+    _p = f'<p class="h-sec-p">{text}</p>' if text else ""
+    st.markdown(
+        f'<div class="h-sec-eyebrow">{eyebrow}</div>'
+        f'<h2 class="h-sec-h2">{title}</h2>{_p}',
+        unsafe_allow_html=True,
+    )
+
+
+def home_exhibit(kick, title, note=None, legend=None):
+    """Capçalera d'un gràfic de la portada. legend: llista de (color, etiqueta)."""
+    _n = f'<p class="h-exh-n">{note}</p>' if note else ""
+    _leg = ""
+    if legend:
+        _leg = ('<div class="h-legend">' + "".join(
+            f'<span><i style="background:{c}"></i>{lab}</span>' for c, lab in legend
+        ) + '</div>')
+    st.markdown(
+        f'<div class="h-exh-kick">{kick}</div>'
+        f'<div class="h-exh-t">{title}</div>{_n}{_leg}',
+        unsafe_allow_html=True,
+    )
+
+
+def home_source(text):
+    """Línia de font sota un gràfic, separada per un filet finíssim."""
+    st.markdown(f'<div class="h-src">{text}</div>', unsafe_allow_html=True)
+
+
+def home_quote(text, source_line):
+    """Pull-quote editorial, amb filet ocre sobre la línia de font."""
+    st.markdown(
+        f'<blockquote class="h-quote">{text}</blockquote>'
+        f'<div class="h-quote-src">{source_line}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def home_field(num, title, text):
+    """Entrada de la llista numerada de dimensions (el page_link va a continuació)."""
+    st.markdown(
+        f'<div class="h-field"><span class="h-field-n">{num}</span>'
+        f'<div><div class="h-field-t">{title}</div>'
+        f'<div class="h-field-p">{text}</div></div></div>',
+        unsafe_allow_html=True,
+    )
