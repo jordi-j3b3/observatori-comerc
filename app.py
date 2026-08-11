@@ -1,6 +1,7 @@
 """
 Observatori del Comerç Minorista a Espanya (CNAE 47)
-Punt d'entrada: navegació jeràrquica HOME / LECTURAS / RADIOGRAFIA / DETALL / RECURSOS.
+Punt d'entrada: navegació per pregunta del visitant
+(Actualitat / El sector / Canal i concentració / El territori / Sobre).
 """
 import os
 import streamlit as st
@@ -31,14 +32,15 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
 # ─── NAVEGACIÓ JERÀRQUICA AMB TÍTOLS TRADUÏTS ──────────────────
 
-# Etiquetes de seccions (capçaleres del sidebar)
+# Etiquetes de seccions (capçaleres del sidebar). Arquitectura per pregunta del
+# visitant (2026-07-06): què passa ara · com és el sector · com canvia i qui
+# domina · com se situa · sobre nosaltres.
 SEC_HOME = "Inicio" if not _ca else "Inici"
-SEC_EDITORIAL = "Editorial"
-SEC_POLS = "Pulso" if not _ca else "Pols"
-SEC_RADIO = "Radiografía" if not _ca else "Radiografia"
-SEC_EUROPA = "Europa"
-SEC_ANALISI = "Análisis" if not _ca else "Anàlisi"
-SEC_RECURSOS = "Recursos"
+SEC_ARA = "La actualidad" if not _ca else "L'actualitat"
+SEC_SECTOR = "El sector"
+SEC_CANAL = "Canal y concentración" if not _ca else "Canal i concentració"
+SEC_TERRITORI = "El territorio" if not _ca else "El territori"
+SEC_SOBRE = "Acerca" if not _ca else "Sobre"
 
 # HOME
 p_inici = st.Page(
@@ -118,12 +120,11 @@ p_premsa = st.Page(
 # Construcció del diccionari de navegació
 nav = {
     SEC_HOME: [p_inici],
-    SEC_EDITORIAL: [p_lecturas],
-    SEC_POLS: [p_pols, p_icm],
-    SEC_RADIO: [p_pib, p_emp, p_ocu, p_prod, p_ec, p_estructura],
-    SEC_EUROPA: [p_europa],
-    SEC_ANALISI: [p_subs, p_lideres, p_terr],
-    SEC_RECURSOS: [p_metod, p_premsa],
+    SEC_ARA: [p_pols, p_icm, p_lecturas, p_premsa],
+    SEC_SECTOR: [p_pib, p_emp, p_ocu, p_prod, p_subs],
+    SEC_CANAL: [p_ec, p_estructura, p_lideres],
+    SEC_TERRITORI: [p_europa, p_terr],
+    SEC_SOBRE: [p_metod],
 }
 
 # A_Municipis.py només es publica si OBSERVATORI_LOCAL=1.
@@ -133,7 +134,7 @@ if LOCAL_ONLY:
         "pages/A_Municipis.py",
         title=("Municipis (local)" if _ca else "Municipios (local)"),
     )
-    nav[SEC_ANALISI].append(p_municipis)
+    nav[SEC_TERRITORI].append(p_municipis)
 
 # position="hidden": amaguem la nav nativa (no plegable) i en construïm una
 # de pròpia amb grups plegables al sidebar.
@@ -153,7 +154,7 @@ with st.sidebar:
                 st.page_link(_pp)
             continue
         _is_open = (any(_pp.title == _active_title for _pp in _sec_pages)
-                    or (_on_home and _sec == SEC_POLS))
+                    or (_on_home and _sec == SEC_ARA))
         with st.expander(_sec, expanded=_is_open):
             for _pp in _sec_pages:
                 st.page_link(_pp)
