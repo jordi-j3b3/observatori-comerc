@@ -1249,11 +1249,12 @@ def inject_css():
         /* ── Marc amb navegació SUPERIOR (sense sidebar) ────────────
            Sense sidebar el contingut s'estiraria a tota la finestra i les
            línies de text es farien il·legibles: el limitem i el centrem. */
-        /* padding-top: la capçalera de la nav és fixa i tapa el contingut si
-           el bloc principal comença massa amunt. */
+        /* padding-top: la capçalera fixa fa 60 px i tapa el contingut si el
+           bloc principal comença massa amunt. Just el que cal i prou, per no
+           enfonsar el titular de la portada. */
         [data-testid="stMainBlockContainer"], .block-container {
             max-width: 1200px !important;
-            padding-top: 72px !important;
+            padding-top: 68px !important;
         }
         header [data-testid="stTopNavSection"] a,
         header [data-testid="stTopNavDropdownLink"],
@@ -2157,14 +2158,15 @@ def inject_home_css():
     .h-gap { height: 44px; }
     .h-gap-l { height: 68px; }
 
-    /* Frase permanent: què és aquest web. No canvia amb l'edició de la setmana. */
+    /* Frase permanent: què és aquest web. No canvia amb l'edició de la setmana.
+       Ha de caber en dues línies: si creix, enfonsa el titular. */
     .h-stand {
         font-family: 'Manrope', system-ui, sans-serif;
-        font-size: 16px; line-height: 1.6; color: #5e6b78;
-        max-width: 72ch; padding-bottom: 20px;
+        font-size: 15.5px; line-height: 1.55; color: #5e6b78;
+        max-width: 88ch; padding-bottom: 14px;
         border-bottom: 1px solid #e4e9ee;
     }
-    .h-stand b { color: #1a2b3a; font-weight: 700; }
+    .h-stand b { color: #0b3a66; font-weight: 700; }
 
     /* ── titular de portada: més gran que el de les pàgines interiors ── */
     .h-kick {
@@ -2184,9 +2186,13 @@ def inject_home_css():
         font-family: 'Manrope', system-ui, sans-serif !important;
         font-size: clamp(3rem, 7vw, 5.5rem) !important;
         font-weight: 800 !important; letter-spacing: -.045em !important;
-        line-height: .94 !important; color: #1a2b3a !important;
-        margin: 20px 0 0 !important; max-width: 22ch;
+        line-height: .94 !important; color: #0b3a66 !important;
+        margin: 14px 0 0 !important; max-width: 22ch;
     }
+    /* L'última frase del titular, en ocre fosc: el color entra a la mida de
+       tipus més gran de la pàgina. Es va provar amb subratllat de retolador,
+       però el fons partit pel salt de línia deixava un bloc solt. */
+    .h-h1 em { font-style: normal; color: #946618; }
     .h-lede {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 18px; line-height: 1.55; color: #37485a;
@@ -2224,7 +2230,7 @@ def inject_home_css():
     .h-stat-v {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 2.15rem; font-weight: 800; letter-spacing: -.035em;
-        color: #1a2b3a; line-height: 1; font-variant-numeric: tabular-nums;
+        color: #0b3a66; line-height: 1; font-variant-numeric: tabular-nums;
     }
     /* Unitat en ocre: quatre tocs càlids repetits al llarg de la banda. */
     .h-stat-u { font-size: .95rem; font-weight: 700; color: #b07d2b; margin-left: 3px; }
@@ -2252,7 +2258,7 @@ def inject_home_css():
     .h-exh-t {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: clamp(1.25rem, 2.3vw, 1.6rem); font-weight: 800;
-        letter-spacing: -.02em; line-height: 1.18; color: #1a2b3a;
+        letter-spacing: -.02em; line-height: 1.18; color: #0b3a66;
         max-width: 40ch;
     }
     .h-exh-n {
@@ -2283,7 +2289,7 @@ def inject_home_css():
         font-family: 'Manrope', system-ui, sans-serif !important;
         font-size: clamp(1.6rem, 3.2vw, 2.4rem) !important;
         font-weight: 800 !important; letter-spacing: -.028em !important;
-        line-height: 1.1 !important; color: #1a2b3a !important;
+        line-height: 1.1 !important; color: #0b3a66 !important;
         margin: 0 !important; max-width: 30ch;
     }
     .h-sec-p {
@@ -2296,7 +2302,7 @@ def inject_home_css():
     .h-quote {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: clamp(1.3rem, 2.2vw, 1.75rem); font-weight: 600;
-        line-height: 1.34; color: #1a2b3a; max-width: 34ch;
+        line-height: 1.34; color: #0b3a66; max-width: 34ch;
         margin: 0 !important; padding: 0 !important;
         border: none !important; background: none !important;
         font-style: normal !important; quotes: none; opacity: 1 !important;
@@ -2334,7 +2340,7 @@ def inject_home_css():
     }
     .h-field-t {
         font-family: 'Manrope', system-ui, sans-serif;
-        font-size: 18px; font-weight: 800; color: #1a2b3a;
+        font-size: 18px; font-weight: 800; color: #0b3a66;
         letter-spacing: -.02em; margin-bottom: 5px;
     }
     .h-field-p {
@@ -2351,6 +2357,7 @@ def inject_home_css():
     .h-upd-row span.l { font-size: 13.5px; color: #37485a; }
     .h-upd-row span.l b { color: #0b3a66; font-weight: 700; }
     .h-upd-row span.r { font-size: 11.5px; color: #9aa6b2; white-space: nowrap; }
+    .h-upd-row span.m { color: #2f7d72; font-weight: 700; }
 
     /* ── enllaços de navegació: text amb fletxa, sense fons de botó ── */
     [data-testid="stPageLink"] a {

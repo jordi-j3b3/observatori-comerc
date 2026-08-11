@@ -87,6 +87,22 @@ def _md_a_html(text):
     return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
 
 
+def _destacar_final(titular):
+    """Marca l'última frase del titular per al subratllat ocre del hero.
+
+    Amb dues frases o més, destaca l'última sencera; amb una sola frase, les
+    tres últimes paraules. És èmfasi tipogràfic: no toca ni reordena el text.
+    """
+    text = titular.strip()
+    frases = re.split(r"(?<=[.!?])\s+", text)
+    if len(frases) >= 2 and len(frases[-1]) >= 8:
+        return " ".join(frases[:-1]) + f" <em>{frases[-1]}</em>"
+    mots = text.split()
+    if len(mots) > 4:
+        return " ".join(mots[:-3]) + f" <em>{' '.join(mots[-3:])}</em>"
+    return f"<em>{text}</em>"
+
+
 def _retallar(text, maxlen=430):
     """Talla en el punt final més proper per no deixar frases a mitges."""
     if len(text) <= maxlen:
@@ -227,7 +243,7 @@ if _ed.get("titular"):
     _num = f" · Núm. {_ed['num']}" if _ed.get("num") else ""
     home_hero(("Tesi de la setmana · " if _ca else "Tesis de la semana · ")
               + _data_fmt + _num,
-              _ed["titular"], _ed.get("pre"))
+              _destacar_final(_ed["titular"]), _ed.get("pre"))
 else:
     home_hero(("Observatori del comerç" if _ca else "Observatorio del comercio"),
               ("Radiografia del comerç al detall espanyol" if _ca
@@ -457,7 +473,8 @@ if _recents:
             _when = f"fa {_ago} dies" if _ca else f"hace {_ago} días"
         _verb = "actualitzat amb dades de" if _ca else "actualizado con datos de"
         _rows += (f'<div class="h-upd-row"><span class="l"><b>{_lbl}</b> {_verb} '
-                  f'{_marker}</span><span class="r">{_when}</span></div>')
+                  f'<span class="m">{_marker}</span></span>'
+                  f'<span class="r">{_when}</span></div>')
     st.markdown(
         f'<div class="h-sec-eyebrow" style="margin-bottom:6px;">'
         f'{"Novetats" if _ca else "Novedades"}</div>{_rows}',
