@@ -154,11 +154,12 @@ def _load_translations():
 _LANG_OPTIONS = {"Castellano": "es", "Català": "ca"}
 
 
-def render_lang_selector(label="Idioma"):
+def render_lang_selector(label="Idioma", collapsed=False):
     """Renderitza el selector d'idioma (selectbox amb clau persistent
-    'lang_selector'). Cal cridar-lo dins d'un context de sidebar; permet
-    col·locar-lo on convingui (p. ex. al peu del sidebar)."""
-    st.selectbox(label, list(_LANG_OPTIONS.keys()), key="lang_selector")
+    'lang_selector'). collapsed=True amaga l'etiqueta, per a la barra
+    d'utilitats de la capçalera."""
+    st.selectbox(label, list(_LANG_OPTIONS.keys()), key="lang_selector",
+                 label_visibility="collapsed" if collapsed else "visible")
 
 
 def setup_lang(show_selector=True):
@@ -1241,6 +1242,55 @@ def inject_css():
                 border-top: 1px solid #e4e9ee;
             }
         }
+
+        /* ── Marc amb navegació SUPERIOR (sense sidebar) ────────────
+           Sense sidebar el contingut s'estiraria a tota la finestra i les
+           línies de text es farien il·legibles: el limitem i el centrem. */
+        /* padding-top: la capçalera de la nav és fixa i tapa el contingut si
+           el bloc principal comença massa amunt. */
+        [data-testid="stMainBlockContainer"], .block-container {
+            max-width: 1200px !important;
+            padding-top: 72px !important;
+        }
+        header [data-testid="stTopNavSection"] a,
+        header [data-testid="stTopNavDropdownLink"],
+        header [data-testid="stTopNavLinkContainer"] a {
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-weight: 600 !important;
+        }
+        header [data-testid="stTopNavSection"] a:hover {
+            color: #b07d2b !important;
+        }
+
+        /* Barra d'utilitats sota la nav */
+        .util-tag {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 12px; color: #9aa6b2; letter-spacing: .02em;
+        }
+        .util-tag a {
+            color: #5e6b78; text-decoration: none;
+            border-bottom: 1px solid #e4e9ee;
+        }
+        .util-tag a:hover { color: #b07d2b; }
+
+        /* Selector d'idioma: discret, no un control de formulari */
+        .st-key-lang_selector [data-baseweb="select"] > div {
+            background: transparent !important;
+            border-color: #e4e9ee !important;
+            min-height: 32px !important;
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-size: 12.5px !important;
+            color: #5e6b78 !important;
+        }
+
+        /* Alta al butlletí al peu de les pàgines interiors */
+        .footer-nl-lab {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
+            text-transform: uppercase; color: #b07d2b;
+            margin: 44px 0 12px; padding-top: 26px;
+            border-top: 2px solid #1a2b3a;
+        }
     </style>
     """, unsafe_allow_html=True)
     _inject_analytics()
@@ -1468,11 +1518,22 @@ def format_mes_any(dt, lang="es"):
     return f"{mes} {dt.year}"
 
 
-def page_meta(sources, lang="es"):
-    """Footer global de cada pàgina: branding, recursos, contacte i meta info.
+def page_meta(sources, lang="es", newsletter=True):
+    """Footer global de cada pàgina: alta al butlletí, branding, recursos i meta.
 
     Manté la signatura històrica per no haver de modificar les pàgines existents.
+    newsletter=False per a les pàgines que ja porten el bloc gran d'alta (la
+    portada); a la resta hi va la versió compacta, que abans vivia al sidebar.
     """
+    if newsletter:
+        _ca_nl = lang == "ca"
+        st.markdown(
+            '<div class="footer-nl-lab">'
+            + ("El Pulso cada dilluns" if _ca_nl else "El Pulso cada lunes")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+        newsletter_form(lang, compact=True)
     update_path = os.path.join(os.path.dirname(__file__), "data", "cache", "last_update.txt")
     date_str = "—"
     if os.path.exists(update_path):
@@ -2097,15 +2158,15 @@ def inject_home_css():
     }
     .h-h1 {
         font-family: 'Manrope', system-ui, sans-serif !important;
-        font-size: clamp(2.3rem, 5vw, 3.4rem) !important;
-        font-weight: 800 !important; letter-spacing: -.035em !important;
-        line-height: 1.03 !important; color: #1a2b3a !important;
-        margin: 18px 0 0 !important; max-width: 24ch;
+        font-size: clamp(2.6rem, 5.4vw, 4rem) !important;
+        font-weight: 800 !important; letter-spacing: -.04em !important;
+        line-height: .99 !important; color: #1a2b3a !important;
+        margin: 16px 0 0 !important; max-width: 20ch;
     }
     .h-lede {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 17.5px; line-height: 1.6; color: #37485a;
-        margin: 20px 0 0; max-width: 52ch;
+        margin: 20px 0 0; max-width: 46ch;
     }
 
     /* ── xifra-xoc en text, sense banda de fons ── */
@@ -2125,6 +2186,22 @@ def inject_home_css():
         font-size: 15.5px; line-height: 1.5; color: #37485a; max-width: 44ch;
     }
     .h-shock-l b { color: #1a2b3a; font-weight: 700; }
+    /* Variant del hero: el número mana i l'etiqueta va a sota, no al costat. */
+    .h-shock.hero {
+        display: block; border-top: 2px solid #1a2b3a; padding-top: 14px;
+        margin: 0;
+    }
+    .h-shock.hero .h-shock-kick {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 11px; font-weight: 700; letter-spacing: .16em;
+        text-transform: uppercase; color: #b07d2b; margin-bottom: 10px;
+    }
+    .h-shock.hero .h-shock-v {
+        font-size: clamp(3.2rem, 6.4vw, 4.8rem); display: block;
+    }
+    .h-shock.hero .h-shock-l {
+        font-size: 14.5px; margin-top: 10px; max-width: 34ch;
+    }
 
     /* ── xifres estructurals: sense cel·les ni separadors verticals ── */
     .h-stats {
@@ -2338,10 +2415,15 @@ def home_hero(kick, titular, lede=None):
     )
 
 
-def home_shock(value, label, negative=False):
-    """Xifra-xoc en text pla, amb la seva lectura al costat."""
+def home_shock(value, label, negative=False, hero=False, kick=None):
+    """Xifra-xoc en text pla.
+
+    Per defecte, número i lectura en línia. hero=True fa la variant d'obertura:
+    filet superior, kicker opcional, número molt gran i lectura a sota.
+    """
+    _k = f'<div class="h-shock-kick">{kick}</div>' if (hero and kick) else ""
     st.markdown(
-        f'<div class="h-shock">'
+        f'<div class="h-shock{" hero" if hero else ""}">{_k}'
         f'<div class="h-shock-v{" neg" if negative else ""}">{value}</div>'
         f'<div class="h-shock-l">{label}</div></div>',
         unsafe_allow_html=True,

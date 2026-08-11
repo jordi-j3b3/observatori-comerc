@@ -1,7 +1,11 @@
 """
 Observatori del Comerç Minorista a Espanya (CNAE 47)
-Punt d'entrada: navegació per pregunta del visitant
+Punt d'entrada: navegació SUPERIOR per pregunta del visitant
 (Actualitat / El sector / Canal i concentració / El territori / Sobre).
+
+No hi ha sidebar: la navegació va a dalt (st.navigation position="top") i les
+utilitats que hi vivien s'han repartit — l'idioma, a la barra d'utilitats sota
+la nav; el butlletí i els recursos, al peu global de page_meta().
 """
 import os
 import streamlit as st
@@ -9,7 +13,6 @@ import streamlit as st
 st.set_page_config(
     page_title="Observatori Comerç",
     layout="wide",
-    initial_sidebar_state="expanded",
 )
 
 # Logo nadiu de Streamlit: apareix a dalt de tot del sidebar, abans de la nav
@@ -19,10 +22,10 @@ st.logo(
     size="large",
 )
 
-from style import inject_css, setup_lang, render_lang_selector, newsletter_form
+from style import inject_css, setup_lang, render_lang_selector
 
 inject_css()
-t = setup_lang(show_selector=False)  # el selector es renderitza al peu del sidebar
+t = setup_lang(show_selector=False)  # el selector es renderitza a la barra d'utilitats
 
 _ca = st.session_state.lang == "ca"
 
@@ -32,7 +35,7 @@ LOCAL_ONLY = os.environ.get("OBSERVATORI_LOCAL", "0") == "1"
 
 # ─── NAVEGACIÓ JERÀRQUICA AMB TÍTOLS TRADUÏTS ──────────────────
 
-# Etiquetes de seccions (capçaleres del sidebar). Arquitectura per pregunta del
+# Etiquetes de seccions (grups de la nav superior). Arquitectura per pregunta del
 # visitant (2026-07-06): què passa ara · com és el sector · com canvia i qui
 # domina · com se situa · sobre nosaltres.
 SEC_HOME = "Inicio" if not _ca else "Inici"
@@ -136,63 +139,26 @@ if LOCAL_ONLY:
     )
     nav[SEC_TERRITORI].append(p_municipis)
 
-# position="hidden": amaguem la nav nativa (no plegable) i en construïm una
-# de pròpia amb grups plegables al sidebar.
-pg = st.navigation(nav, position="hidden")
+# position="top": la navegació nativa va a la capçalera, amb un menú per grup.
+# Sense sidebar: res no s'escriu a st.sidebar, així Streamlit no el mostra.
+pg = st.navigation(nav, position="top")
 
-# ─── SIDEBAR: NAVEGACIÓ PLEGABLE + BRANDING ─────────────────────
+# ─── BARRA D'UTILITATS (sota la nav, a totes les pàgines) ────────
+# app.py és el marc: el que es rendaritza aquí surt sobre el contingut de la
+# pàgina activa. Hi posem només l'idioma, alineat a la dreta.
 
-with st.sidebar:
-    # Navegació per àmbits. Cada àmbit és un expander; s'obre automàticament
-    # el que conté la pàgina activa perquè el sidebar no creixi sense control.
-    # A la home (sense àmbit propi) s'obre Pols, el contingut més immediat.
-    _active_title = pg.title
-    _on_home = _active_title in [_p.title for _p in nav.get(SEC_HOME, [])]
-    for _sec, _sec_pages in nav.items():
-        if _sec == SEC_HOME:
-            for _pp in _sec_pages:
-                st.page_link(_pp)
-            continue
-        _is_open = (any(_pp.title == _active_title for _pp in _sec_pages)
-                    or (_on_home and _sec == SEC_ARA))
-        with st.expander(_sec, expanded=_is_open):
-            for _pp in _sec_pages:
-                st.page_link(_pp)
-
-    st.divider()
-    newsletter_form(st.session_state.lang, sidebar=True)
-
-    st.divider()
-
-    # Secció Recursos (peu del sidebar)
-    _lbl_recursos = "Recursos" if _ca else "Recursos"
-    _lbl_about = "Sobre l'observatori" if _ca else "Sobre el observatorio"
-    _lbl_consulting = "J3B3 Consulting"
-    _lbl_contact = "Contacte" if _ca else "Contacto"
+_util_l, _util_r = st.columns([5, 1], vertical_alignment="center")
+with _util_l:
     st.markdown(
-        f"""
-        <div style="font-family:'Inter',sans-serif; font-size:13px; line-height:1.7; padding:0 4px; color:#ffffff;">
-            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.78rem;
-                        font-weight:700; letter-spacing:0;
-                        text-transform:uppercase; color:#ffffff; opacity:0.7;
-                        margin-bottom:10px;">
-                {_lbl_recursos}
-            </div>
-            <div><a href="https://www.j3b3.com/observatori-comerc" target="_blank"
-                    rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_about}</a></div>
-            <div><a href="https://www.j3b3.com" target="_blank"
-                    rel="noopener" style="color:#ffffff; text-decoration:none;">→ {_lbl_consulting}</a></div>
-            <div><a href="mailto:observatorio@j3b3.com" style="color:#ffffff; text-decoration:none;">→ {_lbl_contact}: observatorio@j3b3.com</a></div>
-        </div>
-        """,
+        '<div class="util-tag">'
+        + ("Una iniciativa de <a href='https://www.j3b3.com' target='_blank' "
+           "rel='noopener'>J3B3 Consulting</a>" if _ca else
+           "Una iniciativa de <a href='https://www.j3b3.com' target='_blank' "
+           "rel='noopener'>J3B3 Consulting</a>")
+        + "</div>",
         unsafe_allow_html=True,
     )
-
-    st.divider()
-    # Selector d'idioma al peu del sidebar
-    render_lang_selector()
-
-    st.divider()
-    st.caption(t("footer"))
+with _util_r:
+    render_lang_selector(collapsed=True)
 
 pg.run()

@@ -211,90 +211,97 @@ home_brandline("Observatori del comerç al detall · CNAE 47 · Espanya" if _ca
                else "Observatorio del comercio minorista · CNAE 47 · España")
 home_space("m")
 
-if _ed.get("titular"):
-    _data_fmt = _ed["data"].strftime("%d/%m/%Y") if _ed.get("data") else ""
-    _num = f" · Núm. {_ed['num']}" if _ed.get("num") else ""
-    home_hero(("Tesi de la setmana · " if _ca else "Tesis de la semana · ")
-              + _data_fmt + _num,
-              _ed["titular"], _ed.get("pre"))
-else:
-    home_hero(("Observatori del comerç" if _ca else "Observatorio del comercio"),
-              ("Radiografia del comerç al detall espanyol" if _ca
-               else "Radiografía del comercio minorista español"),
-              ("Dades oficials del CNAE 47, actualitzades de forma automàtica." if _ca
-               else "Datos oficiales del CNAE 47, actualizados de forma automática."))
+# Dues columnes sense caixes: a l'esquerra la tesi, a la dreta el número del
+# pols. El número ha de ser visible a la primera pantalla — és l'ancoratge del
+# hero, i la tesi sola no aguanta l'obertura.
+_hero_l, _hero_r = st.columns([1.25, 1], gap="large", vertical_alignment="center")
 
-home_space("s")
-_c1, _c2, _c3 = st.columns([1.1, 1.1, 2.8])
-with _c1:
-    st.page_link("pages/L_Editorial.py",
-                 label=("Llegir l'edició →" if _ca else "Leer la edición →"))
-with _c2:
-    st.page_link("pages/0b_ICM.py",
-                 label=("Veure les dades →" if _ca else "Ver los datos →"))
-
-home_rule(space_before=40, space_after=34)
-
-# ─── EL POLS DEL CONSUM ────────────────────────────────────────
-
-if _pulse_fresc:
-    _accel = _pulse["avg_30"] - _pulse["avg_90"]
-    if abs(_accel) < 0.5:
-        _dir = "estable respecte del trimestre" if _ca else "estable respecto al trimestre"
-    elif _accel > 0:
-        _dir = "en acceleració" if _ca else "en aceleración"
+with _hero_l:
+    if _ed.get("titular"):
+        _data_fmt = _ed["data"].strftime("%d/%m/%Y") if _ed.get("data") else ""
+        _num = f" · Núm. {_ed['num']}" if _ed.get("num") else ""
+        home_hero(("Tesi de la setmana · " if _ca else "Tesis de la semana · ")
+                  + _data_fmt + _num,
+                  _ed["titular"], _ed.get("pre"))
     else:
-        _dir = "en desacceleració" if _ca else "en desaceleración"
-    home_shock(
-        fpct(_pulse["avg_30"], 1),
-        (f"<b>Vendes diàries de les grans cadenes</b>, variació anual dels últims "
-         f"30 dies · {_dir}" if _ca else
-         f"<b>Ventas diarias de las grandes cadenas</b>, variación anual de los "
-         f"últimos 30 días · {_dir}"),
-        negative=_pulse["avg_30"] < 0,
-    )
-    _fig = go.Figure()
-    _fig.add_trace(go.Scatter(
-        x=_pulse["plot"]["data"], y=_pulse["plot"]["mm30"],
-        mode="lines", line=dict(color=NAVY, width=2.2),
-        fill="tozeroy", fillcolor="rgba(11,58,102,0.05)",
-        hovertemplate="%{x|%d/%m/%Y}<br>%{y:.1f}%<extra></extra>",
-    ))
-    _fig.add_hline(y=0, line=dict(color="#c9d2db", width=1))
-    _fig.update_layout(**_layout(200, ysuffix="%", hovermode="x unified"))
-    st.plotly_chart(_fig, use_container_width=True, config={"displayModeBar": False})
-    home_source(
-        (f"Mitjana mòbil de 30 dies · INE, CDMGE (experimental) · dades fins al "
-         f"{_pulse['last_dt'].strftime('%d/%m/%Y')}, {_pulse['lag_days']} dies de retard. "
-         f"La sèrie diària, amb els pics de campanya, és a la pàgina del Pols diari."
-         if _ca else
-         f"Media móvil de 30 días · INE, CDMGE (experimental) · datos hasta el "
-         f"{_pulse['last_dt'].strftime('%d/%m/%Y')}, {_pulse['lag_days']} días de retraso. "
-         f"La serie diaria, con los picos de campaña, está en la página del Pulso diario.")
-    )
-    home_rule(space_before=40, space_after=34)
-elif _icm_hero is not None:
-    home_shock(
-        fpct(_icm_hero["valor"], 1),
-        (f"<b>Xifra de negoci del comerç al detall</b>, variació anual real de "
-         f"{format_mes_any(_icm_hero['data'], st.session_state.lang)}" if _ca else
-         f"<b>Cifra de negocio del comercio minorista</b>, variación anual real de "
-         f"{format_mes_any(_icm_hero['data'], st.session_state.lang)}"),
-        negative=_icm_hero["valor"] < 0,
-    )
-    _fig = go.Figure()
-    _fig.add_trace(go.Scatter(
-        x=_icm_hero["serie"]["data"], y=_icm_hero["serie"]["valor"],
-        mode="lines", line=dict(color=NAVY, width=2.2),
-        fill="tozeroy", fillcolor="rgba(11,58,102,0.05)",
-        hovertemplate="%{x|%m/%Y}<br>%{y:.1f}%<extra></extra>",
-    ))
-    _fig.add_hline(y=0, line=dict(color="#c9d2db", width=1))
-    _fig.update_layout(**_layout(200, ysuffix="%"))
-    st.plotly_chart(_fig, use_container_width=True, config={"displayModeBar": False})
-    home_source("INE, Índex de Comerç al Detall · preus constants" if _ca
-                else "INE, Índice de Comercio al por Menor · precios constantes")
-    home_rule(space_before=40, space_after=34)
+        home_hero(("Observatori del comerç" if _ca else "Observatorio del comercio"),
+                  ("Radiografia del comerç al detall espanyol" if _ca
+                   else "Radiografía del comercio minorista español"),
+                  ("Dades oficials del CNAE 47, actualitzades de forma automàtica."
+                   if _ca else
+                   "Datos oficiales del CNAE 47, actualizados de forma automática."))
+    home_space("s")
+    _c1, _c2 = st.columns([1, 1])
+    with _c1:
+        st.page_link("pages/L_Editorial.py",
+                     label=("Llegir l'edició →" if _ca else "Leer la edición →"))
+    with _c2:
+        st.page_link("pages/0b_ICM.py",
+                     label=("Veure les dades →" if _ca else "Ver los datos →"))
+
+with _hero_r:
+    if _pulse_fresc:
+        _accel = _pulse["avg_30"] - _pulse["avg_90"]
+        if abs(_accel) < 0.5:
+            _dir = ("estable respecte del trimestre" if _ca
+                    else "estable respecto al trimestre")
+        elif _accel > 0:
+            _dir = "en acceleració" if _ca else "en aceleración"
+        else:
+            _dir = "en desacceleració" if _ca else "en desaceleración"
+        home_shock(
+            fpct(_pulse["avg_30"], 1),
+            (f"<b>Vendes diàries de les grans cadenes</b>, variació anual dels "
+             f"últims 30 dies · {_dir}" if _ca else
+             f"<b>Ventas diarias de las grandes cadenas</b>, variación anual de "
+             f"los últimos 30 días · {_dir}"),
+            negative=_pulse["avg_30"] < 0, hero=True,
+            kick=("El pols del consum" if _ca else "El pulso del consumo"),
+        )
+        _fig = go.Figure()
+        _fig.add_trace(go.Scatter(
+            x=_pulse["plot"]["data"], y=_pulse["plot"]["mm30"],
+            mode="lines", line=dict(color=NAVY, width=2.2),
+            fill="tozeroy", fillcolor="rgba(11,58,102,0.05)",
+            hovertemplate="%{x|%d/%m/%Y}<br>%{y:.1f}%<extra></extra>",
+        ))
+        _fig.add_hline(y=0, line=dict(color="#c9d2db", width=1))
+        _fig.update_layout(**_layout(148, ysuffix="%", hovermode="x unified",
+                                     margin=dict(l=0, r=8, t=14, b=0)))
+        st.plotly_chart(_fig, use_container_width=True,
+                        config={"displayModeBar": False})
+        home_source(
+            (f"Mitjana mòbil de 30 dies · INE, CDMGE · fins al "
+             f"{_pulse['last_dt'].strftime('%d/%m/%Y')}" if _ca else
+             f"Media móvil de 30 días · INE, CDMGE · hasta el "
+             f"{_pulse['last_dt'].strftime('%d/%m/%Y')}")
+        )
+    elif _icm_hero is not None:
+        home_shock(
+            fpct(_icm_hero["valor"], 1),
+            (f"<b>Xifra de negoci del comerç al detall</b>, variació anual real de "
+             f"{format_mes_any(_icm_hero['data'], st.session_state.lang)}" if _ca else
+             f"<b>Cifra de negocio del comercio minorista</b>, variación anual real "
+             f"de {format_mes_any(_icm_hero['data'], st.session_state.lang)}"),
+            negative=_icm_hero["valor"] < 0, hero=True,
+            kick=("El pols del consum" if _ca else "El pulso del consumo"),
+        )
+        _fig = go.Figure()
+        _fig.add_trace(go.Scatter(
+            x=_icm_hero["serie"]["data"], y=_icm_hero["serie"]["valor"],
+            mode="lines", line=dict(color=NAVY, width=2.2),
+            fill="tozeroy", fillcolor="rgba(11,58,102,0.05)",
+            hovertemplate="%{x|%m/%Y}<br>%{y:.1f}%<extra></extra>",
+        ))
+        _fig.add_hline(y=0, line=dict(color="#c9d2db", width=1))
+        _fig.update_layout(**_layout(148, ysuffix="%",
+                                     margin=dict(l=0, r=8, t=14, b=0)))
+        st.plotly_chart(_fig, use_container_width=True,
+                        config={"displayModeBar": False})
+        home_source("INE, Índex de Comerç al Detall · preus constants" if _ca
+                    else "INE, Índice de Comercio al por Menor · precios constantes")
+
+home_rule(space_before=44, space_after=32)
 
 # ─── XIFRES ESTRUCTURALS ───────────────────────────────────────
 
@@ -746,4 +753,5 @@ newsletter_form(st.session_state.lang)
 
 # ─── META ──────────────────────────────────────────────────────
 
-page_meta("INE, Eurostat, CNMC", st.session_state.lang)
+# newsletter=False: la portada ja porta el bloc gran d'alta just a sobre.
+page_meta("INE, Eurostat, CNMC", st.session_state.lang, newsletter=False)
