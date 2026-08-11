@@ -23,7 +23,7 @@ from style import (inject_css, inject_premium_page_css, inject_home_css,
                    home_standfirst, home_hero, home_shock, home_stats,
                    home_section, home_exhibit, home_source, home_quote,
                    home_field, home_rule, home_space,
-                   NAVY, OCRE, G1_P, INK_P, LINE_P)
+                   NAVY, OCRE, OCRE_DEEP, TEAL, TEAL_SOFT, G1_P, INK_P, LINE_P)
 
 inject_css()
 inject_premium_page_css()
@@ -269,12 +269,24 @@ if _pulse_fresc:
     _fig = go.Figure()
     _fig.add_trace(go.Scatter(
         x=_pulse["plot"]["data"], y=_pulse["plot"]["mm30"],
-        mode="lines", line=dict(color=NAVY, width=2.2),
-        fill="tozeroy", fillcolor="rgba(11,58,102,0.05)",
+        mode="lines", line=dict(color=NAVY, width=2.4),
+        fill="tozeroy", fillcolor="rgba(11,58,102,0.06)",
         hovertemplate="%{x|%d/%m/%Y}<br>%{y:.1f}%<extra></extra>",
     ))
+    # Punt final en ocre amb la lectura anotada: tanca la sèrie amb color.
+    _mm_ok = _pulse["plot"].dropna(subset=["mm30"])
+    if not _mm_ok.empty:
+        _fig.add_trace(go.Scatter(
+            x=[_mm_ok["data"].iloc[-1]], y=[_mm_ok["mm30"].iloc[-1]],
+            mode="markers+text", marker=dict(color=OCRE, size=9,
+                                             line=dict(color="white", width=2)),
+            text=[f" {fpct(_mm_ok['mm30'].iloc[-1], 1)}"], textposition="middle right",
+            textfont=dict(family="Manrope, sans-serif", size=13, color=OCRE_DEEP),
+            hoverinfo="skip",
+        ))
     _fig.add_hline(y=0, line=dict(color="#c9d2db", width=1))
-    _fig.update_layout(**_layout(240, ysuffix="%", hovermode="x unified"))
+    _fig.update_layout(**_layout(240, ysuffix="%", hovermode="x unified",
+                                 margin=dict(l=0, r=64, t=18, b=4)))
     st.plotly_chart(_fig, use_container_width=True, config={"displayModeBar": False})
     home_source(
         (f"Mitjana mòbil de 30 dies · INE, CDMGE (experimental) · dades fins al "
@@ -615,9 +627,11 @@ if _panel_b is not None:
                else f"Los otros {_b['altres_n']} grandes"),
               ("Resta del sector" if _ca else "Resto del sector")]
     _vals += [_b["altres_pct"], _b["resta_pct"]]
+    # Navy per als grans, teal per a la resta del teixit: el contrast de color
+    # és el propi argument del gràfic (cap concentrat vs base fragmentada).
     _fig_b = go.Figure(go.Bar(
         x=_vals, y=_noms, orientation="h",
-        marker_color=[NAVY] + ["#2b5f8f"] * 4 + ["#8fa3b5", "#e3e9ef"],
+        marker_color=[NAVY] + ["#2b5f8f"] * 4 + [TEAL, TEAL_SOFT],
         text=[f"{fnum(v, 1)}%" for v in _vals], textposition="outside",
         textfont=dict(family="Manrope, sans-serif", size=12.5, color=INK_P),
         hovertemplate="%{y}<br>%{x:.1f}%<extra></extra>",

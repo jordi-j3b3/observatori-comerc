@@ -44,6 +44,9 @@ ORANGE = "#c75d2c"         # taronja terròs (no pas saturat)
 NAVY = "#0b3a66"          # navy fosc: display, emphasis
 OCRE = "#b07d2b"          # ocre càlid: accent, kicker
 OCRE_DEEP = "#946618"     # ocre fosc: end-label real
+TEAL = "#2f7d72"          # verd blavós: tercer accent de la línia de marca
+TEAL_SOFT = "#cfe0dc"     # teal rebaixat: masses de fons (resta, comparatives)
+BRICK = "#b03a2e"         # vermell terrós: signe negatiu
 INK_P = "#1a2b3a"         # tinta display premium
 BODY_P = "#37485a"        # cos text premium
 G1_P = "#5e6b78"          # gris labels / ticks
@@ -1291,7 +1294,7 @@ def inject_css():
             font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
             text-transform: uppercase; color: #b07d2b;
             margin: 44px 0 12px; padding-top: 26px;
-            border-top: 2px solid #1a2b3a;
+            border-top: 3px solid #b07d2b;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -2146,8 +2149,10 @@ def inject_home_css():
         text-transform: uppercase; color: #9aa6b2;
         padding-bottom: 12px; border-bottom: 1px solid #e4e9ee;
     }
+    /* Els talls de secció van en ocre: donen ritme de color a la pàgina i
+       eviten que tot sigui tinta sobre blanc. */
     .h-rule { border-top: 1px solid #e4e9ee; margin: 0; }
-    .h-rule-strong { border-top: 2px solid #1a2b3a; margin: 0; }
+    .h-rule-strong { border-top: 3px solid #b07d2b; margin: 0; }
     .h-gap-s { height: 22px; }
     .h-gap { height: 44px; }
     .h-gap-l { height: 68px; }
@@ -2166,6 +2171,11 @@ def inject_home_css():
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
         text-transform: uppercase; color: #b07d2b;
+    }
+    /* Barra d'obertura: la primera taca de color de la pàgina. */
+    .h-kick::before {
+        content: ""; display: block; width: 52px; height: 4px;
+        background: #b07d2b; margin-bottom: 16px;
     }
     /* El titular és l'únic focus del hero: ha de manar per escala.
        Selector amb especificitat alta a propòsit: `.stMarkdown h1` d'inject_css
@@ -2216,7 +2226,8 @@ def inject_home_css():
         font-size: 2.15rem; font-weight: 800; letter-spacing: -.035em;
         color: #1a2b3a; line-height: 1; font-variant-numeric: tabular-nums;
     }
-    .h-stat-u { font-size: .95rem; font-weight: 700; color: #0b3a66; margin-left: 2px; }
+    /* Unitat en ocre: quatre tocs càlids repetits al llarg de la banda. */
+    .h-stat-u { font-size: .95rem; font-weight: 700; color: #b07d2b; margin-left: 3px; }
     .h-stat-l {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 11.5px; font-weight: 700; letter-spacing: .1em;
@@ -2225,10 +2236,10 @@ def inject_home_css():
     }
     .h-stat-d {
         font-family: 'Manrope', system-ui, sans-serif;
-        font-size: 12.5px; font-weight: 600; margin-top: 6px;
+        font-size: 12.5px; font-weight: 700; margin-top: 6px;
         font-variant-numeric: tabular-nums; color: #5e6b78;
     }
-    .h-stat-d.up { color: #1f7a4d; }
+    .h-stat-d.up { color: #2f7d72; }
     .h-stat-d.down { color: #b03a2e; }
     @media (max-width: 900px) { .h-stats { grid-template-columns: 1fr 1fr; } }
 
