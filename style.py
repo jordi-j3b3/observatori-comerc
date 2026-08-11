@@ -1262,16 +1262,18 @@ def inject_css():
             color: #b07d2b !important;
         }
 
-        /* Barra d'utilitats sota la nav */
-        .util-tag {
+        /* Barra d'utilitats sota la nav: identitat del web a totes les pàgines */
+        .site-id {
             font-family: 'Manrope', system-ui, sans-serif;
-            font-size: 12px; color: #9aa6b2; letter-spacing: .02em;
+            font-size: 13px; color: #5e6b78; letter-spacing: .01em;
         }
-        .util-tag a {
+        .site-id b { color: #0b3a66; font-weight: 800; }
+        .site-id .by { color: #9aa6b2; }
+        .site-id a {
             color: #5e6b78; text-decoration: none;
             border-bottom: 1px solid #e4e9ee;
         }
-        .util-tag a:hover { color: #b07d2b; }
+        .site-id a:hover { color: #b07d2b; }
 
         /* Selector d'idioma: discret, no un control de formulari */
         .st-key-lang_selector [data-baseweb="select"] > div {
@@ -2150,23 +2152,35 @@ def inject_home_css():
     .h-gap { height: 44px; }
     .h-gap-l { height: 68px; }
 
+    /* Frase permanent: què és aquest web. No canvia amb l'edició de la setmana. */
+    .h-stand {
+        font-family: 'Manrope', system-ui, sans-serif;
+        font-size: 16px; line-height: 1.6; color: #5e6b78;
+        max-width: 72ch; padding-bottom: 20px;
+        border-bottom: 1px solid #e4e9ee;
+    }
+    .h-stand b { color: #1a2b3a; font-weight: 700; }
+
     /* ── titular de portada: més gran que el de les pàgines interiors ── */
     .h-kick {
         font-family: 'Manrope', system-ui, sans-serif;
         font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
         text-transform: uppercase; color: #b07d2b;
     }
-    .h-h1 {
+    /* El titular és l'únic focus del hero: ha de manar per escala.
+       Selector amb especificitat alta a propòsit: `.stMarkdown h1` d'inject_css
+       fixa 2,6rem amb !important i, a igual pes, guanya el més específic. */
+    h1.h-h1, .stMarkdown h1.h-h1, .stApp .stMarkdown h1.h-h1 {
         font-family: 'Manrope', system-ui, sans-serif !important;
-        font-size: clamp(2.6rem, 5.4vw, 4rem) !important;
-        font-weight: 800 !important; letter-spacing: -.04em !important;
-        line-height: .99 !important; color: #1a2b3a !important;
-        margin: 16px 0 0 !important; max-width: 20ch;
+        font-size: clamp(3rem, 7vw, 5.5rem) !important;
+        font-weight: 800 !important; letter-spacing: -.045em !important;
+        line-height: .94 !important; color: #1a2b3a !important;
+        margin: 20px 0 0 !important; max-width: 22ch;
     }
     .h-lede {
         font-family: 'Manrope', system-ui, sans-serif;
-        font-size: 17.5px; line-height: 1.6; color: #37485a;
-        margin: 20px 0 0; max-width: 46ch;
+        font-size: 18px; line-height: 1.55; color: #37485a;
+        margin: 40px 0 0; max-width: 48ch;
     }
 
     /* ── xifra-xoc en text, sense banda de fons ── */
@@ -2186,22 +2200,11 @@ def inject_home_css():
         font-size: 15.5px; line-height: 1.5; color: #37485a; max-width: 44ch;
     }
     .h-shock-l b { color: #1a2b3a; font-weight: 700; }
-    /* Variant del hero: el número mana i l'etiqueta va a sota, no al costat. */
-    .h-shock.hero {
-        display: block; border-top: 2px solid #1a2b3a; padding-top: 14px;
-        margin: 0;
-    }
-    .h-shock.hero .h-shock-kick {
-        font-family: 'Manrope', system-ui, sans-serif;
-        font-size: 11px; font-weight: 700; letter-spacing: .16em;
-        text-transform: uppercase; color: #b07d2b; margin-bottom: 10px;
-    }
-    .h-shock.hero .h-shock-v {
-        font-size: clamp(3.2rem, 6.4vw, 4.8rem); display: block;
-    }
-    .h-shock.hero .h-shock-l {
-        font-size: 14.5px; margin-top: 10px; max-width: 34ch;
-    }
+    /* Variant en línia: la xifra acompanya el gràfic sense competir amb el
+       titular del hero. Número contingut, etiqueta al costat, tot en una línia. */
+    .h-shock.line { gap: 14px; align-items: baseline; margin: 0 0 2px; }
+    .h-shock.line .h-shock-v { font-size: 2.1rem; letter-spacing: -.03em; }
+    .h-shock.line .h-shock-l { font-size: 15px; max-width: 58ch; }
 
     /* ── xifres estructurals: sense cel·les ni separadors verticals ── */
     .h-stats {
@@ -2265,11 +2268,11 @@ def inject_home_css():
         font-size: 11.5px; font-weight: 700; letter-spacing: .18em;
         text-transform: uppercase; color: #b07d2b; margin-bottom: 12px;
     }
-    .h-sec-h2 {
+    h2.h-sec-h2, .stMarkdown h2.h-sec-h2, .stApp .stMarkdown h2.h-sec-h2 {
         font-family: 'Manrope', system-ui, sans-serif !important;
-        font-size: clamp(1.5rem, 3vw, 2.15rem) !important;
+        font-size: clamp(1.6rem, 3.2vw, 2.4rem) !important;
         font-weight: 800 !important; letter-spacing: -.028em !important;
-        line-height: 1.12 !important; color: #1a2b3a !important;
+        line-height: 1.1 !important; color: #1a2b3a !important;
         margin: 0 !important; max-width: 30ch;
     }
     .h-sec-p {
@@ -2405,6 +2408,11 @@ def home_brandline(text):
     st.markdown(f'<div class="h-brand">{text}</div>', unsafe_allow_html=True)
 
 
+def home_standfirst(text):
+    """Frase permanent que explica què és l'observatori, sobre el titular."""
+    st.markdown(f'<div class="h-stand">{text}</div>', unsafe_allow_html=True)
+
+
 def home_hero(kick, titular, lede=None):
     """Capçalera editorial de la portada: kicker, titular gran i entradeta."""
     _l = f'<p class="h-lede">{lede}</p>' if lede else ""
@@ -2415,15 +2423,14 @@ def home_hero(kick, titular, lede=None):
     )
 
 
-def home_shock(value, label, negative=False, hero=False, kick=None):
-    """Xifra-xoc en text pla.
+def home_shock(value, label, negative=False, line=False):
+    """Xifra en text pla, amb la seva lectura al costat.
 
-    Per defecte, número i lectura en línia. hero=True fa la variant d'obertura:
-    filet superior, kicker opcional, número molt gran i lectura a sota.
+    line=True fa la variant continguda (2,1 rem) per acompanyar un gràfic sense
+    competir amb el titular del hero.
     """
-    _k = f'<div class="h-shock-kick">{kick}</div>' if (hero and kick) else ""
     st.markdown(
-        f'<div class="h-shock{" hero" if hero else ""}">{_k}'
+        f'<div class="h-shock{" line" if line else ""}">'
         f'<div class="h-shock-v{" neg" if negative else ""}">{value}</div>'
         f'<div class="h-shock-l">{label}</div></div>',
         unsafe_allow_html=True,

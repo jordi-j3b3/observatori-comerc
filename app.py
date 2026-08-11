@@ -147,14 +147,20 @@ pg = st.navigation(nav, position="top")
 # app.py és el marc: el que es rendaritza aquí surt sobre el contingut de la
 # pàgina activa. Hi posem només l'idioma, alineat a la dreta.
 
+# La identitat del web va aquí, no només al logo: qui entra per una pàgina
+# interior ha de saber on és sense haver de deduir-ho.
 _util_l, _util_r = st.columns([5, 1], vertical_alignment="center")
 with _util_l:
     st.markdown(
-        '<div class="util-tag">'
-        + ("Una iniciativa de <a href='https://www.j3b3.com' target='_blank' "
-           "rel='noopener'>J3B3 Consulting</a>" if _ca else
-           "Una iniciativa de <a href='https://www.j3b3.com' target='_blank' "
-           "rel='noopener'>J3B3 Consulting</a>")
+        '<div class="site-id">'
+        + ("<b>Observatori del Comerç Minorista</b> · CNAE 47 · Espanya "
+           "<span class='by'>· una iniciativa de "
+           "<a href='https://www.j3b3.com' target='_blank' rel='noopener'>"
+           "J3B3 Consulting</a></span>" if _ca else
+           "<b>Observatorio del Comercio Minorista</b> · CNAE 47 · España "
+           "<span class='by'>· una iniciativa de "
+           "<a href='https://www.j3b3.com' target='_blank' rel='noopener'>"
+           "J3B3 Consulting</a></span>")
         + "</div>",
         unsafe_allow_html=True,
     )
