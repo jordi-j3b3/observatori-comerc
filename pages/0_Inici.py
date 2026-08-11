@@ -1,11 +1,5 @@
-"""Portada (arquitectura home_v5): la tesi de la setmana com a titular + el pols
-del consum com a figura, xifres estructurals, novetats de dades, les dues lectures
-de la setmana, la tesi editorial de l'edició vigent, la radiografia i el butlletí.
-
-Tot el contingut editorial de la portada (titular, deck, xifra de la setmana i
-lede) surt de l'última edició del Pulso a data/newsletter/semana-*.md: la mateixa
-font que L_Editorial, perquè home i butlletí no puguin divergir mai.
-"""
+"""Pàgina d'inici: hero amb número-xoc + tesi vigent, KPIs, Pols diari, cards de
+navegació per dimensió, conclusions executives, butlletí."""
 import json
 import re
 import streamlit as st
@@ -15,26 +9,13 @@ import os, sys
 from datetime import date
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, inject_premium_page_css, inject_home_css,
-                   setup_lang, page_header, fnum, fpct, page_meta,
-                   newsletter_form, format_mes_any,
-                   kicker, action_title, deck,
-                   home_stats, home_section, home_fig_head, home_fig_foot,
-                   home_quote, home_field,
-                   NAVY, OCRE, G1_P, G2_P, LINE_P, INK_P)
+from style import (inject_css, setup_lang, page_header, fnum, fpct,
+                   page_meta, newsletter_form, highlight_expander)
 
 inject_css()
-inject_premium_page_css()
-inject_home_css()
-setup_lang(show_selector=False)
-page_header()
-
-_ca = st.session_state.lang == "ca"
-_avui = date.today()
-_NDIR = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
+t = setup_lang(show_selector=False)
 
 # ─── DADES ─────────────────────────────────────────────────────
-
 
 @st.cache_data(ttl=3600)
 def load_data(name):
@@ -47,48 +28,21 @@ def load_data(name):
         return pd.read_csv(csv)
     return pd.DataFrame()
 
-
-df_pib = load_data("pib_vab")
-df_empreses = load_data("empreses")
-df_ocupacio = load_data("ocupacio_comerc")
-df_ecommerce = load_data("ecommerce")
-df_cdmge = load_data("cdmge")
-df_eu_m = load_data("europa_retail_mensual")
-df_icm = load_data("icm")
-df_lideres = load_data("lideres_empreses")
-df_eas = load_data("subsectors_eas")
-
-
-# ─── L'EDICIÓ VIGENT DEL PULSO ─────────────────────────────────
-
-def _md_a_html(text):
-    """Converteix el marcatge mínim del butlletí (**negreta**) a HTML."""
-    return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
-
-
-def _retallar(text, maxlen=430):
-    """Talla en el punt final més proper per no deixar frases a mitges."""
-    if len(text) <= maxlen:
-        return text
-    tall = text[:maxlen]
-    tall_pos = max(tall.rfind(". "), tall.rfind("? "), tall.rfind("! "))
-    if tall_pos > 140:
-        return tall[:tall_pos + 1]
-    return tall.rstrip() + "…"
-
-
 @st.cache_data(ttl=3600)
-def load_edicio(sig=None):
-    """Llegeix l'última edició del Pulso del mirall local i n'extreu els camps.
-
-    Retorna titular, pre-header, número, setmana, la xifra de la setmana (amb
-    context i font) i el primer paràgraf de prosa. `sig` (noms + mtime de les
-    edicions) trenca la caché quan se'n publica o es corregeix una.
-    """
+def load_tesi(sig=None):
+    # La tesi vigent de la home = titular de l'ÚLTIMA edició del Pulso, llegit
+    # directament de l'arxiu mirall (data/newsletter/semana-*.md) — la MATEIXA
+    # font que L_Lecturas. Així home i Pulso no poden divergir mai. Abans depenia
+    # de tesi_vigent.json, que una recuperació manual d'edició (enviament via
+    # Brevo que salta mirror.py) podia deixar enrere. `sig` = llista d'edicions:
+    # quan n'entra una de nova, la caché es refresca a l'instant.
+    ndir = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
     try:
-        mds = sorted((f for f in os.listdir(_NDIR)
-                      if f.startswith("semana-") and f.endswith(".md")),
-                     reverse=True)
+        mds = sorted(
+            (f for f in os.listdir(ndir)
+             if f.startswith("semana-") and f.endswith(".md")),
+            reverse=True,
+        )
     except OSError:
         return None
     for fname in mds:
@@ -96,315 +50,304 @@ def load_edicio(sig=None):
         if not mdate:
             continue
         try:
-            with open(os.path.join(_NDIR, fname), "r", encoding="utf-8") as f:
+            with open(os.path.join(ndir, fname), "r", encoding="utf-8") as f:
                 text = f.read()
         except OSError:
             continue
-
-        def camp(patro):
-            m = re.search(patro, text, re.M)
-            return m.group(1).strip() if m else None
-
-        titular = camp(r"^\*\*Titular:\*\*\s*(.+)$")
-        if not titular:
+        mt = re.search(r"(?m)^\*\*Titular:\*\*\s*(.+)$", text)
+        if not mt:
             continue
-        # El camp de la xifra protagonista ha canviat de nom entre edicions.
-        cifra = camp(r"^\*\*(?:El dato|Cifra):\*\*\s*(.+)$")
-        # Primer paràgraf de prosa després de la línia de font del bloc de la xifra.
-        m_lede = re.search(r"^\*\*Fuente:\*\*.+?$\n+(.+?)(?:\n\n|\n\*\*)",
-                           text, re.M | re.S)
-        try:
-            data_pub = date.fromisoformat(mdate.group(1))
-        except ValueError:
-            data_pub = None
         return {
-            "titular": titular,
-            "pre": camp(r"^\*\*Pre-header:\*\*\s*(.+)$"),
-            "num": camp(r"^\*Núm\.\s*(\d+)"),
-            "setmana": camp(r"^\*Núm\.\s*\d+\s*\|\s*(.+?)\*\s*$"),
-            "cifra": cifra,
-            "context": camp(r"^\*\*Contexto:\*\*\s*(.+)$"),
-            "font": camp(r"^\*\*Fuente:\*\*\s*(.+)$"),
-            "lede": " ".join(m_lede.group(1).split()) if m_lede else None,
-            "data": data_pub,
+            "titol": mt.group(1).strip(),
+            "data_publicacio": mdate.group(1),
+            "autor": "Observatorio del Comercio · J3B3 Consulting",
+            "enllac_pulso": None,
         }
     return None
 
+df_pib = load_data("pib_vab")
+df_empreses = load_data("empreses")
+df_prod = load_data("productivitat")
+df_ecommerce = load_data("ecommerce")
+df_europa = load_data("europa_vab")
+df_territori = load_data("eee_ccaa")
+df_cdmge = load_data("cdmge")
+df_distrib = load_data("icm_distribucion")
+df_eu_m = load_data("europa_retail_mensual")
+df_icm = load_data("icm")
 
-try:
-    _sig = tuple(sorted(
-        (f, int(os.path.getmtime(os.path.join(_NDIR, f))))
-        for f in os.listdir(_NDIR)
-        if f.startswith("semana-") and f.endswith(".md")
-    ))
-except OSError:
-    _sig = ()
-_ed = load_edicio(_sig) or {}
+# ─── HEADER ────────────────────────────────────────────────────
 
-# ─── EL POLS DEL CONSUM (figura del hero) ──────────────────────
-# CDMGE diari si és fresc; si no, variació anual real de l'ICM mensual.
+page_header()
+st.title(t("app_title"))
+st.markdown(f"*{t('app_subtitle')}*")
+
+_ca = st.session_state.lang == "ca"
+
+# ─── PROCESSING CDMGE (per HERO + chart de Pols diari) ─────────
 
 _pulse = None
 if not df_cdmge.empty and "indicador" in df_cdmge.columns:
-    _p = df_cdmge.copy()
-    _p["data"] = pd.to_datetime(_p["data"], errors="coerce")
-    _ta = (_p[_p["indicador"] == "tasa_anual"]
-           .dropna(subset=["data", "valor"]).sort_values("data")
+    _df_p = df_cdmge.copy()
+    _df_p["data"] = pd.to_datetime(_df_p["data"], errors="coerce")
+    _ta = (_df_p[_df_p["indicador"] == "tasa_anual"]
+           .dropna(subset=["data", "valor"])
+           .sort_values("data")
            .reset_index(drop=True))
     if len(_ta) > 30:
         _last_dt = _ta["data"].max()
-        _plot = _ta[_ta["data"] >= _last_dt - pd.Timedelta(days=365)].copy()
-        _plot["mm30"] = _plot["valor"].rolling(window=30, min_periods=8).mean()
+        _last_val = float(_ta.iloc[-1]["valor"])
+        _avg_30 = float(_ta.tail(30)["valor"].mean())
+        _avg_90 = float(_ta.tail(90)["valor"].mean())
+        _today_ts = pd.Timestamp(date.today())
+        _lag_days = int((_today_ts - _last_dt).days)
+        _cutoff = _last_dt - pd.Timedelta(days=365)
+        _plot_p = _ta[_ta["data"] >= _cutoff].copy()
+        _plot_p["mm30"] = _plot_p["valor"].rolling(window=30, min_periods=8).mean()
         _pulse = {
-            "last_dt": _last_dt,
-            "avg_30": float(_ta.tail(30)["valor"].mean()),
-            "avg_90": float(_ta.tail(90)["valor"].mean()),
-            "lag_days": int((pd.Timestamp(_avui) - _last_dt).days),
-            "plot": _plot,
+            "last_dt": _last_dt, "last_val": _last_val,
+            "avg_30": _avg_30, "avg_90": _avg_90,
+            "lag_days": _lag_days, "plot": _plot_p,
         }
 
-# El CDMGE és estadística experimental de l'INE amb publicació irregular: si
-# l'última dada té més de 30 dies, deixa de ser un "darrers 30 dies" honest.
+# El Pols diari (CDMGE) és una estadística experimental de l'INE que
+# s'actualitza de forma irregular. Si la darrera dada té més de 30 dies,
+# deixa de ser representativa com a "darrers 30 dies" i la retirem de la
+# home (es manté la pàgina pròpia al sidebar). El hero passa a l'ICM.
 POLS_LAG_LLINDAR = 30
 _pulse_fresc = _pulse is not None and _pulse["lag_days"] <= POLS_LAG_LLINDAR
 
+# Fallback fresc per al hero quan el Pols diari és obsolet: variació anual
+# real de l'ICM mensual (Pols mensual), branca general CNAE 47.
 _icm_hero = None
 if not _pulse_fresc and not df_icm.empty and "ambit" in df_icm.columns:
-    _s = df_icm[(df_icm["ambit"] == "nacional")
-                & (df_icm["tipus"] == "real")
-                & (df_icm["indicador"] == "var_anual")
-                & (df_icm["branca"] == "Comercio al por menor, excepto de vehículos "
-                                      "de motor y motocicletas")].dropna(subset=["valor"]).copy()
+    _s = df_icm[(df_icm["ambit"] == "nacional") &
+                (df_icm["tipus"] == "real") &
+                (df_icm["indicador"] == "var_anual") &
+                (df_icm["branca"] == "Comercio al por menor, excepto de vehículos de motor y motocicletas")].copy()
+    _s = _s.dropna(subset=["valor"])
     if not _s.empty:
         _s["data"] = pd.to_datetime(_s["data"], errors="coerce")
         _s = _s.dropna(subset=["data"]).sort_values("data")
         if not _s.empty:
-            _serie = _s[_s["data"] >= _s["data"].max() - pd.DateOffset(years=3)]
-            _icm_hero = {
-                "valor": float(_s.iloc[-1]["valor"]),
-                "data": _s.iloc[-1]["data"],
-                "serie": _serie,
-            }
+            _icm_hero = {"valor": float(_s.iloc[-1]["valor"]), "data": _s.iloc[-1]["data"]}
 
-# ─── BLOC 1 · HERO: LA TESI DE LA SETMANA + EL POLS ────────────
+# ─── HERO: NÚMERO-XOC (esquerra) + TESI VIGENT (dreta) ─────────
 
-st.markdown(
-    f'<div style="font-family:Manrope,system-ui,sans-serif;font-size:11.5px;'
-    f'font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:{G2_P};'
-    f'padding-bottom:14px;">'
-    f'{"Observatori del comerç al detall · CNAE 47 · Espanya" if _ca else "Observatorio del comercio minorista · CNAE 47 · España"}'
-    f'</div>',
-    unsafe_allow_html=True,
-)
+_ndir = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
+try:
+    # Signatura sensible al CONTINGUT (nom + mtime), no només al nom: si una
+    # edició ja publicada es corregeix (p.ex. es re-mirra la versió realment
+    # enviada sobre el mateix fitxer setmanal), el nom no canvia però sí el
+    # mtime → la caché de load_tesi es refresca igualment.
+    _sig = tuple(sorted(
+        (f, int(os.path.getmtime(os.path.join(_ndir, f))))
+        for f in os.listdir(_ndir)
+        if f.startswith("semana-") and f.endswith(".md")
+    ))
+except OSError:
+    _sig = ()
+_tesi = load_tesi(_sig)
+_tesi_titol = None
+_tesi_data = None
+_tesi_autor = "Observatorio del Comercio · J3B3 Consulting"
+_tesi_enllac = ""
 
-hero_l, hero_r = st.columns([1.05, 1], gap="large", vertical_alignment="center")
+def _safe_str(value, default=""):
+    """Retorna value.strip() si és str, default altrament."""
+    if isinstance(value, str):
+        return value.strip()
+    return default
+
+if _tesi:
+    _tesi_titol = _safe_str(_tesi.get("titol"))
+    _tesi_data_str = _safe_str(_tesi.get("data_publicacio"))
+    _tesi_autor = (
+        _safe_str(_tesi.get("autor"), "Observatorio del Comercio · J3B3 Consulting")
+        or "Observatorio del Comercio · J3B3 Consulting"
+    )
+    _tesi_enllac = _safe_str(_tesi.get("enllac_pulso"))
+    try:
+        _tesi_data = date.fromisoformat(_tesi_data_str)
+    except (TypeError, ValueError):
+        _tesi_data = None
+
+_avui = date.today()
+# Una tesi editorial datada no caduca als 10 dies: es mostra sempre l'última
+# disponible amb la seva data (el lector jutja la vigència). Només es considera
+# "absent" si no hi ha tesi o data vàlida; en aquest cas no s'omple amb soroll.
+_tesi_obsoleta = (_tesi_data is None)
+
+hero_l, hero_r = st.columns([3, 2], gap="large")
 
 with hero_l:
-    if _ed.get("titular"):
-        _data_fmt = (_ed["data"].strftime("%d/%m/%Y") if _ed.get("data") else "")
-        _num = f" · Núm. {_ed['num']}" if _ed.get("num") else ""
-        kicker(("Tesi de la setmana · " if _ca else "Tesis de la semana · ")
-               + _data_fmt + _num)
-        action_title(_ed["titular"])
-        if _ed.get("pre"):
-            deck(_ed["pre"])
+    if _pulse_fresc:
+        _sign_color = "#003366" if _pulse["avg_30"] >= 0 else "#c0392b"
+        _sign_text = fpct(_pulse["avg_30"], 1)
+        _eyebrow_l = ("Pols del consum · darrers 30 dies"
+                      if _ca else
+                      "Pulso del consumo · últimos 30 días")
+        _sub_l = ("Variació anual mitjana de vendes diàries · grans empreses retail"
+                  if _ca else
+                  "Variación anual media de ventas diarias · grandes empresas retail")
+        _accel = _pulse["avg_30"] - _pulse["avg_90"]
+        if abs(_accel) < 0.5:
+            _dir_l = "estable vs trimestre anterior" if _ca else "estable vs trimestre anterior"
+        elif _accel > 0:
+            _dir_l = "accelerant" if _ca else "acelerando"
+        else:
+            _dir_l = "desaccelerant" if _ca else "desacelerando"
+        _asof_l = "Darrera dada" if _ca else "Último dato"
+        _lag_l = (f"INE publica amb {_pulse['lag_days']} dies de retard"
+                  if _ca else
+                  f"INE publica con {_pulse['lag_days']} días de retraso")
+        st.markdown(
+            f"""
+            <div style="font-family:'Inter',sans-serif; border-top:3px solid #003366;
+                        padding:18px 0 8px 0; margin-top:18px;">
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                            font-weight:700; text-transform:uppercase; color:#003366;
+                            margin-bottom:4px;">
+                    {_eyebrow_l}
+                </div>
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:5.2rem;
+                            font-weight:700; line-height:1; color:{_sign_color};
+                            letter-spacing:-2px; margin:10px 0 6px;">
+                    {_sign_text}
+                </div>
+                <div style="color:#1a1a1a; font-size:14px; line-height:1.5; margin-top:8px;">
+                    {_sub_l} · <strong>{_dir_l}</strong>
+                </div>
+                <div style="color:#6a6a6a; font-size:12px; margin-top:10px;">
+                    {_asof_l}: {_pulse['last_dt'].strftime('%d/%m/%Y')} · {_lag_l}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    elif _icm_hero is not None:
+        # Fallback: el Pols diari està obsolet (>30d). Mostrem l'ICM mensual,
+        # que sí és fresc, com a número-xoc del hero.
+        _sign_color = "#003366" if _icm_hero["valor"] >= 0 else "#c0392b"
+        _sign_text = fpct(_icm_hero["valor"], 1)
+        _eyebrow_l = ("Pols del consum · darrer mes (ICM)"
+                      if _ca else
+                      "Pulso del consumo · último mes (ICM)")
+        _sub_l = ("Variació anual de la xifra de negoci real del comerç al detall"
+                  if _ca else
+                  "Variación anual de la cifra de negocio real del comercio minorista")
+        _asof_l = "Darrera dada" if _ca else "Último dato"
+        from style import format_mes_any as _fma
+        st.markdown(
+            f"""
+            <div style="font-family:'Inter',sans-serif; border-top:3px solid #003366;
+                        padding:18px 0 8px 0; margin-top:18px;">
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                            font-weight:700; text-transform:uppercase; color:#003366;
+                            margin-bottom:4px;">
+                    {_eyebrow_l}
+                </div>
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:5.2rem;
+                            font-weight:700; line-height:1; color:{_sign_color};
+                            letter-spacing:-2px; margin:10px 0 6px;">
+                    {_sign_text}
+                </div>
+                <div style="color:#1a1a1a; font-size:14px; line-height:1.5; margin-top:8px;">
+                    {_sub_l}
+                </div>
+                <div style="color:#6a6a6a; font-size:12px; margin-top:10px;">
+                    {_asof_l}: {_fma(_icm_hero['data'], st.session_state.lang)} · INE, ICM
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
-        kicker("Observatori del comerç" if _ca else "Observatorio del comercio")
-        action_title("Radiografia del comerç al detall espanyol" if _ca
-                     else "Radiografía del comercio minorista español")
-        deck("Dades oficials del CNAE 47, actualitzades de forma automàtica." if _ca
-             else "Datos oficiales del CNAE 47, actualizados de forma automática.")
-
-    st.markdown("<div style='margin-top:22px;'></div>", unsafe_allow_html=True)
-    _cta1, _cta2 = st.columns(2)
-    with _cta1:
-        st.page_link("pages/L_Editorial.py",
-                     label=("Llegir l'edició →" if _ca else "Leer la edición →"))
-    with _cta2:
-        st.page_link("pages/0b_ICM.py",
-                     label=("Veure les dades →" if _ca else "Ver los datos →"))
+        _na_lbl = ("Pols del consum no disponible"
+                   if _ca else "Pulso del consumo no disponible")
+        st.markdown(
+            f"""
+            <div style="border-top:3px solid #c0c0c0; padding:18px 0; margin-top:18px;
+                        color:#6a6a6a; font-size:14px; font-style:italic;">
+                {_na_lbl}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 with hero_r:
-    with st.container(border=True):
-        if _pulse_fresc:
-            _accel = _pulse["avg_30"] - _pulse["avg_90"]
-            if abs(_accel) < 0.5:
-                _dir = ("estable respecte del trimestre" if _ca
-                        else "estable respecto al trimestre")
-            elif _accel > 0:
-                _dir = "en acceleració" if _ca else "en aceleración"
-            else:
-                _dir = "en desacceleració" if _ca else "en desaceleración"
-            home_fig_head(
-                ("El pols del consum" if _ca else "El pulso del consumo"),
-                (f"Les vendes diàries de les grans cadenes creixen un "
-                 f"{fpct(_pulse['avg_30'], 1, sign=False)} anual, {_dir}"
-                 if _ca else
-                 f"Las ventas diarias de las grandes cadenas crecen un "
-                 f"{fpct(_pulse['avg_30'], 1, sign=False)} anual, {_dir}"),
-                ("Mitjana mòbil de 30 dies de la variació anual de les vendes diàries "
-                 "de grans empreses. La sèrie diària, amb els pics de campanya, és a "
-                 "la pàgina del Pols diari." if _ca else
-                 "Media móvil de 30 días de la variación anual de las ventas diarias "
-                 "de grandes empresas. La serie diaria, con los picos de campaña, está "
-                 "en la página del Pulso diario."),
-            )
-            _fig = go.Figure()
-            _fig.add_trace(go.Scatter(
-                x=_pulse["plot"]["data"], y=_pulse["plot"]["mm30"],
-                mode="lines", line=dict(color=NAVY, width=2.6),
-                fill="tozeroy", fillcolor="rgba(11,58,102,0.07)",
-                name=("Mitjana 30 dies" if _ca else "Media 30 días"),
-                hovertemplate="%{x|%d/%m/%Y}<br>%{y:.1f}%<extra></extra>",
-            ))
-            _fig.add_hline(y=0, line=dict(color=G1_P, width=1))
-            _fig.update_layout(
-                height=232, showlegend=False,
-                margin=dict(l=4, r=10, t=6, b=4),
-                font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
-                paper_bgcolor="white", plot_bgcolor="white", separators=",.",
-                hovermode="x unified",
-                hoverlabel=dict(bgcolor="white", bordercolor=LINE_P,
-                                font=dict(family="Manrope, sans-serif", color=INK_P, size=12)),
-                xaxis=dict(showgrid=False, showline=True, linecolor=LINE_P,
-                           tickfont=dict(size=11)),
-                yaxis=dict(showgrid=True, gridcolor=LINE_P, zeroline=False,
-                           ticksuffix="%", tickfont=dict(size=11)),
-            )
-            st.plotly_chart(_fig, use_container_width=True,
-                            config={"displayModeBar": False})
-            home_fig_foot(
-                (f"Font: INE, CDMGE (experimental) · dades fins al "
-                 f"{_pulse['last_dt'].strftime('%d/%m/%Y')}, {_pulse['lag_days']} dies de retard"
-                 if _ca else
-                 f"Fuente: INE, CDMGE (experimental) · datos hasta el "
-                 f"{_pulse['last_dt'].strftime('%d/%m/%Y')}, {_pulse['lag_days']} días de retraso"),
-                (f"{'30 dies' if _ca else '30 días'} {fpct(_pulse['avg_30'], 1)}"),
-            )
-        elif _icm_hero is not None:
-            home_fig_head(
-                ("El pols del consum" if _ca else "El pulso del consumo"),
-                (f"El comerç al detall tanca el mes a "
-                 f"{fpct(_icm_hero['valor'], 1)} real interanual" if _ca else
-                 f"El comercio minorista cierra el mes en "
-                 f"{fpct(_icm_hero['valor'], 1)} real interanual"),
-                ("Variació anual de la xifra de negoci a preus constants, comerç al "
-                 "detall sense vehicles." if _ca else
-                 "Variación anual de la cifra de negocio a precios constantes, comercio "
-                 "minorista sin vehículos."),
-            )
-            _fig = go.Figure()
-            _fig.add_trace(go.Scatter(
-                x=_icm_hero["serie"]["data"], y=_icm_hero["serie"]["valor"],
-                mode="lines", line=dict(color=NAVY, width=2.4),
-                fill="tozeroy", fillcolor="rgba(11,58,102,0.07)",
-                hovertemplate="%{x|%m/%Y}<br>%{y:.1f}%<extra></extra>",
-            ))
-            _fig.add_hline(y=0, line=dict(color=G1_P, width=1))
-            _fig.update_layout(
-                height=232, showlegend=False,
-                margin=dict(l=4, r=10, t=6, b=4),
-                font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
-                paper_bgcolor="white", plot_bgcolor="white", separators=",.",
-                xaxis=dict(showgrid=False, showline=True, linecolor=LINE_P,
-                           tickfont=dict(size=11)),
-                yaxis=dict(showgrid=True, gridcolor=LINE_P, zeroline=False,
-                           ticksuffix="%", tickfont=dict(size=11)),
-            )
-            st.plotly_chart(_fig, use_container_width=True,
-                            config={"displayModeBar": False})
-            home_fig_foot(
-                (f"Font: INE, Índex de Comerç al Detall · dades fins a "
-                 f"{format_mes_any(_icm_hero['data'], st.session_state.lang)}"
-                 if _ca else
-                 f"Fuente: INE, Índice de Comercio al por Menor · datos hasta "
-                 f"{format_mes_any(_icm_hero['data'], st.session_state.lang)}"),
-                fpct(_icm_hero["valor"], 1),
-            )
-        else:
-            st.caption("Pols del consum no disponible" if _ca
-                       else "Pulso del consumo no disponible")
+    _eyebrow_r = "Tesi vigent" if _ca else "Tesis vigente"
+    if _tesi_titol and not _tesi_obsoleta:
+        _tesi_data_fmt = _tesi_data.strftime("%d/%m/%Y")
+        st.markdown(
+            f"""
+            <div style="border-top:3px solid #E8B33A;
+                        padding:18px 18px 14px 18px; margin-top:18px;
+                        font-family:'Inter',sans-serif;">
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                            font-weight:700; text-transform:uppercase;
+                            color:#C89B2A; margin-bottom:10px;">
+                    {_eyebrow_r}
+                </div>
+                <div style="color:#003366; font-size:17px; font-weight:600;
+                            line-height:1.35; margin-bottom:12px;
+                            font-family:'Archivo Narrow',sans-serif;">
+                    {_tesi_titol}
+                </div>
+                <div style="color:#6a6a6a; font-size:11.5px;">
+                    {_tesi_autor} · {_tesi_data_fmt}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.page_link(
+            "pages/L_Editorial.py",
+            label=("Llegir el Pulso de la setmana →" if _ca
+                   else "Leer el Pulso de la semana →"),
+        )
+    else:
+        st.markdown(
+            f"""
+            <div style="border-top:3px solid #E8B33A;
+                        padding:18px 18px 14px 18px; margin-top:18px;
+                        font-family:'Inter',sans-serif;">
+                <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.82rem;
+                            font-weight:700; text-transform:uppercase;
+                            color:#C89B2A; margin-bottom:10px;">
+                    {_eyebrow_r}
+                </div>
+                <div style="color:#003366; font-size:15px; font-weight:600;
+                            line-height:1.35; font-family:'Archivo Narrow',sans-serif;">
+                    {"La lectura de la setmana, al Pulso." if _ca
+                     else "La lectura de la semana, en el Pulso."}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.page_link(
+            "pages/L_Editorial.py",
+            label=("Veure el Pulso de la setmana →" if _ca
+                   else "Ver el Pulso de la semana →"),
+        )
 
-# ─── BLOC 2 · XIFRES ESTRUCTURALS ──────────────────────────────
-
-_stats = []
-
-# VAB del comerç sobre el PIB
-if not df_pib.empty and "pes_cnae47" in df_pib.columns:
-    _r = df_pib.dropna(subset=["pes_cnae47"]).sort_values("any")
-    if len(_r) >= 2:
-        _l, _pr = _r.iloc[-1], _r.iloc[-2]
-        _stats.append((
-            fnum(_l["pes_cnae47"] * 100, 1), "%",
-            (f"VAB del comerç sobre el PIB · {int(_l['any'])}" if _ca
-             else f"VAB del comercio sobre el PIB · {int(_l['any'])}"),
-            (f"{'des del' if _ca else 'desde el'} "
-             f"{fnum(_pr['pes_cnae47'] * 100, 1)}% {'el' if _ca else 'en'} {int(_pr['any'])}"),
-            "up" if _l["pes_cnae47"] > _pr["pes_cnae47"] else
-            ("down" if _l["pes_cnae47"] < _pr["pes_cnae47"] else "flat"),
-        ))
-
-# Empreses actives
-if not df_empreses.empty and "territori" in df_empreses.columns:
-    _e = df_empreses[df_empreses["territori"] == "espanya"].dropna(
-        subset=["empreses"]).sort_values("any")
-    if len(_e) >= 2:
-        _l, _pr = _e.iloc[-1], _e.iloc[-2]
-        _var = (_l["empreses"] / _pr["empreses"] - 1) * 100
-        _stats.append((
-            fnum(int(_l["empreses"])), "",
-            (f"Empreses actives al CNAE 47 · {int(_l['any'])}" if _ca
-             else f"Empresas activas en el CNAE 47 · {int(_l['any'])}"),
-            f"{fpct(_var, 1)} {'vs' if _ca else 'vs'} {int(_pr['any'])}",
-            "up" if _var > 0 else ("down" if _var < 0 else "flat"),
-        ))
-
-# Persones ocupades (Eurostat LFS, G47)
-if not df_ocupacio.empty and "pais_codi" in df_ocupacio.columns:
-    _o = df_ocupacio[(df_ocupacio["pais_codi"] == "ES")
-                     & (df_ocupacio["sex"] == "T")].dropna(subset=["ocupats_milers"])
-    _o = _o.groupby("any")["ocupats_milers"].sum().sort_index()
-    if len(_o) >= 2:
-        _var = (_o.iloc[-1] / _o.iloc[-2] - 1) * 100
-        _stats.append((
-            fnum(_o.iloc[-1] / 1000, 2), "M",
-            (f"Persones ocupades al comerç · {int(_o.index[-1])}" if _ca
-             else f"Personas ocupadas en el comercio · {int(_o.index[-1])}"),
-            f"{fpct(_var, 1)} vs {int(_o.index[-2])}",
-            "up" if _var > 0 else ("down" if _var < 0 else "flat"),
-        ))
-
-# Volum d'e-commerce del sector
-if not df_ecommerce.empty and "ecommerce_cnae47_eur" in df_ecommerce.columns:
-    _c = df_ecommerce.dropna(subset=["ecommerce_cnae47_eur"]).sort_values("any")
-    if len(_c) >= 2:
-        _l, _pr = _c.iloc[-1], _c.iloc[-2]
-        _var = (_l["ecommerce_cnae47_eur"] / _pr["ecommerce_cnae47_eur"] - 1) * 100
-        _stats.append((
-            fnum(_l["ecommerce_cnae47_eur"] / 1e9, 1), "Md€",
-            (f"Vendes online del CNAE 47 · {int(_l['any'])}" if _ca
-             else f"Ventas online del CNAE 47 · {int(_l['any'])}"),
-            f"{fpct(_var, 1)} vs {int(_pr['any'])}",
-            "up" if _var > 0 else ("down" if _var < 0 else "flat"),
-        ))
-
-if _stats:
-    home_stats(_stats)
-    _nota_fonts = (
-        "Fonts: INE (Comptabilitat Nacional, DIRCE), Eurostat (enquesta de forces "
-        "de treball) i CNMC. Cada xifra correspon a l'últim exercici tancat de la seva font."
+# Banner d'avís si el retard del Pols diari és superior al normal
+if _pulse_fresc and _pulse["lag_days"] > 21:
+    _notice = (
+        f"L'INE publica el CDMGE un cop al mes amb retard de ~30-40 dies. "
+        f"Última dada disponible: {_pulse['last_dt'].strftime('%d/%m/%Y')} "
+        f"(fa {_pulse['lag_days']} dies)."
         if _ca else
-        "Fuentes: INE (Contabilidad Nacional, DIRCE), Eurostat (encuesta de fuerzas "
-        "de trabajo) y CNMC. Cada cifra corresponde al último ejercicio cerrado de su fuente."
+        f"El INE publica el CDMGE una vez al mes con retraso de ~30-40 días. "
+        f"Último dato disponible: {_pulse['last_dt'].strftime('%d/%m/%Y')} "
+        f"(hace {_pulse['lag_days']} días)."
     )
-    st.markdown(
-        f'<div style="font-family:Manrope,system-ui,sans-serif;font-size:11.5px;'
-        f'color:{G1_P};margin:8px 0 26px;">{_nota_fonts}</div>',
-        unsafe_allow_html=True,
-    )
+    st.caption(_notice)
 
-# ─── BLOC 3 · NOVETATS DE DADES ────────────────────────────────
+st.markdown("<div style='margin-top:18px;'></div>", unsafe_allow_html=True)
 
+# ─── NOVETATS (alertes d'actualització de dades) ───────────────
 
 @st.cache_data(ttl=600)
 def load_updates_log():
@@ -422,20 +365,22 @@ def _fmt_marker(marker, lang):
     """Formata el marcador de data d'un event (any / mes-any / data)."""
     parts = str(marker).split("-")
     if len(parts) == 1:
-        return parts[0]
+        return parts[0]  # any
     try:
-        if len(parts) == 2:
-            return format_mes_any(date(int(parts[0]), int(parts[1]), 1), lang)
-        if len(parts) == 3:
+        if len(parts) == 2:  # YYYY-MM
+            from style import format_mes_any as _fma
+            return _fma(date(int(parts[0]), int(parts[1]), 1), lang)
+        if len(parts) == 3:  # YYYY-MM-DD
             return f"{int(parts[2]):02d}/{int(parts[1]):02d}/{parts[0]}"
     except (ValueError, TypeError):
         return str(marker)
     return str(marker)
 
 
+_upd_log = load_updates_log()
 _NOVETATS_DIES = 14
 _recents = []
-for _ev in load_updates_log().get("events", []):
+for _ev in _upd_log.get("events", []):
     try:
         _det = date.fromisoformat(_ev.get("detected_at", ""))
     except (TypeError, ValueError):
@@ -445,10 +390,13 @@ for _ev in load_updates_log().get("events", []):
         _recents.append((_ev, _ago))
 
 if _recents:
-    _rows = ""
+    _nov_eyebrow = "Novetats" if _ca else "Novedades"
+    _nov_sub = ("Actualitzacions de dades dels darrers 14 dies"
+                if _ca else "Actualizaciones de datos de los últimos 14 días")
+    _items_html = ""
     for _ev, _ago in _recents:
         _lbl = _ev.get("label_ca" if _ca else "label_es", _ev.get("dataset", ""))
-        _marker = _fmt_marker(_ev.get("last_data", ""), st.session_state.lang)
+        _marker_fmt = _fmt_marker(_ev.get("last_data", ""), st.session_state.lang)
         if _ago == 0:
             _when = "avui" if _ca else "hoy"
         elif _ago == 1:
@@ -456,351 +404,329 @@ if _recents:
         else:
             _when = (f"fa {_ago} dies" if _ca else f"hace {_ago} días")
         _verb = "actualitzat amb dades de" if _ca else "actualizado con datos de"
-        _rows += (f'<div class="h-upd-row"><span class="l"><b>{_lbl}</b> {_verb} '
-                  f'{_marker}</span><span class="r">{_when}</span></div>')
+        _items_html += (
+            f"<div style='display:flex; justify-content:space-between; align-items:baseline;"
+            f" gap:12px; padding:7px 0; border-bottom:1px solid rgba(0,51,102,0.08);'>"
+            f"<span style='font-size:13px; color:#1a1a1a;'>"
+            f"<strong style='color:#003366;'>{_lbl}</strong> {_verb} {_marker_fmt}</span>"
+            f"<span style='font-size:11.5px; color:#6a6a6a; white-space:nowrap;'>{_when}</span>"
+            f"</div>"
+        )
     st.markdown(
-        f'<div class="h-sec-eyebrow" style="margin-bottom:4px;">'
-        f'{"Novetats" if _ca else "Novedades"}</div>{_rows}',
+        f"""
+        <div style="border-top:1px solid rgba(0,51,102,0.12); padding:10px 0 6px 0;
+                    margin:6px 0 22px; font-family:'Inter',sans-serif;">
+            <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.75rem;
+                        font-weight:700; text-transform:uppercase; letter-spacing:0.10em;
+                        color:#003366; opacity:0.7; margin-bottom:6px;">
+                {_nov_eyebrow}
+            </div>
+            {_items_html}
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-    st.markdown("<div style='margin-top:34px;'></div>", unsafe_allow_html=True)
 
-# ─── BLOC 4 · LES LECTURES DE LA SETMANA ───────────────────────
+# ─── CARDS DE NAVEGACIÓ (6 dimensions, grid 3x2) ───────────────
 
-home_section(
-    ("Les lectures de la setmana" if _ca else "Las lecturas de la semana"),
-    ("Dos senyals: on se situa Espanya i qui captura el creixement" if _ca
-     else "Dos señales: dónde se sitúa España y quién captura el crecimiento"),
-    ("La primera diu si el sector va més ràpid o més lent que el seu entorn. La "
-     "segona, si el creixement es reparteix o es concentra." if _ca else
-     "La primera dice si el sector va más rápido o más lento que su entorno. La "
-     "segunda, si el crecimiento se reparte o se concentra."),
-)
-st.markdown("<div style='margin-top:26px;'></div>", unsafe_allow_html=True)
+st.divider()
 
-# ── Panel A: Espanya vs zona euro, per trimestres ──
-_panel_a = None
-if not df_eu_m.empty and {"pais_codi", "periode", "yoy"} <= set(df_eu_m.columns):
-    _q = df_eu_m[df_eu_m["pais_codi"].isin(["ES", "EA20"])].dropna(subset=["yoy"]).copy()
-    if not _q.empty:
-        _q["trim"] = pd.PeriodIndex(pd.to_datetime(_q["periode"] + "-01"), freq="Q")
-        # Només trimestres complets (3 mesos publicats per als dos àmbits).
-        _cnt = _q.groupby(["trim", "pais_codi"]).size().unstack(fill_value=0)
-        _plens = (_cnt[(_cnt["ES"] == 3) & (_cnt["EA20"] == 3)].index
-                  if {"ES", "EA20"} <= set(_cnt.columns) else [])
-        _piv = (_q[_q["trim"].isin(_plens)]
-                .pivot_table(index="trim", columns="pais_codi", values="yoy", aggfunc="mean")
-                .sort_index().tail(8))
-        if len(_piv) >= 2 and {"ES", "EA20"} <= set(_piv.columns):
-            _panel_a = _piv
-
-if _panel_a is not None:
-    _last_q = _panel_a.index[-1]
-    _es_v, _ea_v = float(_panel_a["ES"].iloc[-1]), float(_panel_a["EA20"].iloc[-1])
-    _per_damunt = _es_v > _ea_v
-    # Ratxa de trimestres consecutius per damunt (o, si ara està per sota, la
-    # ratxa que s'acaba de trencar) sobre la sèrie completa, no només les 8 barres.
-    _tot = (df_eu_m[df_eu_m["pais_codi"].isin(["ES", "EA20"])].dropna(subset=["yoy"]).copy())
-    _tot["trim"] = pd.PeriodIndex(pd.to_datetime(_tot["periode"] + "-01"), freq="Q")
-    _cnt_t = _tot.groupby(["trim", "pais_codi"]).size().unstack(fill_value=0)
-    _plens_t = _cnt_t[(_cnt_t.get("ES", 0) == 3) & (_cnt_t.get("EA20", 0) == 3)].index
-    _serie_q = (_tot[_tot["trim"].isin(_plens_t)]
-                .pivot_table(index="trim", columns="pais_codi", values="yoy", aggfunc="mean")
-                .sort_index())
-    _ratxa = 0
-    for _t in reversed(_serie_q.index if _per_damunt else _serie_q.index[:-1]):
-        if _serie_q.loc[_t, "ES"] > _serie_q.loc[_t, "EA20"]:
-            _ratxa += 1
-        else:
-            break
-    _qlbl = str(_last_q).replace("Q", "T")
-    _qlbl = f"{_qlbl.split('T')[1]}T {_qlbl.split('T')[0]}"
-
-    with st.container(border=True):
-        if _per_damunt:
-            _titol_a = (f"Espanya creix per damunt de la zona euro {_ratxa} trimestres seguits"
-                        if _ca else
-                        f"España crece por encima de la zona euro {_ratxa} trimestres seguidos")
-        else:
-            _titol_a = (f"Espanya cau per sota de la zona euro després de {_ratxa} trimestres per damunt"
-                        if _ca else
-                        f"España cae por debajo de la zona euro tras {_ratxa} trimestres por encima")
-        home_fig_head(
-            ("Dinàmica recent · Eurostat" if _ca else "Dinámica reciente · Eurostat"),
-            _titol_a,
-            (f"{_qlbl}: {fpct(_es_v, 1)} Espanya i {fpct(_ea_v, 1)} zona euro, un "
-             f"diferencial de {fnum(abs(_es_v - _ea_v), 1)}%. Volum de vendes, "
-             f"variació interanual mitjana del trimestre." if _ca else
-             f"{_qlbl}: {fpct(_es_v, 1)} España y {fpct(_ea_v, 1)} zona euro, un "
-             f"diferencial de {fnum(abs(_es_v - _ea_v), 1)}%. Volumen de ventas, "
-             f"variación interanual media del trimestre."),
-            legend=[(NAVY, "Espanya" if _ca else "España"),
-                    (OCRE, "Zona euro" if _ca else "Zona euro")],
-        )
-        _labels = [f"{str(p).split('Q')[1]}T {str(p).split('Q')[0][2:]}"
-                   for p in _panel_a.index]
-        _fig_a = go.Figure()
-        _fig_a.add_trace(go.Bar(
-            x=_labels, y=_panel_a["ES"], name=("Espanya" if _ca else "España"),
-            marker_color=NAVY,
-            hovertemplate="%{x}<br>%{y:.1f}%<extra>" + ("Espanya" if _ca else "España") + "</extra>",
-        ))
-        _fig_a.add_trace(go.Bar(
-            x=_labels, y=_panel_a["EA20"], name="Zona euro", marker_color=OCRE,
-            hovertemplate="%{x}<br>%{y:.1f}%<extra>Zona euro</extra>",
-        ))
-        _fig_a.add_hline(y=0, line=dict(color=G1_P, width=1))
-        _fig_a.update_layout(
-            barmode="group", bargap=0.3, bargroupgap=0.08, height=300,
-            showlegend=False, margin=dict(l=4, r=10, t=8, b=4),
-            font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
-            paper_bgcolor="white", plot_bgcolor="white", separators=",.",
-            xaxis=dict(showgrid=False, showline=True, linecolor=LINE_P),
-            yaxis=dict(showgrid=True, gridcolor=LINE_P, zeroline=False, ticksuffix="%"),
-        )
-        st.plotly_chart(_fig_a, use_container_width=True,
-                        config={"displayModeBar": False})
-        home_fig_foot(
-            ("Font: Eurostat (sts_trtu_m), volum de vendes corregit d'estacionalitat "
-             "i calendari · només trimestres complets" if _ca else
-             "Fuente: Eurostat (sts_trtu_m), volumen de ventas corregido de "
-             "estacionalidad y calendario · solo trimestres completos"),
-            f"{_qlbl} {fpct(_es_v, 1)}",
-        )
-    st.markdown("<div style='margin-top:26px;'></div>", unsafe_allow_html=True)
-
-# ── Panel B: qui captura el creixement (quotes sobre el sector) ──
-_panel_b = None
-if not df_lideres.empty and not df_eas.empty and "ing_2024" in df_lideres.columns:
-    # El codi de branca ve com a text al parquet i com a enter al CSV: comparar en text.
-    _s47 = (df_eas[df_eas["codi"].astype(str) == "47"]
-            .dropna(subset=["xifra_negoci"]).sort_values("any"))
-    if not _s47.empty:
-        _sec_any = int(_s47.iloc[-1]["any"])
-        _sec_meur = float(_s47.iloc[-1]["xifra_negoci"]) / 1e6
-        _lid = df_lideres.dropna(subset=["ing_2024"]).sort_values("ing_2024", ascending=False)
-        if not _lid.empty and _sec_meur > 0:
-            _top = _lid.head(5)
-            _quotes = [(r["nombre"], r["ing_2024"] / 1000 / _sec_meur * 100)
-                       for _, r in _top.iterrows()]
-            _altres_n = len(_lid) - len(_top)
-            _altres_pct = _lid.iloc[5:]["ing_2024"].sum() / 1000 / _sec_meur * 100
-            _bloc_pct = _lid["ing_2024"].sum() / 1000 / _sec_meur * 100
-            _resta_pct = 100 - _bloc_pct
-            # Mateix bloc d'empreses, quatre anys abans: es va moure gaire?
-            _bloc_ant = None
-            _any_ant = None
-            _bloc_ara_sub = None
-            _n_ambdos = None
-            if "ing_2020" in _lid.columns:
-                _sub = _lid.dropna(subset=["ing_2020"])
-                _s_ant = _s47[_s47["any"] == 2020]
-                if not _sub.empty and not _s_ant.empty:
-                    _any_ant = 2020
-                    _n_ambdos = len(_sub)
-                    _bloc_ant = (_sub["ing_2020"].sum() / 1000
-                                 / (float(_s_ant.iloc[0]["xifra_negoci"]) / 1e6) * 100)
-                    _bloc_ara_sub = _sub["ing_2024"].sum() / 1000 / _sec_meur * 100
-            _panel_b = {
-                "quotes": _quotes, "altres_n": _altres_n, "altres_pct": _altres_pct,
-                "resta_pct": _resta_pct, "bloc_pct": _bloc_pct, "n": len(_lid),
-                "sec_any": _sec_any, "bloc_ant": _bloc_ant, "any_ant": _any_ant,
-                "bloc_ara_sub": _bloc_ara_sub, "n_ambdos": _n_ambdos,
-                "no_2024": int((_lid["snapshot_any"] != 2024).sum())
-                if "snapshot_any" in _lid.columns else 0,
-            }
-
-if _panel_b is not None:
-    _b = _panel_b
-    _lider_nom, _lider_pct = _b["quotes"][0]
-    with st.container(border=True):
-        _sub_b = (
-            f"I el repartiment gairebé no s'ha mogut: les {_b['n_ambdos']} societats amb "
-            f"comptes dipositats dels dos exercicis passen del {fnum(_b['bloc_ant'], 1)}% "
-            f"({_b['any_ant']}) al {fnum(_b['bloc_ara_sub'], 1)}% ({_b['sec_any']}) de la "
-            f"xifra de negoci del sector."
-            if _b["bloc_ant"] is not None else
-            f"Els {_b['n']} grans sumen el {fnum(_b['bloc_pct'], 1)}% de la xifra de "
-            f"negoci del sector; la resta es reparteix entre desenes de milers d'empreses."
-        ) if _ca else (
-            f"Y el reparto apenas se ha movido: las {_b['n_ambdos']} sociedades con cuentas "
-            f"depositadas de los dos ejercicios pasan del {fnum(_b['bloc_ant'], 1)}% "
-            f"({_b['any_ant']}) al {fnum(_b['bloc_ara_sub'], 1)}% ({_b['sec_any']}) de la "
-            f"cifra de negocio del sector."
-            if _b["bloc_ant"] is not None else
-            f"Los {_b['n']} grandes suman el {fnum(_b['bloc_pct'], 1)}% de la cifra de "
-            f"negocio del sector; el resto se reparte entre decenas de miles de empresas."
-        )
-        home_fig_head(
-            ("Estructura de mercat · Registre Mercantil i INE" if _ca
-             else "Estructura de mercado · Registro Mercantil e INE"),
-            (f"Un sol operador val el {fnum(_lider_pct, 1)}% del sector; els "
-             f"{_b['n']} grans, el {fnum(_b['bloc_pct'], 1)}%" if _ca else
-             f"Un solo operador vale el {fnum(_lider_pct, 1)}% del sector; los "
-             f"{_b['n']} grandes, el {fnum(_b['bloc_pct'], 1)}%"),
-            _sub_b,
-        )
-        _noms = [n for n, _ in _b["quotes"]]
-        _vals = [v for _, v in _b["quotes"]]
-        _noms += [(f"Els altres {_b['altres_n']} grans" if _ca
-                   else f"Los otros {_b['altres_n']} grandes"),
-                  ("Resta del sector" if _ca else "Resto del sector")]
-        _vals += [_b["altres_pct"], _b["resta_pct"]]
-        _colors = [NAVY] + ["#1e5488"] * 4 + [G2_P, "#dde4ec"]
-        _fig_b = go.Figure(go.Bar(
-            x=_vals, y=_noms, orientation="h", marker_color=_colors,
-            text=[f"{fnum(v, 1)}%" for v in _vals], textposition="outside",
-            textfont=dict(family="Manrope, sans-serif", size=12, color=INK_P),
-            hovertemplate="%{y}<br>%{x:.1f}% "
-                          + ("del sector" if _ca else "del sector") + "<extra></extra>",
-        ))
-        _fig_b.update_layout(
-            height=300, showlegend=False, margin=dict(l=4, r=52, t=8, b=4),
-            font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
-            paper_bgcolor="white", plot_bgcolor="white", separators=",.",
-            xaxis=dict(visible=False, range=[0, max(_vals) * 1.18]),
-            yaxis=dict(autorange="reversed", showgrid=False,
-                       tickfont=dict(size=12.5, color=INK_P)),
-        )
-        st.plotly_chart(_fig_b, use_container_width=True,
-                        config={"displayModeBar": False})
-        _nota_snap = ""
-        if _b["no_2024"]:
-            _nota_snap = (f" · {_b['no_2024']} societats amb l'últim exercici dipositat "
-                          f"anterior al {_b['sec_any']}" if _ca else
-                          f" · {_b['no_2024']} sociedades con el último ejercicio "
-                          f"depositado anterior a {_b['sec_any']}")
-        home_fig_foot(
-            (f"Font: comptes del Registre Mercantil i Enquesta Estructural d'Empreses "
-             f"(INE), exercici {_b['sec_any']}{_nota_snap}" if _ca else
-             f"Fuente: cuentas del Registro Mercantil y Encuesta Estructural de "
-             f"Empresas (INE), ejercicio {_b['sec_any']}{_nota_snap}"),
-            None,
-        )
-    st.markdown("<div style='margin-top:14px;'></div>", unsafe_allow_html=True)
-    st.page_link("pages/D_Lideres.py",
-                 label=("Anatomia de la concentració →" if _ca
-                        else "Anatomía de la concentración →"))
-
-st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
-
-# ─── BLOC 5 · LA TESI EDITORIAL ────────────────────────────────
-
-if _ed.get("cifra") or _ed.get("lede"):
-    _tesi_l, _tesi_r = st.columns([1.05, 1], gap="large")
-    with _tesi_l:
-        _src_bits = []
-        if _ed.get("setmana"):
-            _src_bits.append(f'<span class="d">{_ed["setmana"]}</span>')
-        _src_bits.append("El Pulso de la semana")
-        if _ed.get("font"):
-            _src_bits.append(_ed["font"])
-        home_quote(
-            _md_a_html(_ed.get("cifra") or _ed["lede"].split(". ")[0] + "."),
-            " · ".join(_src_bits),
-        )
-    with _tesi_r:
-        _paras = []
-        if _ed.get("context"):
-            _paras.append(f'<p><i>{_md_a_html(_ed["context"])}</i></p>')
-        if _ed.get("lede"):
-            _paras.append(f'<p>{_md_a_html(_retallar(_ed["lede"]))}</p>')
-        st.markdown(f'<div class="h-aside">{"".join(_paras)}</div>',
-                    unsafe_allow_html=True)
-        st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-        st.page_link("pages/L_Editorial.py",
-                     label=("Llegir l'edició completa →" if _ca
-                            else "Leer la edición completa →"))
-    st.markdown("<div style='margin-top:44px;'></div>", unsafe_allow_html=True)
-
-# ─── BLOC 6 · LA RADIOGRAFIA (8 dimensions) ────────────────────
-
-home_section(
-    ("La radiografia" if _ca else "La radiografía"),
-    ("Vuit dimensions del comerç al detall" if _ca
-     else "Ocho dimensiones del comercio minorista"),
-    ("Sèries oficials verificades i actualitzades de forma automàtica des de la font."
-     if _ca else
-     "Series oficiales verificadas y actualizadas de forma automática desde la fuente."),
+_cards_eyebrow = ("Explora les dimensions" if _ca
+                  else "Explora las dimensiones")
+_cards_sub = ("Sis radiografies del sector. Cada targeta porta a la pàgina amb el detall complet."
+              if _ca else
+              "Seis radiografías del sector. Cada tarjeta lleva a la página con el detalle completo.")
+st.markdown(
+    f"""
+    <div style="margin:24px 0 18px;">
+        <div style="font-family:'Archivo Narrow',sans-serif; font-size:0.92rem;
+                    font-weight:700; text-transform:uppercase; color:#003366;
+                    margin-bottom:6px;">
+            {_cards_eyebrow}
+        </div>
+        <div style="font-size:13px; color:#666;">{_cards_sub}</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-_DIMENSIONS = [
-    ("01", "PIB i VAB", "PIB y VAB",
-     "Pes del comerç a l'economia i trajectòria del seu valor afegit.",
-     "Peso del comercio en la economía y trayectoria de su valor añadido.",
-     "pages/1_PIB_i_VAB.py"),
-    ("02", "Empreses", "Empresas",
-     "Demografia empresarial: cens, densitat territorial i mida mitjana.",
-     "Demografía empresarial: censo, densidad territorial y tamaño medio.",
-     "pages/2_Empreses.py"),
-    ("03", "Ocupació", "Empleo",
-     "Ocupats, perfil de qui treballa al sector i pes al mercat laboral.",
-     "Ocupados, perfil de quien trabaja en el sector y peso en el mercado laboral.",
-     "pages/3_Ocupació.py"),
-    ("04", "Productivitat", "Productividad",
-     "Valor afegit per hora, marges i repartiment de cada euro venut.",
-     "Valor añadido por hora, márgenes y reparto de cada euro vendido.",
-     "pages/4_Productivitat.py"),
-    ("05", "E-commerce", "E-commerce",
-     "Volum online del sector i adopció de tecnologia de fons.",
-     "Volumen online del sector y adopción de tecnología de fondo.",
-     "pages/5_Ecommerce.py"),
-    ("06", "Territori", "Territorio",
-     "Distribució per comunitats autònomes i densitat comercial.",
-     "Distribución por comunidades autónomas y densidad comercial.",
-     "pages/6_Territori.py"),
-    ("07", "Subsectors", "Subsectores",
-     "Estructura, activitat i demanda de cada branca del CNAE 47.",
-     "Estructura, actividad y demanda de cada rama del CNAE 47.",
-     "pages/9_Subsectors.py"),
-    ("08", "Comparativa Europa", "Comparativa Europa",
-     "El comerç espanyol davant la UE-27 en estructura i dinàmica.",
-     "El comercio español frente a la UE-27 en estructura y dinámica.",
-     "pages/7_Comparativa_Europa.py"),
-]
 
-_col_esq, _col_dre = st.columns(2, gap="large")
-for _i, (_n, _t_ca, _t_es, _d_ca, _d_es, _path) in enumerate(_DIMENSIONS):
-    with (_col_esq if _i % 2 == 0 else _col_dre):
-        home_field(_n, _t_ca if _ca else _t_es, _d_ca if _ca else _d_es)
-        st.page_link(_path, label=("Explorar →" if _ca else "Explorar →"))
+def _spark(values, color="#003366"):
+    """Mini-sparkline Plotly per a les cards (sense eixos)."""
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=list(range(len(values))), y=list(values),
+        mode="lines",
+        line=dict(color=color, width=2),
+        fill="tozeroy",
+        fillcolor="rgba(0,51,102,0.10)",
+        showlegend=False,
+        hoverinfo="skip",
+    ))
+    fig.update_layout(
+        height=58,
+        margin=dict(l=0, r=0, t=0, b=0),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        plot_bgcolor="white",
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+    return fig
 
-st.markdown("<div style='margin-top:34px;'></div>", unsafe_allow_html=True)
 
-# ─── SOBRE L'OBSERVATORI ───────────────────────────────────────
+def _card_header(eyebrow, kpi, sub, context=""):
+    _ctx = (
+        f"<div style=\"font-size:12px; color:#4a6080; font-style:italic; "
+        f"line-height:1.45; margin-top:8px; margin-bottom:2px;\">{context}</div>"
+        if context else ""
+    )
+    return (
+        f"<div style=\"border-top:2px solid #003366; padding:14px 0 2px 0;\">"
+        f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:0.78rem; "
+        f"font-weight:700; text-transform:uppercase; color:#003366; opacity:0.7; "
+        f"margin-bottom:6px;\">{eyebrow}</div>"
+        f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:1.55rem; "
+        f"font-weight:700; line-height:1.05; color:#003366; letter-spacing:-0.5px;\">{kpi}</div>"
+        f"<div style=\"font-size:11.5px; color:#6a6a6a; margin-top:4px;\">{sub}</div>"
+        f"{_ctx}"
+        f"</div>"
+    )
 
-with st.expander(
+
+def _no_data_card(eyebrow):
+    return (
+        f"<div style=\"border-top:2px solid #c0c0c0; padding:14px 0;\">"
+        f"<div style=\"font-family:'Archivo Narrow',sans-serif; font-size:0.78rem; "
+        f"font-weight:700; text-transform:uppercase; color:#6a6a6a; opacity:0.7;\">{eyebrow}</div>"
+        f"<div style=\"font-size:13px; color:#999; font-style:italic; margin-top:8px;\">—</div>"
+        f"</div>"
+    )
+
+
+row1 = st.columns(3, gap="medium")
+row2 = st.columns(3, gap="medium")
+
+# ── Card 1: PIB i VAB ─────────────────────────────────────────
+with row1[0]:
+    _lbl = "PIB i VAB" if _ca else "PIB y VAB"
+
+    if (not df_pib.empty
+            and "vab_cnae47_corrents" in df_pib.columns):
+        _rows = df_pib.dropna(subset=["vab_cnae47_corrents"]).sort_values("any")
+        if len(_rows) >= 2:
+            _last = _rows.iloc[-1]
+            _kpi = f"{fnum(_last['vab_cnae47_corrents'])} M€"
+            _sub = (f"VAB nominal {int(_last['any'])}" if not _ca
+                    else f"VAB nominal {int(_last['any'])}")
+            _ctx = ("Aporta el ~4,8% del PIB. Espanya supera la mitjana de la UE‑27 per novè any consecutiu."
+                    if _ca else
+                    "Aporta el ~4,8% del PIB. España supera la media de la UE‑27 por noveno año consecutivo.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = (_rows["vab_cnae47_constants"].dropna().tolist()
+                           if "vab_cnae47_constants" in _rows.columns
+                           and _rows["vab_cnae47_constants"].notna().any()
+                           else _rows["vab_cnae47_corrents"].tolist())
+            if len(_spark_vals) >= 2:
+                st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                                config={"displayModeBar": False})
+            st.page_link("pages/1_PIB_i_VAB.py",
+                         label=("Evolució i pes sobre PIB →" if _ca
+                                else "Evolución y peso sobre PIB →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ── Card 2: Empreses ──────────────────────────────────────────
+with row1[1]:
+    _lbl = "Empreses" if _ca else "Empresas"
+
+    if not df_empreses.empty:
+        _esp = df_empreses[df_empreses["territori"] == "espanya"].sort_values("any")
+        if len(_esp) >= 2:
+            _last = _esp.iloc[-1]
+            _kpi = fnum(int(_last["empreses"]))
+            _sub = (f"Empreses CNAE 47 · {int(_last['any'])}" if _ca
+                    else f"Empresas CNAE 47 · {int(_last['any'])}")
+            _ctx = ("La concentració accelera: les grans cadenes guanyen quota als establiments independents."
+                    if _ca else
+                    "La concentración acelera: las grandes cadenas ganan cuota a los establecimientos independientes.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = _esp["empreses"].tolist()
+            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.page_link("pages/2_Empreses.py",
+                         label=("Densitat per CCAA →" if _ca
+                                else "Densidad por CCAA →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ── Card 3: Productivitat ─────────────────────────────────────
+with row1[2]:
+    _lbl = "Productivitat" if _ca else "Productividad"
+
+    if (not df_prod.empty
+            and "productivitat_va_hora" in df_prod.columns):
+        _rows = df_prod.dropna(subset=["productivitat_va_hora"]).sort_values("any")
+        if len(_rows) >= 2:
+            _last = _rows.iloc[-1]
+            _kpi = f"{fnum(_last['productivitat_va_hora'], 1)} €/h"
+            _sub = (f"VA per hora · {int(_last['any'])}" if _ca
+                    else f"VA por hora · {int(_last['any'])}")
+            _ctx = ("Per sota del promig industrial. Supermercats tripliquen la productivitat del comerç especialitzat."
+                    if _ca else
+                    "Por debajo del promedio industrial. Los supermercados triplican la productividad del comercio especializado.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = _rows["productivitat_va_hora"].tolist()
+            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.page_link("pages/4_Productivitat.py",
+                         label=("Quota salarial i costos →" if _ca
+                                else "Cuota salarial y costes →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ── Card 4: E-commerce ────────────────────────────────────────
+with row2[0]:
+    _lbl = "E-commerce"
+
+    if (not df_ecommerce.empty
+            and "ecommerce_cnae47_eur" in df_ecommerce.columns):
+        _rows = df_ecommerce.dropna(subset=["ecommerce_cnae47_eur"]).sort_values("any")
+        if len(_rows) >= 2:
+            _last = _rows.iloc[-1]
+            _kpi = f"{fnum(_last['ecommerce_cnae47_eur']/1e9, 1)} Md€"
+            _sub = (f"Volum CNAE 47 · {int(_last['any'])}" if _ca
+                    else f"Volumen CNAE 47 · {int(_last['any'])}")
+            _ctx = ("Creixement de doble dígit. Ha passat del 4,9% al 12,4% de la xifra de negoci del sector en una dècada."
+                    if _ca else
+                    "Crecimiento de doble dígito. Ha pasado del 4,9% al 12,4% de la cifra de negocio del sector en una década.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = _rows["ecommerce_cnae47_eur"].tolist()
+            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.page_link("pages/5_Ecommerce.py",
+                         label=("Pes online sobre total →" if _ca
+                                else "Peso online sobre total →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ── Card 5: Territori ─────────────────────────────────────────
+with row2[1]:
+    _lbl = "Territori" if _ca else "Territorio"
+
+    if (not df_territori.empty
+            and "pes_cnae47_pib" in df_territori.columns):
+        _terr = df_territori[df_territori["territori"] != "espanya"].dropna(subset=["pes_cnae47_pib"])
+        if not _terr.empty:
+            _yr = int(_terr["any"].max())
+            _yr_data = _terr[_terr["any"] == _yr]
+            _top = _yr_data.nlargest(1, "pes_cnae47_pib").iloc[0]
+            _bot = _yr_data.nsmallest(1, "pes_cnae47_pib").iloc[0]
+            _kpi = f"{fpct(_top['pes_cnae47_pib']*100, 1, sign=False)} – {fpct(_bot['pes_cnae47_pib']*100, 1, sign=False)}"
+            _sub = (f"Pes s/ PIB · rang CCAA · {_yr}" if _ca
+                    else f"Peso s/ PIB · rango CCAA · {_yr}")
+            _ctx = ("Balears lidera; Astúries tanca. La bretxa territorial s'ha eixamplat respecte la dècada anterior."
+                    if _ca else
+                    "Baleares lidera; Asturias cierra. La brecha territorial se ha ampliado respecto a la década anterior.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = _yr_data.sort_values("pes_cnae47_pib")["pes_cnae47_pib"].tolist()
+            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.page_link("pages/6_Territori.py",
+                         label=("Mapa i estimació per CCAA →" if _ca
+                                else "Mapa y estimación por CCAA →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ── Card 6: Europa ────────────────────────────────────────────
+with row2[2]:
+    _lbl = "Europa"
+
+    if not df_europa.empty and "pes_cnae47" in df_europa.columns:
+        _es = df_europa[df_europa["pais_codi"] == "ES"].sort_values("any")
+        _eu = df_europa[df_europa["pais_codi"] == "EU27_2020"].sort_values("any")
+        if not _es.empty and not _eu.empty:
+            _es_last = _es.iloc[-1]
+            _eu_last = _eu.iloc[-1]
+            _delta = (_es_last["pes_cnae47"] - _eu_last["pes_cnae47"]) * 100
+            _yr = int(_es_last["any"])
+            _kpi = f"{fpct(_delta, 2)}"
+            _sub = (f"ES vs UE-27 · pes s/ PIB · {_yr}" if _ca
+                    else f"ES vs UE-27 · peso s/ PIB · {_yr}")
+            _ctx = ("Espanya supera la mitjana europea 9 dels últims 10 anys. La bretxa creix per sobre la UE."
+                    if _ca else
+                    "España supera la media europea 9 de los últimos 10 años. La brecha crece por encima de la UE.")
+            st.markdown(_card_header(_lbl, _kpi, _sub, _ctx), unsafe_allow_html=True)
+            _spark_vals = [v*100 for v in _es["pes_cnae47"].tolist()]
+            st.plotly_chart(_spark(_spark_vals), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.page_link("pages/7_Comparativa_Europa.py",
+                         label=("Comparativa amb la UE-27 →" if _ca
+                                else "Comparativa con la UE-27 →"))
+        else:
+            st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+    else:
+        st.markdown(_no_data_card(_lbl), unsafe_allow_html=True)
+
+# ─── SOBRE L'OBSERVATORI (expander discret) ───────────────────
+
+st.markdown("<div style='margin-top:28px;'></div>", unsafe_allow_html=True)
+
+with highlight_expander(
     "Què és l'Observatori del Comerç" if _ca else "Qué es el Observatorio del Comercio",
     expanded=False,
 ):
     if _ca:
         st.markdown(
             "El **comerç al detall** (CNAE 47) és un dels pilars de l'economia "
-            "espanyola: dona feina a més de **2 milions** de persones, genera uns "
-            "**72.000 M€** de valor afegit i articula el consum de les famílies "
+            "espanyola: dona feina a més d'**1,7 milions** de persones, genera uns "
+            "**70.000 M EUR** de valor afegit i articula el consum de les famílies "
             "a tot el territori. Aquest observatori ofereix una **radiografia "
             "actualitzada** del sector a partir de dades oficials (INE, Eurostat, "
-            "CNMC), organitzada en vuit dimensions. Les sèries anuals s'actualitzen "
-            "de forma **trimestral automàtica** i el pols diari i mensual es "
-            "refresca de continu."
+            "CNMC), organitzada en sis dimensions: PIB i VAB, empreses, productivitat, "
+            "e-commerce, territori i Europa. Les dades s'actualitzen de forma "
+            "**trimestral automàtica** (gener, abril, juliol, octubre) i el Pols "
+            "diari/mensual es refresca de continu."
         )
     else:
         st.markdown(
             "El **comercio minorista** (CNAE 47) es uno de los pilares de la economía "
-            "española: da empleo a más de **2 millones** de personas, genera unos "
-            "**72.000 M€** de valor añadido y articula el consumo de las familias "
+            "española: da empleo a más de **1,7 millones** de personas, genera unos "
+            "**70.000 M EUR** de valor añadido y articula el consumo de las familias "
             "en todo el territorio. Este observatorio ofrece una **radiografía "
             "actualizada** del sector a partir de datos oficiales (INE, Eurostat, "
-            "CNMC), organizada en ocho dimensiones. Las series anuales se actualizan "
-            "de forma **trimestral automática** y el pulso diario y mensual se "
-            "refresca de continuo."
+            "CNMC), organizada en seis dimensiones: PIB y VAB, empresas, productividad, "
+            "e-commerce, territorio y Europa. Los datos se actualizan de forma "
+            "**trimestral automática** (enero, abril, julio, octubre) y el Pulso "
+            "diario/mensual se refresca de continuo."
         )
 
-# ─── BUTLLETÍ ──────────────────────────────────────────────────
+# ─── BUTLLETI ─────────────────────────────────────────────────
 
 st.divider()
 newsletter_form(st.session_state.lang)
 
-# ─── META ──────────────────────────────────────────────────────
+# ─── SIGNATURA JBJ ─────────────────────────────────────────────
+
+st.markdown(
+    """
+    <div style="text-align:right; color:#888; font-size:12px;
+                font-family:'Inter',sans-serif; margin-top:12px;">
+        Observatorio del Comercio · J3B3 Consulting
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ─── META ─────────────────────────────────────────────────────
 
 page_meta("INE, Eurostat, CNMC", st.session_state.lang)
