@@ -12,12 +12,15 @@ import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source,
-                   page_meta, fnum, fpct, apply_layout, highlight_expander,
-                   format_mes_any,
-                   PURPLE, RED, GREEN, GRAY_DARK)
+from style import (inject_css, inject_premium_page_css, setup_lang, page_header,
+                   insight, source, page_meta, fnum, fpct, apply_layout,
+                   highlight_expander, format_mes_any,
+                   kicker, action_title, deck, key_takeaways, exhibit_header,
+                   NAVY, OCRE_DEEP, RED, G1_P, G2_P, GRAY_DARK,
+                   freshness_badge)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -57,26 +60,8 @@ def load_icm_distribucion():
 df = load_icm()
 df_distrib = load_icm_distribucion()
 
-st.title("Pols mensual del comerç" if _ca else "Pulso mensual del comercio")
-
-if _ca:
-    intro(
-        "L'ICM (Índices de Comercio al por Menor) és la sèrie oficial mensual "
-        "de l'INE que recull la <strong>cifra de negoci</strong> i "
-        "l'<strong>ocupació</strong> del comerç al detall espanyol, en valors "
-        "índex base 2021=100. Permet seguir el cicle del consum amb retard "
-        "de ~45 dies. Aquesta pàgina mostra Espanya, branques principals i "
-        "Comunitats Autònomes."
-    )
-else:
-    intro(
-        "El ICM (Índices de Comercio al por Menor) es la serie oficial mensual "
-        "del INE que recoge la <strong>cifra de negocio</strong> y el "
-        "<strong>empleo</strong> del comercio minorista español, en valores "
-        "índice base 2021=100. Permite seguir el ciclo del consumo con retraso "
-        "de ~45 días. Esta página muestra España, ramas principales y "
-        "Comunidades Autónomas."
-    )
+kicker("Pols mensual del consum · ICM (INE)" if _ca
+       else "Pulso mensual del consumo · ICM (INE)")
 
 if df.empty:
     st.warning(
@@ -153,6 +138,69 @@ _last_real_var = df_nac_real[df_nac_real["indicador"] == "var_anual"].sort_value
 _last_nom_var = df_nac_nom[df_nac_nom["indicador"] == "var_anual"].sort_values("data")
 _last_ocu_var = df_nac_ocu[df_nac_ocu["indicador"] == "var_anual"].sort_values("data")
 
+# ─── Tesi del titular: última variació real, mitjana 12m, efecte preu ──
+_real_v = float(_last_real_var.iloc[-1]["valor"]) if not _last_real_var.empty else None
+_nom_v = float(_last_nom_var.iloc[-1]["valor"]) if not _last_nom_var.empty else None
+_real_dt = _last_real_var.iloc[-1]["data"] if not _last_real_var.empty else None
+_avg12 = (df_nac_real[df_nac_real["indicador"] == "var_anual"]["valor"]
+          .tail(12).mean())
+_gap = (_nom_v - _real_v) if (_real_v is not None and _nom_v is not None) else None
+_mes_titol = format_mes_any(_real_dt, st.session_state.lang) if _real_dt is not None else ""
+
+if _real_v is not None:
+    _puja = _real_v > 0
+    if _ca:
+        _verb = "creix" if _puja else ("cau" if _real_v < 0 else "s'estabilitza")
+        action_title(
+            f"El consum real {_verb} un {fnum(abs(_real_v), 1)}% interanual"
+            if _real_v != 0 else "El consum real s'estabilitza")
+        deck(f"Cifra de negoci del comerç al detall a preus constants, "
+             f"{_mes_titol}. La bretxa amb el nominal és l'efecte preu.")
+    else:
+        _verb = "crece" if _puja else ("cae" if _real_v < 0 else "se estabiliza")
+        action_title(
+            f"El consumo real {_verb} un {fnum(abs(_real_v), 1)}% interanual"
+            if _real_v != 0 else "El consumo real se estabiliza")
+        deck(f"Cifra de negocio del comercio minorista a precios constantes, "
+             f"{_mes_titol}. La brecha con el nominal es el efecto precio.")
+else:
+    action_title("Pols mensual del comerç" if _ca else "Pulso mensual del comercio")
+    deck("Sèrie oficial mensual de l'INE (ICM), base 2021=100." if _ca
+         else "Serie oficial mensual del INE (ICM), base 2021=100.")
+
+if _real_v is not None:
+    if _ca:
+        _tk = [
+            f"Al <b>{_mes_titol}</b>, la cifra de negoci real del comerç al "
+            f"detall {'creix' if _puja else ('cau' if _real_v < 0 else 'es manté')} "
+            f"un <b>{fpct(_real_v, 1)}</b> respecte al mateix mes de l'any anterior.",
+            f"En els darrers 12 mesos, la variació anual mitjana s'ha situat al "
+            f"<b>{fpct(_avg12, 1)}</b>.",
+        ]
+        if _gap is not None:
+            _tk.append(
+                f"El nominal varia un <b>{fpct(_nom_v, 1)}</b>: la bretxa de "
+                f"<b>{fnum(abs(_gap), 1)} punts</b> amb el real és, essencialment, "
+                f"l'efecte preu.")
+        _tk_lbl = "Conclusions clau"
+    else:
+        _tk = [
+            f"En <b>{_mes_titol}</b>, la cifra de negocio real del comercio "
+            f"minorista {'crece' if _puja else ('cae' if _real_v < 0 else 'se estabiliza')} "
+            f"un <b>{fpct(_real_v, 1)}</b> respecto al mismo mes del año anterior.",
+            f"En los últimos 12 meses, la variación anual media se ha situado en "
+            f"el <b>{fpct(_avg12, 1)}</b>.",
+        ]
+        if _gap is not None:
+            _tk.append(
+                f"El nominal varía un <b>{fpct(_nom_v, 1)}</b>: la brecha de "
+                f"<b>{fnum(abs(_gap), 1)} puntos</b> con el real es, esencialmente, "
+                f"el efecto precio.")
+        _tk_lbl = "Conclusiones clave"
+    key_takeaways(_tk, label=_tk_lbl)
+
+freshness_badge(["icm", "icm_distribucion"], st.session_state.lang)
+
 if not _last_real_idx.empty:
     last_data = _last_real_idx.iloc[-1]["data"]
     st.caption(
@@ -198,7 +246,16 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 with tab1:
-    st.header("Evolució nacional" if _ca else "Evolución nacional")
+    if _ca:
+        exhibit_header(
+            1, "Real i nominal divergeixen quan els preus es mouen",
+            note="Variació anual de la cifra de negoci. La distància entre "
+                 "les dues línies és l'efecte preu.")
+    else:
+        exhibit_header(
+            1, "Real y nominal divergen cuando los precios se mueven",
+            note="Variación anual de la cifra de negocio. La distancia entre "
+                 "las dos líneas es el efecto precio.")
 
     periodes = {
         ("12 mesos" if _ca else "12 meses"): 12,
@@ -233,7 +290,7 @@ with tab1:
         x=df_serie_real["data"], y=df_serie_real["valor"],
         mode="lines+markers",
         name=("Real (preus constants)" if _ca else "Real (precios constantes)"),
-        line=dict(color=PURPLE, width=2.6),
+        line=dict(color=NAVY, width=2.6),
         marker=dict(size=5),
         customdata=_lbl_real,
         hovertemplate="%{customdata}: <b>%{y:+.1f}%</b><extra></extra>",
@@ -285,8 +342,6 @@ with tab1:
             )
 
 with tab2:
-    st.header("Variació anual per branca" if _ca else "Variación anual por rama")
-
     # Última data disponible amb dades de branques
     _last_dt = df_nac_real["data"].max()
     df_branca = df[(df["ambit"] == "nacional") &
@@ -299,8 +354,23 @@ with tab2:
     df_branca["label"] = df_branca["branca"].map(BRANCA_LBL).fillna(df_branca["branca"])
     df_branca = df_branca.drop_duplicates(subset=["branca"]).sort_values("valor", ascending=True)
 
+    _n_pos = int((df_branca["valor"] >= 0).sum())
+    _n_tot = len(df_branca)
+    if _ca:
+        exhibit_header(
+            2, f"{_n_pos} de {_n_tot} branques creixen el darrer mes" if _n_tot
+               else "Variació anual per branca",
+            note="Variació interanual de la cifra de negoci real per branca "
+                 "CNAE 47, últim mes disponible.")
+    else:
+        exhibit_header(
+            2, f"{_n_pos} de {_n_tot} ramas crecen en el último mes" if _n_tot
+               else "Variación anual por rama",
+            note="Variación interanual de la cifra de negocio real por rama "
+                 "CNAE 47, último mes disponible.")
+
     if not df_branca.empty:
-        colors_br = [GREEN if v >= 0 else RED for v in df_branca["valor"]]
+        colors_br = [NAVY if v >= 0 else RED for v in df_branca["valor"]]
         fig_br = go.Figure()
         fig_br.add_trace(go.Bar(
             y=df_branca["label"], x=df_branca["valor"],
@@ -324,8 +394,6 @@ with tab2:
                f"INE, ICM. Cifra de negocio a precios constantes — {format_mes_any(_last_dt, 'es')}")
 
 with tab3:
-    st.header("Variació anual per CCAA" if _ca else "Variación anual por CCAA")
-
     df_ccaa = df[(df["ambit"] != "nacional") &
                  (df["tipus"] == "real") &
                  (df["indicador"] == "var_anual") &
@@ -333,8 +401,23 @@ with tab3:
                  (df["data"] == _last_dt)].copy()
     df_ccaa = df_ccaa.drop_duplicates(subset=["ambit"]).sort_values("valor", ascending=True)
 
+    _n_pos_cc = int((df_ccaa["valor"] >= 0).sum())
+    _n_tot_cc = len(df_ccaa)
+    if _ca:
+        exhibit_header(
+            3, f"El consum real creix a {_n_pos_cc} de {_n_tot_cc} comunitats"
+               if _n_tot_cc else "Variació anual per CCAA",
+            note="Variació interanual de la cifra de negoci real per comunitat "
+                 "autònoma, últim mes disponible.")
+    else:
+        exhibit_header(
+            3, f"El consumo real crece en {_n_pos_cc} de {_n_tot_cc} comunidades"
+               if _n_tot_cc else "Variación anual por CCAA",
+            note="Variación interanual de la cifra de negocio real por comunidad "
+                 "autónoma, último mes disponible.")
+
     if not df_ccaa.empty:
-        colors_cc = [GREEN if v >= 0 else RED for v in df_ccaa["valor"]]
+        colors_cc = [NAVY if v >= 0 else RED for v in df_ccaa["valor"]]
         fig_cc = go.Figure()
         fig_cc.add_trace(go.Bar(
             y=df_ccaa["ambit"], x=df_ccaa["valor"],
@@ -358,8 +441,16 @@ with tab3:
                f"INE, ICM por CCAA. Cifra de negocio a precios constantes ({_branca_font_lbl}) — {format_mes_any(_last_dt, 'es')}")
 
 with tab4:
-    st.header("Variació anual per format de venda" if _ca
-              else "Variación anual por formato de venta")
+    if _ca:
+        exhibit_header(
+            4, "La bretxa entre formats marca el ritme de la concentració",
+            note="Variació anual de la cifra de negoci real per modo de "
+                 "distribució comercial.")
+    else:
+        exhibit_header(
+            4, "La brecha entre formatos marca el ritmo de la concentración",
+            note="Variación anual de la cifra de negocio real por modo de "
+                 "distribución comercial.")
 
     if _ca:
         st.markdown(
@@ -427,10 +518,10 @@ with tab4:
 
         fig_d = go.Figure()
         _colors_d = {
-            "Empresas unilocalizadas": GRAY_DARK,
-            "Pequeñas cadenas": GREEN,
-            "Grandes cadenas": PURPLE,
-            "Grandes Superficies": RED,
+            "Empresas unilocalizadas": OCRE_DEEP,
+            "Pequeñas cadenas": G1_P,
+            "Grandes cadenas": NAVY,
+            "Grandes Superficies": G2_P,
         }
         for m in _modo_order:
             _serie = _ds_plot[_ds_plot["modo"] == m].sort_values("data")
@@ -592,7 +683,7 @@ with highlight_expander(_lbl_ocu_exp, expanded=False):
     fig_ocu.add_trace(go.Scatter(
         x=df_ocu_serie["data"], y=df_ocu_serie["valor"],
         mode="lines+markers",
-        line=dict(color=PURPLE, width=2.6),
+        line=dict(color=NAVY, width=2.6),
         marker=dict(size=5),
         name="",
         customdata=_lbl_ocu,

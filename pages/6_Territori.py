@@ -1,43 +1,26 @@
-"""Pàgina 6: Territori — Magnituds del CNAE 47 per CCAA"""
+"""Pàgina 6: Territori — Magnituds del CNAE 47 per CCAA (disseny premium)"""
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import json
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   load_geojson_spain_ccaa, canaries_inset_layers,
-                   fnum, fpct, apply_layout, highlight_expander,
-                   PURPLE, PURPLE_LIGHT, RED, PALETTE)
+from style import (
+    inject_css, inject_premium_page_css, setup_lang, page_header,
+    insight, source, page_meta,
+    fnum, fpct, apply_layout, highlight_expander,
+    kicker, action_title, deck, key_takeaways, exhibit_header,
+    freshness_badge,
+    NAVY, OCRE, G1_P, G2_P,
+    load_geojson_spain_ccaa, canaries_inset_layers,
+)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 _ca = st.session_state.lang == "ca"
 
-st.title("Territori" if _ca else "Territorio")
-
-if _ca:
-    intro(
-        "La Comptabilitat Regional de l'INE no desglossa el CNAE 47 per comunitats autonomes. "
-        "Per estimar el VAB del comerç al detall per CCAA, combinem dues fonts: "
-        "la <strong>comptabilitat regional d'Eurostat</strong> (VAB de la secció G-I: comerç, transport i hostaleria) "
-        "i la <strong>xifra de negoci per CCAA</strong> de l'Enquesta Estructural d'Empreses de l'INE. "
-        "El metode hibrid distribueix el VAB nacional del CNAE 47 entre CCAA ponderant "
-        "les quotes regionals de G-I (top-down) amb les quotes de facturacio (bottom-up), "
-        "garantint que la suma coincideixi amb el total nacional d'Eurostat."
-    )
-else:
-    intro(
-        "La Contabilidad Regional del INE no desglosa el CNAE 47 por comunidades autonomas. "
-        "Para estimar el VAB del comercio minorista por CCAA, combinamos dos fuentes: "
-        "la <strong>contabilidad regional de Eurostat</strong> (VAB de la sección G-I: comercio, transporte y hosteleria) "
-        "y la <strong>cifra de negocio por CCAA</strong> de la Encuesta Estructural de Empresas del INE. "
-        "El metodo hibrido distribuye el VAB nacional del CNAE 47 entre CCAA ponderando "
-        "las cuotas regionales de G-I (top-down) con las cuotas de facturacion (bottom-up), "
-        "garantizando que la suma coincida con el total nacional de Eurostat."
-    )
 
 @st.cache_data(ttl=3600)
 def load_data():
@@ -46,11 +29,16 @@ def load_data():
         return pd.read_csv(p)
     return pd.DataFrame()
 
+
 @st.cache_data
 def load_geojson():
     return load_geojson_spain_ccaa(with_canaries_inset=True)
 
+
 df_eee = load_data()
+
+kicker("Anàlisi territorial · Comerç al detall per CCAA" if _ca
+       else "Análisis territorial · Comercio minorista por CCAA")
 
 if df_eee.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
@@ -66,6 +54,111 @@ else:
     anys = _tots_anys
 if not anys:
     anys = _tots_anys
+
+# ─── Càlculs per a header i takeaways (últim any disponible) ──
+_ly = int(max(anys))
+
+_d_hdr = df_ccaa[df_ccaa["any"] == _ly].dropna(subset=["pes_cnae47_pib"]).copy()
+_d_hdr["_pct"] = _d_hdr["pes_cnae47_pib"] * 100
+_d_hdr = _d_hdr.sort_values("_pct")
+_hdr_top = _d_hdr.iloc[-1]
+_hdr_bot = _d_hdr.iloc[0]
+_hdr_ratio = _hdr_top["_pct"] / _hdr_bot["_pct"] if _hdr_bot["_pct"] else 0
+
+_esp_hdr = df_esp[df_esp["any"] == _ly]
+_esp_pes_hdr = None
+if not _esp_hdr.empty and pd.notna(_esp_hdr.iloc[0].get("pes_cnae47_pib")):
+    _esp_pes_hdr = _esp_hdr.iloc[0]["pes_cnae47_pib"] * 100
+
+# Productivitat per al takeaway
+_dp_hdr = df_ccaa[df_ccaa["any"] == _ly].copy()
+_prod_top = _prod_bot = _prod_ratio = None
+if "xifra_negoci" in _dp_hdr.columns and "personal_ocupat" in _dp_hdr.columns:
+    _dp_hdr["_prod"] = _dp_hdr["xifra_negoci"] / _dp_hdr["personal_ocupat"]
+    _dp_hdr = _dp_hdr.dropna(subset=["_prod"]).sort_values("_prod")
+    if not _dp_hdr.empty:
+        _prod_top = _dp_hdr.iloc[-1]
+        _prod_bot = _dp_hdr.iloc[0]
+        _prod_ratio = _prod_top["_prod"] / _prod_bot["_prod"]
+
+# ─── HEADER ──────────────────────────────────────────────────
+if _ca:
+    action_title(
+        f"El pes del comerç sobre el PIB regional oscil·la entre el "
+        f"{fpct(_hdr_top['_pct'], 1, sign=False)} i el {fpct(_hdr_bot['_pct'], 1, sign=False)}")
+    deck("El comerç al detall pesa molt més a les economies orientades al consum "
+         "i al turisme que a les industrials o de serveis avançats.")
+else:
+    action_title(
+        f"El peso del comercio sobre el PIB regional oscila entre el "
+        f"{fpct(_hdr_top['_pct'], 1, sign=False)} y el {fpct(_hdr_bot['_pct'], 1, sign=False)}")
+    deck("El comercio minorista pesa mucho más en las economías orientadas al "
+         "consumo y al turismo que en las industriales o de servicios avanzados.")
+
+if _ca:
+    _takeaways = [
+        f"El {_ly}, <b>{_hdr_top['territori']}</b> destina el "
+        f"<b>{fpct(_hdr_top['_pct'], 1, sign=False)}</b> del seu PIB al comerç al detall, "
+        f"<b>{fnum(_hdr_ratio, 1)}</b> vegades el de <b>{_hdr_bot['territori']}</b> "
+        f"({fpct(_hdr_bot['_pct'], 1, sign=False)}).",
+    ]
+    if _esp_pes_hdr is not None:
+        _above = int((_d_hdr["_pct"] >= _esp_pes_hdr).sum())
+        _below = int((_d_hdr["_pct"] < _esp_pes_hdr).sum())
+        _takeaways.append(
+            f"<b>{_above}</b> comunitats superen la mitjana espanyola "
+            f"(<b>{fpct(_esp_pes_hdr, 1, sign=False)}</b> del PIB) i <b>{_below}</b> hi queden per sota.")
+    if _prod_ratio is not None:
+        _takeaways.append(
+            f"La facturació per ocupat varia <b>{fnum(_prod_ratio, 1)}</b> vegades entre "
+            f"<b>{_prod_top['territori']}</b> ({fnum(_prod_top['_prod']/1000, 0)} k EUR) "
+            f"i <b>{_prod_bot['territori']}</b> ({fnum(_prod_bot['_prod']/1000, 0)} k EUR).")
+    _tk_label = "Conclusions clau"
+else:
+    _takeaways = [
+        f"En {_ly}, <b>{_hdr_top['territori']}</b> destina el "
+        f"<b>{fpct(_hdr_top['_pct'], 1, sign=False)}</b> de su PIB al comercio minorista, "
+        f"<b>{fnum(_hdr_ratio, 1)}</b> veces el de <b>{_hdr_bot['territori']}</b> "
+        f"({fpct(_hdr_bot['_pct'], 1, sign=False)}).",
+    ]
+    if _esp_pes_hdr is not None:
+        _above = int((_d_hdr["_pct"] >= _esp_pes_hdr).sum())
+        _below = int((_d_hdr["_pct"] < _esp_pes_hdr).sum())
+        _takeaways.append(
+            f"<b>{_above}</b> comunidades superan la media española "
+            f"(<b>{fpct(_esp_pes_hdr, 1, sign=False)}</b> del PIB) y <b>{_below}</b> quedan por debajo.")
+    if _prod_ratio is not None:
+        _takeaways.append(
+            f"La facturación por ocupado varía <b>{fnum(_prod_ratio, 1)}</b> veces entre "
+            f"<b>{_prod_top['territori']}</b> ({fnum(_prod_top['_prod']/1000, 0)} k EUR) "
+            f"y <b>{_prod_bot['territori']}</b> ({fnum(_prod_bot['_prod']/1000, 0)} k EUR).")
+    _tk_label = "Conclusiones clave"
+
+key_takeaways(_takeaways, label=_tk_label)
+freshness_badge("eee_ccaa", st.session_state.lang)
+
+# ─── Nota metodològica (mètode híbrid top-down + bottom-up) ──
+_lbl_metode = ("Nota metodològica: com s'estima el VAB del comerç per CCAA"
+               if _ca else "Nota metodológica: cómo se estima el VAB del comercio por CCAA")
+with highlight_expander(_lbl_metode, expanded=False):
+    if _ca:
+        st.markdown(
+            "La Comptabilitat Regional de l'INE no desglossa el CNAE 47 per comunitats autònomes. "
+            "Per estimar el VAB del comerç al detall per CCAA combinem dues fonts: "
+            "la **comptabilitat regional d'Eurostat** (VAB de la secció G-I: comerç, transport i hostaleria) "
+            "i la **xifra de negoci per CCAA** de l'Enquesta Estructural d'Empreses de l'INE. "
+            "El mètode híbrid distribueix el VAB nacional del CNAE 47 entre CCAA ponderant "
+            "les quotes regionals de G-I (top-down) amb les quotes de facturació (bottom-up), "
+            "garantint que la suma coincideixi amb el total nacional d'Eurostat.")
+    else:
+        st.markdown(
+            "La Contabilidad Regional del INE no desglosa el CNAE 47 por comunidades autónomas. "
+            "Para estimar el VAB del comercio minorista por CCAA combinamos dos fuentes: "
+            "la **contabilidad regional de Eurostat** (VAB de la sección G-I: comercio, transporte y hostelería) "
+            "y la **cifra de negocio por CCAA** de la Encuesta Estructural de Empresas del INE. "
+            "El método híbrido distribuye el VAB nacional del CNAE 47 entre CCAA ponderando "
+            "las cuotas regionales de G-I (top-down) con las cuotas de facturación (bottom-up), "
+            "garantizando que la suma coincida con el total nacional de Eurostat.")
 
 # ─── Selector d'any ──────────────────────────────────────────
 
@@ -94,11 +187,7 @@ if not d_yr_esp.empty:
     if "locals" in row and pd.notna(row.get("locals")):
         c4.metric("Locals" if _ca else "Locales", fnum(row["locals"]))
 
-# ─── Pes del CNAE 47 sobre el PIB per CCAA ──────────────────
-
-_lbl_pes = ("Pes del comerç al detall sobre el PIB de cada CCAA" if _ca
-            else "Peso del comercio minorista sobre el PIB de cada CCAA")
-st.subheader(f"{_lbl_pes} ({int(any_sel)})")
+# ─── Exhibit 1: pes del CNAE 47 sobre el PIB per CCAA ────────
 
 if "pes_cnae47_pib" in df_ccaa.columns:
     d_pes = df_ccaa[df_ccaa["any"] == any_sel].dropna(subset=["pes_cnae47_pib"]).copy()
@@ -112,12 +201,28 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         if not esp_pes_row.empty and pd.notna(esp_pes_row.iloc[0].get("pes_cnae47_pib")):
             esp_pes = esp_pes_row.iloc[0]["pes_cnae47_pib"] * 100
 
+        _ex1_top = d_pes.iloc[-1]
+        if _ca:
+            exhibit_header(
+                1, f"{_ex1_top['territori']} encapçala el pes del comerç sobre el PIB "
+                   f"({fpct(_ex1_top['_pct'], 1, sign=False)}) el {int(any_sel)}",
+                note="Les barres navy marquen comunitats per sobre de la mitjana espanyola; "
+                     "les clares, per sota.",
+            )
+        else:
+            exhibit_header(
+                1, f"{_ex1_top['territori']} encabeza el peso del comercio sobre el PIB "
+                   f"({fpct(_ex1_top['_pct'], 1, sign=False)}) en {int(any_sel)}",
+                note="Las barras navy marcan comunidades por encima de la media española; "
+                     "las claras, por debajo.",
+            )
+
         colors_pes = []
         for _, r in d_pes.iterrows():
             if esp_pes is not None and r["_pct"] >= esp_pes:
-                colors_pes.append(PURPLE)
+                colors_pes.append(NAVY)
             else:
-                colors_pes.append(PURPLE_LIGHT)
+                colors_pes.append(G2_P)
 
         fig_pes = go.Figure()
         fig_pes.add_trace(go.Bar(
@@ -126,13 +231,13 @@ if "pes_cnae47_pib" in df_ccaa.columns:
             marker_color=colors_pes,
             text=[fpct(v, 1, sign=False) for v in d_pes["_pct"]],
             textposition="outside",
-            textfont=dict(size=11),
+            textfont=dict(size=11, color=G1_P),
         ))
 
         if esp_pes is not None:
             fig_pes.add_vline(
-                x=esp_pes, line_dash="dash", line_color=RED, line_width=2,
-                annotation_text=f"{'Espanya' if _ca else 'Espana'}: {fpct(esp_pes, 1, sign=False)}",
+                x=esp_pes, line_dash="dash", line_color=OCRE, line_width=2,
+                annotation_text=f"{'Espanya' if _ca else 'España'}: {fpct(esp_pes, 1, sign=False)}",
                 annotation_position="top right",
             )
 
@@ -200,6 +305,10 @@ if "pes_cnae47_pib" in df_ccaa.columns:
     d_map["_pct"] = d_map["pes_cnae47_pib"] * 100
 
     if not d_map.empty:
+        if _ca:
+            exhibit_header(2, f"Mapa del pes del comerç sobre el PIB per comunitat ({int(any_sel)})")
+        else:
+            exhibit_header(2, f"Mapa del peso del comercio sobre el PIB por comunidad ({int(any_sel)})")
         fig_map = go.Figure(go.Choroplethmap(
             geojson=geojson,
             locations=d_map["territori"],
@@ -236,43 +345,55 @@ if "pes_cnae47_pib" in df_ccaa.columns:
         st.plotly_chart(fig_map, use_container_width=True,
                         config={"scrollZoom": False, "doubleClick": False, "displayModeBar": False})
 
-# ─── Productivitat per CCAA ──────────────────────────────────
+# ─── Exhibit 3: productivitat per CCAA ───────────────────────
 
 d_derived = df_ccaa[df_ccaa["any"] == any_sel].copy()
 if "xifra_negoci" in d_derived.columns and "personal_ocupat" in d_derived.columns:
     d_derived["prod_xn_ocupat"] = d_derived["xifra_negoci"] / d_derived["personal_ocupat"]
-
-    st.subheader(f"{t('eee_ccaa_prod')} ({int(any_sel)})")
     d_prod = d_derived.dropna(subset=["prod_xn_ocupat"]).sort_values("prod_xn_ocupat", ascending=True)
 
-    fig_prod = go.Figure()
-    fig_prod.add_trace(go.Bar(
-        y=d_prod["territori"], x=d_prod["prod_xn_ocupat"] / 1000,
-        orientation="h", marker_color=PURPLE_LIGHT,
-        text=[f"{fnum(v/1000, 1)} k" for v in d_prod["prod_xn_ocupat"]],
-        textposition="outside", textfont=dict(size=11),
-    ))
-
-    esp_row = df_esp[df_esp["any"] == any_sel]
-    if not esp_row.empty and "xifra_negoci" in esp_row.columns:
-        esp_p = esp_row["xifra_negoci"].values[0] / esp_row["personal_ocupat"].values[0]
-        fig_prod.add_vline(
-            x=esp_p / 1000, line_dash="dash", line_color=RED, line_width=2,
-            annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(esp_p/1000, 1)} k",
-            annotation_position="top right",
-        )
-
-    apply_layout(fig_prod,
-        xaxis_title=("Milers EUR / ocupat" if _ca else "Miles EUR / ocupado"),
-        height=max(450, len(d_prod) * 32 + 100),
-        margin=dict(l=200, r=100, t=50, b=50),
-    )
-    st.plotly_chart(fig_prod, use_container_width=True)
-    source("INE, Enquesta Estructural d'Empreses. Calcul propi" if _ca
-           else "INE, Encuesta Estructural de Empresas. Calculo propio")
-
-    # Insight productivitat
     if not d_prod.empty:
+        _pr_top = d_prod.iloc[-1]
+        if _ca:
+            exhibit_header(
+                3, f"{_pr_top['territori']} lidera la facturació per ocupat "
+                   f"({fnum(_pr_top['prod_xn_ocupat']/1000, 0)} k EUR) el {int(any_sel)}",
+                note="La línia ocre marca la mitjana espanyola.",
+            )
+        else:
+            exhibit_header(
+                3, f"{_pr_top['territori']} lidera la facturación por ocupado "
+                   f"({fnum(_pr_top['prod_xn_ocupat']/1000, 0)} k EUR) en {int(any_sel)}",
+                note="La línea ocre marca la media española.",
+            )
+
+        fig_prod = go.Figure()
+        fig_prod.add_trace(go.Bar(
+            y=d_prod["territori"], x=d_prod["prod_xn_ocupat"] / 1000,
+            orientation="h", marker_color=NAVY,
+            text=[f"{fnum(v/1000, 1)} k" for v in d_prod["prod_xn_ocupat"]],
+            textposition="outside", textfont=dict(size=11, color=G1_P),
+        ))
+
+        esp_row = df_esp[df_esp["any"] == any_sel]
+        if not esp_row.empty and "xifra_negoci" in esp_row.columns:
+            esp_p = esp_row["xifra_negoci"].values[0] / esp_row["personal_ocupat"].values[0]
+            fig_prod.add_vline(
+                x=esp_p / 1000, line_dash="dash", line_color=OCRE, line_width=2,
+                annotation_text=f"{'Espanya' if _ca else 'España'}: {fnum(esp_p/1000, 1)} k",
+                annotation_position="top right",
+            )
+
+        apply_layout(fig_prod,
+            xaxis_title=("Milers EUR / ocupat" if _ca else "Miles EUR / ocupado"),
+            height=max(450, len(d_prod) * 32 + 100),
+            margin=dict(l=200, r=100, t=50, b=50),
+        )
+        st.plotly_chart(fig_prod, use_container_width=True)
+        source("INE, Enquesta Estructural d'Empreses. Calcul propi" if _ca
+               else "INE, Encuesta Estructural de Empresas. Calculo propio")
+
+        # Insight productivitat
         _p_top = d_prod.iloc[-1]
         _p_bot = d_prod.iloc[0]
         _p_ratio = _p_top["prod_xn_ocupat"] / _p_bot["prod_xn_ocupat"]

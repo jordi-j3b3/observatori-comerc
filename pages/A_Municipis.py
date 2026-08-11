@@ -7,9 +7,11 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
                    fnum, fpct, apply_layout,
+                   inject_premium_page_css, kicker, action_title, deck,
                    PURPLE, PURPLE_LIGHT, RED, GREEN, ORANGE, PALETTE)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -24,7 +26,12 @@ def load_data():
 
 df = load_data()
 
-st.title("Capacitat comercial municipal" if _ca else "Capacidad comercial municipal")
+kicker("Anàlisi territorial · Escala municipal" if _ca
+       else "Análisis territorial · Escala municipal")
+action_title("La capacitat comercial dels municipis, en un índex comparable" if _ca
+             else "La capacidad comercial de los municipios, en un índice comparable")
+deck("Un índex 0-100 del teixit comerç-serveis per municipi de més de 5.000 habitants, combinant nombre absolut d'empreses i densitat per 1.000 habitants." if _ca
+     else "Un índice 0-100 del tejido comercio-servicios por municipio de más de 5.000 habitantes, combinando número absoluto de empresas y densidad por 1.000 habitantes.")
 
 if _ca:
     intro(
@@ -90,7 +97,7 @@ col1.metric(
     help=("Municipis amb >5.000 habitants i dades completes" if _ca
           else "Municipios con >5.000 habitantes y datos completos"),
 )
-top_mun = df_idx.iloc[df_idx["index_capacitat"].idxmax()]
+top_mun = df_idx.loc[df_idx["index_capacitat"].idxmax()]
 col2.metric(
     "Líder" if _ca else "Líder",
     str(top_mun["municipi"]),

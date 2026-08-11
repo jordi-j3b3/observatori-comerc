@@ -15,14 +15,22 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout, highlight_expander,
-                   PURPLE, PURPLE_LIGHT, RED, BLUE, GREEN, ORANGE, GRAY)
+from style import (
+    inject_css, inject_premium_page_css, setup_lang, page_header,
+    insight, source, page_meta,
+    fnum, fpct, apply_layout, highlight_expander,
+    kicker, action_title, deck, key_takeaways, exhibit_header,
+    premium_plotly_layout, freshness_badge,
+    NAVY, OCRE, OCRE_DEEP, G2_P,
+)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 _ca = st.session_state.lang == "ca"
+
+_CHART_CONFIG = {"displayModeBar": False, "responsive": True}
 
 # ─── Càrrega de dades ──────────────────────────────────────────
 
@@ -52,28 +60,127 @@ def firma_lectura():
         unsafe_allow_html=True,
     )
 
+# ─── Càlculs per a la capçalera (xifres reals) ─────────────────
+
+_hdr_es = _hdr_eu = _hdr_diff = None
+_hdr_year = None
+_hdr_rank = _hdr_n = None
+if not df_europa.empty and "pes_cnae47" in df_europa.columns:
+    _es_ser = df_europa[df_europa["pais_codi"] == "ES"].dropna(subset=["pes_cnae47"])
+    _eu_ser = df_europa[df_europa["pais_codi"] == "EU27_2020"].dropna(subset=["pes_cnae47"])
+    _common = sorted(set(_es_ser["any"]) & set(_eu_ser["any"]))
+    if _common:
+        _hdr_year = int(_common[-1])
+        _hdr_es = _es_ser[_es_ser["any"] == _hdr_year].iloc[0]["pes_cnae47"] * 100
+        _hdr_eu = _eu_ser[_eu_ser["any"] == _hdr_year].iloc[0]["pes_cnae47"] * 100
+        _hdr_diff = _hdr_es - _hdr_eu
+        _y = df_europa[df_europa["any"] == _hdr_year]
+        _ranking = (_y[~_y["pais_codi"].isin(["EU27_2020", "EA20", "EA19"])]
+                    .dropna(subset=["pes_cnae47"]).sort_values("pes_cnae47", ascending=False))
+        _codes = list(_ranking["pais_codi"])
+        if "ES" in _codes:
+            _hdr_rank = _codes.index("ES") + 1
+            _hdr_n = len(_codes)
+
+# Pols mensual: darrer mes amb yoy per a ES
+_hdr_m_period = None
+_hdr_es_idx = _hdr_es_yoy = _hdr_ea_yoy = None
+if not df_mens.empty:
+    _dm = df_mens.copy()
+    _dm["periode"] = _dm["periode"].astype(str)
+    _es_yoy_ser = _dm[(_dm["pais_codi"] == "ES")].dropna(subset=["yoy"])
+    if not _es_yoy_ser.empty:
+        _hdr_m_period = _es_yoy_ser["periode"].max()
+        _row = _es_yoy_ser[_es_yoy_ser["periode"] == _hdr_m_period].iloc[0]
+        _hdr_es_idx = _row["index_volum"]
+        _hdr_es_yoy = _row["yoy"]
+        _ea = _dm[(_dm["pais_codi"] == "EA20") & (_dm["periode"] == _hdr_m_period)]
+        if not _ea.empty:
+            _hdr_ea_yoy = _ea.iloc[0]["yoy"]
+
 # ─── Capçalera ─────────────────────────────────────────────────
 
-st.title("Comparativa Europa" if _ca else "Comparativa Europa")
+kicker("Comparativa europea · Comerç al detall (CNAE 47)" if _ca
+       else "Comparativa europea · Comercio minorista (CNAE 47)")
+
+if _hdr_es is not None and _hdr_diff is not None and _hdr_diff > 0:
+    if _ca:
+        action_title(
+            f"Espanya destina {fpct(_hdr_diff, 1, sign=False)} més del PIB "
+            f"al comerç al detall que la mitjana de la UE"
+        )
+        deck("El comerç pesa més a l'economia espanyola que a l'europea i el seu "
+             "índex de vendes va per davant de l'eurozona. Espanya es destaca per "
+             "facilitar la comparació.")
+    else:
+        action_title(
+            f"España destina {fpct(_hdr_diff, 1, sign=False)} más del PIB "
+            f"al comercio minorista que la media de la UE"
+        )
+        deck("El comercio pesa más en la economía española que en la europea y su "
+             "índice de ventas va por delante de la eurozona. España se destaca para "
+             "facilitar la comparación.")
+else:
+    if _ca:
+        action_title("El comerç espanyol davant l'espill europeu")
+        deck("Pes sobre el PIB, estructura empresarial i pols mensual de vendes, "
+             "comparats amb la UE. Espanya es destaca per facilitar la comparació.")
+    else:
+        action_title("El comercio español ante el espejo europeo")
+        deck("Peso sobre el PIB, estructura empresarial y pulso mensual de ventas, "
+             "comparados con la UE. España se destaca para facilitar la comparación.")
 
 if _ca:
-    intro(
-        "Aquesta pàgina situa el comerç al detall espanyol en el context europeu des de quatre angles: "
-        "(1) <strong>posicionament estructural</strong> per pes sobre el PIB, "
-        "(2) <strong>evolució</strong> del pes per principals economies, "
-        "(3) <strong>dimensió estructural</strong> de la demografia empresarial i "
-        "(4) <strong>pols mensual</strong> del volum de vendes. "
-        "Espanya es destaca en vermell per facilitar la comparació."
+    _takeaways = []
+    if _hdr_es is not None:
+        _takeaways.append(
+            f"El comerç al detall val el <b>{fpct(_hdr_es, 1, sign=False)}</b> del PIB "
+            f"espanyol ({_hdr_year}), <b>{fpct(_hdr_diff, 1)}</b> respecte a la UE-27 "
+            f"({fpct(_hdr_eu, 1, sign=False)})."
+        )
+    if _hdr_rank is not None:
+        _takeaways.append(
+            f"Espanya ocupa la posició <b>#{_hdr_rank} de {_hdr_n}</b> estats membres "
+            f"per pes del comerç sobre el PIB: per sobre de la mitjana, però lluny dels primers."
+        )
+    if _hdr_es_idx is not None:
+        _takeaways.append(
+            f"El volum de vendes minoristes marca <b>{fnum(_hdr_es_idx, 1)}</b> "
+            f"(base 2021=100) al {_hdr_m_period}: el consum ja supera amb claredat el nivell "
+            f"prepandèmic."
+        )
+    _takeaways.append(
+        "L'estructura empresarial espanyola és més atomitzada: domini de microempreses "
+        "i menor mida mitjana que la mitjana europea."
     )
+    _tk_label = "Conclusions clau"
 else:
-    intro(
-        "Esta página sitúa el comercio minorista español en el contexto europeo desde cuatro ángulos: "
-        "(1) <strong>posicionamiento estructural</strong> por peso sobre el PIB, "
-        "(2) <strong>evolución</strong> del peso por principales economías, "
-        "(3) <strong>dimensión estructural</strong> de la demografía empresarial y "
-        "(4) <strong>pulso mensual</strong> del volumen de ventas. "
-        "España se destaca en rojo para facilitar la comparación."
+    _takeaways = []
+    if _hdr_es is not None:
+        _takeaways.append(
+            f"El comercio minorista vale el <b>{fpct(_hdr_es, 1, sign=False)}</b> del PIB "
+            f"español ({_hdr_year}), <b>{fpct(_hdr_diff, 1)}</b> respecto a la UE-27 "
+            f"({fpct(_hdr_eu, 1, sign=False)})."
+        )
+    if _hdr_rank is not None:
+        _takeaways.append(
+            f"España ocupa la posición <b>#{_hdr_rank} de {_hdr_n}</b> estados miembros "
+            f"por peso del comercio sobre el PIB: por encima de la media, pero lejos de los primeros."
+        )
+    if _hdr_es_idx is not None:
+        _takeaways.append(
+            f"El volumen de ventas minoristas marca <b>{fnum(_hdr_es_idx, 1)}</b> "
+            f"(base 2021=100) en {_hdr_m_period}: el consumo ya supera con claridad el nivel "
+            f"prepandémico."
+        )
+    _takeaways.append(
+        "La estructura empresarial española es más atomizada: dominio de microempresas "
+        "y menor tamaño medio que la media europea."
     )
+    _tk_label = "Conclusiones clave"
+
+key_takeaways(_takeaways, label=_tk_label)
+freshness_badge(["europa_vab", "europa_retail_mensual"], st.session_state.lang)
 
 if df_europa.empty and df_mens.empty and df_total.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
@@ -92,8 +199,14 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # TAB 1 — POSICIONAMENT ESTRUCTURAL
 # ═══════════════════════════════════════════════════════════════
 with tab1:
-    st.header("Pes del comerç al detall sobre el PIB" if _ca
-              else "Peso del comercio minorista sobre el PIB")
+    exhibit_header(
+        1,
+        ("El comerç pesa més sobre el PIB espanyol que sobre la mitjana europea" if _ca
+         else "El comercio pesa más sobre el PIB español que sobre la media europea"),
+        note=("Pes del VAB del CNAE 47 sobre el PIB total, per país i any de referència."
+              if _ca else
+              "Peso del VAB del CNAE 47 sobre el PIB total, por país y año de referencia."),
+    )
 
     if not df_europa.empty and "pes_cnae47" in df_europa.columns:
         anys_disp = sorted(df_europa["any"].dropna().unique(), reverse=True)
@@ -134,7 +247,7 @@ with tab1:
 
         # Gràfic horitzontal: pes/PIB per país
         df_sorted = df_year.dropna(subset=["pes_cnae47"]).sort_values("pes_cnae47", ascending=True)
-        colors = [RED if c == "ES" else PURPLE if c == "EU27_2020" else GRAY
+        colors = [NAVY if c == "ES" else OCRE if c == "EU27_2020" else G2_P
                   for c in df_sorted["pais_codi"]]
 
         fig1 = go.Figure()
@@ -210,29 +323,58 @@ with tab1:
 # TAB 2 — EVOLUCIÓ DEL POSICIONAMENT
 # ═══════════════════════════════════════════════════════════════
 with tab2:
-    st.header("Evolució del posicionament" if _ca else "Evolución del posicionamiento")
+    exhibit_header(
+        2,
+        ("Espanya manté el comerç per sobre de la mitjana europea al llarg del temps" if _ca
+         else "España mantiene el comercio por encima de la media europea a lo largo del tiempo"),
+        note=("Evolució del pes del CNAE 47 sobre el PIB per a les principals economies i la UE-27."
+              if _ca else
+              "Evolución del peso del CNAE 47 sobre el PIB para las principales economías y la UE-27."),
+    )
 
     if not df_europa.empty and "pes_cnae47" in df_europa.columns:
-        highlight = ["ES", "DE", "FR", "IT", "PT", "EU27_2020"]
+        highlight = ["DE", "FR", "IT", "PT", "EU27_2020", "ES"]
         colors_map = {
-            "ES": RED, "DE": BLUE, "FR": GREEN,
-            "IT": ORANGE, "PT": "#8E44AD", "EU27_2020": PURPLE,
+            "ES": NAVY, "EU27_2020": OCRE,
+            "DE": G2_P, "FR": G2_P, "IT": G2_P, "PT": G2_P,
         }
 
         fig2 = go.Figure()
         for code in highlight:
             df_c = df_europa[df_europa["pais_codi"] == code].sort_values("any")
-            if not df_c.empty:
+            if df_c.empty:
+                continue
+            _is_focus = code in ("ES", "EU27_2020")
+            fig2.add_trace(go.Scatter(
+                x=df_c["any"], y=df_c["pes_cnae47"] * 100,
+                mode="lines",
+                name=df_c["pais"].iloc[0],
+                line=dict(
+                    color=colors_map.get(code, G2_P),
+                    width=3.4 if code == "ES" else (2.6 if code == "EU27_2020" else 1.6),
+                ),
+            ))
+            # End-marker per a ES i UE-27
+            if _is_focus:
+                _xl = df_c["any"].iloc[-1]
+                _yl = df_c["pes_cnae47"].iloc[-1] * 100
                 fig2.add_trace(go.Scatter(
-                    x=df_c["any"], y=df_c["pes_cnae47"] * 100,
-                    mode="lines+markers",
-                    name=df_c["pais"].iloc[0],
-                    line=dict(color=colors_map.get(code, "#999"), width=2.5),
-                    marker=dict(size=5),
+                    x=[_xl], y=[_yl], mode="markers+text",
+                    showlegend=False, hoverinfo="skip",
+                    text=[f"  {df_c['pais'].iloc[0]}"],
+                    textposition="middle right",
+                    textfont=dict(color=colors_map.get(code), size=12),
+                    marker=dict(color=colors_map.get(code), size=9,
+                                line=dict(color="white", width=2)),
                 ))
 
-        apply_layout(fig2, yaxis_title="% PIB", height=450)
-        st.plotly_chart(fig2, use_container_width=True)
+        _layout2 = premium_plotly_layout(
+            height=450, margin_right=120,
+            ytitle="% PIB")
+        _layout2["yaxis"]["rangemode"] = "tozero"
+        _layout2["yaxis"]["tickformat"] = ".1f"
+        fig2.update_layout(**_layout2)
+        st.plotly_chart(fig2, use_container_width=True, config=_CHART_CONFIG)
         source("Eurostat, Comptes Nacionals (nama_10_a64)" if _ca
                else "Eurostat, Cuentas Nacionales (nama_10_a64)")
 
@@ -240,7 +382,14 @@ with tab2:
 # TAB 3 — DIMENSIÓ ESTRUCTURAL (Eurostat bd_size)
 # ═══════════════════════════════════════════════════════════════
 with tab3:
-    st.header("Dimensió estructural" if _ca else "Dimensión estructural")
+    exhibit_header(
+        3,
+        ("L'estructura empresarial del comerç espanyol és més atomitzada que l'europea" if _ca
+         else "La estructura empresarial del comercio español es más atomizada que la europea"),
+        note=("Demografia empresarial del CNAE 47: mida, rotació, mida mitjana i supervivència (Eurostat bd_size)."
+              if _ca else
+              "Demografía empresarial del CNAE 47: tamaño, rotación, tamaño medio y supervivencia (Eurostat bd_size)."),
+    )
 
     if df_total.empty:
         st.info(
@@ -287,8 +436,14 @@ with tab3:
             )
 
         # ── Distribució per mida d'empresa ───────────────────
-        st.subheader("Distribució per mida d'empresa" if _ca
-                     else "Distribución por tamaño de empresa")
+        exhibit_header(
+            4,
+            ("Les microempreses dominen el comerç espanyol més que el de la UE-27" if _ca
+             else "Las microempresas dominan el comercio español más que el de la UE-27"),
+            note=("Distribució d'empreses per nombre d'assalariats, Espanya vs UE-27."
+                  if _ca else
+                  "Distribución de empresas por número de asalariados, España vs UE-27."),
+        )
 
         if not df_mida.empty:
             df_size = df_mida[(df_mida["any"] == darrer_any) & (df_mida["indic_sbs"] == "ENT_NR")].copy()
@@ -302,7 +457,7 @@ with tab3:
                 SIZE_LBL_ES = {"0": "Sin asalariados", "1-4": "1-4 asalariados",
                                "5-9": "5-9 asalariados", "GE10": "10 o más"}
                 size_lbl = SIZE_LBL_CA if _ca else SIZE_LBL_ES
-                SIZE_COLORS = {"0": "#a8c8e8", "1-4": "#5d4fff", "5-9": "#3320d4", "GE10": "#1a0d8e"}
+                SIZE_COLORS = {"0": "#9aa6b2", "1-4": "#5e89b0", "5-9": "#2d5f8a", "GE10": NAVY}
 
                 fig_size = go.Figure()
                 for s in SIZE_ORDER:
@@ -387,8 +542,14 @@ with tab3:
                          "Ver más análisis estructural (nacimiento, tamaño, supervivencia)")
         with highlight_expander(_lbl_estr_exp, expanded=False):
             # ── Naixement vs defunció per 8 països ───────────────
-            st.subheader("Naixement vs defunció (8 països)" if _ca
-                         else "Nacimiento vs defunción (8 países)")
+            exhibit_header(
+                5,
+                ("La defunció supera el naixement: el comerç perd empreses netament" if _ca
+                 else "La defunción supera al nacimiento: el comercio pierde empresas netamente"),
+                note=("Taxes de naixement i defunció empresarial del CNAE 47, per país."
+                      if _ca else
+                      "Tasas de nacimiento y defunción empresarial del CNAE 47, por país."),
+            )
 
             if not df_lst.empty:
                 PAIS_ORDER = ["EU27_2020", "ES", "DE", "FR", "IT", "PT", "NL", "PL"]
@@ -398,14 +559,14 @@ with tab3:
                 fig_br.add_trace(go.Bar(
                     x=df_disp["pais"], y=df_disp.get("ENT_BRTHR_PC", pd.Series()),
                     name=("Taxa naixement" if _ca else "Tasa nacimiento"),
-                    marker_color=GREEN,
+                    marker_color=NAVY,
                     text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_BRTHR_PC", pd.Series())],
                     textposition="outside",
                 ))
                 fig_br.add_trace(go.Bar(
                     x=df_disp["pais"], y=df_disp.get("ENT_DTHR_PC", pd.Series()),
                     name=("Taxa defunció" if _ca else "Tasa defunción"),
-                    marker_color=RED,
+                    marker_color=OCRE,
                     text=[fpct(v, 1, sign=False) for v in df_disp.get("ENT_DTHR_PC", pd.Series())],
                     textposition="outside",
                 ))
@@ -471,8 +632,14 @@ with tab3:
                     firma_lectura()
 
             # ── Mida mitjana (ocupats/empresa) per país ──────────
-            st.subheader("Mida mitjana d'empresa (ocupats per empresa)" if _ca
-                         else "Tamaño medio de empresa (ocupados por empresa)")
+            exhibit_header(
+                6,
+                ("Cada empresa retail espanyola ocupa menys persones que la mitjana europea" if _ca
+                 else "Cada empresa retail española ocupa menos personas que la media europea"),
+                note=("Ocupats per empresa al CNAE 47, per país (indicador de concentració)."
+                      if _ca else
+                      "Ocupados por empresa en el CNAE 47, por país (indicador de concentración)."),
+            )
 
             if not df_lst.empty and "ENT_NR" in df_lst.columns and "EMP_NR" in df_lst.columns:
                 df_lst2 = df_lst.copy()
@@ -484,11 +651,11 @@ with tab3:
                 colors_mm = []
                 for code in df_mm["pais_codi"]:
                     if code == "ES":
-                        colors_mm.append(PURPLE)
+                        colors_mm.append(NAVY)
                     elif code == "EU27_2020":
-                        colors_mm.append(RED)
+                        colors_mm.append(OCRE)
                     else:
-                        colors_mm.append(PURPLE_LIGHT)
+                        colors_mm.append(G2_P)
 
                 fig_mm = go.Figure()
                 fig_mm.add_trace(go.Bar(
@@ -537,8 +704,14 @@ with tab3:
                     firma_lectura()
 
             # ── Supervivència Y1 / Y2 ES vs UE-27 ────────────────
-            st.subheader("Supervivència empresarial Y1 / Y2" if _ca
-                         else "Supervivencia empresarial Y1 / Y2")
+            exhibit_header(
+                7,
+                ("La supervivència de les noves empreses retail es compara amb la UE-27" if _ca
+                 else "La supervivencia de las nuevas empresas retail se compara con la UE-27"),
+                note=("Empreses que sobreviuen 1 i 2 anys després del naixement, Espanya vs UE-27."
+                      if _ca else
+                      "Empresas que sobreviven 1 y 2 años tras el nacimiento, España vs UE-27."),
+            )
 
             if not df_surv.empty:
                 AGE_LBL_CA = {"Y1": "1 any després del naixement", "Y2": "2 anys després del naixement"}
@@ -562,7 +735,7 @@ with tab3:
                             y=["UE-27", "Espanya" if _ca else "España"],
                             name=age_lbl[age],
                             orientation="h",
-                            marker_color=PURPLE if age == "Y1" else PURPLE_LIGHT,
+                            marker_color=NAVY if age == "Y1" else OCRE,
                             text=[fpct(d_age[d_age["pais_codi"] == "EU27_2020"]["survival_pc"].sum(), 1, sign=False),
                                   fpct(d_age[d_age["pais_codi"] == "ES"]["survival_pc"].sum(), 1, sign=False)],
                             textposition="outside",
@@ -625,8 +798,14 @@ with tab3:
 # TAB 4 — POLS MENSUAL EUROPEU
 # ═══════════════════════════════════════════════════════════════
 with tab4:
-    st.header("Pols mensual del comerç a Europa" if _ca
-              else "Pulso mensual del comercio en Europa")
+    exhibit_header(
+        8,
+        ("El volum de vendes a Espanya va per davant de l'eurozona" if _ca
+         else "El volumen de ventas en España va por delante de la eurozona"),
+        note=("Índex de volum de vendes minoristes (base 2021=100), ajustat estacional."
+              if _ca else
+              "Índice de volumen de ventas minoristas (base 2021=100), ajustado estacional."),
+    )
 
     if df_mens.empty:
         st.info(
@@ -738,9 +917,7 @@ with tab4:
             df_plot = df_plot[df_plot["dt"] >= cutoff]
 
         color_m = {
-            "ES": RED, "EA20": "#34495e", "EU27_2020": "#7f8c8d",
-            "DE": BLUE, "FR": GREEN, "IT": ORANGE,
-            "PT": "#8E44AD", "NL": "#16a085", "BE": "#95a5a6",
+            "ES": NAVY, "EA20": OCRE, "EU27_2020": OCRE_DEEP,
         }
         paisos_visibles = ["EA20", "EU27_2020"] + extra_sel + ["ES"]
 
@@ -749,24 +926,31 @@ with tab4:
             sub = df_plot[df_plot["pais_codi"] == code].sort_values("dt")
             if sub.empty:
                 continue
-            es_destacat = (code == "ES")
+            _focus = code in ("ES", "EA20", "EU27_2020")
             fig_m.add_trace(go.Scatter(
                 x=sub["dt"], y=sub["index_volum"],
                 mode="lines", name=sub["pais"].iloc[0],
                 line=dict(
-                    color=color_m.get(code, "#999"),
-                    width=3.4 if es_destacat else 2.0,
+                    color=color_m.get(code, G2_P),
+                    width=3.4 if code == "ES" else (2.4 if _focus else 1.6),
                 ),
             ))
-        fig_m.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"),
+        fig_m.add_hline(y=100, line=dict(color=G2_P, width=1, dash="dot"),
                         annotation_text="Base 2021=100",
                         annotation_position="bottom right",
                         annotation_font_size=10)
+        # Eix de dates: apply_layout recolorat (premium_plotly_layout té dtick=5
+        # pensat per a anys i trencaria l'eix mensual).
         apply_layout(fig_m,
             yaxis_title=("Índex (2021=100)" if _ca else "Índice (2021=100)"),
             height=420,
         )
-        st.plotly_chart(fig_m, use_container_width=True)
+        fig_m.update_layout(
+            font=dict(family="Manrope, system-ui, sans-serif", color="#37485a", size=14),
+            paper_bgcolor="white", plot_bgcolor="white",
+            hoverlabel=dict(font=dict(family="Manrope, sans-serif")),
+        )
+        st.plotly_chart(fig_m, use_container_width=True, config=_CHART_CONFIG)
         source(
             f"Eurostat sts_trtu_m. Volum de vendes G47, ajustat estacional. Darrera dada: {darrer}."
             if _ca else

@@ -9,10 +9,15 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout, PALETTE, BRAND, RED, GREEN, GRAY, GRAY_DARK)
+from style import (inject_css, inject_premium_page_css, setup_lang, page_header,
+                   insight, source, page_meta, fnum, fpct, apply_layout,
+                   kicker, action_title, deck, key_takeaways, exhibit_header,
+                   freshness_badge,
+                   PALETTE, BRAND, RED, GRAY, GRAY_DARK,
+                   NAVY, G2_P)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -62,7 +67,8 @@ def _icm_modos():
 _sig = ((os.path.getsize(_PATH), int(os.path.getmtime(_PATH))) if os.path.exists(_PATH) else (0, 0))
 d = _load(_sig)
 
-st.title("Líders del comerç" if _ca else "Líderes del comercio")
+kicker("Anatomia de la concentració · Líders del comerç" if _ca
+       else "Anatomía de la concentración · Líderes del comercio")
 
 if d.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
@@ -89,21 +95,53 @@ for v in ing[1:]:
         break
 _ratio2 = f"{ing[0]/ing[1]:.1f}".replace(".", ",")  # vegades sobre el nº 2
 
-intro(
-    (f"Una <strong>mostra dels {d['nombre'].nunique()} grans operadors del comerç al detall</strong> (CNAE 47) "
-     f"a partir dels <strong>comptes anuals dipositats al Registre Mercantil</strong> (2020-2024). Sumen "
-     f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturació el 2024 — el "
-     f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de tot el sector</strong> (denominador EAS {eas_any}). "
-     f"La resta es reparteix entre desenes de milers d'empreses. Aquí no fem un rànquing d'empreses: fem "
-     f"l'<strong>anatomia de la concentració</strong> del sector."
-     if _ca else
-     f"Una <strong>muestra de los {d['nombre'].nunique()} grandes operadores del comercio minorista</strong> (CNAE 47) "
-     f"a partir de las <strong>cuentas anuales depositadas en el Registro Mercantil</strong> (2020-2024). Suman "
-     f"<strong>{fnum(mostra_meur/1000, 1)} bn€</strong> de facturación en 2024 — el "
-     f"<strong>{fpct(quota_mostra_sector, 1, sign=False)} de todo el sector</strong> (denominador EAS {eas_any}). "
-     f"El resto se reparte entre decenas de miles de empresas. Aquí no hacemos un ranking de empresas: hacemos "
-     f"la <strong>anatomía de la concentración</strong> del sector.")
-)
+_lider_nom = d["nombre"].iloc[0]
+_n_grans = d["nombre"].nunique()
+_un_de_cada = round(100 / quota_lider_sector) if quota_lider_sector else None
+
+if _ca:
+    action_title(
+        f"Un sol operador concentra el {fpct(quota_lider_sector, 1, sign=False)} de tot el comerç al detall"
+        if quota_lider_sector else
+        f"El comerç al detall té un cap molt concentrat i una base molt fragmentada")
+    deck("Els comptes del Registre Mercantil identifiquen els grans; el denominador EAS els situa "
+         "sobre el sector. La bretxa real és entre el bloc dels grans i el petit comerç.")
+    _takeaways = [
+        f"<strong>{_lider_nom}</strong> representa el <b>{fpct(quota_lider_sector, 1, sign=False)}</b> "
+        f"de tot el comerç minorista espanyol (EAS {eas_any}): aproximadament "
+        f"<b>1 de cada {_un_de_cada} euros</b>."
+        if quota_lider_sector else
+        f"<strong>{_lider_nom}</strong> és el primer operador de la mostra de grans.",
+        f"Els quatre majors (CR4) sumen el <b>{fpct(cr4, 1, sign=False)}</b> de la mostra i l'HHI és de "
+        f"<b>{fnum(hhi)}</b>: una estructura concentrada al capdamunt.",
+        f"Però els <b>{_n_grans} grans</b> són només el <b>{fpct(quota_mostra_sector, 1, sign=False)}</b> "
+        f"del sector; la resta es reparteix entre desenes de milers d'empreses. La bretxa que importa "
+        f"és grans vs petit comerç, no entre grans.",
+    ]
+    _tk_label = "Conclusions clau"
+else:
+    action_title(
+        f"Un solo operador concentra el {fpct(quota_lider_sector, 1, sign=False)} de todo el comercio minorista"
+        if quota_lider_sector else
+        f"El comercio minorista tiene una cúspide muy concentrada y una base muy fragmentada")
+    deck("Las cuentas del Registro Mercantil identifican a los grandes; el denominador EAS los sitúa "
+         "sobre el sector. La brecha real es entre el bloque de los grandes y el pequeño comercio.")
+    _takeaways = [
+        f"<strong>{_lider_nom}</strong> representa el <b>{fpct(quota_lider_sector, 1, sign=False)}</b> "
+        f"de todo el comercio minorista español (EAS {eas_any}): aproximadamente "
+        f"<b>1 de cada {_un_de_cada} euros</b>."
+        if quota_lider_sector else
+        f"<strong>{_lider_nom}</strong> es el primer operador de la muestra de grandes.",
+        f"Los cuatro mayores (CR4) suman el <b>{fpct(cr4, 1, sign=False)}</b> de la muestra y el HHI es de "
+        f"<b>{fnum(hhi)}</b>: una estructura concentrada en la cúspide.",
+        f"Pero los <b>{_n_grans} grandes</b> son solo el <b>{fpct(quota_mostra_sector, 1, sign=False)}</b> "
+        f"del sector; el resto se reparte entre decenas de miles de empresas. La brecha que importa "
+        f"es grandes vs pequeño comercio, no entre grandes.",
+    ]
+    _tk_label = "Conclusiones clave"
+
+key_takeaways(_takeaways, label=_tk_label)
+freshness_badge(["subsectors_eas", "icm_distribucion"], st.session_state.lang)
 
 k1, k2, k3, k4 = st.columns(4)
 k1.metric(("El líder, sobre el sector" if _ca else "El líder, sobre el sector"),
@@ -144,13 +182,16 @@ tab_conc, tab_din, tab_efi, tab_mostra = st.tabs([
 
 # ── TAB 1: CONCENTRACIÓ ──
 with tab_conc:
-    st.markdown(("**Els grans operadors per facturació** (2024, M€). Un sol operador domina el conjunt."
-                 if _ca else
-                 "**Los grandes operadores por facturación** (2024, M€). Un solo operador domina el conjunto."))
+    exhibit_header(
+        1,
+        ("Els grans operadors per facturació (2024, M€)" if _ca
+         else "Los grandes operadores por facturación (2024, M€)"),
+        note=("Un sol operador domina el conjunt de la mostra de grans." if _ca
+              else "Un solo operador domina el conjunto de la muestra de grandes."))
     top = d.dropna(subset=["ing_2024"]).head(15).copy()
     top = top.sort_values("ing_2024")  # ascendent: el major queda a dalt
     top["meur"] = top["ing_2024"] / 1000
-    colors = [BRAND if i == len(top) - 1 else "rgba(0,51,102,0.32)" for i in range(len(top))]
+    colors = [NAVY if i == len(top) - 1 else "rgba(11,58,102,0.30)" for i in range(len(top))]
     figc = go.Figure(go.Bar(
         y=top["nombre"], x=top["meur"], orientation="h", marker_color=colors,
         text=[fnum(v) for v in top["meur"]], textposition="outside", textfont=dict(size=11),
@@ -211,18 +252,19 @@ with tab_conc:
     cr1_20, cr4_20, cr10_20, hhi_20 = _conc_shares("ing_2020")
     cr1_24c, cr4_24c, cr10_24c, hhi_24c = _conc_shares("ing_2024")
 
-    st.markdown(("**Evolució de la concentració, 2020–2024.** Comparem el mateix grup de "
-                 f"{len(dyn)} grans operadors el 2020 i el 2024."
-                 if _ca else
-                 "**Evolución de la concentración, 2020–2024.** Comparamos el mismo grupo de "
-                 f"{len(dyn)} grandes operadores en 2020 y 2024."))
+    exhibit_header(
+        2,
+        ("Evolució de la concentració, 2020–2024" if _ca
+         else "Evolución de la concentración, 2020–2024"),
+        note=(f"Comparem el mateix grup de {len(dyn)} grans operadors el 2020 i el 2024." if _ca
+              else f"Comparamos el mismo grupo de {len(dyn)} grandes operadores en 2020 y 2024."))
     _lbl = ["Líder", "CR4", "CR10"]
     _y20 = [cr1_20, cr4_20, cr10_20]
     _y24 = [cr1_24c, cr4_24c, cr10_24c]
     figdin = go.Figure()
-    figdin.add_trace(go.Bar(name="2020", x=_lbl, y=_y20, marker_color=GRAY,
+    figdin.add_trace(go.Bar(name="2020", x=_lbl, y=_y20, marker_color=G2_P,
                             text=[fpct(v, 1, sign=False) for v in _y20], textposition="outside", textfont=dict(size=11)))
-    figdin.add_trace(go.Bar(name="2024", x=_lbl, y=_y24, marker_color=BRAND,
+    figdin.add_trace(go.Bar(name="2024", x=_lbl, y=_y24, marker_color=NAVY,
                             text=[fpct(v, 1, sign=False) for v in _y24], textposition="outside", textfont=dict(size=11)))
     apply_layout(figdin, yaxis_title="% sobre la mostra de grans" if _ca else "% sobre la muestra de grandes",
                  height=340, margin=dict(l=50, r=20, t=20, b=40))
@@ -260,15 +302,15 @@ with tab_din:
                    "Empresas unilocalizadas": "Tienda unilocalizada (pequeño comercio)",
                    "Pequeñas cadenas": "Pequeñas cadenas",
                    "Grandes Superficies": "Grandes superficies"}
-        STYLE = {"Grandes cadenas": (BRAND, 3.2), "Empresas unilocalizadas": (RED, 3.2),
+        STYLE = {"Grandes cadenas": (NAVY, 3.2), "Empresas unilocalizadas": (RED, 3.2),
                  "Pequeñas cadenas": (GRAY_DARK, 1.6), "Grandes Superficies": (GRAY, 1.6)}
         lbl = MODO_CA if _ca else MODO_ES
-        st.markdown(("**Dinàmica per formats de distribució.** Índex de xifra de negoci del comerç "
-                     "(base 2016 = 100). Les <strong>grans cadenes</strong> creixen molt per sobre del <strong>petit comerç</strong>."
-                     if _ca else
-                     "**Dinámica por formatos de distribución.** Índice de cifra de negocio del comercio "
-                     "(base 2016 = 100). Las <strong>grandes cadenas</strong> crecen muy por encima del <strong>pequeño comercio</strong>."),
-                    unsafe_allow_html=True)
+        exhibit_header(
+            1,
+            ("Les grans cadenes creixen molt per sobre del petit comerç" if _ca
+             else "Las grandes cadenas crecen muy por encima del pequeño comercio"),
+            note=("Índex de xifra de negoci del comerç per format de distribució (base 2016 = 100)." if _ca
+                  else "Índice de cifra de negocio del comercio por formato de distribución (base 2016 = 100)."))
         figd = go.Figure()
         for modo in ["Grandes Superficies", "Pequeñas cadenas", "Empresas unilocalizadas", "Grandes cadenas"]:
             s = icm["serie"][icm["serie"]["modo"] == modo].sort_values("data")
@@ -325,11 +367,14 @@ with tab_efi:
     med_marge = ef["marge_ebitda"].median()
     big4_med = ef.sort_values("ing_2024", ascending=False).head(4)["marge_ebitda"].median()
     top_marge_names = ", ".join(ef.sort_values("marge_ebitda", ascending=False).head(3)["nombre"])
-    st.markdown(("**Facturació enfront del marge, per empresa.** Cada bombolla és una empresa: facturació (eix X, escala log) "
-                 "enfront del marge EBITDA; la mida de la bombolla és la plantilla."
-                 if _ca else
-                 "**Facturación frente al margen, por empresa.** Cada burbuja es una empresa: facturación (eje X, escala log) "
-                 "frente al margen EBITDA; el tamaño de la burbuja es la plantilla."))
+    exhibit_header(
+        1,
+        ("Facturació i marge no van lligats, per empresa" if _ca
+         else "Facturación y margen no van ligados, por empresa"),
+        note=("Cada bombolla és una empresa: facturació (eix X, escala log) enfront del marge EBITDA; "
+              "la mida és la plantilla." if _ca
+              else "Cada burbuja es una empresa: facturación (eje X, escala log) frente al margen EBITDA; "
+              "el tamaño es la plantilla."))
     figm = go.Figure()
     for s in sorted(ef["subsector"].unique()):
         g = ef[ef["subsector"] == s]
@@ -370,13 +415,14 @@ with tab_efi:
     st.markdown("---")
 
     # ── Marges per model de negoci — focus alimentació ────────────────
-    st.markdown(("**Marges per model de negoci · alimentació.** La concentració per si sola no diu si "
-                 "el sector \"esprem marges\" o no. Aquí classifiquem els grans operadors d'alimentació "
-                 "per model de negoci i mostrem el marge EBITDA real."
-                 if _ca else
-                 "**Márgenes por modelo de negocio · alimentación.** La concentración por sí sola no dice si "
-                 "el sector \"exprime márgenes\" o no. Aquí clasificamos a los grandes operadores de "
-                 "alimentación por modelo de negocio y mostramos el margen EBITDA real."))
+    exhibit_header(
+        2,
+        ("Marges per model de negoci · alimentació" if _ca
+         else "Márgenes por modelo de negocio · alimentación"),
+        note=("La concentració per si sola no diu si el sector «esprem marges»: classifiquem els grans "
+              "operadors d'alimentació per model i mostrem el marge EBITDA real." if _ca
+              else "La concentración por sí sola no dice si el sector «exprime márgenes»: clasificamos a los "
+              "grandes operadores de alimentación por modelo y mostramos el margen EBITDA real."))
 
     # Classificació editorial per model (manual; basat en estructura comercial i de format)
     MODEL_MAP = {
@@ -503,9 +549,12 @@ with tab_efi:
 
     st.markdown("---")
 
-    st.markdown(("**Mapa de posicionament dels subsectors** — productivitat vs marge (mediana, 3+ empreses)"
-                 if _ca else
-                 "**Mapa de posicionamiento de los subsectores** — productividad vs margen (mediana, 3+ empresas)"))
+    exhibit_header(
+        3,
+        ("Mapa de posicionament dels subsectors" if _ca
+         else "Mapa de posicionamiento de los subsectores"),
+        note=("Productivitat vs marge EBITDA (mediana, subsectors amb 3+ empreses)." if _ca
+              else "Productividad vs margen EBITDA (mediana, subsectores con 3+ empresas)."))
     fig = go.Figure()
     for _, row in s3.iterrows():
         fig.add_trace(go.Scatter(
@@ -532,16 +581,19 @@ with tab_efi:
          "<strong>volumen</strong>, no del margen unitario.")
     )
 
-    st.markdown(("**Creixement orgànic 2020-2024 (CAGR).** N'excloem les empreses amb ruptura de sèrie "
-                 "(reorganitzacions societàries), el CAGR de les quals no seria comparable."
-                 if _ca else
-                 "**Crecimiento orgánico 2020-2024 (CAGR).** Excluimos las empresas con ruptura de serie "
-                 "(reorganizaciones societarias), cuyo CAGR no sería comparable."))
+    exhibit_header(
+        4,
+        ("Creixement orgànic 2020-2024 (CAGR)" if _ca
+         else "Crecimiento orgánico 2020-2024 (CAGR)"),
+        note=("N'excloem les empreses amb ruptura de sèrie (reorganitzacions societàries), "
+              "el CAGR de les quals no seria comparable." if _ca
+              else "Excluimos las empresas con ruptura de serie (reorganizaciones societarias), "
+              "cuyo CAGR no sería comparable."))
     g = d.dropna(subset=["cagr"]).sort_values("cagr")
     sel = pd.concat([g.head(8), g.tail(8)]).drop_duplicates("nombre")
     figg = go.Figure(go.Bar(
         y=sel["nombre"], x=sel["cagr"], orientation="h",
-        marker_color=[GREEN if v >= 0 else RED for v in sel["cagr"]],
+        marker_color=[NAVY if v >= 0 else RED for v in sel["cagr"]],
         text=[fpct(v, 1) for v in sel["cagr"]], textposition="outside", textfont=dict(size=10)))
     figg.add_vline(x=0, line_color="rgba(0,0,0,0.3)")
     apply_layout(figg, xaxis_title="CAGR 2020-2024 (%)", height=520, margin=dict(l=170, r=70, t=20, b=40))

@@ -3,20 +3,21 @@ import streamlit as st
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header, page_meta, PURPLE
+from style import inject_css, inject_premium_page_css, setup_lang, page_header, page_meta, kicker, action_title, deck, PURPLE
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
+_ca = st.session_state.lang == "ca"
+
+kicker("Transparència · Mètode i fonts" if _ca else "Transparencia · Método y fuentes")
+action_title("Cada indicador es pot reproduir des de la font oficial" if _ca
+             else "Cada indicador se puede reproducir desde la fuente oficial")
+deck("Criteris de càlcul i decisions metodològiques de tots els indicadors de l'Observatori, per garantir transparència i reproductibilitat." if _ca
+     else "Criterios de cálculo y decisiones metodológicas de todos los indicadores del Observatorio, para garantizar transparencia y reproducibilidad.")
 
 if st.session_state.lang == "ca":
-    st.title("Aspectes metodològics")
-    st.markdown("""
-    Aquesta secció detalla els criteris de càlcul i les decisions metodològiques
-    adoptades en l'elaboració dels indicadors de l'Observatori. L'objectiu és garantir
-    la **transparència** i la **reproductibilitat** de tots els resultats presentats.
-    """)
-
     st.markdown("---")
 
     # ── Deflactor IPC ──
@@ -307,13 +308,6 @@ if st.session_state.lang == "ca":
     """)
 
 else:
-    st.title("Aspectos metodológicos")
-    st.markdown("""
-    Esta sección detalla los criterios de cálculo y las decisiones metodológicas
-    adoptadas en la elaboración de los indicadores del Observatorio. El objetivo es garantizar
-    la **transparencia** y la **reproducibilidad** de todos los resultados presentados.
-    """)
-
     st.markdown("---")
 
     st.subheader("1. Deflación con IPC: conversión a precios constantes")

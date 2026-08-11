@@ -5,9 +5,16 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header
+from style import (
+    inject_css, inject_premium_page_css, setup_lang, page_header,
+    source, page_meta, apply_layout, fnum,
+    kicker, action_title, deck, key_takeaways, exhibit_header,
+    metrics_band, freshness_badge,
+    NAVY, GRAY_DARK, G1_P,
+)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -23,6 +30,9 @@ def load_cdmge():
 
 
 df_cdmge = load_cdmge()
+
+kicker("Indicador d'alta freqüència · Consum amb grans cadenes" if _ca
+       else "Indicador de alta frecuencia · Consumo con grandes cadenas")
 
 if df_cdmge.empty or "indicador" not in df_cdmge.columns:
     st.warning(
@@ -51,66 +61,86 @@ _avg_30 = float(_ta.tail(30)["valor"].mean())
 _avg_90 = float(_ta.tail(90)["valor"].mean())
 _avg_365 = float(_ta.tail(365)["valor"].mean()) if len(_ta) >= 365 else None
 
-# ── Càlcul de retard real i propera publicació estimada ──
+# ── Càlcul de retard real vs avui ──
 from datetime import datetime
 _today = pd.Timestamp(datetime.now().date())
 _lag_days = int((_today - _last_dt).days)
 
-# Propera publicació INE estimada: ~25-30 dies després de fi de mes de referència.
-# El darrer mes complet publicat és el del _last_dt; el següent es publicarà a finals
-# del mes en curs si _last_dt ja ha passat fa més de 25 dies.
-_next_month = (_last_dt + pd.offsets.MonthEnd(1)).normalize()
-_next_pub_est = (_next_month + pd.Timedelta(days=28)).normalize()
-
-# ── Capçalera ──
-_eyebrow = ("GRANULARITAT DIÀRIA · PUBLICACIÓ MENSUAL" if _ca
-            else "GRANULARIDAD DIARIA · PUBLICACIÓN MENSUAL")
-_title = "Pols diari del consum" if _ca else "Pulso diario del consumo"
-_sub = ("Sèrie diària de vendes acumulades de grans empreses del comerç al detall, "
-        "comparades amb el mateix període de l'any anterior. <strong>L'INE publica aquesta "
-        "sèrie un cop al mes</strong>: cada dia està disponible, però amb el retard típic de la publicació."
-        if _ca else
-        "Serie diaria de ventas acumuladas de grandes empresas del comercio minorista, "
-        "comparadas con el mismo período del año anterior. <strong>El INE publica esta serie "
-        "una vez al mes</strong>: cada día está disponible, pero con el retraso típico de la publicación.")
-
-_asof_lbl = "Darrera dada disponible" if _ca else "Último dato disponible"
+# ── Tesi de capçalera (calculada amb les dades reals) ──
+_accel_30v90 = _avg_30 - _avg_90
+_signe_creix = _avg_30 > 0
 _lag_lbl = ("retard de {n} dies vs avui" if _ca else "retraso de {n} días vs hoy").format(n=_lag_days)
-_next_lbl = ("Propera actualització estimada" if _ca else "Próxima actualización estimada")
 
-st.markdown(
-    f"""
-    <div class="cdmge-block">
-        <div class="cdmge-eyebrow"><span class="cdmge-pulse"></span>{_eyebrow}</div>
-        <h3>{_title}</h3>
-        <div class="cdmge-sub">{_sub}</div>
-        <div class="cdmge-asof">
-            {_asof_lbl}: <strong>{_last_dt.strftime("%d/%m/%Y")}</strong> ({_lag_lbl})
-            &nbsp;·&nbsp; {_next_lbl}: ~{_next_pub_est.strftime("%d/%m/%Y")}
-        </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
-# ── KPIs ──
-k1, k2, k3, k4 = st.columns(4)
-k1.metric(
-    ("Darrera dada" if _ca else "Último dato"),
-    f"{_last_val:+.1f}%",
-    delta=_last_dt.strftime("%d/%m/%Y"),
-    delta_color="off",
-    help=("Taxa anual de vendes diàries acumulades del darrer dia publicat per l'INE."
-          if _ca else
-          "Tasa anual de ventas diarias acumuladas del último día publicado por el INE."),
-)
-k2.metric(("Mitjana 7 dies" if _ca else "Media 7 días"), f"{_avg_7:+.1f}%",
-          delta=f"{(_avg_7 - _avg_30):+.1f} pp vs 30d", delta_color="off")
-k3.metric(("Mitjana 30 dies" if _ca else "Media 30 días"), f"{_avg_30:+.1f}%",
-          delta=f"{(_avg_30 - _avg_90):+.1f} pp vs 90d", delta_color="off")
-k4.metric(("Mitjana 90 dies" if _ca else "Media 90 días"), f"{_avg_90:+.1f}%",
-          delta=(f"{(_avg_90 - _avg_365):+.1f} pp vs 365d" if _avg_365 is not None else None),
-          delta_color="off")
+def _sc(x, d=1):  # signe + format europeu (coma) per a pp i deltes
+    return ("+" + fnum(x, d)) if x >= 0 else fnum(x, d)
+
+
+if _ca:
+    if _signe_creix:
+        _verb, _sentit = "creixen", "creixement"
+    else:
+        _verb, _sentit = "cauen", "contracció"
+    action_title(f"Les vendes de les grans cadenes {_verb} un {fnum(abs(_avg_30), 1)}% interanual")
+    if abs(_accel_30v90) < 0.5:
+        _ritme = "estabilitzat"
+    elif _accel_30v90 > 0:
+        _ritme = "en acceleració"
+    else:
+        _ritme = "en desacceleració"
+    deck("Senyal d'alta freqüència del consum amb targeta a les grans empreses del "
+         "comerç al detall, l'única peça del dashboard amb detall diari. Mitjana mòbil "
+         f"de 30 dies {_ritme} respecte del trimestre.")
+    _takeaways = [
+        f"La mitjana mòbil de 30 dies marca un <b>{_sc(_avg_30)}%</b> interanual; "
+        f"la de 7 dies, un <b>{_sc(_avg_7)}%</b> ({_sc(_avg_7 - _avg_30)} pp vs 30 dies).",
+        f"Respecte del trimestre, el ritme està <b>{_ritme}</b> "
+        f"({_sc(_accel_30v90)} pp entre la mitjana de 30 i la de 90 dies).",
+        f"La darrera dada publicada és del <b>{_last_dt.strftime('%d/%m/%Y')}</b> ({_lag_lbl}): "
+        "granularitat diària, però l'INE difon la sèrie un cop al mes.",
+    ]
+    _tk_label = "Conclusions clau"
+else:
+    if _signe_creix:
+        _verb, _sentit = "crecen", "crecimiento"
+    else:
+        _verb, _sentit = "caen", "contracción"
+    action_title(f"Las ventas de las grandes cadenas {_verb} un {fnum(abs(_avg_30), 1)}% interanual")
+    if abs(_accel_30v90) < 0.5:
+        _ritme = "estabilizado"
+    elif _accel_30v90 > 0:
+        _ritme = "en aceleración"
+    else:
+        _ritme = "en desaceleración"
+    deck("Señal de alta frecuencia del consumo con tarjeta en las grandes empresas del "
+         "comercio minorista, la única pieza del dashboard con detalle diario. Media móvil "
+         f"de 30 días {_ritme} respecto al trimestre.")
+    _takeaways = [
+        f"La media móvil de 30 días marca un <b>{_sc(_avg_30)}%</b> interanual; "
+        f"la de 7 días, un <b>{_sc(_avg_7)}%</b> ({_sc(_avg_7 - _avg_30)} pp vs 30 días).",
+        f"Respecto al trimestre, el ritmo está <b>{_ritme}</b> "
+        f"({_sc(_accel_30v90)} pp entre la media de 30 y la de 90 días).",
+        f"El último dato publicado es del <b>{_last_dt.strftime('%d/%m/%Y')}</b> ({_lag_lbl}): "
+        "granularidad diaria, pero el INE difunde la serie una vez al mes.",
+    ]
+    _tk_label = "Conclusiones clave"
+
+key_takeaways(_takeaways, label=_tk_label)
+freshness_badge("cdmge", st.session_state.lang)
+
+# ── Exhibit 1: sèrie diària ──
+if _ca:
+    exhibit_header(
+        1, f"La sèrie diària es mou al voltant del {_avg_30:+.1f}% interanual en mitjana de 30 dies",
+        note="Tria el període i la finestra de suavitzat per separar el soroll del "
+             "calendari de la tendència de fons.",
+    )
+else:
+    exhibit_header(
+        1, f"La serie diaria se mueve en torno al {_avg_30:+.1f}% interanual en media de 30 días",
+        note="Elige el período y la ventana de suavizado para separar el ruido del "
+             "calendario de la tendencia de fondo.",
+    )
 
 # ── Selectors ──
 sc1, sc2 = st.columns([2, 2])
@@ -158,9 +188,9 @@ _fig.add_trace(go.Scatter(
     x=_plot_df["data"], y=_plot_df["mm"],
     mode="lines",
     name=_sm_lbl,
-    line=dict(color="#003366", width=2.8),
+    line=dict(color=NAVY, width=2.8),
     fill="tozeroy",
-    fillcolor="rgba(245, 216, 0, 0.12)",
+    fillcolor="rgba(11,58,102,0.07)",
     hovertemplate="%{x|%d/%m/%Y}<br><b>%{y:+.1f}%</b><extra></extra>",
 ))
 
@@ -169,42 +199,64 @@ if _sm_days > 1:
         x=_plot_df["data"], y=_plot_df["valor"],
         mode="lines",
         name=("Diari" if _ca else "Diario"),
-        line=dict(color="#999", width=0.8, dash="dot"),
+        line=dict(color=GRAY_DARK, width=0.8, dash="dot"),
         opacity=0.45,
         hovertemplate="%{x|%d/%m/%Y}: %{y:+.1f}%<extra></extra>",
     ))
 
-_fig.add_hline(y=0, line_dash="solid", line_color="#666", line_width=1.2,
+_fig.add_hline(y=0, line_dash="solid", line_color=G1_P, line_width=1.2,
                annotation_text=("0% (sense canvi YoY)" if _ca else "0% (sin cambio YoY)"),
                annotation_position="bottom right",
-               annotation_font=dict(size=10, color="#666"))
+               annotation_font=dict(size=10, color=G1_P))
 
 _covid_start = pd.Timestamp("2020-03-14")
 _covid_end = pd.Timestamp("2020-06-21")
 if _plot_df["data"].min() <= _covid_end:
     _fig.add_vrect(
         x0=_covid_start, x1=_covid_end,
-        fillcolor="#999", opacity=0.08, line_width=0,
+        fillcolor=GRAY_DARK, opacity=0.08, line_width=0,
         annotation_text=("Confinament" if _ca else "Confinamiento"),
         annotation_position="top left",
-        annotation_font=dict(size=10, color="#666"),
+        annotation_font=dict(size=10, color=G1_P),
     )
 
-_fig.update_layout(
+apply_layout(
+    _fig,
     height=460,
     margin=dict(l=10, r=10, t=30, b=20),
     yaxis_title=("Variació anual (%)" if _ca else "Variación anual (%)"),
     xaxis_title="",
     hovermode="x unified",
     legend=dict(orientation="h", yanchor="bottom", y=1.04, xanchor="right", x=1,
-                font=dict(family="Inter, sans-serif", size=11)),
+                font=dict(family="Manrope, system-ui, sans-serif", size=11)),
     plot_bgcolor="white",
-    font=dict(family="Inter, sans-serif", size=13, color="#1a1a1a"),
+    font=dict(family="Manrope, system-ui, sans-serif", size=13, color="#37485a"),
 )
-_fig.update_yaxes(gridcolor="#eee", zeroline=False, ticksuffix="%")
-_fig.update_xaxes(gridcolor="#f5f5f5", showspikes=True, spikemode="across",
-                  spikethickness=1, spikecolor="#ccc")
+_fig.update_yaxes(gridcolor="#e4e9ee", zeroline=False, ticksuffix="%")
+_fig.update_xaxes(gridcolor="#f1f4f7", showspikes=True, spikemode="across",
+                  spikethickness=1, spikecolor="#9aa6b2")
 st.plotly_chart(_fig, use_container_width=True)
+source("INE — Mesura del Comerç Diari al per Menor de Grans Empreses (CDMGE)" if _ca
+       else "INE — Medición del Comercio Diario al por Menor de Grandes Empresas (CDMGE)")
+
+# ── Banda de mètriques (resum) ──
+def _pp(x):
+    return ("+" if x >= 0 else "") + f"{x:.1f}".replace(".", ",")
+
+if _ca:
+    metrics_band([
+        (_pp(_last_val), "%", "Darrera dada"),
+        (_pp(_avg_7), "%", "Mitjana 7 dies"),
+        (_pp(_avg_30), "%", "Mitjana 30 dies"),
+        (_pp(_avg_90), "%", "Mitjana 90 dies"),
+    ])
+else:
+    metrics_band([
+        (_pp(_last_val), "%", "Último dato"),
+        (_pp(_avg_7), "%", "Media 7 días"),
+        (_pp(_avg_30), "%", "Media 30 días"),
+        (_pp(_avg_90), "%", "Media 90 días"),
+    ])
 
 # ── Anàlisi automàtica ──
 with st.expander(("Anàlisi — què diuen les dades ara mateix" if _ca
@@ -328,10 +380,11 @@ with st.expander(("Metodologia — com es calcula i què mesura" if _ca
 **Por qué la incluimos aquí**: el resto del dashboard trabaja con datos anuales (PIB, VAB, EAS) o trimestrales (EPA), que llegan con 6-18 meses de retraso. A pesar de la publicación mensual, la CDMGE sigue siendo la pieza **más reciente** disponible y, sobre todo, la única con **detalle diario** — útil para detectar cambios de ritmo dentro del mes (picos Black Friday, rebajas, Semana Santa, Navidad) que las series trimestrales/anuales ocultan.
         """)
 
-st.caption(
-    ("Font: INE — Mesura del Comerç Diari al per Menor de Grans Empreses (CDMGE), estadística experimental. "
-     "Sèrie diària des del gener de 2019."
+page_meta(
+    ("INE — Mesura del Comerç Diari al per Menor de Grans Empreses (CDMGE), "
+     "estadística experimental. Sèrie diària des del gener de 2019."
      if _ca else
-     "Fuente: INE — Medición del Comercio Diario al por Menor de Grandes Empresas (CDMGE), estadística experimental. "
-     "Serie diaria desde enero de 2019.")
+     "INE — Medición del Comercio Diario al por Menor de Grandes Empresas (CDMGE), "
+     "estadística experimental. Serie diaria desde enero de 2019."),
+    st.session_state.lang,
 )

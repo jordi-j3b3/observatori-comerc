@@ -16,9 +16,11 @@ import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from style import (inject_css, setup_lang, page_header, insight, intro, source,
-                   fpct, apply_layout, PURPLE, GREEN, GRAY, RED)
+                   fpct, apply_layout, PURPLE, GREEN, GRAY, RED,
+                   inject_premium_page_css, kicker, action_title, deck)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -59,8 +61,12 @@ _psig = ((os.path.getsize(_PRED), int(os.path.getmtime(_PRED)))
          if os.path.exists(_PRED) else (0, 0))
 preds = load_prediccions(_psig)
 
-st.title("Trajectòria estructural del comerç" if _ca
-         else "Trayectoria estructural del comercio")
+kicker("Tendència estructural · Béns i canal online" if _ca
+       else "Tendencia estructural · Bienes y canal online")
+action_title("El comerç físic viu un doble pinçament: menys béns, més online" if _ca
+             else "El comercio físico vive un doble pinzamiento: menos bienes, más online")
+deck("La quota de béns sobre el consum de les llars baixa i, dins dels béns, l'online en guanya. Dues forces lentes i persistents." if _ca
+     else "La cuota de bienes sobre el consumo de los hogares baja y, dentro de los bienes, el online gana. Dos fuerzas lentas y persistentes.")
 
 intro(
     ("El comerç al detall físic no s'enfonsa: el <strong>pincen dues forces lentes "

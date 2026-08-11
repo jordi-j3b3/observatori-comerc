@@ -40,6 +40,16 @@ BLUE = BRAND
 GREEN = "#5a8f3d"          # verd terròs (no pas saturat)
 ORANGE = "#c75d2c"         # taronja terròs (no pas saturat)
 
+# ─── PALETA PREMIUM (consultora — pilot PIB i VAB) ────────────
+NAVY = "#0b3a66"          # navy fosc: display, emphasis
+OCRE = "#b07d2b"          # ocre càlid: accent, kicker
+OCRE_DEEP = "#946618"     # ocre fosc: end-label real
+INK_P = "#1a2b3a"         # tinta display premium
+BODY_P = "#37485a"        # cos text premium
+G1_P = "#5e6b78"          # gris labels / ticks
+G2_P = "#9aa6b2"          # gris clar: axis title, font
+LINE_P = "#e4e9ee"        # filet molt subtil
+
 # Paleta editorial per a sèries múltiples: comença amb el blau marca
 # i alterna amb groc highlighter, gris i accents discretos.
 PALETTE = [BRAND, YELLOW, GRAY_DARK, RED, "#5a8f3d", "#c75d2c", BRAND_DEEP, "#3d8f8f", GRAY, INK_STRONG]
@@ -184,7 +194,7 @@ def inject_css():
     """
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@1,400;1,500&family=IBM+Plex+Mono:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Lora:ital,wght@1,400;1,500&family=IBM+Plex+Mono:wght@500;700&family=Manrope:wght@400;600;700;800&display=swap');
 
         /* Tipografia global */
         html, body, [class*="css"] {
@@ -1039,7 +1049,197 @@ def inject_css():
         /* Top horitzontal app bar (Deploy menu) — discreta */
         header[data-testid="stHeader"] {
             background: #ffffff !important;
-            border-bottom: 1px solid #d0d0d0;
+            border-bottom: 1px solid #e4e9ee !important;
+        }
+
+        /* ── Barra de navegació superior (model prototip j3b3) ── */
+        [data-testid="stTopNavLink"],
+        [data-testid="stTopNavLink"] *,
+        [data-testid="stTopNavSection"],
+        [data-testid="stTopNavSection"] * {
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            letter-spacing: .01em !important;
+            color: #5e6b78 !important;
+            text-transform: none !important;
+        }
+        [data-testid="stTopNavLink"]:hover,
+        [data-testid="stTopNavLink"]:hover *,
+        [data-testid="stTopNavSection"]:hover,
+        [data-testid="stTopNavSection"]:hover * {
+            color: #0b3a66 !important;
+        }
+        /* Enllaç/secció actiu: navy + subratllat ocre */
+        [data-testid="stTopNavLink"][aria-current="page"],
+        [data-testid="stTopNavLink"][aria-current="page"] *,
+        [data-testid="stTopNavSection"]:has([aria-current="page"]),
+        [data-testid="stTopNavSection"]:has([aria-current="page"]) * {
+            color: #0b3a66 !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stTopNavLink"][aria-current="page"] {
+            border-bottom: 2px solid #b07d2b !important;
+        }
+        /* Desplegable de secció: fons blanc, tipografia Manrope */
+        [data-testid="stTopNavPopover"] {
+            background: #ffffff !important;
+            border: 1px solid #e4e9ee !important;
+        }
+        [data-testid="stTopNavDropdownLink"],
+        [data-testid="stTopNavDropdownLink"] * {
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            color: #5e6b78 !important;
+        }
+        [data-testid="stTopNavDropdownLink"]:hover,
+        [data-testid="stTopNavDropdownLink"]:hover * {
+            color: #0b3a66 !important;
+            background: #f5f7f9 !important;
+        }
+        [data-testid="stTopNavDropdownLink"][aria-current="page"],
+        [data-testid="stTopNavDropdownLink"][aria-current="page"] * {
+            color: #0b3a66 !important;
+            font-weight: 700 !important;
+        }
+        /* Logo de marca a la capçalera */
+        [data-testid="stHeaderLogo"] {
+            height: 30px !important;
+        }
+
+        /* ── Peu de pàgina global (utilitats fora del sidebar) ── */
+        .p-foot-sep {
+            border-top: 2px solid #1a2b3a;
+            margin: 64px 0 28px;
+        }
+        .p-foot-links { font-family: 'Manrope', system-ui, sans-serif; }
+        .p-foot-lab {
+            font-size: 11px; font-weight: 700; letter-spacing: .14em;
+            text-transform: uppercase; color: #5e6b78; margin-bottom: 12px;
+        }
+        .p-foot-links a {
+            display: block; color: #0b3a66; text-decoration: none;
+            font-size: 14px; font-weight: 600; line-height: 1.9;
+        }
+        .p-foot-links a:hover { color: #b07d2b; }
+        .p-foot-legal {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 12px; color: #9aa6b2; margin: 36px 0 24px;
+            border-top: 1px solid #e4e9ee; padding-top: 18px;
+        }
+
+        /* ── Components premium (consultora — pilot PIB i VAB) ── */
+        .p-kicker {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 12px; font-weight: 700; letter-spacing: .16em;
+            text-transform: uppercase; color: #b07d2b; margin-bottom: 0;
+        }
+        .p-kicker::after {
+            content: ""; display: inline-block; width: 34px; height: 2px;
+            background: #b07d2b; vertical-align: middle; margin-left: 14px;
+        }
+        .p-h1 {
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-size: clamp(1.7rem, 3.5vw, 2.4rem) !important;
+            font-weight: 800 !important; letter-spacing: -.025em !important;
+            line-height: 1.1 !important; color: #1a2b3a !important;
+            margin: 10px 0 0 !important; max-width: 26ch;
+        }
+        .p-deck {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 16px; line-height: 1.6; color: #37485a;
+            margin: 14px 0 0; max-width: 62ch;
+        }
+        .p-takeaways {
+            border-top: 2px solid #1a2b3a; padding: 20px 0 16px;
+            margin: 28px 0 8px;
+        }
+        .p-tk-lab {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 11px; font-weight: 700; letter-spacing: .14em;
+            text-transform: uppercase; color: #5e6b78; margin-bottom: 14px;
+        }
+        .p-takeaways ul {
+            list-style: none; margin: 0; padding: 0; display: grid; gap: 11px;
+        }
+        .p-takeaways li {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 15px; line-height: 1.5; color: #37485a;
+            padding-left: 20px; position: relative;
+        }
+        .p-takeaways li::before {
+            content: ""; position: absolute; left: 0; top: 7px;
+            width: 8px; height: 8px; background: #b07d2b; border-radius: 1px;
+        }
+        .p-takeaways li b { color: #1a2b3a; font-weight: 800; }
+        .p-shock {
+            background: #0b3a66; color: #e4e9ee; padding: 28px 28px 24px;
+            margin: 28px 0 32px; display: flex; align-items: baseline;
+            gap: 20px; flex-wrap: wrap;
+        }
+        .p-shock-v {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 3rem; font-weight: 800; letter-spacing: -.04em;
+            color: #ffffff; line-height: 1; font-variant-numeric: tabular-nums;
+        }
+        .p-shock-u {
+            font-size: 1.4rem; font-weight: 600; color: #b07d2b; margin-left: 2px;
+        }
+        .p-shock-l {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 15px; line-height: 1.5; color: #9aa6b2; max-width: 40ch;
+        }
+        .p-exhibit-no {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 11px; font-weight: 700; letter-spacing: .16em;
+            text-transform: uppercase; color: #b07d2b; margin-bottom: 2px;
+        }
+        .p-exhibit-h2 {
+            font-family: 'Manrope', system-ui, sans-serif !important;
+            font-size: clamp(1.1rem, 2.2vw, 1.45rem) !important;
+            font-weight: 800 !important; letter-spacing: -.015em !important;
+            line-height: 1.2 !important; color: #1a2b3a !important;
+            margin: 4px 0 14px !important; max-width: 44ch;
+        }
+        .p-note {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 15.5px; line-height: 1.6; color: #37485a;
+            margin: 0 0 20px; max-width: 64ch;
+        }
+        .p-shock-sub {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 13px; color: #8aa0b8; margin-top: 14px;
+            text-transform: uppercase; letter-spacing: .08em; font-weight: 600;
+            flex-basis: 100%;
+        }
+        .p-metrics {
+            margin-top: 36px; display: grid;
+            grid-template-columns: repeat(4, 1fr); border-top: 2px solid #1a2b3a;
+        }
+        .p-metric {
+            padding: 26px 18px; border-left: 1px solid #e4e9ee; text-align: center;
+        }
+        .p-metric:first-child { border-left: none; }
+        .p-metric-v {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 1.9rem; font-weight: 800; letter-spacing: -.03em;
+            color: #1a2b3a; line-height: 1; font-variant-numeric: tabular-nums;
+        }
+        .p-metric-u {
+            font-size: .82rem; font-weight: 700; color: #0b3a66; margin-left: 2px;
+        }
+        .p-metric-l {
+            font-family: 'Manrope', system-ui, sans-serif;
+            font-size: 13px; color: #5e6b78; margin: 11px auto 0;
+            line-height: 1.45; font-weight: 500; max-width: 24ch;
+        }
+        @media (max-width: 640px) {
+            .p-metrics { grid-template-columns: 1fr 1fr; }
+            .p-metric:nth-child(3) { border-left: none; }
+            .p-metric:nth-child(3), .p-metric:nth-child(4) {
+                border-top: 1px solid #e4e9ee;
+            }
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1554,3 +1754,314 @@ def newsletter_form(lang="es", compact=False, sidebar=False):
         st.markdown(f'<p style="{foot_style}">{foot}</p>', unsafe_allow_html=True)
     else:
         st.markdown(f'<p class="newsletter-foot">{foot}</p>', unsafe_allow_html=True)
+
+
+# ─── HELPERS PREMIUM (consultora — pilot PIB i VAB) ─────────────────────────
+
+def inject_premium_page_css():
+    """Sobreescriu tipografia i accents per a pàgines amb disseny premium.
+
+    Cridar DESPRÉS d'inject_css(). Canvia Archivo Narrow → Manrope en tots
+    els elements de la pàgina: headings, tabs, expanders, insight boxes, etc.
+    El sidebar no es toca (és chrome global).
+    """
+    st.markdown("""
+    <style>
+    /* Tipografia global → Manrope */
+    html, body,
+    .stMarkdown, .stMarkdown p,
+    [class*="css"] p, [class*="css"] li {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #37485a;
+    }
+    /* Headings: Manrope 800, navy fosc */
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4,
+    .stApp .stMarkdown h1, .stApp .stMarkdown h2,
+    .stApp .stMarkdown h3, .stApp .stMarkdown h4 {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #1a2b3a !important;
+        letter-spacing: -.02em !important;
+    }
+    /* Tabs: Manrope, subratllat ocre */
+    .stTabs [data-baseweb="tab"] {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        color: #5e6b78 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: .08em !important;
+    }
+    .stTabs [aria-selected="true"] {
+        color: #0b3a66 !important;
+        border-bottom-color: #b07d2b !important;
+        border-bottom-width: 3px !important;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        border-bottom: 2px solid #e4e9ee !important;
+    }
+    /* Expander header: Manrope, navy */
+    .streamlit-expanderHeader,
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] details > summary,
+    details > summary[role="button"] {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #0b3a66 !important;
+        font-size: 0.9rem !important;
+        letter-spacing: .04em !important;
+    }
+    /* Insight box: Manrope, acent ocre */
+    .insight-box {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        border-top-color: #0b3a66 !important;
+    }
+    .insight-box .insight-title {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #b07d2b !important;
+    }
+    .insight-box strong {
+        background: linear-gradient(180deg,
+            transparent 0%, transparent 60%,
+            rgba(176,125,43,0.25) 60%, rgba(176,125,43,0.25) 92%,
+            transparent 92%) !important;
+    }
+    /* Source label */
+    .source-label {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #9aa6b2 !important;
+        font-size: 11.5px !important;
+        letter-spacing: .05em !important;
+    }
+    /* Input labels */
+    .stSelectbox label, .stMultiSelect label {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #0b3a66 !important;
+    }
+    /* Metric */
+    [data-testid="stMetricValue"] div,
+    [data-testid="stMetricValue"] span {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+        color: #0b3a66 !important;
+    }
+    [data-testid="stMetricLabel"] p,
+    [data-testid="stMetricLabel"] div {
+        font-family: 'Manrope', system-ui, sans-serif !important;
+    }
+    [data-testid="stMetric"] {
+        border-top-color: #0b3a66 !important;
+    }
+    /* Highlight expander (highlight_expander) - canvia groc → ocre */
+    [class*="st-key-highlight_expander_"] [data-testid="stExpander"] summary,
+    div[class*="highlight_expander"] [data-testid="stExpander"] summary {
+        background: linear-gradient(180deg,
+            transparent 0%, transparent 55%,
+            rgba(176,125,43,0.22) 55%, rgba(176,125,43,0.22) 92%,
+            transparent 92%) !important;
+    }
+    [class*="st-key-highlight_expander_"] [data-testid="stExpander"] summary:hover,
+    div[class*="highlight_expander"] [data-testid="stExpander"] summary:hover {
+        background: linear-gradient(180deg,
+            transparent 0%, transparent 30%,
+            rgba(176,125,43,0.40) 30%, rgba(176,125,43,0.40) 95%,
+            transparent 95%) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+def kicker(text):
+    """Eyebrow ocre uppercase amb línia decorativa."""
+    st.markdown(f'<div class="p-kicker">{text}</div>', unsafe_allow_html=True)
+
+
+def action_title(text):
+    """Títol-tesi H1 premium: Manrope 800, navy fosc, màx 26ch."""
+    st.markdown(f'<h1 class="p-h1">{text}</h1>', unsafe_allow_html=True)
+
+
+def deck(text):
+    """Paràgraf deck sota l'action title (1-2 frases, màx 62ch)."""
+    st.markdown(f'<p class="p-deck">{text}</p>', unsafe_allow_html=True)
+
+
+def key_takeaways(items, label="Conclusions clau"):
+    """Bloc de 2-4 conclusions amb marca ocre. items: llista de strings (HTML permès)."""
+    lis = "".join(f"<li>{item}</li>" for item in items)
+    st.markdown(
+        f'<div class="p-takeaways">'
+        f'<div class="p-tk-lab">{label}</div>'
+        f'<ul>{lis}</ul>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def shock_stat(value, unit, label, sub=None):
+    """Banda xifra-xoc: fons navy, valor gran blanc, unitat ocre, etiqueta gris.
+
+    sub: caption opcional en majúscules sota la banda (ex. lectura del titular).
+    """
+    _sub = f'<div class="p-shock-sub">{sub}</div>' if sub else ""
+    st.markdown(
+        f'<div class="p-shock">'
+        f'<div class="p-shock-v">{value}<span class="p-shock-u">{unit}</span></div>'
+        f'<div class="p-shock-l">{label}</div>'
+        f'{_sub}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def exhibit_header(n, title, note=None):
+    """Capçalera d'exhibit: número petit ocre + títol-tesi H2 Manrope.
+
+    note: paràgraf explicatiu opcional sota el títol (1-2 frases, màx 64ch).
+    """
+    _note = f'<p class="p-note">{note}</p>' if note else ""
+    st.markdown(
+        f'<div class="p-exhibit-no">Ex. {n}</div>'
+        f'<h2 class="p-exhibit-h2">{title}</h2>'
+        f'{_note}',
+        unsafe_allow_html=True,
+    )
+
+
+def metrics_band(items):
+    """Banda final de KPIs: graella de mètriques amb separadors.
+
+    items: llista de (value, unit, label). value/unit ja formatats (str).
+    """
+    cells = "".join(
+        f'<div class="p-metric">'
+        f'<div class="p-metric-v">{v}<span class="p-metric-u">{u}</span></div>'
+        f'<div class="p-metric-l">{l}</div>'
+        f'</div>'
+        for v, u, l in items
+    )
+    st.markdown(f'<div class="p-metrics">{cells}</div>', unsafe_allow_html=True)
+
+
+def premium_plotly_layout(height=480, margin_right=150, ytitle="M€"):
+    """Layout Plotly premium: Manrope, navy+ocre, hover blanc, spike, separadors catalans."""
+    return dict(
+        font=dict(family="Manrope, system-ui, sans-serif", color=BODY_P, size=14),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        separators=",.",
+        height=height,
+        showlegend=False,
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="white",
+            bordercolor=LINE_P,
+            font=dict(family="Manrope, sans-serif", color=INK_P, size=13),
+        ),
+        margin=dict(l=8, r=margin_right, t=14, b=42),
+        xaxis=dict(
+            tickfont=dict(color=G1_P, size=12),
+            showgrid=False,
+            showline=True,
+            linecolor=LINE_P,
+            linewidth=1,
+            ticks="outside",
+            tickcolor=LINE_P,
+            dtick=5,
+            showspikes=True,
+            spikecolor=G2_P,
+            spikethickness=1,
+            spikedash="dot",
+            spikemode="across",
+            spikesnap="cursor",
+        ),
+        yaxis=dict(
+            tickfont=dict(color=G1_P, size=12),
+            title=dict(font=dict(color=G2_P, size=12), text=ytitle),
+            showgrid=True,
+            gridcolor=LINE_P,
+            gridwidth=1,
+            zeroline=False,
+            showline=False,
+            tickformat=",.0f",
+            automargin=True,
+            rangemode="tozero",
+        ),
+    )
+
+
+# ─── Frescor de dades (senyal de pàgina viva) ──────────────────
+_UPDATES_LOG_CACHE = None
+
+_MESOS_CA_1IDX = ["", "gener", "febrer", "març", "abril", "maig", "juny",
+             "juliol", "agost", "setembre", "octubre", "novembre", "desembre"]
+_MESOS_ES_1IDX = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio",
+             "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+
+
+def _load_updates_log():
+    global _UPDATES_LOG_CACHE
+    if _UPDATES_LOG_CACHE is None:
+        p = os.path.join(os.path.dirname(__file__), "data", "cache", "updates_log.json")
+        try:
+            with open(p, encoding="utf-8") as f:
+                _UPDATES_LOG_CACHE = json.load(f)
+        except Exception:
+            _UPDATES_LOG_CACHE = {}
+    return _UPDATES_LOG_CACHE
+
+
+def _fmt_period(s, ca):
+    """'2024' | '2026-05' | '2026-04-01' -> text llegible (any / mes any / dia mes any)."""
+    s = str(s).strip()
+    parts = s.split("-")
+    mesos = _MESOS_CA_1IDX if ca else _MESOS_ES_1IDX
+    try:
+        if len(parts) == 1:
+            return parts[0]
+        y, m = parts[0], int(parts[1])
+        if len(parts) == 2:
+            return f"{mesos[m]} {y}"
+        d = int(parts[2])
+        if d == 1:
+            return f"{mesos[m]} {y}"
+        return f"{d} de {mesos[m]} de {y}" if ca else f"{d} de {mesos[m]} de {y}"
+    except (ValueError, IndexError):
+        return s
+
+
+def _fmt_detected(s, ca):
+    """'2026-05-22' -> '22 de maig de 2026' / '22 de mayo de 2026'."""
+    try:
+        y, m, d = str(s).split("-")
+        mesos = _MESOS_CA_1IDX if ca else _MESOS_ES_1IDX
+        return f"{int(d)} de {mesos[int(m)]} de {y}"
+    except (ValueError, IndexError):
+        return str(s)
+
+
+def freshness_badge(datasets, lang="es"):
+    """Subtítol discret de frescor, per fer que la pàgina sembli viva.
+
+    Ex.: 'Actualitzat 26 de juny de 2026 · dades fins a maig 2026'.
+    datasets: clau o llista de claus de updates_log.json['datasets'].
+    Mostra l'entrada amb detected_at més recent; si no n'hi ha cap, no renderitza res.
+    """
+    if isinstance(datasets, str):
+        datasets = [datasets]
+    log = _load_updates_log().get("datasets", {})
+    entries = [log[d] for d in datasets if d in log and log[d].get("detected_at")]
+    if not entries:
+        return
+    best = max(entries, key=lambda e: e.get("detected_at", ""))
+    ca = lang == "ca"
+    updated = _fmt_detected(best.get("detected_at", ""), ca)
+    period = _fmt_period(best.get("last_data", ""), ca)
+    lbl_upd = "Actualitzat" if ca else "Actualizado"
+    lbl_data = "dades fins a" if ca else "datos hasta"
+    st.markdown(
+        f'<div style="display:flex;align-items:center;gap:8px;margin:-6px 0 20px 0;'
+        f'font-family:Manrope,system-ui,sans-serif;font-size:0.82rem;color:{G1_P};">'
+        f'<span style="width:7px;height:7px;border-radius:50%;background:{OCRE};'
+        f'box-shadow:0 0 0 3px rgba(176,125,43,0.15);flex:none;"></span>'
+        f'<span>{lbl_upd} <b style="color:{INK_P};font-weight:600;">{updated}</b>'
+        f' · {lbl_data} {period}</span></div>',
+        unsafe_allow_html=True,
+    )

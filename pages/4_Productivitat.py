@@ -1,17 +1,26 @@
-"""Pàgina 4: Productivitat, distribució del VAB i marges (CNAE 47)"""
+"""Pàgina 4: Productivitat, distribució del VAB i marges (CNAE 47) — disseny premium consultora"""
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout, highlight_expander,
-                   PURPLE, RED, BLUE, ORANGE, GREEN)
+from style import (
+    inject_css, inject_premium_page_css, setup_lang, page_header,
+    insight, source, page_meta,
+    fnum, fpct, cagr, highlight_expander,
+    kicker, action_title, deck, key_takeaways, exhibit_header,
+    metrics_band, premium_plotly_layout, freshness_badge,
+    NAVY, OCRE, OCRE_DEEP, RED, G1_P, G2_P,
+)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
+
+_CHART_CONFIG = {"displayModeBar": False, "responsive": True}
+
 
 @st.cache_data(ttl=3600)
 def load_data():
@@ -22,8 +31,6 @@ def load_data():
 
 df = load_data()
 
-st.title(t("prod_title"))
-
 _ca = st.session_state.lang == "ca"
 
 # Noms complets (sense abreviatures)
@@ -32,28 +39,86 @@ _lbl_xn = "Xifra de Negoci/hora" if _ca else "Cifra de Negocio/hora"
 _lbl_va_short = "VA/hora"
 _lbl_xn_short = "Xifra Negoci/hora" if _ca else "Cifra Negocio/hora"
 
-if _ca:
-    intro(
-        "Aquesta pàgina analitza el <strong>rendiment econòmic</strong> del comerç al detall des de tres "
-        "perspectives complementàries: la <strong>productivitat</strong> (eficiència en l'ús del treball), "
-        "la <strong>distribució del Valor Afegit</strong> entre treball i capital, i els "
-        "<strong>marges i rendibilitat</strong> del sector. "
-        "Totes les dades són a preus constants (deflactats amb IPC general, base primer any disponible)."
-    )
-else:
-    intro(
-        "Esta página analiza el <strong>rendimiento económico</strong> del comercio minorista desde tres "
-        "perspectivas complementarias: la <strong>productividad</strong> (eficiencia en el uso del trabajo), "
-        "la <strong>distribución del Valor Añadido</strong> entre trabajo y capital, y los "
-        "<strong>márgenes y rentabilidad</strong> del sector. "
-        "Todos los datos son a precios constantes (deflactados con IPC general, base primer año disponible)."
-    )
+kicker("Anàlisi estructural · Productivitat i marges" if _ca
+       else "Análisis estructural · Productividad y márgenes")
 
 if df.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
     st.stop()
 
 df = df.sort_values("any").reset_index(drop=True)
+
+# ─── Càlculs per a header i takeaways ─────────────────────────
+_df_h = df.dropna(subset=["productivitat_va_hora",
+                          "valor_afegit_constants", "xifra_negoci_constants",
+                          "gastos_personal_constants"]).copy()
+_h_first = _df_h.iloc[0]
+_h_last = _df_h.iloc[-1]
+_h_fy = int(_h_first["any"])
+_h_ly = int(_h_last["any"])
+_h_n = _h_ly - _h_fy
+
+_prod_var = (_h_last["productivitat_va_hora"] / _h_first["productivitat_va_hora"] - 1) * 100
+_prod_cagr = cagr(_h_first["productivitat_va_hora"], _h_last["productivitat_va_hora"], _h_n)
+_prod_last = _h_last["productivitat_va_hora"]
+
+_df_h["marge_brut_pct"] = _df_h["marge_brut"] * 100 if "marge_brut" in _df_h.columns else None
+_df_h["marge_op_h"] = (_df_h["valor_afegit_constants"] - _df_h["gastos_personal_constants"]) \
+    / _df_h["xifra_negoci_constants"] * 100
+_mb_last = float(_df_h["marge_brut_pct"].iloc[-1]) if "marge_brut" in df.columns else None
+_op_min = float(_df_h["marge_op_h"].min())
+_op_max = float(_df_h["marge_op_h"].max())
+
+if _ca:
+    _takeaways = [
+        f"La productivitat (valor afegit per hora treballada) ha crescut un "
+        f"<b>{fpct(_prod_var, 1, sign=False)}</b> entre {_h_fy} i {_h_ly} "
+        f"(CAGR {fpct(_prod_cagr, 1)}): un ritme modest que manté el sector "
+        f"<b>per sota de la productivitat mitjana</b> de l'economia espanyola.",
+        f"El marge brut comercial és <b>estructuralment estable</b> al voltant del "
+        f"<b>{fnum(_mb_last, 1)}%</b>: la mercaderia comprada per revendre és el cost "
+        f"que marca el sostre del sector i amb prou feines es mou.",
+        f"El marge operatiu (≈ EBITDA) oscil·la entre el <b>{fnum(_op_min, 1)}%</b> "
+        f"i el <b>{fnum(_op_max, 1)}%</b> de les vendes: amb marges fins, l'única "
+        f"palanca real de rendibilitat és la <b>rotació</b> i l'eficiència operativa.",
+    ]
+    _tk_label = "Conclusions clau"
+else:
+    _takeaways = [
+        f"La productividad (valor añadido por hora trabajada) ha crecido un "
+        f"<b>{fpct(_prod_var, 1, sign=False)}</b> entre {_h_fy} y {_h_ly} "
+        f"(CAGR {fpct(_prod_cagr, 1)}): un ritmo modesto que mantiene al sector "
+        f"<b>por debajo de la productividad media</b> de la economía española.",
+        f"El margen bruto comercial es <b>estructuralmente estable</b> en torno al "
+        f"<b>{fnum(_mb_last, 1)}%</b>: la mercancía comprada para revender es el coste "
+        f"que marca el techo del sector y apenas se mueve.",
+        f"El margen operativo (≈ EBITDA) oscila entre el <b>{fnum(_op_min, 1)}%</b> "
+        f"y el <b>{fnum(_op_max, 1)}%</b> de las ventas: con márgenes finos, la única "
+        f"palanca real de rentabilidad es la <b>rotación</b> y la eficiencia operativa.",
+    ]
+    _tk_label = "Conclusiones clave"
+
+if _ca:
+    action_title(
+        f"La productivitat creix un {fnum(_prod_var, 0)}% en {_h_n} anys, "
+        f"amb marges fins i la rotació com a palanca"
+    )
+    deck(
+        "El comerç al detall genera poc valor afegit per hora i opera amb marges "
+        "estructuralment ajustats. La rendibilitat depèn de vendre molt, no de marges amples."
+    )
+else:
+    action_title(
+        f"La productividad crece un {fnum(_prod_var, 0)}% en {_h_n} años, "
+        f"con márgenes finos y la rotación como palanca"
+    )
+    deck(
+        "El comercio minorista genera poco valor añadido por hora y opera con márgenes "
+        "estructuralmente ajustados. La rentabilidad depende de vender mucho, no de márgenes amplios."
+    )
+
+key_takeaways(_takeaways, label=_tk_label)
+freshness_badge("productivitat", st.session_state.lang)
 
 # ─── TABS ────────────────────────────────────────────────────
 
@@ -136,8 +201,18 @@ with tab1:
                     )
 
     # ─── Gràfic: Índex base 100 ──────────────────────────────────
-    st.subheader("Evolució relativa (índex base 100)" if _ca
-                 else "Evolución relativa (índice base 100)")
+    if _ca:
+        exhibit_header(
+            1, "La facturació per hora puja més que el valor afegit per hora",
+            note=("Quatre magnituds en índex base 100. Quan la xifra de negoci per hora "
+                  "creix més que el valor afegit per hora, els marges es comprimeixen."),
+        )
+    else:
+        exhibit_header(
+            1, "La facturación por hora sube más que el valor añadido por hora",
+            note=("Cuatro magnitudes en índice base 100. Cuando la cifra de negocio por hora "
+                  "crece más que el valor añadido por hora, los márgenes se comprimen."),
+        )
 
     df_idx = df.copy()
     cols_idx = []
@@ -149,28 +224,28 @@ with tab1:
         df_idx["idx_va_hora"] = (df_idx["productivitat_va_hora"] / base) * 100
         cols_idx.append("idx_va_hora")
         labels_idx["idx_va_hora"] = _lbl_va_short
-        colors_idx["idx_va_hora"] = PURPLE
+        colors_idx["idx_va_hora"] = NAVY
 
     if "productivitat_xn_hora" in df_idx.columns:
         base = df_idx["productivitat_xn_hora"].dropna().iloc[0]
         df_idx["idx_xn_hora"] = (df_idx["productivitat_xn_hora"] / base) * 100
         cols_idx.append("idx_xn_hora")
         labels_idx["idx_xn_hora"] = _lbl_xn_short
-        colors_idx["idx_xn_hora"] = RED
+        colors_idx["idx_xn_hora"] = OCRE
 
     if "personal_ocupat" in df_idx.columns:
         base = df_idx["personal_ocupat"].dropna().iloc[0]
         df_idx["idx_personal"] = (df_idx["personal_ocupat"] / base) * 100
         cols_idx.append("idx_personal")
         labels_idx["idx_personal"] = "Personal ocupat" if _ca else "Personal ocupado"
-        colors_idx["idx_personal"] = BLUE
+        colors_idx["idx_personal"] = G1_P
 
     if "hores_treballades" in df_idx.columns:
         base = df_idx["hores_treballades"].dropna().iloc[0]
         df_idx["idx_hores"] = (df_idx["hores_treballades"] / base) * 100
         cols_idx.append("idx_hores")
         labels_idx["idx_hores"] = "Hores treballades" if _ca else "Horas trabajadas"
-        colors_idx["idx_hores"] = ORANGE
+        colors_idx["idx_hores"] = G2_P
 
     fig_idx = go.Figure()
     for col in cols_idx:
@@ -183,11 +258,18 @@ with tab1:
         ))
 
     fig_idx.add_hline(y=100, line_dash="dash", line_color="rgba(0,0,0,0.15)")
-    apply_layout(fig_idx,
-        yaxis_title=f"{'Índex' if _ca else 'Índice'} (base 100 = {int(df_idx['any'].min())})",
-        height=450,
+    _layout_idx = premium_plotly_layout(height=450, margin_right=30,
+        ytitle=f"{'Índex' if _ca else 'Índice'} (base 100 = {int(df_idx['any'].min())})")
+    _layout_idx["showlegend"] = True
+    _layout_idx["yaxis"]["rangemode"] = "normal"
+    _layout_idx["yaxis"]["tickformat"] = ".0f"
+    _layout_idx["legend"] = dict(
+        orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+        font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
+        bgcolor="rgba(0,0,0,0)",
     )
-    st.plotly_chart(fig_idx, use_container_width=True)
+    fig_idx.update_layout(**_layout_idx)
+    st.plotly_chart(fig_idx, use_container_width=True, config=_CHART_CONFIG)
     source("INE, Estadística Estructural d'Empreses Sector Comerç. Càlcul propi" if _ca
            else "INE, Estadística Estructural de Empresas Sector Comercio. Cálculo propio")
 
@@ -261,6 +343,23 @@ with tab1:
                 )
             insight(txt)
 
+    # ─── Banda de mètriques (resum productivitat) ─────────────
+    _m_va = ("+" if _prod_cagr >= 0 else "") + fnum(_prod_cagr, 1)
+    if _ca:
+        metrics_band([
+            (fnum(_prod_last, 1), "EUR/h", f"Valor afegit per hora ({_h_ly})"),
+            (("+" if _prod_var >= 0 else "") + fnum(_prod_var, 1), "%",
+             f"Variació {_h_fy}–{_h_ly}"),
+            (_m_va, "%", f"Creixement anual (CAGR) · {_h_n} anys"),
+        ])
+    else:
+        metrics_band([
+            (fnum(_prod_last, 1), "EUR/h", f"Valor añadido por hora ({_h_ly})"),
+            (("+" if _prod_var >= 0 else "") + fnum(_prod_var, 1), "%",
+             f"Variación {_h_fy}–{_h_ly}"),
+            (_m_va, "%", f"Crecimiento anual (CAGR) · {_h_n} años"),
+        ])
+
 # ============================================================
 # TAB 2: DISTRIBUCIÓ DEL VAB
 # ============================================================
@@ -296,27 +395,43 @@ with tab2:
         df_dist = df.dropna(subset=["gastos_personal_constants", "excedent_brut"])
 
         if not df_dist.empty:
-            st.subheader("Composició del Valor Afegit" if _ca else "Composición del Valor Añadido")
+            if _ca:
+                exhibit_header(
+                    1, "El Valor Afegit es reparteix entre salaris i excedent brut",
+                    note="La major part del VAB es destina a remuneració dels treballadors; "
+                         "la resta és excedent brut (beneficis, amortitzacions i impostos).",
+                )
+            else:
+                exhibit_header(
+                    1, "El Valor Añadido se reparte entre salarios y excedente bruto",
+                    note="La mayor parte del VAB se destina a remuneración de los trabajadores; "
+                         "el resto es excedente bruto (beneficios, amortizaciones e impuestos).",
+                )
             fig_dist = go.Figure()
             fig_dist.add_trace(go.Scatter(
                 x=df_dist["any"], y=df_dist["gastos_personal_constants"] / 1e9,
                 mode="lines",
                 name=("Remuneració treballadors" if _ca else "Remuneración trabajadores"),
-                line=dict(width=0), fillcolor="rgba(46,134,193,0.5)",
+                line=dict(width=0), fillcolor="rgba(11,58,102,0.55)",
                 stackgroup="one",
             ))
             fig_dist.add_trace(go.Scatter(
                 x=df_dist["any"], y=df_dist["excedent_brut"] / 1e9,
                 mode="lines",
                 name=("Excedent brut" if _ca else "Excedente bruto"),
-                line=dict(width=0), fillcolor="rgba(93,79,255,0.5)",
+                line=dict(width=0), fillcolor="rgba(176,125,43,0.55)",
                 stackgroup="one",
             ))
-            apply_layout(fig_dist,
-                yaxis_title=("Milers M EUR" if _ca else "Miles M EUR"),
-                height=400,
+            _layout_dist = premium_plotly_layout(height=400, margin_right=30,
+                ytitle=("Milers M EUR" if _ca else "Miles M EUR"))
+            _layout_dist["showlegend"] = True
+            _layout_dist["legend"] = dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+                font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
+                bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_dist, use_container_width=True)
+            fig_dist.update_layout(**_layout_dist)
+            st.plotly_chart(fig_dist, use_container_width=True, config=_CHART_CONFIG)
             source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
                    else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
 
@@ -332,17 +447,18 @@ with tab2:
                     x=df_qs["any"], y=df_qs["quota_salarial"] * 100,
                     mode="lines+markers",
                     name=("Quota salarial" if _ca else "Cuota salarial"),
-                    line=dict(color=BLUE, width=3),
+                    line=dict(color=NAVY, width=3),
                     marker=dict(size=8),
                     text=[f"{v:.1f}%".replace(".", ",") for v in df_qs["quota_salarial"] * 100],
                     textposition="top center",
-                    textfont=dict(size=10),
+                    textfont=dict(size=10, color=G1_P),
                 ))
-                apply_layout(fig_qs,
-                    yaxis_title=("% del Valor Afegit" if _ca else "% del Valor Añadido"),
-                    height=380,
-                )
-                st.plotly_chart(fig_qs, use_container_width=True)
+                _layout_qs = premium_plotly_layout(height=380, margin_right=30,
+                    ytitle=("% del Valor Afegit" if _ca else "% del Valor Añadido"))
+                _layout_qs["yaxis"]["rangemode"] = "normal"
+                _layout_qs["yaxis"]["tickformat"] = ".0f"
+                fig_qs.update_layout(**_layout_qs)
+                st.plotly_chart(fig_qs, use_container_width=True, config=_CHART_CONFIG)
                 source("INE, Estadística Estructural d'Empreses. Càlcul propi" if _ca
                        else "INE, Estadística Estructural de Empresas. Cálculo propio")
 
@@ -355,16 +471,15 @@ with tab2:
                     fig_cl = go.Figure()
                     fig_cl.add_trace(go.Bar(
                         x=df_cl["any"], y=df_cl["cost_laboral_per_ocupat"],
-                        marker_color=PURPLE,
+                        marker_color=NAVY,
                         text=[f"{fnum(v, 0)} EUR" for v in df_cl["cost_laboral_per_ocupat"]],
                         textposition="outside",
-                        textfont=dict(size=11),
+                        textfont=dict(size=11, color=G1_P),
                     ))
-                    apply_layout(fig_cl,
-                        yaxis_title=("EUR / ocupat" if _ca else "EUR / ocupado"),
-                        height=380,
-                    )
-                    st.plotly_chart(fig_cl, use_container_width=True)
+                    _layout_cl = premium_plotly_layout(height=380, margin_right=30,
+                        ytitle=("EUR / ocupat" if _ca else "EUR / ocupado"))
+                    fig_cl.update_layout(**_layout_cl)
+                    st.plotly_chart(fig_cl, use_container_width=True, config=_CHART_CONFIG)
                     source("INE, Estadística Estructural d'Empreses. Preus constants. Càlcul propi" if _ca
                            else "INE, Estadística Estructural de Empresas. Precios constantes. Cálculo propio")
 
@@ -512,7 +627,7 @@ with tab3:
             mb_first = first_m["marge_brut_pct"]
             mb_last = last_m["marge_brut_pct"]
             delta_marge_brut = mb_last - mb_first
-            delta_color_brut = "#27ae60" if delta_marge_brut >= 0 else "#c0392b"
+            delta_color_brut = OCRE_DEEP if delta_marge_brut >= 0 else RED
             delta_arrow = "▲" if delta_marge_brut >= 0 else "▼"
 
             mb_value_str = f"{mb_last:.1f}".replace(".", ",")
@@ -522,14 +637,16 @@ with tab3:
                 col_num, col_txt = st.columns([1, 2])
                 with col_num:
                     st.markdown(
-                        f"<div style='font-family:Inter,sans-serif;font-size:11px;"
-                        f"font-weight:600;letter-spacing:0;text-transform:uppercase;"
-                        f"color:#b35900;margin-bottom:4px;'>"
+                        f"<div style='font-family:Manrope,system-ui,sans-serif;font-size:11px;"
+                        f"font-weight:700;letter-spacing:.08em;text-transform:uppercase;"
+                        f"color:{OCRE};margin-bottom:4px;'>"
                         f"{'Any' if _ca else 'Año'} {any_last}</div>"
-                        f"<div style='font-size:3.4rem;line-height:1;color:#e67e22;"
-                        f"font-weight:700;font-family:Archivo Narrow,serif;'>{mb_value_str}%</div>"
-                        f"<div style='font-size:14px;color:{delta_color_brut};font-weight:600;"
-                        f"margin-top:8px;'>{delta_arrow} {delta_str}% vs {any_first}</div>",
+                        f"<div style='font-size:3.4rem;line-height:1;color:{NAVY};"
+                        f"font-weight:800;font-family:Manrope,system-ui,sans-serif;"
+                        f"letter-spacing:-.02em;'>{mb_value_str}%</div>"
+                        f"<div style='font-size:14px;color:{delta_color_brut};font-weight:700;"
+                        f"margin-top:8px;font-family:Manrope,system-ui,sans-serif;'>"
+                        f"{delta_arrow} {delta_str}% vs {any_first}</div>",
                         unsafe_allow_html=True,
                     )
                 with col_txt:
@@ -582,7 +699,18 @@ with tab3:
         )
 
         # ─── Gràfic 1: Evolució dels marges sobre vendes ─────────
-        st.subheader("Evolució dels marges sobre vendes" if _ca else "Evolución de los márgenes sobre ventas")
+        if _ca:
+            exhibit_header(
+                1, "Del marge brut al marge operatiu: cada esglaó descompta un cost",
+                note="El marge brut és estable; el marge operatiu, més estret, absorbeix els "
+                     "xocs de cost en intermedis i salaris.",
+            )
+        else:
+            exhibit_header(
+                1, "Del margen bruto al margen operativo: cada escalón descuenta un coste",
+                note="El margen bruto es estable; el margen operativo, más estrecho, absorbe los "
+                     "shocks de coste en intermedios y salarios.",
+            )
 
         fig_marges = go.Figure()
         if has_brut:
@@ -590,7 +718,7 @@ with tab3:
                 x=df_m["any"], y=df_m["marge_brut_pct"],
                 mode="lines+markers",
                 name=("Marge brut sobre vendes" if _ca else "Margen bruto sobre ventas"),
-                line=dict(color=ORANGE, width=3),
+                line=dict(color=NAVY, width=3),
                 marker=dict(size=8),
                 hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
             ))
@@ -598,7 +726,7 @@ with tab3:
             x=df_m["any"], y=df_m["marge_vab"],
             mode="lines+markers",
             name=("Valor Afegit sobre vendes" if _ca else "Valor Añadido sobre ventas"),
-            line=dict(color=PURPLE, width=2.8),
+            line=dict(color=OCRE, width=2.8),
             marker=dict(size=7),
             hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
@@ -606,7 +734,7 @@ with tab3:
             x=df_m["any"], y=df_m["clu"],
             mode="lines+markers",
             name=("Cost laboral unitari" if _ca else "Coste laboral unitario"),
-            line=dict(color=BLUE, width=2.5, dash="dot"),
+            line=dict(color=G1_P, width=2.5, dash="dot"),
             marker=dict(size=6),
             hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
@@ -614,15 +742,22 @@ with tab3:
             x=df_m["any"], y=df_m["marge_op"],
             mode="lines+markers",
             name=("Marge operatiu (≈ EBITDA)" if _ca else "Margen operativo (≈ EBITDA)"),
-            line=dict(color=GREEN, width=2.8),
+            line=dict(color=RED, width=2.8),
             marker=dict(size=7),
             hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
         ))
-        apply_layout(fig_marges,
-            yaxis_title=("% sobre xifra de negoci" if _ca else "% sobre cifra de negocios"),
-            height=420,
+        _layout_marges = premium_plotly_layout(height=420, margin_right=30,
+            ytitle=("% sobre xifra de negoci" if _ca else "% sobre cifra de negocios"))
+        _layout_marges["showlegend"] = True
+        _layout_marges["yaxis"]["rangemode"] = "normal"
+        _layout_marges["yaxis"]["tickformat"] = ".0f"
+        _layout_marges["legend"] = dict(
+            orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+            font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
+            bgcolor="rgba(0,0,0,0)",
         )
-        st.plotly_chart(fig_marges, use_container_width=True)
+        fig_marges.update_layout(**_layout_marges)
+        st.plotly_chart(fig_marges, use_container_width=True, config=_CHART_CONFIG)
         source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
                else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 
@@ -631,8 +766,10 @@ with tab3:
                           "Ver descomposición de la cifra de negocios")
         with highlight_expander(_lbl_stack_exp, expanded=False):
             # ─── Gràfic 2: Composició de cada euro venut (waterfall implicit) ──
-            st.subheader("Descomposició de la xifra de negoci" if _ca
-                         else "Descomposición de la cifra de negocios")
+            if _ca:
+                exhibit_header(2, "On va cada euro facturat: mercaderia, intermedis, personal i excedent")
+            else:
+                exhibit_header(2, "Adónde va cada euro facturado: mercancía, intermedios, personal y excedente")
 
             df_w = df_m.copy()
             if has_brut and "cogs" in df_w.columns:
@@ -654,26 +791,26 @@ with tab3:
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["pct_cogs"],
                     name=("Cost de mercaderia (COGS)" if _ca else "Coste de mercancía (COGS)"),
-                    marker_color="#7f8c8d",
+                    marker_color="#9aa6b2",
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["pct_altres_int"],
                     name=("Altres intermedis (lloguer, energia, serveis)" if _ca
                           else "Otros intermedios (alquiler, energía, servicios)"),
-                    marker_color="#bdc3c7",
+                    marker_color="#cdd5dd",
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["pct_personal"],
                     name=("Personal" if _ca else "Personal"),
-                    marker_color=BLUE,
+                    marker_color=NAVY,
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["pct_excedent"],
                     name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
-                    marker_color=GREEN,
+                    marker_color=OCRE,
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
             else:
@@ -686,28 +823,35 @@ with tab3:
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["resta_intermedis"],
                     name=("Costos intermedis" if _ca else "Costes intermedios"),
-                    marker_color="#bdc3c7",
+                    marker_color="#cdd5dd",
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["resta_personal"],
                     name=("Personal" if _ca else "Personal"),
-                    marker_color=BLUE,
+                    marker_color=NAVY,
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
                 fig_stack.add_trace(go.Bar(
                     x=df_w["any"], y=df_w["resta_excedent"],
                     name=("Excedent brut (≈ EBITDA)" if _ca else "Excedente bruto (≈ EBITDA)"),
-                    marker_color=GREEN,
+                    marker_color=OCRE,
                     hovertemplate="<b>%{fullData.name}</b><br>%{x}: %{y:.1f}%<extra></extra>",
                 ))
 
-            apply_layout(fig_stack,
-                yaxis_title=("% de cada euro facturat" if _ca else "% de cada euro facturado"),
-                height=420,
-                barmode="stack",
+            _layout_stack = premium_plotly_layout(height=420, margin_right=30,
+                ytitle=("% de cada euro facturat" if _ca else "% de cada euro facturado"))
+            _layout_stack["showlegend"] = True
+            _layout_stack["barmode"] = "stack"
+            _layout_stack["yaxis"]["rangemode"] = "normal"
+            _layout_stack["yaxis"]["tickformat"] = ".0f"
+            _layout_stack["legend"] = dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+                font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
+                bgcolor="rgba(0,0,0,0)",
             )
-            st.plotly_chart(fig_stack, use_container_width=True)
+            fig_stack.update_layout(**_layout_stack)
+            st.plotly_chart(fig_stack, use_container_width=True, config=_CHART_CONFIG)
             source("INE, Enquesta Estructural d'Empreses Sector Comerç (taules 36194 + 36199). Càlcul propi" if _ca
                    else "INE, Encuesta Estructural de Empresas Sector Comercio (tablas 36194 + 36199). Cálculo propio")
 

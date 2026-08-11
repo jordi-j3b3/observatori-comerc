@@ -5,11 +5,17 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, apply_layout, highlight_expander,
-                   PURPLE, PURPLE_LIGHT, RED, GREEN, ORANGE, PALETTE)
+from style import (
+    inject_css, inject_premium_page_css, setup_lang, page_header,
+    insight, source, page_meta,
+    fnum, fpct, apply_layout, highlight_expander,
+    kicker, action_title, deck, key_takeaways, exhibit_header,
+    freshness_badge,
+    NAVY, OCRE, OCRE_DEEP, RED, G1_P, PALETTE,
+)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -197,76 +203,101 @@ HOVER_LBL_EX = "Exemples" if _ca else "Ejemplos"
 
 # ─── Capçalera ──────────────────────────────────────────────
 
-st.title("Subsectors del comerç al detall" if _ca else "Subsectores del comercio minorista")
-
-if _ca:
-    intro(
-        "El CNAE 47 agrupa diversos subsectors a tres dígits amb dinàmiques molt diferents: "
-        "des dels <strong>establiments no especialitzats</strong> (supermercats, hipermercats) fins al "
-        "<strong>comerç electrònic</strong> (CNAE 479) o la <strong>venda en mercadillos</strong>. "
-        "S'exclou el CNAE 473 (combustibles per a l'automoció) per la seva naturalesa atípica dins "
-        "del comerç al detall (preus regulats, dinàmica energètica). "
-        "Aquesta pàgina creua tres fonts oficials de l'INE per oferir una radiografia tridimensional: "
-        "<strong>Directori d'Empreses</strong> (estructura empresarial), "
-        "<strong>Enquesta Estructural d'Empreses</strong> (oferta: xifra de negoci, valor afegit, "
-        "ocupació) i <strong>Enquesta de Pressupostos Familiars</strong> (demanda: despesa de les "
-        "llars per tipus de béns)."
-    )
-else:
-    intro(
-        "El CNAE 47 agrupa varios subsectores a tres dígitos con dinámicas muy diferentes: "
-        "desde los <strong>establecimientos no especializados</strong> (super/hipermercados) hasta el "
-        "<strong>comercio electrónico</strong> (CNAE 479) o la <strong>venta en mercadillos</strong>. "
-        "Se excluye el CNAE 473 (combustibles para automoción) por su naturaleza atípica dentro "
-        "del comercio minorista (precios regulados, dinámica energética). "
-        "Esta página cruza tres fuentes oficiales del INE para ofrecer una radiografía tridimensional: "
-        "<strong>Directorio de Empresas</strong> (estructura empresarial), "
-        "<strong>Encuesta Estructural de Empresas</strong> (oferta: cifra de negocios, valor añadido, "
-        "empleo) y <strong>Encuesta de Presupuestos Familiares</strong> (demanda: gasto de los "
-        "hogares por tipo de bienes)."
-    )
+kicker("Anàlisi sectorial · Subsectors CNAE 47" if _ca
+       else "Análisis sectorial · Subsectores CNAE 47")
 
 if df_dirce.empty and df_eas.empty and df_epf.empty:
     st.warning("No hi ha dades disponibles." if _ca else "No hay datos disponibles.")
     st.stop()
 
-# ─── KPIs superiors ──────────────────────────────────────────
-
+# ─── Càlculs per a header i takeaways ─────────────────────────
+_hdr = {}
 if not df_dirce.empty:
-    last_year_dirce = int(df_dirce["any"].max())
-    df_last_dirce = df_dirce[df_dirce["any"] == last_year_dirce]
-    df_subs_dirce = df_last_dirce[
-        (df_last_dirce["codi"] != "47") & (~df_last_dirce["codi"].isin(EXCLUDE_CODES))
+    _hd_ly = int(df_dirce["any"].max())
+    _hd_fy = int(df_dirce["any"].min())
+    _hd_subs = df_dirce[
+        (df_dirce["codi"] != "47") & (~df_dirce["codi"].isin(EXCLUDE_CODES))
     ].copy()
+    _hd_f = _hd_subs[_hd_subs["any"] == _hd_fy][["codi", "empreses"]].rename(columns={"empreses": "f"})
+    _hd_l = _hd_subs[_hd_subs["any"] == _hd_ly][["codi", "empreses"]].rename(columns={"empreses": "l"})
+    _hd_m = _hd_f.merge(_hd_l, on="codi")
+    _hd_m["var"] = (_hd_m["l"] / _hd_m["f"] - 1) * 100
+    _hd_win = _hd_m.sort_values("var").iloc[-1]
+    _hd_los = _hd_m.sort_values("var").iloc[0]
+    _hd_n_grow = int((_hd_m["var"] >= 0).sum())
+    _hd_n_lose = int((_hd_m["var"] < 0).sum())
+    _hd_n_tot = len(_hd_m)
+    _hdr.update(fy=_hd_fy, ly=_hd_ly, win=_hd_win, los=_hd_los,
+                n_grow=_hd_n_grow, n_lose=_hd_n_lose, n_tot=_hd_n_tot)
 
-    if not df_subs_dirce.empty:
-        top_subs = df_subs_dirce.sort_values("empreses", ascending=False).iloc[0]
-        total_47 = df_last_dirce[df_last_dirce["codi"] == "47"]["empreses"].sum()
-        share_top = top_subs["empreses"] / total_47 * 100 if total_47 else 0
+# Líder en facturació (EAS), per al deck
+if not df_eas.empty:
+    _he_ly = int(df_eas["any"].max())
+    _he = df_eas[(df_eas["codi"] != "47") & (~df_eas["codi"].isin(EXCLUDE_CODES))
+                 & (df_eas["any"] == _he_ly)].copy()
+    if not _he.empty:
+        _he_tot = _he["xifra_negoci"].sum()
+        _he_top = _he.sort_values("xifra_negoci", ascending=False).iloc[0]
+        _hdr["xn_top_code"] = _he_top["codi"]
+        _hdr["xn_top_share"] = _he_top["xifra_negoci"] / _he_tot * 100 if _he_tot else 0
+        _he["productiv"] = _he["valor_afegit"] / _he["personal_ocupat"]
+        _he_s = _he.sort_values("productiv")
+        _hdr["prod_ratio"] = _he_s.iloc[-1]["productiv"] / _he_s.iloc[0]["productiv"] if _he_s.iloc[0]["productiv"] else 0
 
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric(
-            f"{'Subsectors CNAE 47' if _ca else 'Subsectores CNAE 47'}",
-            f"{df_subs_dirce['codi'].nunique()}",
-        )
-        col2.metric(
-            f"{'Empreses CNAE 47' if _ca else 'Empresas CNAE 47'} ({last_year_dirce})",
-            fnum(total_47),
-        )
-        col3.metric(
-            f"{'Subsector amb més empreses' if _ca else 'Subsector con más empresas'}",
-            SLABEL.get(top_subs["codi"], top_subs["codi"]),
-            help=("Lideratge mesurat pel nombre d'empreses. En facturació i ocupació, el "
-                  "subsector líder és sovint un altre (vegeu pestanya Activitat).") if _ca else
-                 ("Liderazgo medido por número de empresas. En facturación y empleo, el "
-                  "subsector líder suele ser otro (ver pestaña Actividad)."),
-        )
-        col4.metric(
-            f"{'% del total empreses' if _ca else '% del total empresas'} ({last_year_dirce})",
-            fpct(share_top, 1, sign=False),
-        )
+# ─── HEADER ──────────────────────────────────────────────────
+if "win" in _hdr:
+    _win_lbl = SUBSECTOR_LABELS[LANG].get(_hdr["win"]["codi"], _hdr["win"]["codi"])
+    _los_lbl = SUBSECTOR_LABELS[LANG].get(_hdr["los"]["codi"], _hdr["los"]["codi"])
+    if _ca:
+        action_title(
+            f"{_hdr['n_lose']} de {_hdr['n_tot']} subsectors del comerç al detall "
+            f"perden empreses entre {_hdr['fy']} i {_hdr['ly']}")
+        deck(
+            f"L'únic subsector en expansió és {_win_lbl} ({fpct(_hdr['win']['var'])}); "
+            f"el comerç físic especialitzat es contrau, encapçalat per {_los_lbl} "
+            f"({fpct(_hdr['los']['var'])}).")
+    else:
+        action_title(
+            f"{_hdr['n_lose']} de {_hdr['n_tot']} subsectores del comercio minorista "
+            f"pierden empresas entre {_hdr['fy']} y {_hdr['ly']}")
+        deck(
+            f"El único subsector en expansión es {_win_lbl} ({fpct(_hdr['win']['var'])}); "
+            f"el comercio físico especializado se contrae, encabezado por {_los_lbl} "
+            f"({fpct(_hdr['los']['var'])}).")
 
-st.markdown("---")
+    if _ca:
+        _takeaways = [
+            f"Entre {_hdr['fy']} i {_hdr['ly']}, <b>{_hdr['n_lose']} dels "
+            f"{_hdr['n_tot']} subsectors</b> a tres dígits redueixen el nombre d'empreses; "
+            f"només <b>{_win_lbl.lower()}</b> creix (<b>{fpct(_hdr['win']['var'])}</b>).",
+            f"<b>{_los_lbl}</b> és el subsector que més es contrau "
+            f"(<b>{fpct(_hdr['los']['var'])}</b>), pressionat per la digitalització i el gran format.",
+        ]
+        if "xn_top_share" in _hdr:
+            _xn_lbl = SUBSECTOR_LABELS[LANG].get(_hdr["xn_top_code"], _hdr["xn_top_code"])
+            _takeaways.append(
+                f"El rànquing per empreses no és el de facturació: "
+                f"<b>{_xn_lbl.lower()}</b> mou el <b>{fpct(_hdr['xn_top_share'], 1, sign=False)}</b> "
+                f"de la xifra de negoci amb pocs operadors grans.")
+        _tk_label = "Conclusions clau"
+    else:
+        _takeaways = [
+            f"Entre {_hdr['fy']} y {_hdr['ly']}, <b>{_hdr['n_lose']} de los "
+            f"{_hdr['n_tot']} subsectores</b> a tres dígitos reducen el número de empresas; "
+            f"solo <b>{_win_lbl.lower()}</b> crece (<b>{fpct(_hdr['win']['var'])}</b>).",
+            f"<b>{_los_lbl}</b> es el subsector que más se contrae "
+            f"(<b>{fpct(_hdr['los']['var'])}</b>), presionado por la digitalización y el gran formato.",
+        ]
+        if "xn_top_share" in _hdr:
+            _xn_lbl = SUBSECTOR_LABELS[LANG].get(_hdr["xn_top_code"], _hdr["xn_top_code"])
+            _takeaways.append(
+                f"El ranking por empresas no coincide con el de facturación: "
+                f"<b>{_xn_lbl.lower()}</b> mueve el <b>{fpct(_hdr['xn_top_share'], 1, sign=False)}</b> "
+                f"de la cifra de negocios con pocos operadores grandes.")
+        _tk_label = "Conclusiones clave"
+    key_takeaways(_takeaways, label=_tk_label)
+
+freshness_badge(["subsectors_dirce", "subsectors_eas", "subsectors_epf"], st.session_state.lang)
 
 # ─── TABS ────────────────────────────────────────────────────
 
@@ -284,8 +315,6 @@ with tab1:
     if df_dirce.empty:
         st.info("Sense dades DIRCE." if _ca else "Sin datos DIRCE.")
     else:
-        st.subheader("Empreses per subsector" if _ca else "Empresas por subsector")
-
         last_year = int(df_dirce["any"].max())
         df_subs = df_dirce[
             (df_dirce["codi"] != "47") & (df_dirce["any"] == last_year)
@@ -295,11 +324,27 @@ with tab1:
         df_subs["examples"] = df_subs["codi"].map(SEXAMPLES).fillna("")
         df_subs = df_subs.sort_values("empreses", ascending=True)
 
+        _t1_lead = df_subs.iloc[-1]
+        _t1_total = df_subs["empreses"].sum()
+        _t1_share = _t1_lead["empreses"] / _t1_total * 100 if _t1_total else 0
+        if _ca:
+            exhibit_header(
+                1, f"{_t1_lead['label']} concentra {fpct(_t1_share, 1, sign=False)} "
+                   f"de les empreses del comerç al detall ({last_year})",
+                note="El rànquing per nombre d'empreses no és el de facturació: el lideratge "
+                     "en establiments i el lideratge en volum recauen en subsectors diferents.")
+        else:
+            exhibit_header(
+                1, f"{_t1_lead['label']} concentra {fpct(_t1_share, 1, sign=False)} "
+                   f"de las empresas del comercio minorista ({last_year})",
+                note="El ranking por número de empresas no coincide con el de facturación: "
+                     "el liderazgo en establecimientos y en volumen recaen en subsectores distintos.")
+
         fig_bar = go.Figure()
         fig_bar.add_trace(go.Bar(
             y=df_subs["label"], x=df_subs["empreses"],
             orientation="h",
-            marker_color=PURPLE,
+            marker_color=NAVY,
             text=[fnum(v) for v in df_subs["empreses"]],
             textposition="outside",
             textfont=dict(size=11),
@@ -364,8 +409,6 @@ with tab1:
             )
 
         # Evolució per subsector
-        st.subheader("Evolució per subsector" if _ca else "Evolución por subsector")
-
         first_year = int(df_dirce["any"].min())
         df_first = df_dirce[
             (df_dirce["codi"] != "47") & (df_dirce["any"] == first_year)
@@ -381,8 +424,23 @@ with tab1:
         df_var["examples"] = df_var["codi"].map(SEXAMPLES).fillna("")
         df_var = df_var.sort_values("var_pct", ascending=True)
 
+        _n_grow_t1 = int((df_var["var_pct"] >= 0).sum())
+        _n_lose_t1 = int((df_var["var_pct"] < 0).sum())
+        if _ca:
+            exhibit_header(
+                2, f"{_n_lose_t1} dels {len(df_var)} subsectors perden empreses "
+                   f"entre {first_year} i {last_year}",
+                note="Les barres blaves marquen subsectors que guanyen teixit empresarial; "
+                     "les vermelles, els que en perden.")
+        else:
+            exhibit_header(
+                2, f"{_n_lose_t1} de los {len(df_var)} subsectores pierden empresas "
+                   f"entre {first_year} y {last_year}",
+                note="Las barras azules marcan subsectores que ganan tejido empresarial; "
+                     "las rojas, los que lo pierden.")
+
         fig_var = go.Figure()
-        colors = [GREEN if v >= 0 else RED for v in df_var["var_pct"]]
+        colors = [NAVY if v >= 0 else RED for v in df_var["var_pct"]]
         fig_var.add_trace(go.Bar(
             y=df_var["label"], x=df_var["var_pct"],
             orientation="h",
@@ -563,14 +621,28 @@ with tab2:
                 "total CNAE 47 por redondeos estadísticos de la misma encuesta."
             )
 
-        st.subheader(f"{'Xifra de negoci per subsector' if _ca else 'Cifra de negocios por subsector'} ({last_year})")
-
         df_xn = df_subs.sort_values("xifra_negoci", ascending=True)
+        _xn_lead = df_xn.iloc[-1]
+        _xn_tot = df_subs["xifra_negoci"].sum()
+        _xn_share = _xn_lead["xifra_negoci"] / _xn_tot * 100 if _xn_tot else 0
+        if _ca:
+            exhibit_header(
+                1, f"{_xn_lead['label']} factura {fpct(_xn_share, 1, sign=False)} "
+                   f"del comerç al detall ({last_year})",
+                note="Pocs operadors grans (Mercadona, Carrefour, Lidl, El Corte Inglés) "
+                     "expliquen el gruix del volum dels establiments no especialitzats.")
+        else:
+            exhibit_header(
+                1, f"{_xn_lead['label']} factura {fpct(_xn_share, 1, sign=False)} "
+                   f"del comercio minorista ({last_year})",
+                note="Pocos operadores grandes (Mercadona, Carrefour, Lidl, El Corte Inglés) "
+                     "explican el grueso del volumen de los establecimientos no especializados.")
+
         fig_xn = go.Figure()
         fig_xn.add_trace(go.Bar(
             y=df_xn["label"], x=df_xn["xifra_negoci"] / 1e9,
             orientation="h",
-            marker_color=PURPLE,
+            marker_color=NAVY,
             text=[f"{v/1e9:.1f}".replace(".", ",") + " M€" for v in df_xn["xifra_negoci"]],
             textposition="outside",
             textfont=dict(size=11),
@@ -594,8 +666,6 @@ with tab2:
                else "INE, Encuesta Estructural de Empresas Sector Comercio, tabla 76818")
 
         # Productivitat: VA per persona ocupada
-        st.subheader(f"{'Productivitat (VA per persona ocupada)' if _ca else 'Productividad (VA por persona ocupada)'} ({last_year})")
-
         df_pr = df_subs.copy()
         df_pr["productivitat"] = df_pr["valor_afegit"] / df_pr["personal_ocupat"]
         df_pr = df_pr.sort_values("productivitat", ascending=True)
@@ -605,11 +675,27 @@ with tab2:
         per_sum = df_subs["personal_ocupat"].sum()
         avg_prod = va_sum / per_sum if per_sum else None
 
+        _pr_top = df_pr.iloc[-1]
+        _pr_bot = df_pr.iloc[0]
+        _pr_ratio = _pr_top["productivitat"] / _pr_bot["productivitat"] if _pr_bot["productivitat"] else 0
+        if _ca:
+            exhibit_header(
+                2, f"{_pr_top['label']} genera {fnum(_pr_ratio, 1)} vegades més valor "
+                   f"per ocupat que {_pr_bot['label']} ({last_year})",
+                note="La bretxa de productivitat reflecteix intensitat de capital, tícket mitjà "
+                     "i escala empresarial molt diferents entre subsectors.")
+        else:
+            exhibit_header(
+                2, f"{_pr_top['label']} genera {fnum(_pr_ratio, 1)} veces más valor "
+                   f"por ocupado que {_pr_bot['label']} ({last_year})",
+                note="La brecha de productividad refleja intensidad de capital, ticket medio "
+                     "y escala empresarial muy distintos entre subsectores.")
+
         fig_pr = go.Figure()
         fig_pr.add_trace(go.Bar(
             y=df_pr["label"], x=df_pr["productivitat"],
             orientation="h",
-            marker_color=ORANGE,
+            marker_color=OCRE,
             text=[f"{v/1000:.1f}".replace(".", ",") + "k€" for v in df_pr["productivitat"]],
             textposition="outside",
             textfont=dict(size=11),
@@ -624,7 +710,7 @@ with tab2:
         ))
         if avg_prod:
             fig_pr.add_vline(
-                x=avg_prod, line_dash="dash", line_color=PURPLE, line_width=2,
+                x=avg_prod, line_dash="dash", line_color=NAVY, line_width=2,
                 annotation_text=f"{'Mitjana subsectors' if _ca else 'Media subsectores'}: {avg_prod/1000:.1f}k€".replace(".", ","),
                 annotation_position="top right",
             )
@@ -639,14 +725,25 @@ with tab2:
                else "INE, Encuesta Estructural de Empresas Sector Comercio. Cálculo propio")
 
         # Personal ocupat
-        st.subheader(f"{'Persones ocupades per subsector' if _ca else 'Personas ocupadas por subsector'} ({last_year})")
+        df_per = df_subs.sort_values("personal_ocupat", ascending=True)
+        _per_lead = df_per.iloc[-1]
+        _per_tot = df_subs["personal_ocupat"].sum()
+        _per_share = _per_lead["personal_ocupat"] / _per_tot * 100 if _per_tot else 0
+        if _ca:
+            exhibit_header(
+                3, f"{_per_lead['label']} ocupa {fpct(_per_share, 1, sign=False)} "
+                   f"de les persones del comerç al detall ({last_year})")
+        else:
+            exhibit_header(
+                3, f"{_per_lead['label']} ocupa {fpct(_per_share, 1, sign=False)} "
+                   f"de las personas del comercio minorista ({last_year})")
 
         df_per = df_subs.sort_values("personal_ocupat", ascending=True)
         fig_per = go.Figure()
         fig_per.add_trace(go.Bar(
             y=df_per["label"], x=df_per["personal_ocupat"],
             orientation="h",
-            marker_color=GREEN,
+            marker_color=OCRE_DEEP,
             text=[fnum(v) for v in df_per["personal_ocupat"]],
             textposition="outside",
             textfont=dict(size=11),
@@ -830,17 +927,27 @@ with tab3:
                 "Ver el mapeo detallado en la página Metodología."
             )
 
-        st.subheader(
-            f"{'Despesa anual de la llar al comerç al detall' if _ca else 'Gasto anual del hogar en el comercio al detalle'} ({last_year})"
-        )
-
         df_groups = df_groups.sort_values("despesa_per_llar", ascending=True)
+
+        _ep_lead = df_groups.iloc[-1]
+        if _ca:
+            exhibit_header(
+                1, f"{_ep_lead['label']} encapçala la despesa de la llar al comerç al "
+                   f"detall: {fnum(_ep_lead['despesa_per_llar'])} €/any ({last_year})",
+                note="Es mostren només les categories de despesa que es compren al comerç "
+                     "minorista; queden fora habitatge, transport, restauració i educació.")
+        else:
+            exhibit_header(
+                1, f"{_ep_lead['label']} encabeza el gasto del hogar en el comercio "
+                   f"minorista: {fnum(_ep_lead['despesa_per_llar'])} €/año ({last_year})",
+                note="Se muestran solo las categorías de gasto que se compran en el comercio "
+                     "minorista; quedan fuera vivienda, transporte, restauración y educación.")
 
         fig_epf = go.Figure()
         fig_epf.add_trace(go.Bar(
             y=df_groups["label"], x=df_groups["despesa_per_llar"],
             orientation="h",
-            marker_color=PURPLE,
+            marker_color=NAVY,
             text=[fnum(v) + " €" for v in df_groups["despesa_per_llar"]],
             textposition="outside",
             textfont=dict(size=11),
@@ -903,8 +1010,6 @@ with tab3:
                        "Ver evolución temporal del gasto por categoría")
         with highlight_expander(_lbl_evo_exp, expanded=False):
             # Evolucio temporal (line chart simple amb pivot table)
-            st.subheader("Evolució de la despesa al llarg del temps" if _ca else "Evolución del gasto a lo largo del tiempo")
-
             sel_default = ["01", "03", "05", "09"]
             sel_codis = st.multiselect(
                 ("Selecciona categories" if _ca else "Selecciona categorías"),
@@ -1116,10 +1221,14 @@ with tab4:
     if df_472.empty:
         st.info("Sense dades disponibles." if _ca else "Sin datos disponibles.")
     else:
-        st.subheader(
-            "Detall del grup d'alimentació (472): anàlisi per especialitat" if _ca
-            else "Detalle del grupo de alimentación (472): análisis por especialidad"
-        )
+        if _ca:
+            exhibit_header(
+                1, "Dins l'alimentació especialitzada, cada especialitat segueix la seva pròpia corba",
+                note="Tria una especialitat per separar el creixement nominal de l'efecte preus.")
+        else:
+            exhibit_header(
+                1, "Dentro de la alimentación especializada, cada especialidad sigue su propia curva",
+                note="Elige una especialidad para separar el crecimiento nominal del efecto precios.")
         st.caption(
             "Tria una especialitat per veure'n l'evolució 2018-2024. El gràfic s'indexa a l'any "
             "inicial (=100) i mostra la facturació a preus corrents (nominal) i constants (deflactada "
@@ -1192,9 +1301,9 @@ with tab4:
         # Gràfic indexat (base any inicial = 100): fa visible la divergència
         fig = go.Figure()
         for col, name, color in (
-            ("xifra_negoci", "Facturació (nominal)" if _ca else "Facturación (nominal)", PURPLE),
-            ("n_empreses_eas", "Establiments" if _ca else "Establecimientos", ORANGE),
-            ("personal_ocupat", "Ocupació" if _ca else "Ocupación", GREEN),
+            ("xifra_negoci", "Facturació (nominal)" if _ca else "Facturación (nominal)", NAVY),
+            ("n_empreses_eas", "Establiments" if _ca else "Establecimientos", OCRE),
+            ("personal_ocupat", "Ocupació" if _ca else "Ocupación", G1_P),
         ):
             base = d[d["any"] == yr0][col].iloc[0]
             if base:
@@ -1210,7 +1319,7 @@ with tab4:
                     x=d["any"], y=d["xifra_negoci_constants"] / base_c * 100,
                     mode="lines+markers",
                     name=("Facturació (constant)" if _ca else "Facturación (constante)"),
-                    line=dict(color=PURPLE, width=2.2, dash="dash"),
+                    line=dict(color=OCRE_DEEP, width=2.2, dash="dash"),
                 ))
         fig.add_hline(y=100, line=dict(color="#bbb", width=1, dash="dot"))
         apply_layout(fig, yaxis_title=f"Índex ({yr0}=100)", height=420)

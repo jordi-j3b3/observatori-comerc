@@ -7,10 +7,11 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header, page_meta  # noqa: E402
+from style import inject_css, inject_premium_page_css, setup_lang, page_header, page_meta, kicker, action_title, deck  # noqa: E402
 from modules.press import fetch_press  # noqa: E402
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -22,9 +23,12 @@ def _load():
     return fetch_press()
 
 
+kicker("Actualitat · Comerç, distribució i consum" if _ca
+       else "Actualidad · Comercio, distribución y consumo")
 title_col, btn_col = st.columns([5, 1])
 with title_col:
-    st.title("Recull de premsa" if _ca else "Resumen de prensa")
+    action_title("Les notícies del comerç minorista, filtrades i datades" if _ca
+                 else "Las noticias del comercio minorista, filtradas y fechadas")
 with btn_col:
     st.write("")  # spacer per alinear vertical
     if st.button(
@@ -36,11 +40,9 @@ with btn_col:
         _load.clear()
         st.rerun()
 
-st.markdown(
-    "*Notícies seleccionades de fonts sectorials, generalistes i institucionals sobre comerç al detall, distribució i consum a Espanya.*"
-    if _ca else
-    "*Noticias seleccionadas de fuentes sectoriales, generalistas e institucionales sobre comercio minorista, distribución y consumo en España.*"
-)
+deck("Notícies seleccionades de fonts sectorials, generalistes i institucionals sobre comerç al detall, distribució i consum a Espanya."
+     if _ca else
+     "Noticias seleccionadas de fuentes sectoriales, generalistas e institucionales sobre comercio minorista, distribución y consumo en España.")
 
 with st.spinner("Carregant feeds…" if _ca else "Cargando feeds…"):
     df = _load()

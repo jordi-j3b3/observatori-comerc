@@ -14,9 +14,11 @@ from pathlib import Path
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import inject_css, setup_lang, page_header  # noqa: E402
+from style import (inject_css, inject_premium_page_css, setup_lang,  # noqa: E402
+                   page_header, kicker, action_title, deck)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -566,19 +568,16 @@ def load_issues() -> list[tuple[date, dict, str]]:
 
 st.markdown(PULSO_CSS, unsafe_allow_html=True)
 
-st.title("El Pulso de la setmana" if _ca else "El Pulso de la semana")
-st.markdown(
-    '<div class="pulso-intro">'
-    + ("Cada dilluns, una mirada concisa al moment del consum minorista a Espanya i Europa: "
-       "una xifra, tres notícies comentades, dades comparades i una predicció signada. "
-       "A dalt tens l'última edició; a sota, l'arxiu de les anteriors."
-       if _ca else
-       "Cada lunes, una mirada concisa al momento del consumo minorista en España y Europa: "
-       "una cifra, tres noticias comentadas, datos comparados y una predicción firmada. "
-       "Arriba tienes la última edición; debajo, el archivo de las anteriores.")
-    + "</div>",
-    unsafe_allow_html=True,
-)
+kicker("Editorial · Arxiu del butlletí setmanal" if _ca
+       else "Editorial · Archivo del boletín semanal")
+action_title("El Pulso de la setmana" if _ca else "El Pulso de la semana")
+deck("Cada dilluns, una mirada concisa al moment del consum minorista a Espanya i Europa: "
+     "una xifra, tres notícies comentades, dades comparades i una predicció signada. "
+     "A dalt tens l'última edició; a sota, l'arxiu de les anteriors."
+     if _ca else
+     "Cada lunes, una mirada concisa al momento del consumo minorista en España y Europa: "
+     "una cifra, tres noticias comentadas, datos comparados y una predicción firmada. "
+     "Arriba tienes la última edición; debajo, el archivo de las anteriores.")
 
 issues = load_issues()
 

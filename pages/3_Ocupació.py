@@ -5,12 +5,15 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from style import (inject_css, setup_lang, page_header, insight, intro, source, page_meta,
-                   fnum, fpct, cagr, apply_layout, highlight_expander,
-                   PURPLE, RED, BLUE, ORANGE,
-                   BRAND, BRAND_DEEP, YELLOW)
+from style import (inject_css, inject_premium_page_css, setup_lang, page_header,
+                   insight, intro, source, page_meta,
+                   fnum, fpct, apply_layout, highlight_expander,
+                   kicker, action_title, deck, key_takeaways, shock_stat,
+                   exhibit_header, metrics_band, premium_plotly_layout, freshness_badge,
+                   NAVY, OCRE, OCRE_DEEP, G1_P, G2_P)
 
 inject_css()
+inject_premium_page_css()
 t = setup_lang(show_selector=False)
 page_header()
 
@@ -49,18 +52,146 @@ _ocu_sig = ((os.path.getsize(_OCU_PATH), int(os.path.getmtime(_OCU_PATH)))
             if os.path.exists(_OCU_PATH) else (0, 0))
 df_ocu = load_ocu_sx(_ocu_sig)
 
-st.title(t("ocu_title"))
-intro(
-    ("L'<strong>ocupació</strong> del comerç al detall, en tres mirades: el <strong>volum i la "
-     "intensitat</strong> (persones, hores, treballadors per empresa), els <strong>salaris</strong> "
-     "comparats amb el conjunt de l'economia, i el <strong>perfil</strong> de qui hi treballa "
-     "(sexe i edat)."
-     if _ca else
-     "El <strong>empleo</strong> del comercio minorista, en tres miradas: el <strong>volumen y la "
-     "intensidad</strong> (personas, horas, trabajadores por empresa), los <strong>salarios</strong> "
-     "comparados con el conjunto de la economía, y el <strong>perfil</strong> de quien trabaja "
-     "(sexo y edad).")
-)
+kicker("Anàlisi estructural · Ocupació" if _ca else "Análisis estructural · Empleo")
+
+# ─── Càlculs per a header, takeaways i shock stat ────────────
+# Volum i intensitat (EEE)
+_hd_ok = (not df_prod.empty and "personal_ocupat" in df_prod.columns
+          and "hores_treballades" in df_prod.columns)
+if _hd_ok:
+    _hd = df_prod.sort_values("any")
+    _hd_oc = _hd.dropna(subset=["personal_ocupat"])
+    _hd_h = _hd.dropna(subset=["hores_treballades"])
+    _hd_fy = int(_hd_oc.iloc[0]["any"])
+    _hd_ly = int(_hd_oc.iloc[-1]["any"])
+    _hd_var_oc = (_hd_oc.iloc[-1]["personal_ocupat"] / _hd_oc.iloc[0]["personal_ocupat"] - 1) * 100
+    _hd_var_h = (_hd_h.iloc[-1]["hores_treballades"] / _hd_h.iloc[0]["hores_treballades"] - 1) * 100
+    _hd_hpt_f = _hd_h.iloc[0]["hores_treballades"] / _hd_oc.iloc[0]["personal_ocupat"]
+    _hd_hpt_l = _hd_h.iloc[-1]["hores_treballades"] / _hd_oc.iloc[-1]["personal_ocupat"]
+    _hd_gap = _hd_var_h - _hd_var_oc  # punts: quant més creixen les hores que els caps
+
+# Salaris (EAES)
+_hd_sal_ok = False
+if not df_eaes.empty:
+    _hd_yr = int(df_eaes["any"].max())
+    _hd_e = df_eaes[df_eaes["any"] == _hd_yr]
+    _ST = "Industria, construcción y servicios (excepto actividades de los hogares como empleadores y de organizaciones y organismos extraterritoriales)"
+    _SC = "Comercio al por mayor y al por menor; reparación de vehículos de motor y motocicletas"
+    _hd_t = _hd_e[_hd_e["sector"] == _ST]
+    _hd_c = _hd_e[_hd_e["sector"] == _SC]
+    if not _hd_t.empty and not _hd_c.empty:
+        _hd_vt = float(_hd_t["valor"].iloc[0])
+        _hd_vc = float(_hd_c["valor"].iloc[0])
+        _hd_sal_pct = (_hd_vc - _hd_vt) / _hd_vt * 100
+        _hd_sal_ok = True
+
+# Perfil: edat (Eurostat EU-LFS)
+_hd_perf_ok = False
+if not df_ocu.empty:
+    _hd_pu = int(df_ocu["any"].max())
+    _hd_pf = int(df_ocu["any"].min())
+
+    def _hd_sen(p, y):
+        a = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["pais_codi"] == p) & (df_ocu["any"] == y)]
+        s = a.groupby("edat")["ocupats_milers"].sum()
+        if not s.sum():
+            return None
+        return (s.get("50-59", 0) + s.get("60-64", 0) + s.get("65+", 0)) / s.sum() * 100
+
+    def _hd_jove(p, y):
+        a = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["pais_codi"] == p) & (df_ocu["any"] == y)]
+        s = a.groupby("edat")["ocupats_milers"].sum()
+        return (s.get("15-24", 0) / s.sum() * 100) if s.sum() else None
+
+    def _hd_dones(p, y):
+        b = df_ocu[(df_ocu["pais_codi"] == p) & (df_ocu["any"] == y)]
+        tot = b[b["sexe"] == "Total"]["ocupats_milers"].sum()
+        don = b[b["sexe"] == "Dones"]["ocupats_milers"].sum()
+        return (don / tot * 100) if tot else None
+
+    _hd_sen_f = _hd_sen("ES", _hd_pf)
+    _hd_sen_l = _hd_sen("ES", _hd_pu)
+    _hd_jove_f = _hd_jove("ES", _hd_pf)
+    _hd_jove_l = _hd_jove("ES", _hd_pu)
+    _hd_dones_l = _hd_dones("ES", _hd_pu)
+    _hd_perf_ok = _hd_sen_l is not None
+
+# ─── HEADER ──────────────────────────────────────────────────
+if _ca:
+    if _hd_ok:
+        action_title(
+            f"El comerç afegeix hores ({fpct(_hd_var_h, 0)}), no ocupació "
+            f"({fpct(_hd_var_oc, 0)}), des del {_hd_fy}"
+        )
+    else:
+        action_title("Ocupació del comerç al detall")
+    deck(
+        "El sector intensifica la jornada de la plantilla existent més que no contracta, "
+        "paga per sota de la mitjana i envelleix de pressa."
+    )
+else:
+    if _hd_ok:
+        action_title(
+            f"El comercio añade horas ({fpct(_hd_var_h, 0)}), no empleo "
+            f"({fpct(_hd_var_oc, 0)}), desde {_hd_fy}"
+        )
+    else:
+        action_title("Empleo del comercio minorista")
+    deck(
+        "El sector intensifica la jornada de la plantilla existente más que contrata, "
+        "paga por debajo de la media y envejece rápido."
+    )
+
+if _ca:
+    _takeaways = []
+    if _hd_ok:
+        _takeaways.append(
+            f"Entre {_hd_fy} i {_hd_ly}, les hores treballades creixen un "
+            f"<b>{fpct(_hd_var_h, 1)}</b> i el personal ocupat només un "
+            f"<b>{fpct(_hd_var_oc, 1)}</b>: la jornada per treballador puja de "
+            f"<b>{fnum(_hd_hpt_f)}</b> a <b>{fnum(_hd_hpt_l)}</b> h/any."
+        )
+    if _hd_sal_ok:
+        _takeaways.append(
+            f"El sector comerç paga un <b>{fpct(abs(_hd_sal_pct), 1, sign=False)} menys</b> "
+            f"que la mitjana de l'economia espanyola "
+            f"(<b>{fnum(_hd_vc)}</b> vs {fnum(_hd_vt)} EUR, EAES {_hd_yr})."
+        )
+    if _hd_perf_ok:
+        _takeaways.append(
+            f"La plantilla envelleix: els 50 anys o més passen del "
+            f"<b>{fpct(_hd_sen_f, 1, sign=False)}</b> ({_hd_pf}) al "
+            f"<b>{fpct(_hd_sen_l, 1, sign=False)}</b> ({_hd_pu}), i els joves 15-24 cauen del "
+            f"<b>{fpct(_hd_jove_f, 1, sign=False)}</b> al <b>{fpct(_hd_jove_l, 1, sign=False)}</b>."
+        )
+    _tk_label = "Conclusions clau"
+else:
+    _takeaways = []
+    if _hd_ok:
+        _takeaways.append(
+            f"Entre {_hd_fy} y {_hd_ly}, las horas trabajadas crecen un "
+            f"<b>{fpct(_hd_var_h, 1)}</b> y el personal ocupado solo un "
+            f"<b>{fpct(_hd_var_oc, 1)}</b>: la jornada por trabajador sube de "
+            f"<b>{fnum(_hd_hpt_f)}</b> a <b>{fnum(_hd_hpt_l)}</b> h/año."
+        )
+    if _hd_sal_ok:
+        _takeaways.append(
+            f"El sector comercio paga un <b>{fpct(abs(_hd_sal_pct), 1, sign=False)} menos</b> "
+            f"que la media de la economía española "
+            f"(<b>{fnum(_hd_vc)}</b> vs {fnum(_hd_vt)} EUR, EAES {_hd_yr})."
+        )
+    if _hd_perf_ok:
+        _takeaways.append(
+            f"La plantilla envejece: los 50 años o más pasan del "
+            f"<b>{fpct(_hd_sen_f, 1, sign=False)}</b> ({_hd_pf}) al "
+            f"<b>{fpct(_hd_sen_l, 1, sign=False)}</b> ({_hd_pu}), y los jóvenes 15-24 caen del "
+            f"<b>{fpct(_hd_jove_f, 1, sign=False)}</b> al <b>{fpct(_hd_jove_l, 1, sign=False)}</b>."
+        )
+    _tk_label = "Conclusiones clave"
+
+if _takeaways:
+    key_takeaways(_takeaways, label=_tk_label)
+freshness_badge(["ocupacio_comerc", "eaes"], st.session_state.lang)
 
 tab_vol, tab_sal, tab_perfil = st.tabs([
     ("Volum i intensitat" if _ca else "Volumen e intensidad"),
@@ -97,57 +228,121 @@ with tab_vol:
         last = df.dropna(subset=["personal_ocupat"]).iloc[-1]
         var_ocu = ((last["personal_ocupat"] / first["personal_ocupat"]) - 1) * 100
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric(f"{'Personal ocupat' if _ca else 'Personal ocupado'} ({int(last['any'])})",
-                    fnum(last['personal_ocupat']))
-        col2.metric(f"{'Variació' if _ca else 'Variación'} {int(first['any'])}-{int(last['any'])}",
-                    fpct(var_ocu))
-        if "hores_treballades" in df.columns:
-            last_h = df.dropna(subset=["hores_treballades"]).iloc[-1]
-            col3.metric(f"{'Hores' if _ca else 'Horas'} ({int(last_h['any'])})",
-                        f"{fnum(last_h['hores_treballades'] / 1e6)}M h")
-
-        st.subheader(t("ocu_evolution"))
+        if _ca:
+            exhibit_header(
+                1, f"El personal ocupat varia un {fpct(var_ocu, 1)} entre "
+                   f"{int(first['any'])} i {int(last['any'])}",
+                note="El nombre de persones al sector es manté gairebé pla; el moviment "
+                     "rellevant és a les hores, no als caps.",
+            )
+        else:
+            exhibit_header(
+                1, f"El personal ocupado varía un {fpct(var_ocu, 1)} entre "
+                   f"{int(first['any'])} y {int(last['any'])}",
+                note="El número de personas en el sector se mantiene casi plano; el movimiento "
+                     "relevante está en las horas, no en las cabezas.",
+            )
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=df["any"], y=df["personal_ocupat"],
-            mode="lines+markers", name=t("kpi_ocupacio"),
-            line=dict(color=PURPLE, width=2.5), marker=dict(size=6),
-            fill="tozeroy", fillcolor="rgba(93,79,255,0.08)"))
-        apply_layout(fig,
-            yaxis_title=("Persones" if _ca else "Personas"),
-            height=400, yaxis_range=[1500000, 2000000])
+            mode="lines", name=t("kpi_ocupacio"),
+            line=dict(color=NAVY, shape="spline", smoothing=0.5, width=3),
+            fill="tozeroy", fillcolor="rgba(11,58,102,0.06)",
+            hovertemplate="<b>%{y:,.0f}</b><extra></extra>"))
+        _x_oc = int(df.dropna(subset=["personal_ocupat"])["any"].iloc[-1])
+        _y_oc = float(df.dropna(subset=["personal_ocupat"])["personal_ocupat"].iloc[-1])
+        fig.add_trace(go.Scatter(
+            x=[_x_oc], y=[_y_oc], mode="markers", showlegend=False, hoverinfo="skip",
+            marker=dict(color=NAVY, size=10, line=dict(color="white", width=2))))
+        _l1 = premium_plotly_layout(height=400, margin_right=120,
+                                    ytitle=("Persones" if _ca else "Personas"))
+        _l1["yaxis"]["rangemode"] = "normal"
+        _l1["yaxis"]["range"] = [
+            float(df["personal_ocupat"].min()) * 0.96,
+            float(df["personal_ocupat"].max()) * 1.03,
+        ]
+        _l1["annotations"] = [dict(
+            x=_x_oc, y=_y_oc, xanchor="left", xshift=14, showarrow=False, align="left",
+            text=f"<b>{fnum(_y_oc)}</b><br><span style='color:{G1_P}'>{_x_oc}</span>",
+            font=dict(color=NAVY, size=13))]
+        fig.update_layout(**_l1)
         st.plotly_chart(fig, use_container_width=True)
         source("INE, Estadística Estructural d'Empreses (EEE)" if _ca
                else "INE, Estadística Estructural de Empresas (EEE)")
 
         if "hores_treballades" in df.columns:
-            st.subheader(t("ocu_hours"))
+            df_h2 = df.dropna(subset=["hores_treballades"])
+            _vh = (df_h2.iloc[-1]["hores_treballades"] / df_h2.iloc[0]["hores_treballades"] - 1) * 100
+            if _ca:
+                exhibit_header(
+                    2, f"Les hores treballades creixen un {fpct(_vh, 1)}: quatre vegades "
+                       f"més que els caps",
+                    note="El volum total de treball efectiu puja molt per sobre del nombre "
+                         "de persones: el sector estira la jornada.",
+                )
+            else:
+                exhibit_header(
+                    2, f"Las horas trabajadas crecen un {fpct(_vh, 1)}: cuatro veces "
+                       f"más que las cabezas",
+                    note="El volumen total de trabajo efectivo sube muy por encima del número "
+                         "de personas: el sector estira la jornada.",
+                )
             fig2 = go.Figure()
             fig2.add_trace(go.Bar(
                 x=df["any"], y=df["hores_treballades"] / 1e6,
-                marker_color=BLUE,
+                marker_color=NAVY,
                 text=[f"{fnum(v / 1e6)}M" for v in df["hores_treballades"]],
-                textposition="outside", textfont=dict(size=10)))
-            apply_layout(fig2,
-                yaxis_title=("Milions d'hores" if _ca else "Millones de horas"),
-                height=400)
+                textposition="outside",
+                textfont=dict(size=10, color=G1_P, family="Manrope, system-ui, sans-serif")))
+            _l2 = premium_plotly_layout(
+                height=400, margin_right=30,
+                ytitle=("Milions d'hores" if _ca else "Millones de horas"))
+            _l2["yaxis"]["rangemode"] = "normal"
+            _l2["yaxis"]["range"] = [0, float(df["hores_treballades"].max() / 1e6) * 1.12]
+            fig2.update_layout(**_l2)
             st.plotly_chart(fig2, use_container_width=True)
             source("INE, EEE")
+
+            # Shock stat: intensificació de jornada
+            if _hd_ok and _ca:
+                shock_stat(
+                    fpct(_hd_gap, 1), " pp",
+                    f"de diferència entre el creixement de les hores ({fpct(_hd_var_h, 1)}) i el "
+                    f"de l'ocupació ({fpct(_hd_var_oc, 1)}) entre {_hd_fy} i {_hd_ly}. "
+                    f"El sector treballa més estirant la plantilla, no ampliant-la.",
+                    sub="Intensificació de la jornada",
+                )
+            elif _hd_ok:
+                shock_stat(
+                    fpct(_hd_gap, 1), " pp",
+                    f"de diferencia entre el crecimiento de las horas ({fpct(_hd_var_h, 1)}) y el "
+                    f"del empleo ({fpct(_hd_var_oc, 1)}) entre {_hd_fy} y {_hd_ly}. "
+                    f"El sector trabaja más estirando la plantilla, no ampliándola.",
+                    sub="Intensificación de la jornada",
+                )
 
         if "hores_treballades" in df.columns and "personal_ocupat" in df.columns:
             df["hores_per_treballador"] = df["hores_treballades"] / df["personal_ocupat"]
             _lbl_hpt_exp = ("Veure hores anuals per treballador" if _ca
                             else "Ver horas anuales por trabajador")
             with highlight_expander(_lbl_hpt_exp, expanded=False):
+                _dfk = df.dropna(subset=["hores_per_treballador"])
                 fig_hpt = go.Figure()
                 fig_hpt.add_trace(go.Scatter(
-                    x=df["any"], y=df["hores_per_treballador"],
-                    mode="lines+markers",
-                    line=dict(color=ORANGE, width=2.5), marker=dict(size=6)))
-                apply_layout(fig_hpt,
-                    yaxis_title=("Hores/any per treballador" if _ca else "Horas/año por trabajador"),
-                    height=380)
+                    x=_dfk["any"], y=_dfk["hores_per_treballador"],
+                    mode="lines",
+                    line=dict(color=OCRE, shape="spline", smoothing=0.5, width=3),
+                    fill="tozeroy", fillcolor="rgba(176,125,43,0.07)",
+                    hovertemplate="%{x}: <b>%{y:,.0f}</b> h<extra></extra>"))
+                _lk = premium_plotly_layout(
+                    height=380, margin_right=30,
+                    ytitle=("Hores/any per treballador" if _ca else "Horas/año por trabajador"))
+                _lk["yaxis"]["rangemode"] = "normal"
+                _lk["yaxis"]["range"] = [
+                    float(_dfk["hores_per_treballador"].min()) * 0.96,
+                    float(_dfk["hores_per_treballador"].max()) * 1.04,
+                ]
+                fig_hpt.update_layout(**_lk)
                 st.plotly_chart(fig_hpt, use_container_width=True)
                 source("INE, EEE. Càlcul propi" if _ca else "INE, EEE. Cálculo propio")
 
@@ -165,17 +360,17 @@ with tab_vol:
                 if _intensifica:
                     titol_bloc = "<strong>Més hores, no més contractació.</strong>"
                     lectura = (
-                        f"El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla "
-                        f"existent abans que crear nous llocs de treball. La reforma laboral de 2022 — que va "
-                        f"limitar la temporalitat i va impulsar la conversió a contractes indefinits — ha "
-                        f"contribuït a aquest patró: menys rotació i més hores per treballador."
+                        "El sector ha optat per <strong>intensificar la jornada</strong> de la plantilla "
+                        "existent abans que crear nous llocs de treball. La reforma laboral de 2022 — que va "
+                        "limitar la temporalitat i va impulsar la conversió a contractes indefinits — ha "
+                        "contribuït a aquest patró: menys rotació i més hores per treballador."
                     )
                 else:
                     titol_bloc = "<strong>Més contractació, menys intensitat.</strong>"
                     lectura = (
-                        f"El sector ha optat per <strong>ampliar la plantilla</strong> més que intensificar "
-                        f"la jornada existent: la creació de nous llocs de treball ha anat per davant de "
-                        f"l'augment d'hores per treballador."
+                        "El sector ha optat per <strong>ampliar la plantilla</strong> més que intensificar "
+                        "la jornada existent: la creació de nous llocs de treball ha anat per davant de "
+                        "l'augment d'hores per treballador."
                     )
                 verb_hpt = "ha passat" if _hpt_creix else "ha passat (a la baixa)"
                 txt = (
@@ -195,17 +390,17 @@ with tab_vol:
                 if _intensifica:
                     titol_bloc = "<strong>Más horas, no más contratación.</strong>"
                     lectura = (
-                        f"El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla "
-                        f"existente antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — "
-                        f"que limitó la temporalidad e impulsó la conversión a contratos indefinidos — ha "
-                        f"contribuido a este patrón: menos rotación y más horas por trabajador."
+                        "El sector ha optado por <strong>intensificar la jornada</strong> de la plantilla "
+                        "existente antes que crear nuevos puestos de trabajo. La reforma laboral de 2022 — "
+                        "que limitó la temporalidad e impulsó la conversión a contratos indefinidos — ha "
+                        "contribuido a este patrón: menos rotación y más horas por trabajador."
                     )
                 else:
                     titol_bloc = "<strong>Más contratación, menos intensidad.</strong>"
                     lectura = (
-                        f"El sector ha optado por <strong>ampliar la plantilla</strong> más que intensificar "
-                        f"la jornada existente: la creación de nuevos puestos ha ido por delante del "
-                        f"aumento de horas por trabajador."
+                        "El sector ha optado por <strong>ampliar la plantilla</strong> más que intensificar "
+                        "la jornada existente: la creación de nuevos puestos ha ido por delante del "
+                        "aumento de horas por trabajador."
                     )
                 verb_hpt = "ha pasado" if _hpt_creix else "ha pasado (a la baja)"
                 txt = (
@@ -224,21 +419,47 @@ with tab_vol:
             insight(txt)
 
     # ─── Treballadors per empresa ───
-    st.subheader(t("ocu_per_company"))
     df_esp = df_emp[df_emp["territori"] == "espanya"].sort_values("any") if not df_emp.empty else pd.DataFrame()
 
     if not df_prod.empty and not df_esp.empty and "personal_ocupat" in df_prod.columns:
         merged = df_prod[["any", "personal_ocupat"]].merge(df_esp[["any", "empreses"]], on="any")
         merged["treb_per_empresa"] = merged["personal_ocupat"] / merged["empreses"]
 
+        _te_f0 = merged.iloc[0]["treb_per_empresa"] if len(merged) else None
+        _te_l0 = merged.iloc[-1]["treb_per_empresa"] if len(merged) else None
+        if _te_f0 is not None and _te_l0 is not None:
+            _te_pj = _te_l0 > _te_f0
+            if _ca:
+                exhibit_header(
+                    3, f"La dimensió mitjana {'puja' if _te_pj else 'baixa'} a "
+                       f"{fnum(_te_l0, 1)} treballadors per empresa",
+                    note="La ràtio connecta l'ocupació amb el cens d'empreses; reflecteix "
+                         "el canvi d'escala del teixit comercial.",
+                )
+            else:
+                exhibit_header(
+                    3, f"La dimensión media {'sube' if _te_pj else 'baja'} a "
+                       f"{fnum(_te_l0, 1)} trabajadores por empresa",
+                    note="La ratio conecta el empleo con el censo de empresas; refleja "
+                         "el cambio de escala del tejido comercial.",
+                )
         fig3 = go.Figure()
         fig3.add_trace(go.Scatter(
             x=merged["any"], y=merged["treb_per_empresa"],
-            mode="lines+markers",
-            line=dict(color=ORANGE, width=2.5), marker=dict(size=6)))
-        apply_layout(fig3,
-            yaxis_title=("Treballadors / empresa" if _ca else "Trabajadores / empresa"),
-            height=400)
+            mode="lines",
+            line=dict(color=OCRE, shape="spline", smoothing=0.5, width=3),
+            fill="tozeroy", fillcolor="rgba(176,125,43,0.07)",
+            hovertemplate="%{x}: <b>%{y:.1f}</b><extra></extra>"))
+        _l3 = premium_plotly_layout(
+            height=400, margin_right=30,
+            ytitle=("Treballadors / empresa" if _ca else "Trabajadores / empresa"))
+        _l3["yaxis"]["rangemode"] = "normal"
+        _l3["yaxis"]["range"] = [
+            float(merged["treb_per_empresa"].min()) * 0.92,
+            float(merged["treb_per_empresa"].max()) * 1.06,
+        ]
+        _l3["yaxis"]["tickformat"] = ".1f"
+        fig3.update_layout(**_l3)
         st.plotly_chart(fig3, use_container_width=True)
         source("INE, EEE i DIRCE. Càlcul propi" if _ca else "INE, EEE y DIRCE. Cálculo propio")
 
@@ -294,6 +515,25 @@ with tab_vol:
         st.info("Dades insuficients per calcular treballadors per empresa." if _ca
                 else "Datos insuficientes para calcular trabajadores por empresa.")
 
+    # ─── Banda de mètriques (resum volum i intensitat) ───
+    if _hd_ok:
+        _mb_voc = ("+" if _hd_var_oc >= 0 else "") + fnum(_hd_var_oc, 1)
+        _mb_vh = ("+" if _hd_var_h >= 0 else "") + fnum(_hd_var_h, 1)
+        if _ca:
+            metrics_band([
+                (fnum(_hd_oc.iloc[-1]["personal_ocupat"]), "", f"Personal ocupat ({_hd_ly})"),
+                (_mb_voc, "%", f"Variació ocupació {_hd_fy}–{_hd_ly}"),
+                (_mb_vh, "%", f"Variació hores {_hd_fy}–{_hd_ly}"),
+                (fnum(_hd_hpt_l), "h", f"Jornada anual · {fnum(_hd_hpt_f)} h el {_hd_fy}"),
+            ])
+        else:
+            metrics_band([
+                (fnum(_hd_oc.iloc[-1]["personal_ocupat"]), "", f"Personal ocupado ({_hd_ly})"),
+                (_mb_voc, "%", f"Variación empleo {_hd_fy}–{_hd_ly}"),
+                (_mb_vh, "%", f"Variación horas {_hd_fy}–{_hd_ly}"),
+                (fnum(_hd_hpt_l), "h", f"Jornada anual · {fnum(_hd_hpt_f)} h en {_hd_fy}"),
+            ])
+
 # ════════════════════════════════════════════════════════════
 # TAB 2: SALARIS (EAES, comerç vs total economia)
 # ════════════════════════════════════════════════════════════
@@ -331,32 +571,35 @@ with tab_sal:
             _diff = _v_comer - _v_total
             _diff_pct = (_diff / _v_total) * 100
 
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.metric(("Mitjana economia espanyola" if _ca else "Media economía española"),
-                          f"{fnum(_v_total)} EUR", help=f"EAES {_yr_eaes} · jornada equivalent")
-            with c2:
-                st.metric(("Sector comerç (G45+G46+G47)" if _ca else "Sector comercio (G45+G46+G47)"),
-                          f"{fnum(_v_comer)} EUR", help=f"EAES {_yr_eaes} · inclou majorista")
-            with c3:
-                _label_diff = ("Diferència sobre la mitjana" if _ca else "Diferencia sobre la media")
-                st.metric(_label_diff, fpct(_diff_pct, 1),
-                          delta=f"{fnum(_diff)} EUR", delta_color="inverse")
+            if _ca:
+                exhibit_header(
+                    1, f"El sector comerç paga un {fpct(abs(_diff_pct), 1, sign=False)} menys "
+                       f"que la mitjana de l'economia ({_yr_eaes})",
+                    note="Salari brut anual per treballador a jornada equivalent; la xifra del "
+                         "sector G inclou majorista i tendeix a sobreestimar el retail pur.",
+                )
+            else:
+                exhibit_header(
+                    1, f"El sector comercio paga un {fpct(abs(_diff_pct), 1, sign=False)} menos "
+                       f"que la media de la economía ({_yr_eaes})",
+                    note="Salario bruto anual por trabajador a jornada equivalente; la cifra del "
+                         "sector G incluye mayorista y tiende a sobreestimar el retail puro.",
+                )
 
             _lbl_total = "Total economia espanyola" if _ca else "Total economía española"
             _lbl_comer = "Sector comerç (G)" if _ca else "Sector comercio (G)"
             _comp = pd.DataFrame({
                 "Categoria": [_lbl_total, _lbl_comer],
                 "Valor": [_v_total, _v_comer],
-                "Color": [BRAND_DEEP, BRAND],
+                "Color": [G2_P, NAVY],
             })
 
             fig_c = go.Figure()
             fig_c.add_trace(go.Bar(
                 y=_comp["Categoria"], x=_comp["Valor"], orientation="h",
-                marker=dict(color=_comp["Color"], line=dict(color=BRAND_DEEP, width=0.5)),
+                marker=dict(color=_comp["Color"]),
                 text=[f"{fnum(v)} EUR" for v in _comp["Valor"]],
-                textposition="outside", textfont=dict(size=13, color=BRAND_DEEP),
+                textposition="outside", textfont=dict(size=13, color=G1_P),
                 hovertemplate="<b>%{y}</b>: %{x:,.0f} EUR<extra></extra>", width=0.5))
             apply_layout(fig_c,
                 xaxis_title="EUR / treballador / any" if _ca else "EUR / trabajador / año",
@@ -375,13 +618,13 @@ with tab_sal:
                     fig_evo.add_trace(go.Scatter(
                         x=_serie_total["any"], y=_serie_total["valor"],
                         mode="lines+markers", name=_lbl_total,
-                        line=dict(color=BRAND_DEEP, width=2.8), marker=dict(size=7),
+                        line=dict(color=NAVY, width=2.8), marker=dict(size=7),
                         hovertemplate="<b>%{x}</b>: %{y:,.0f} EUR<extra></extra>"))
                     fig_evo.add_trace(go.Scatter(
                         x=_serie_comer["any"], y=_serie_comer["valor"],
                         mode="lines+markers", name=_lbl_comer,
-                        line=dict(color=YELLOW, width=2.8),
-                        marker=dict(size=7, line=dict(color=BRAND_DEEP, width=1)),
+                        line=dict(color=OCRE, width=2.8),
+                        marker=dict(size=7, line=dict(color=OCRE_DEEP, width=1)),
                         hovertemplate="<b>%{x}</b>: %{y:,.0f} EUR<extra></extra>"))
                     apply_layout(fig_evo,
                         yaxis_title="EUR / treballador / any" if _ca else "EUR / trabajador / año",
@@ -417,6 +660,22 @@ with tab_sal:
                     f"sobreestimar ligeramente el salario del retail estrictamente G47 "
                     f"porque el mayorista paga más de media.</em>"
                 )
+
+            # ─── Banda de mètriques (resum salaris) ───
+            if _ca:
+                metrics_band([
+                    (fnum(_v_comer), "EUR", f"Salari sector comerç ({_yr_eaes})"),
+                    (fnum(_v_total), "EUR", "Mitjana economia espanyola"),
+                    (fnum(_diff_pct, 1), "%", "Diferència sobre la mitjana"),
+                    (fnum(_diff), "EUR", "Bretxa anual per treballador"),
+                ])
+            else:
+                metrics_band([
+                    (fnum(_v_comer), "EUR", f"Salario sector comercio ({_yr_eaes})"),
+                    (fnum(_v_total), "EUR", "Media economía española"),
+                    (fnum(_diff_pct, 1), "%", "Diferencia sobre la media"),
+                    (fnum(_diff), "EUR", "Brecha anual por trabajador"),
+                ])
 
 # ════════════════════════════════════════════════════════════
 # TAB 3: PERFIL — sexe i edat (Eurostat EU-LFS)
@@ -466,18 +725,19 @@ with tab_perfil:
         jove_es, jove_ue = _ageshare("ES", _ult, "15-24"), _ageshare("EU27_2020", _ult, "15-24")
         sen_es, sen_first = _senshare("ES", _ult), _senshare("ES", _first)
 
-        k1, k2, k3 = st.columns(3)
-        k1.metric(("Dones al comerç" if _ca else "Mujeres en el comercio"),
-                  fpct(w_es, 1, sign=False), help=(f"UE-27: {fpct(w_ue, 1, sign=False)}"))
-        k2.metric(("Joves 15-24" if _ca else "Jóvenes 15-24"),
-                  fpct(jove_es, 1, sign=False),
-                  delta=fpct(jove_es - _ageshare("ES", _first, "15-24"), 1),
-                  delta_color="normal",
-                  help=(f"vs {_first}; UE-27 avui: {fpct(jove_ue, 1, sign=False)}"))
-        k3.metric(("50 anys o més" if _ca else "50 años o más"),
-                  fpct(sen_es, 1, sign=False),
-                  delta=fpct(sen_es - sen_first, 1),
-                  delta_color="off", help=(f"vs {_first}"))
+        jove_first = _ageshare("ES", _first, "15-24")
+        if _ca:
+            metrics_band([
+                (fpct(w_es, 1, sign=False), "", f"Dones al comerç · UE-27 {fpct(w_ue, 1, sign=False)}"),
+                (fpct(jove_es, 1, sign=False), "", f"Joves 15-24 · {fpct(jove_first, 1, sign=False)} el {_first}"),
+                (fpct(sen_es, 1, sign=False), "", f"50 anys o més · {fpct(sen_first, 1, sign=False)} el {_first}"),
+            ])
+        else:
+            metrics_band([
+                (fpct(w_es, 1, sign=False), "", f"Mujeres en el comercio · UE-27 {fpct(w_ue, 1, sign=False)}"),
+                (fpct(jove_es, 1, sign=False), "", f"Jóvenes 15-24 · {fpct(jove_first, 1, sign=False)} en {_first}"),
+                (fpct(sen_es, 1, sign=False), "", f"50 años o más · {fpct(sen_first, 1, sign=False)} en {_first}"),
+            ])
 
         _sub_sexe, _sub_edat = st.tabs([
             ("Sexe" if _ca else "Sexo"),
@@ -485,14 +745,20 @@ with tab_perfil:
         ])
 
         with _sub_sexe:
-            st.markdown("**Un sector majoritàriament femení**" if _ca
-                        else "**Un sector mayoritariamente femenino**")
+            if _ca:
+                exhibit_header(
+                    1, f"Les dones són el {fpct(w_es, 1, sign=False)} dels ocupats al comerç, "
+                       f"per sota de la UE-27 ({fpct(w_ue, 1, sign=False)})")
+            else:
+                exhibit_header(
+                    1, f"Las mujeres son el {fpct(w_es, 1, sign=False)} de los ocupados del comercio, "
+                       f"por debajo de la UE-27 ({fpct(w_ue, 1, sign=False)})")
             _piv = df_ocu.pivot_table(index=["pais_codi", "any"], columns="sexe",
                                       values="ocupats_milers", aggfunc="sum").reset_index()
             _piv["quota_dones"] = _piv["Dones"] / _piv["Total"] * 100
             figg = go.Figure()
-            for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                                  ("EU27_2020", ORANGE, "UE-27")]:
+            for _p, _col, _nm in [("ES", NAVY, ("Espanya" if _ca else "España")),
+                                  ("EU27_2020", OCRE, "UE-27")]:
                 _d = _piv[_piv["pais_codi"] == _p].sort_values("any")
                 figg.add_trace(go.Scatter(
                     x=_d["any"], y=_d["quota_dones"], mode="lines+markers", name=_nm,
@@ -503,10 +769,20 @@ with tab_perfil:
 
         with _sub_edat:
             # (a) Evolució longitudinal de l'estructura d'edat a Espanya (àrea apilada 100%)
-            st.markdown(("**Com evoluciona l'estructura d'edat a Espanya** "
-                         f"({_first}–{_ult})" if _ca else
-                         "**Cómo evoluciona la estructura de edad en España** "
-                         f"({_first}–{_ult})"))
+            if _ca:
+                exhibit_header(
+                    1, f"El pes dels 50 anys o més passa del {fpct(sen_first, 1, sign=False)} "
+                       f"al {fpct(sen_es, 1, sign=False)} entre {_first} i {_ult}",
+                    note="Estructura d'edat dels ocupats a Espanya en percentatge del total, "
+                         "any rere any. Les franges fosques són les edats altes.",
+                )
+            else:
+                exhibit_header(
+                    1, f"El peso de los 50 años o más pasa del {fpct(sen_first, 1, sign=False)} "
+                       f"al {fpct(sen_es, 1, sign=False)} entre {_first} y {_ult}",
+                    note="Estructura de edad de los ocupados en España en porcentaje del total, "
+                         "año tras año. Las franjas oscuras son las edades altas.",
+                )
             _es = df_ocu[(df_ocu["sexe"] == "Total") & (df_ocu["pais_codi"] == "ES")]
             _pv = _es.pivot_table(index="any", columns="edat",
                                   values="ocupats_milers", aggfunc="sum")
@@ -523,11 +799,17 @@ with tab_perfil:
             source("Eurostat lfsa_egan22d (EU-LFS), CNAE G47")
 
             # (b) Foto actual: Espanya vs UE-27 per franja
-            st.markdown((f"**Foto actual: Espanya vs UE-27** ({_ult})" if _ca
-                         else f"**Foto actual: España vs UE-27** ({_ult})"))
+            if _ca:
+                exhibit_header(
+                    2, f"El comerç espanyol té menys joves 15-24 que la UE-27 "
+                       f"({fpct(jove_es, 1, sign=False)} vs {fpct(jove_ue, 1, sign=False)}) el {_ult}")
+            else:
+                exhibit_header(
+                    2, f"El comercio español tiene menos jóvenes 15-24 que la UE-27 "
+                       f"({fpct(jove_es, 1, sign=False)} vs {fpct(jove_ue, 1, sign=False)}) en {_ult}")
             figa = go.Figure()
-            for _p, _col, _nm in [("ES", BRAND, ("Espanya" if _ca else "España")),
-                                  ("EU27_2020", ORANGE, "UE-27")]:
+            for _p, _col, _nm in [("ES", NAVY, ("Espanya" if _ca else "España")),
+                                  ("EU27_2020", OCRE, "UE-27")]:
                 _ys = [_ageshare(_p, _ult, b) for b in _ages]
                 figa.add_trace(go.Bar(x=_ages, y=_ys, name=_nm, marker_color=_col))
             apply_layout(figa, yaxis_title="% dels ocupats" if _ca else "% de los ocupados",
