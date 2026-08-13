@@ -93,8 +93,8 @@
    "detected_at": "2026-07-07"
   },
   "ipc_coicop": {
-   "last_data": "2026-06",
-   "detected_at": "2026-08-03"
+   "last_data": "2026-07",
+   "detected_at": "2026-08-13"
   },
   "epa_retail": {
    "last_data": "2026-T2",
@@ -106,6 +106,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "ipc_coicop",
+   "label_ca": "IPC per grups (alimentació, vestit, llar)",
+   "label_es": "IPC por grupos (alimentación, vestido, hogar)",
+   "last_data": "2026-07",
+   "detected_at": "2026-08-13"
+  },
   {
    "dataset": "cdmge",
    "label_ca": "Pols diari",
