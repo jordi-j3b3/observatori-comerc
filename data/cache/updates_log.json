@@ -41,8 +41,8 @@
    "detected_at": "2026-07-25"
   },
   "cdmge": {
-   "last_data": "2026-07-15",
-   "detected_at": "2026-07-31"
+   "last_data": "2026-07-31",
+   "detected_at": "2026-08-22"
   },
   "ipc": {
    "last_data": "2025",
@@ -106,6 +106,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "cdmge",
+   "label_ca": "Pols diari",
+   "label_es": "Pulso diario",
+   "last_data": "2026-07-31",
+   "detected_at": "2026-08-22"
+  },
   {
    "dataset": "ipc_coicop",
    "label_ca": "IPC per grups (alimentació, vestit, llar)",
