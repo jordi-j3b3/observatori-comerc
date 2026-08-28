@@ -7,7 +7,7 @@
   "confianza_consumidor": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "482 files"
+    "missatge": "483 files"
   },
   "digitalitzacio_comerc": {
     "estat": "ok",
@@ -37,7 +37,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8947 files"
+    "missatge": "8951 files"
   },
   "europa_vab": {
     "estat": "ok",
@@ -47,7 +47,7 @@
   "icm": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "48233 files"
+    "missatge": "48261 files"
   },
   "icm_distribucion": {
     "estat": "ok",
