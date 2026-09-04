@@ -41,8 +41,8 @@
    "detected_at": "2026-08-27"
   },
   "cdmge": {
-   "last_data": "2026-07-31",
-   "detected_at": "2026-08-22"
+   "last_data": "2026-08-15",
+   "detected_at": "2026-09-04"
   },
   "ipc": {
    "last_data": "2025",
@@ -77,16 +77,16 @@
    "detected_at": "2026-06-27"
   },
   "estructura_retail": {
-   "last_data": "2023",
-   "detected_at": "2026-06-27"
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
   },
   "estructura_retail_mida": {
-   "last_data": "2023",
-   "detected_at": "2026-06-27"
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
   },
   "estructura_retail_supervivencia": {
-   "last_data": "2023",
-   "detected_at": "2026-06-27"
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
   },
   "marges_branca_ine": {
    "last_data": "2024",
@@ -106,6 +106,34 @@
   }
  },
  "events": [
+  {
+   "dataset": "estructura_retail_supervivencia",
+   "label_ca": "Supervivència d'empreses (UE)",
+   "label_es": "Supervivencia de empresas (UE)",
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
+  },
+  {
+   "dataset": "estructura_retail_mida",
+   "label_ca": "Comerç UE per mida d'empresa",
+   "label_es": "Comercio UE por tamaño de empresa",
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
+  },
+  {
+   "dataset": "estructura_retail",
+   "label_ca": "Estructura del comerç a la UE (SBS)",
+   "label_es": "Estructura del comercio en la UE (SBS)",
+   "last_data": "2024",
+   "detected_at": "2026-09-04"
+  },
+  {
+   "dataset": "cdmge",
+   "label_ca": "Pols diari",
+   "label_es": "Pulso diario",
+   "last_data": "2026-08-15",
+   "detected_at": "2026-09-04"
+  },
   {
    "dataset": "confianza_consumidor",
    "label_ca": "Confiança del consumidor",

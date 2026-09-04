@@ -2,7 +2,7 @@
   "cdmge": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "13022 files"
+    "missatge": "13113 files"
   },
   "confianza_consumidor": {
     "estat": "ok",
@@ -37,7 +37,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8968 files"
+    "missatge": "8974 files"
   },
   "europa_vab": {
     "estat": "ok",
