@@ -55,6 +55,13 @@ COLORS = {
     "Catalunya, total": "#c0c0c0",
 }
 
+# Paleta del gràfic del diferencial: navy per a la mitjana mòbil, blau grisós per a
+# la línia mensual i vermell discret per a la referència de zero.
+NAVY = "#1B2A4A"
+BLAU_GRIS = "#4A6080"
+VERMELL = "#C0392B"
+TIPUS = "Inter, Helvetica, Arial, sans-serif"
+
 
 def _icm(indicador, ambit, tipus, branca=BRANCA):
     d = pd.read_csv(os.path.join(CACHE, "icm.csv"))
@@ -145,6 +152,90 @@ def escletxa_anual(anys, a="Comertia", b="Grans cadenes"):
             fa *= 1 + tram[a] / 100
             fb *= 1 + tram[b] / 100
     return (fb / fa - 1) * 100
+
+
+def diferencial(taula, finestra=12):
+    """Diferencial mensual contra les grans cadenes i la seva mitjana mòbil.
+
+    L'índex de `index_relatiu` són dotze cadenes anuals paral·leles, una per mes de
+    calendari, i el seu valor terminal es mou uns quants punts només d'avançar de mes.
+    El diferencial en variació interanual no arrossega aquesta fragilitat —cada mes es
+    compara amb el mateix mes de l'any anterior a totes dues sèries— però és sorollós,
+    i un mes solt no diu res. La mitjana mòbil de dotze mesos treu el soroll sense
+    dependre de cap any base i és el que es pot ensenyar sense haver de defensar una
+    convenció d'índex.
+
+    Retorna un DataFrame amb `diferencial` (punts percentuals, positiu = Comertia
+    creix més) i `mm12`, buit als onze primers mesos de la finestra.
+    """
+    d = (taula["Comertia"] - taula["Grans cadenes"]).dropna()
+    return pd.DataFrame({"diferencial": d, "mm12": d.rolling(finestra).mean()})
+
+
+def _svg_diferencial(dif, amplada=760, alcada=330):
+    """Gràfic del diferencial: línia mensual, mitjana mòbil de 12 mesos i zero."""
+    lo = float(min(dif["diferencial"].min(), 0))
+    hi = float(max(dif["diferencial"].max(), 0))
+    marge = (hi - lo) * 0.12
+    lo, hi = lo - marge, hi + marge
+    PL, PR, PT, PB = 46, 200, 16, 30
+    n = len(dif)
+
+    def px(i):
+        return PL + i * (amplada - PL - PR) / max(n - 1, 1)
+
+    def py(v):
+        return PT + (hi - v) * (alcada - PT - PB) / (hi - lo)
+
+    def num(v):
+        return f"{v:+.1f}".replace(".", ",").replace("-", "−")
+
+    p = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {amplada} {alcada}" '
+         f'width="{amplada}" height="{alcada}" font-family="{TIPUS}">']
+    p.append(f'<rect width="{amplada}" height="{alcada}" fill="#ffffff"/>')
+
+    pas = 2 if (hi - lo) < 12 else 5
+    marca = int(lo // pas * pas)
+    while marca <= hi:
+        if lo <= marca <= hi and marca != 0:
+            y = py(marca)
+            p.append(f'<line x1="{PL}" y1="{y:.1f}" x2="{amplada - PR}" y2="{y:.1f}" '
+                     f'stroke="#ececec" stroke-width="1"/>')
+            p.append(f'<text x="{PL - 7}" y="{y + 3.5:.1f}" font-size="10" fill="#6a6a6a" '
+                     f'text-anchor="end">{str(marca).replace("-", "−")}</text>')
+        marca += pas
+
+    # Zero: la línia que separa créixer més que les grans cadenes de créixer menys.
+    y0 = py(0)
+    p.append(f'<line x1="{PL}" y1="{y0:.1f}" x2="{amplada - PR}" y2="{y0:.1f}" '
+             f'stroke="{VERMELL}" stroke-width="1" stroke-dasharray="3 3"/>')
+    p.append(f'<text x="{PL - 7}" y="{y0 + 3.5:.1f}" font-size="10" fill="{VERMELL}" '
+             f'text-anchor="end">0</text>')
+
+    for col, color, gruix in (("diferencial", BLAU_GRIS, 1.4), ("mm12", NAVY, 2.6)):
+        s = dif[col]
+        pts = " ".join(f"{px(i):.1f},{py(v):.1f}"
+                       for i, v in enumerate(s) if pd.notna(v))
+        p.append(f'<polyline fill="none" stroke="{color}" stroke-width="{gruix}" '
+                 f'stroke-linejoin="round" points="{pts}"/>')
+
+    etiquetes = [("mm12", NAVY, "Mitjana mòbil 12 mesos"),
+                 ("diferencial", BLAU_GRIS, "Diferencial mensual")]
+    for col, color, text in etiquetes:
+        s = dif[col].dropna()
+        if not len(s):
+            continue
+        i = list(dif.index).index(s.index[-1])
+        p.append(f'<text x="{px(i) + 8:.1f}" y="{py(s.iloc[-1]) + 3.5:.1f}" '
+                 f'font-size="11" fill="{color}">{text} {num(s.iloc[-1])}</text>')
+
+    for i, d in enumerate(dif.index):
+        if d.month in (1, 7) or i == n - 1:
+            p.append(f'<text x="{px(i):.1f}" y="{alcada - 10}" font-size="10" '
+                     f'fill="#6a6a6a" text-anchor="middle">{d.strftime("%m/%y")}</text>')
+
+    p.append("</svg>")
+    return "".join(p)
 
 
 def _svg(rel, fi, amplada=760, alcada=330):
@@ -238,8 +329,10 @@ def main():
         print(f"  Escletxa encadenant els {len(anys)} anys mobils: "
               f"{escletxa_anual(anys):.1f} punts (l'ultim any es parcial).")
 
+    dif12 = pd.DataFrame()
     if "Grans cadenes" in taula.columns:
-        dif = (taula["Comertia"] - taula["Grans cadenes"]).dropna()
+        dif12 = diferencial(taula)
+        dif = dif12["diferencial"]
         guanya = int((dif > 0).sum())
         print("\n=== 4. Mes a mes contra les grans cadenes ===")
         print(f"  Comertia creix mes en {guanya} de {len(dif)} mesos "
@@ -247,6 +340,14 @@ def main():
         print(f"  Anys mobils en que Comertia queda per sota: "
               f"{sum(1 for t in anys.values() if t['Comertia'] < t['Grans cadenes'])} "
               f"de {len(anys)}.")
+
+        mm = dif12["mm12"].dropna()
+        print(f"\n  Mitjana mobil de 12 mesos ({len(mm)} punts, de {mm.index[0]:%m/%y} "
+              f"a {mm.index[-1]:%m/%y}):")
+        print(f"    ultima  {mm.iloc[-1]:+.2f} punts ({mm.index[-1]:%m/%Y})")
+        print(f"    minima  {mm.min():+.2f} punts ({mm.idxmin():%m/%Y})")
+        print(f"    maxima  {mm.max():+.2f} punts ({mm.idxmax():%m/%Y})")
+        print(f"    mesos per sota de zero: {int((mm < 0).sum())} de {len(mm)}")
 
     online = _icm("var_anual", "nacional", "real", ONLINE).loc[INICI:fi]
     total_real = _icm("var_anual", "nacional", "real").loc[INICI:fi]
@@ -262,6 +363,9 @@ def main():
     sortida = taula[ordre].copy()
     for c in ordre:
         sortida[f"{c} — index"] = rel[c]
+    if not dif12.empty:
+        sortida["Diferencial (Comertia − Grans cadenes)"] = dif12["diferencial"]
+        sortida["Diferencial — mitjana mòbil 12 m"] = dif12["mm12"]
     ruta_csv = os.path.join(OUT_DIR, "posicio_competitiva.csv")
     sortida.round(2).to_csv(ruta_csv, index_label="mes")
     ruta_svg = os.path.join(OUT_DIR, "posicio_competitiva.svg")
@@ -269,6 +373,11 @@ def main():
         f.write(_svg(rel, fi))
     print(f"\nTaula: {os.path.abspath(ruta_csv)}")
     print(f"Grafic: {os.path.abspath(ruta_svg)}")
+    if not dif12.empty:
+        ruta_dif = os.path.join(OUT_DIR, "diferencial_mm12.svg")
+        with open(ruta_dif, "w", encoding="utf-8") as f:
+            f.write(_svg_diferencial(dif12))
+        print(f"Grafic: {os.path.abspath(ruta_dif)}")
 
 
 if __name__ == "__main__":

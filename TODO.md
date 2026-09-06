@@ -185,8 +185,8 @@ el forat sistemàtic de ~2 punts contra les reals és tot efecte preus. El seu v
 del mes, unes tres setmanes abans que l'INE.
 
 **Pendents**:
-1. Refer el test quan surti l'ICM de juliol (finals d'agost) per contrastar la xifra que
-   Comertia ha publicat per aquell mes.
+1. ~~Refer el test quan surti l'ICM de juliol~~ **FET 2026-09-06**: sèrie i eix 1 refets
+   amb juliol de 2026. Veure "Estat a 2026-09-06" aquí sota.
 2. Els mesos sense nota de premsa s'omplen a mà a `data/raw/comertia/overrides.json`
    llegint el gràfic del PDF del mes següent. Cada mes nou, comprovar si cal.
 3. Comertia revisa xifres sense avisar: algun mes el valor de la nota de premsa i el del
@@ -194,3 +194,65 @@ del mes, unes tres setmanes abans que l'INE.
    premsa, que és text i no píxel.
 4. **Bloquejant si la col·laboració tira endavant**: el pendent de CVEC d'aquí sobre.
    El marc de referència de Comertia és Idescat, i la nostra sèrie catalana és bruta.
+
+### Estat a 2026-09-06
+
+**Comertia no publica cap nota de premsa des del 5 de juny de 2026** (verificat aquell
+dia contra `wp-json/wp/v2/posts`, el RSS de `/feed/` i l'endpoint de cerca; també s'ha
+comprovat que no hi ha cap tipus de contingut a part d'`entrades` i `socios`, o sigui que
+no s'han mogut a un altre lloc del web). L'última és la del maig (+2,1%, publicada el
+5 de juny) i el post més recent del web, de qualsevol mena, és aquell mateix. **El
+fetcher funciona: les notes de juny i juliol no existeixen.** Per això aquests dos mesos
+entren a `indicador_comertia.csv` amb `font=grafic_pdf` i sense data de publicació,
+llegits del gràfic de l'`Indicador_Comertia_Juliol_2026.pdf`. Cobertura actual: 58 mesos
+(2020-12 → 2026-07), 53 de nota de premsa i 5 de gràfic.
+
+**El que s'ha aturat és el web, no l'Indicador.** Comprovat el 2026-09-06 a la premsa:
+l'Indicador de juny (+6,7%) i el de juliol (+7,6%) han sortit publicats amb normalitat.
+El de juliol el recullen ViaEmpresa, El Nacional (ON Economia) i Ràdio Balaguer el
+**5 d'agost de 2026**, amb declaracions del president, Ignasi Pietx, i amb el detall
+sectorial de sempre (oci i cultura +25,2%, equipament de la llar +14,4%) més absentisme
+i vacants. O sigui que segueixen fent la nota i enviant-la als mitjans; el que han deixat
+de fer és penjar-la al seu web. L'argument de les tres setmanes d'avantatge sobre l'INE
+es manté dret.
+
+Conseqüències per a la col·laboració:
+- L'avantatge temporal segueix sent real, però **el canal que llegim ja no és el canal
+  principal**. Si la sèrie ha de continuar, el fetcher haurà de sortir de
+  `comertia.net` i llegir la repercussió a premsa (el feed `google_comertia` de
+  `modules/press.py` ja la capta) o rebre el PDF directament d'ells, que és una de les
+  coses que la col·laboració resoldria.
+- Juny i juliol són píxel a `indicador_comertia.csv` (`font=grafic_pdf`), però els dos
+  valors **es poden corroborar en text** amb els articles del 5 d'agost. Si mai es
+  citen, citar la premsa i no el gràfic.
+- **Discrepància per revisar**: per a l'agost de 2025, `overrides.json` porta 2,3 llegit
+  del gràfic i El Punt Avui (8-9-2025) publica **2,7%** citant Comertia. És el cas del
+  punt 3 amb una font de text disponible. No s'ha tocat res: la correcció la decideix
+  el Jordi, i afecta l'últim any mòbil de l'eix 1.
+- A 2026-09-06 **no consta enlloc l'Indicador de l'agost de 2026**, que per cadència
+  (mediana de 5 dies) tocaria cap al 5 de setembre. Comprovar-ho abans del dia 15.
+
+**Eix 1 refet amb juliol** (`analisi/comertia_posicio_competitiva.py`, finestra 2023-09 →
+2026-07, 35 mesos): el diagnòstic no canvia de signe però es suavitza. Grans cadenes
++8,0% de mitjana contra +5,1% de Comertia; Comertia les bat en 8 de 35 mesos (abans 7 de
+34: el juliol és un mes seu, +7,6% contra +6,4%). L'escletxa mesurada dins la finestra
+passa de **2,7 a 2,1 punts** i l'encadenada pels tres anys mòbils, de 9,1 a 8,7. Part del
+moviment ve de revisions de l'INE sobre el juny (grans cadenes 5,4 → 5,5; Catalunya
+2,6 → 3,8). **Si es porta l'escletxa a un lliurable, cal actualitzar-la: la xifra vigent
+és 2,1 punts, no 2,7.**
+
+Avís de mètode sobre aquesta xifra: `index_relatiu()` encadena `I(t) = I(t−12)·(1+g(t))`,
+o sigui dotze cadenes anuals paral·leles, una per mes de calendari. El valor terminal
+depèn de quin mes tanca la finestra i es mou uns quants punts en canviar de mes sense que
+hi hagi passat res. Presentar-lo tot sol el fa fràgil; si ha d'anar a un document, val més
+acompanyar-lo d'una mitjana mòbil de dotze mesos del diferencial.
+
+**Gràfic de suport per a la reunió** (afegit 2026-09-06): `diferencial()` i
+`_svg_diferencial()` a `analisi/comertia_posicio_competitiva.py` donen el diferencial
+mensual contra les grans cadenes i la seva mitjana mòbil de dotze mesos, amb sortida a
+`data/raw/comertia/diferencial_mm12.svg` i dues columnes noves a
+`posicio_competitiva.csv`. És la lectura que no depèn de cap any base ni de quin mes
+tanca la finestra. El que explica: 24 punts de mitjana mòbil i **els 24 per sota de
+zero**; el forat es va tancar fins a −0,2 punts el maig del 2025 i s'ha tornat a obrir
+fins a −4,1 el març del 2026, i ara és de −3,2. Que mai creuï el zero és el que aguanta
+el diagnòstic quan un mes solt els va a favor, com el juliol (+1,2).
