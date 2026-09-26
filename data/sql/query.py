@@ -23,7 +23,8 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "observatori.duckd
 # source_table NO es columna de series_metadata (nomes d'observations, per fila)
 # — _get_metadata() l'afegeix amb una consulta petita addicional.
 _METADATA_COLS = ["serie_id", "name", "description", "source",
-                   "frequency", "date_start", "date_end", "is_critical", "is_derived"]
+                   "frequency", "date_start", "date_end", "is_critical", "is_derived",
+                   "nota_trencament"]
 
 
 def _connect(db_path=None):

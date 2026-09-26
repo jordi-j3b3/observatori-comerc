@@ -16,6 +16,8 @@ INE_TABLES = {
     73019: "DIRCE — Subsectors CNAE 471–479",
     76818: "EAS — Subsectors CNAE 47",
     4721:  "DIRCE — Empreses municipals (CNAE G+I agregat)",
+    301:   "DIRCE — Locals per província, divisió CNAE 47 (sèrie 2010–actual)",
+    294:   "DIRCE — Locals per CCAA, grups CNAE 471–479 (sèrie 2010–actual)",
 
     # Ocupació (EPA — ocupats CNAE 47 net; aturats/hores nomes a seccio G)
     65123: "EPA — Ocupats per branca d'activitat i sexe (CNAE 47 net)",
@@ -48,6 +50,7 @@ INE_TABLES = {
     # Població
     2915:  "Padró — Població per municipis (sèrie llarga)",
     56934: "Padró — Població per municipis (nova sèrie des de 2002)",
+    29005: "Padró — Xifres oficials per municipi (1996–actual), sumades per província",
 
     # Indicadors addicionals
     # (Índex de Confiança del Consumidor: cap taula INE — la taula 36499 antiga
@@ -55,6 +58,34 @@ INE_TABLES = {
     75003: "EPF COICOP — despesa llars en alimentació i vestuari",
     28185: "EAES — Enquesta Anual d'Estructura Salarial",
 }
+
+# ─── Trencaments de sèrie del DIRCE ─────────────────────────────────
+# Primer any (foto a 1 de gener) d'una base nova. Una comparació entre dos anys
+# travessa el trencament si l'any base és anterior i l'any final és igual o
+# posterior. Punt únic per a tots els consumidors: processor (columnes
+# travessa_trencament / nota_trencament dels CSV), corpus DuckDB i pàgines.
+#   2023: el cens de CNAE 47 cau d'un any per l'altre molt més que qualsevol
+#         altre any de la sèrie (empreses −35.318; locals −6,6%). Canvi
+#         metodològic no verificat.
+# Quan arribi l'edició en CNAE-2025 (prevista el desembre de 2026), afegir-hi
+# l'any de referència corresponent.
+TRENCAMENTS_DIRCE = [2023]
+
+
+def trencaments_travessats(any_base, any_final, trencaments=TRENCAMENTS_DIRCE):
+    """Anys de trencament que queden entre any_base (exclòs) i any_final (inclòs)."""
+    lo, hi = sorted((int(any_base), int(any_final)))
+    return [t for t in trencaments if lo < t <= hi]
+
+
+def nota_trencament_dirce(trencaments=TRENCAMENTS_DIRCE):
+    """Text d'avís per a sèries del DIRCE, o None si no n'hi ha cap."""
+    if not trencaments:
+        return None
+    anys = ", ".join(str(t) for t in trencaments)
+    return (f"Trencament de sèrie DIRCE a {anys}: les xifres d'abans i d'après no "
+            f"són comparables. Cap variació que travessi aquest any es pot "
+            f"presentar sense avís.")
 
 # ─── Eurostat ─────────────────────────────────────────────────────
 EUROSTAT_DATASETS = {

@@ -11,19 +11,27 @@ BASE_URL = "https://servicios.ine.es/wstempus/js/ES"
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
 
 
-def _fetch_table(table_id, nult=None, retries=8, det=None):
+def _fetch_table(table_id, nult=None, retries=8, det=None, tip=None, tv=None):
     """Descarrega una taula de l'INE amb reintentos per peticions en cua.
     Les taules pesades (p.ex. series diaries com la 37808) s'encuen al servidor:
     l'INE respon HTTP 202 amb {"status": "Petición en proceso..."} —o bé 200 amb
     un cos d'estat «en proceso»— mentre materialitza la taula. En aquests casos
     esperem i reintentem fins que retorna les dades.
-    det=2 retorna NombrePeriodo, Fecha i metadades de Periodo (necessari per series diaries)."""
+    det=2 retorna NombrePeriodo, Fecha i metadades de Periodo (necessari per series diaries).
+    tip="AM" afegeix MetaData (codis de territori i d'activitat) a cada sèrie.
+    tv=["idVariable:idValor", ...] filtra al servidor; diversos valors d'una
+    mateixa variable es combinen com a O. Redueix les taules del DIRCE de
+    ~100-190 MB a pocs centenars de KB."""
     url = f"{BASE_URL}/DATOS_TABLA/{table_id}"
-    params = {}
+    params = []
     if nult:
-        params["nult"] = nult
+        params.append(("nult", nult))
     if det:
-        params["det"] = det
+        params.append(("det", det))
+    if tip:
+        params.append(("tip", tip))
+    for f in tv or []:
+        params.append(("tv", f))
 
     for attempt in range(retries):
         try:
@@ -1398,6 +1406,126 @@ def fetch_icm_distribucion():
             .sort_values(["tipus", "modo", "indicador", "data"])
             .reset_index(drop=True))
     return df
+
+
+# ─── TERRITORI: LOCALS DIRCE PER PROVÍNCIA I PER CCAA × GRUP ────────────
+#
+# Mesuren LOCALS (unitats locals), no empreses: una empresa amb tres botigues
+# compta tres. No es poden comparar amb fetch_empreses() (T=39372).
+#
+# Els noms de territori de les taules del DIRCE no són estables entre
+# activitats ("Coruña (A)" / "A Coruña"...): tot es filtra i s'uneix pels
+# codis de MetaData (tip="AM"), mai pel nom. Els filtres tv= són ids interns
+# de valor de l'INE; si mai canvien, la resposta ve buida i el processor cau
+# al cache.
+
+_TV_ESTRAT_TOTAL = "336:15723"          # Estrato de asalariados = Total
+_TV_ACTIVITAT = {                        # Actividad principal (idValor)
+    "47":  "338:17579", "471": "338:18228", "472": "338:21936",
+    "473": "338:21937", "474": "338:18231", "475": "338:18232",
+    "476": "338:18233", "477": "338:18234", "478": "338:18235",
+    "479": "338:18236",
+}
+_CODI_ACTIVITAT = {                      # codi INE de MetaData -> CNAE
+    "EHX": "47", "EHB": "471", "EHC": "472", "EHD": "473", "EHE": "474",
+    "EHF": "475", "EHG": "476", "EHH": "477", "EHI": "478", "EHJ": "479",
+}
+
+
+def _meta(serie, variable):
+    """Codi de MetaData d'una variable ('Provincias', 'Actividad principal'...)."""
+    for m in serie.get("MetaData", []):
+        if m.get("T3_Variable") == variable:
+            return m.get("Codigo")
+    return None
+
+
+def _codi_geo(serie, variable_territori):
+    """Codi del territori; '00' per al total nacional."""
+    if _meta(serie, "Totales Territoriales") == "00":
+        return "00"
+    return _meta(serie, variable_territori)
+
+
+def fetch_locals_provincia():
+    """
+    Taula 301: Locals per província, activitat principal (divisions CNAE 2009)
+    i estrat d'assalariats. Divisió 47, estrat Total, 52 províncies + nacional.
+    Retorna: codi_geo (INE 2 dígits, '00' = Espanya), any, locals_cnae47.
+    """
+    data = _fetch_table(301, nult=30, tip="AM",
+                        tv=[_TV_ESTRAT_TOTAL, _TV_ACTIVITAT["47"]])
+    if not isinstance(data, list):
+        return pd.DataFrame()
+    rows = []
+    for serie in data:
+        if (_meta(serie, "Actividad principal") != "EHX"
+                or _meta(serie, "Estrato de asalariados") != "01"):
+            continue
+        codi = _codi_geo(serie, "Provincias")
+        if not codi:
+            continue
+        for obs in serie.get("Data", []):
+            if obs.get("Valor") is not None:
+                rows.append({"codi_geo": codi, "any": obs.get("Anyo"),
+                             "locals_cnae47": obs.get("Valor")})
+    return pd.DataFrame(rows)
+
+
+def fetch_locals_ccaa_grups():
+    """
+    Taula 294: Locals per CCAA, activitat principal (grups CNAE 2009) i estrat
+    d'assalariats. Divisió 47 + grups 471-479, estrat Total, 19 CCAA + nacional.
+    Retorna: codi_geo (INE CCAA 2 dígits, '00' = Espanya), any, cnae, locals.
+    """
+    data = _fetch_table(294, nult=30, tip="AM",
+                        tv=[_TV_ESTRAT_TOTAL] + list(_TV_ACTIVITAT.values()))
+    if not isinstance(data, list):
+        return pd.DataFrame()
+    rows = []
+    for serie in data:
+        cnae = _CODI_ACTIVITAT.get(_meta(serie, "Actividad principal"))
+        if cnae is None or _meta(serie, "Estrato de asalariados") != "01":
+            continue
+        codi = _codi_geo(serie, "Comunidades y Ciudades Autónomas")
+        if not codi:
+            continue
+        for obs in serie.get("Data", []):
+            if obs.get("Valor") is not None:
+                rows.append({"codi_geo": codi, "any": obs.get("Anyo"),
+                             "cnae": cnae, "locals": obs.get("Valor")})
+    return pd.DataFrame(rows)
+
+
+def fetch_poblacio_provincia(nult=17):
+    """
+    Taula 29005: xifres oficials del padró per municipi, sumades per província
+    (dos primers dígits del codi municipal). Les taules provincials del padró
+    (2852 i germanes) s'aturen el 2021; aquesta arriba a l'últim any publicat.
+    Verificat: Barcelona 2021 = 5.714.730, igual que la T=2852.
+    nult=17 cobreix des del 2009 (la sèrie de locals comença el 2010).
+    Retorna: codi_prov, any, poblacio, n_municipis.
+    """
+    data = _fetch_table(29005, nult=nult, tip="AM", tv=["18:451"])  # Sexo = Total
+    if not isinstance(data, list):
+        return pd.DataFrame()
+    rows = []
+    for serie in data:
+        if _meta(serie, "Sexo") != "0":
+            continue
+        codi_mun = _meta(serie, "Municipios")
+        if not codi_mun or len(codi_mun) != 5:
+            continue
+        for obs in serie.get("Data", []):
+            if obs.get("Valor") is not None:
+                rows.append({"codi_prov": codi_mun[:2], "any": obs.get("Anyo"),
+                             "poblacio": obs.get("Valor")})
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    return (df.groupby(["codi_prov", "any"])
+              .agg(poblacio=("poblacio", "sum"), n_municipis=("poblacio", "size"))
+              .reset_index())
 
 
 if __name__ == "__main__":

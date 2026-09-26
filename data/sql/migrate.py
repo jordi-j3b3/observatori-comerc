@@ -17,8 +17,12 @@ Convenció (confirmada 2026-08-03 després del pilot amb icm/epa_retail/ipc_coic
 Execució: python3 data/sql/migrate.py
 """
 import os
+import sys
 import duckdb
 import pandas as pd
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+from data.config import nota_trencament_dirce  # noqa: E402
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "observatori.duckdb")
@@ -26,7 +30,10 @@ SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "schema.sql")
 
 
 def _load(name):
-    return pd.read_csv(os.path.join(CACHE_DIR, f"{name}.csv"))
+    # Els codis de territori ("08", "00") han de quedar com a text.
+    return pd.read_csv(os.path.join(CACHE_DIR, f"{name}.csv"),
+                       dtype={"codi_geo": str, "codi_prov": str, "codi_ccaa": str,
+                              "cnae": str})
 
 
 # ─── Helpers genèrics de data ────────────────────────────────────────────────
@@ -177,13 +184,18 @@ SERIES_EXTRA = []
 
 def _add(serie_id, name, description, source, source_table, frequency, unit,
          is_critical, is_derived, cache_name, metric_col, date_fn, dim_cols=(),
-         row_filter=None):
+         row_filter=None, nota_trencament=None):
     SERIES_EXTRA.append(dict(
         serie_id=serie_id, name=name, description=description, source=source,
         source_table=source_table, frequency=frequency, unit=unit,
         is_critical=is_critical, is_derived=is_derived, is_public=True,
+        nota_trencament=nota_trencament,
         build=_series_builder(cache_name, metric_col, date_fn, dim_cols, row_filter),
     ))
+
+
+# Sèries del DIRCE: la nota surt de TRENCAMENTS_DIRCE (data/config.py).
+_NOTA_DIRCE = nota_trencament_dirce()
 
 
 # --- pib_vab (INE T=69070) — CRITICAL — sense dimensió (agregat nacional) ---
@@ -202,13 +214,45 @@ for col, unit, desc in [
 # --- empreses (INE T=39372+3954+298 DIRCE + T=2915+56934 Padró) — CRITICAL ---
 _add("empreses_count", "Empreses actives CNAE 47", "Nombre d'empreses actives del comerç al detall (CNAE 47), per territori.",
      "INE", "T=39372+3954+298", "annual", "nombre d'empreses", True, False,
-     "empreses", "empreses", _annual_date, dim_cols=["territori"])
+     "empreses", "empreses", _annual_date, dim_cols=["territori"],
+     nota_trencament=_NOTA_DIRCE)
 _add("empreses_poblacio", "Població (per territori)", "Població per territori, usada com a denominador de densitat comercial.",
      "INE", "T=2915+56934", "annual", "persones", True, False,
      "empreses", "poblacio", _annual_date, dim_cols=["territori"])
 _add("empreses_per_1000hab", "Densitat comercial", "Empreses actives CNAE 47 per cada 1.000 habitants, per territori.",
      "INE", "T=39372+3954+298 / T=2915+56934 (ràtio derivada)", "annual", "empreses / 1.000 hab.", True, False,
-     "empreses", "empreses_per_1000hab", _annual_date, dim_cols=["territori"])
+     "empreses", "empreses_per_1000hab", _annual_date, dim_cols=["territori"],
+     nota_trencament=_NOTA_DIRCE)
+
+# --- locals_provincia (INE T=301 DIRCE locals + T=29005 Padró sumat) — no crítica ---
+# LOCALS, no empreses: sèries independents de empreses_*, no comparables.
+# dim_1 = codi INE de província ('00' = Espanya), dim_2 = nom.
+_LOCALS_AVIS = (" Mesura LOCALS (unitats locals: una empresa amb tres botigues compta "
+                "tres), no empreses: no es pot comparar amb empreses_count.")
+for sid, col, unit, tbl, desc in [
+    ("locals_prov_count", "locals_cnae47", "nombre de locals", "T=301",
+     "Locals actius del comerç al detall (CNAE 47) per província."),
+    ("locals_prov_per_1000hab", "locals_per_1000hab", "locals / 1.000 hab.",
+     "T=301 / T=29005 (ràtio derivada)",
+     "Densitat comercial: locals CNAE 47 per cada 1.000 habitants, per província."),
+]:
+    _add(sid, f"Locals per província — {col}", desc + _LOCALS_AVIS, "INE", tbl,
+         "annual", unit, False, False, "locals_provincia", col, _annual_date,
+         dim_cols=["codi_geo", "provincia"], nota_trencament=_NOTA_DIRCE)
+_add("poblacio_prov", "Població per província (padró)",
+     "Població oficial del padró a 1 de gener per província (suma dels municipis), "
+     "denominador de la densitat de locals.",
+     "INE", "T=29005 (sumada per província)", "annual", "persones", False, False,
+     "locals_provincia", "poblacio", _annual_date, dim_cols=["codi_geo", "provincia"])
+
+# --- locals_ccaa_grups (INE T=294 DIRCE locals per grups) — no crítica ---
+# dim_1 = codi INE de CCAA ('00' = Espanya), dim_2 = grup CNAE (47, 471..479), dim_3 = nom CCAA.
+_add("locals_ccaa_grup", "Locals per CCAA i grup CNAE 47",
+     "Locals actius del comerç al detall per CCAA i grup CNAE (471-479, més el total 47)."
+     + _LOCALS_AVIS,
+     "INE", "T=294", "annual", "nombre de locals", False, False,
+     "locals_ccaa_grups", "locals", _annual_date, dim_cols=["codi_geo", "cnae", "ccaa"],
+     nota_trencament=_NOTA_DIRCE)
 
 # --- productivitat (INE T=36194 EEE Comercio + T=36199 P&L + T=50902 IPC) — CRITICAL ---
 _PROD = [
@@ -332,7 +376,8 @@ for col, unit, tbl, desc in _EEE_CCAA:
 _add("subsectors_dirce_empreses", "Subsectors CNAE 47 — empreses (DIRCE)",
      "Nombre d'empreses per subsector CNAE 47 (471-479).",
      "INE", "T=73019", "annual", "nombre d'empreses", False, False,
-     "subsectors_dirce", "empreses", _annual_date, dim_cols=["nom"])
+     "subsectors_dirce", "empreses", _annual_date, dim_cols=["nom"],
+     nota_trencament=_NOTA_DIRCE)
 
 # --- subsectors_eas (INE T=76818) — no crítica — dim: nom (subsector) ---
 for col, unit, desc in [
@@ -500,10 +545,11 @@ def migrate(db_path=DB_PATH, series=None):
         con.execute("""
             INSERT INTO series_metadata
             (serie_id, name, description, source, frequency, date_start, date_end,
-             is_critical, is_derived, is_public)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             is_critical, is_derived, is_public, nota_trencament)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, [s["serie_id"], s["name"], s["description"], s["source"], s["frequency"],
-              date_start, date_end, s["is_critical"], s["is_derived"], s["is_public"]])
+              date_start, date_end, s["is_critical"], s["is_derived"], s["is_public"],
+              s.get("nota_trencament")])
 
         con.register("tidy_df", tidy[cols])
         con.execute("INSERT INTO observations SELECT * FROM tidy_df")

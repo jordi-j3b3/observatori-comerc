@@ -9,6 +9,7 @@ import os
 import json
 import pandas as pd
 from data.fetchers import ine, eurostat, cnmc
+from data.config import trencaments_travessats
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
 
@@ -174,7 +175,8 @@ def _is_valid_series(df, col, name, min_rows=5, max_nan_pct=0.5, max_jump=10.0,
             return 0.0
         return float((nonzero / nonzero.shift(1)).abs().dropna().max())
 
-    if group_by is not None and group_by in df.columns:
+    group_cols = [group_by] if isinstance(group_by, str) else list(group_by or [])
+    if group_cols and all(c in df.columns for c in group_cols):
         max_ratio = float(df.groupby(group_by, sort=False)[col]
                           .apply(_max_ratio_in).max())
     else:
@@ -693,6 +695,188 @@ def process_empreses():
         print(f"  Error obtenint població: {e}")
 
     save_cache(df, "empreses")
+    return df
+
+
+# ─── Territori: locals DIRCE per província i per CCAA × grup ──────────────
+#
+# Sèries de LOCALS (unitats locals), independents de empreses.csv: no el
+# substitueixen ni s'hi poden comparar. Anuals (foto a 1 de gener, publicació
+# al desembre): fora de CRITICAL_SOURCES, com l'e-commerce.
+
+GEO_DIR = os.path.join(os.path.dirname(__file__), "geo")
+
+
+def _load_provincies():
+    return pd.read_csv(os.path.join(GEO_DIR, "provincies.csv"), dtype=str)
+
+
+def _marca_trencaments(df, valor_col, group_cols):
+    """Afegeix var_interanual_pct, travessa_trencament i nota_trencament.
+
+    La variació es calcula contra l'any anterior disponible dins cada sèrie.
+    travessa_trencament marca les variacions que creuen un any de
+    TRENCAMENTS_DIRCE (data/config.py); la nota diu quin.
+    """
+    df = df.sort_values(group_cols + ["any"]).reset_index(drop=True)
+    prev_val = df.groupby(group_cols)[valor_col].shift(1)
+    prev_any = df.groupby(group_cols)["any"].shift(1)
+    df["var_interanual_pct"] = ((df[valor_col] / prev_val - 1) * 100).round(2)
+
+    travessa, nota = [], []
+    for a, pa in zip(df["any"], prev_any):
+        t = trencaments_travessats(pa, a) if pd.notna(pa) else []
+        travessa.append(bool(t))
+        nota.append(
+            f"La variació {int(pa)}→{int(a)} travessa el trencament de sèrie "
+            f"DIRCE de {', '.join(map(str, t))}: no comparable." if t else "")
+    df["travessa_trencament"] = travessa
+    df["nota_trencament"] = nota
+    return df
+
+
+def _poblacio_provincia(cache_name):
+    """Padró per província (T=29005 sumada). Si l'API falla, reaprofita la
+    columna poblacio del cache existent en lloc d'estimar-la."""
+    pob = ine.fetch_poblacio_provincia()
+    if not pob.empty:
+        return pob[["codi_prov", "any", "poblacio"]], "api"
+    prev = load_cache(cache_name)
+    if not prev.empty and "poblacio" in prev.columns:
+        pob = (prev[prev["nivell_geo"] == "provincia"]
+               .rename(columns={"codi_geo": "codi_prov"})[["codi_prov", "any", "poblacio"]])
+        pob["codi_prov"] = pob["codi_prov"].astype(str).str.zfill(2)
+        return pob.dropna().drop_duplicates(), "cache"
+    return pd.DataFrame(columns=["codi_prov", "any", "poblacio"]), "cap"
+
+
+def process_locals_provincia():
+    """
+    Locals CNAE 47 per província (T=301) + padró provincial (T=29005 sumada).
+    1. API INE  2. Cache existent
+    Sortida: locals_provincia.csv (52 províncies + fila espanya).
+    """
+    name = "locals_provincia"
+    print("  Font 1: API INE (T=301 locals + T=29005 padró)")
+    loc = ine.fetch_locals_provincia()
+    if loc.empty:
+        print("  Font 2: Cache existent")
+        df = load_cache(name)
+        if df.empty:
+            _record_status(name, "error", "cap", "API INE buida i sense cache")
+            return pd.DataFrame()
+        _record_status(name, "fallback", "cache", "API INE T=301 buida")
+        return df
+
+    geo = _load_provincies()
+    pob, via_pob = _poblacio_provincia(name)
+    pob = pob.copy()
+    pob["any"] = pob["any"].astype(int)
+    pob["poblacio"] = pd.to_numeric(pob["poblacio"], errors="coerce").astype(float)
+    loc["any"] = loc["any"].astype(int)
+
+    prov = loc[loc["codi_geo"] != "00"].merge(geo, left_on="codi_geo",
+                                               right_on="codi_prov", how="left")
+    prov["nivell_geo"] = "provincia"
+    prov = prov.merge(pob, on=["codi_prov", "any"], how="left")
+
+    esp = loc[loc["codi_geo"] == "00"].copy()
+    esp["nivell_geo"] = "espanya"
+    esp["codi_prov"] = "00"
+    esp["provincia"] = "Espanya"
+    esp["codi_ccaa"] = "00"
+    esp["ccaa"] = "espanya"
+    # Espanya = suma de les 52 províncies; només anys amb totes presents.
+    pob_esp = pob.groupby("any").agg(poblacio=("poblacio", "sum"),
+                                      n=("codi_prov", "nunique")).reset_index()
+    pob_esp = pob_esp[pob_esp["n"] == len(geo)][["any", "poblacio"]]
+    esp = esp.merge(pob_esp, on="any", how="left")
+
+    df = pd.concat([esp, prov], ignore_index=True)
+    mask = df["poblacio"].notna() & (df["poblacio"] > 0)
+    df.loc[mask, "locals_per_1000hab"] = (
+        df.loc[mask, "locals_cnae47"] / df.loc[mask, "poblacio"] * 1000).round(3)
+    df = _marca_trencaments(df, "locals_cnae47", ["codi_geo"])
+    df["font"] = "INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província"
+
+    cols = ["nivell_geo", "codi_geo", "provincia", "codi_ccaa", "ccaa", "any",
+            "locals_cnae47", "poblacio", "locals_per_1000hab", "var_interanual_pct",
+            "travessa_trencament", "nota_trencament", "font"]
+    df = df[cols].astype({"locals_cnae47": "Int64", "poblacio": "Int64"})
+
+    sense_nom = df[df["provincia"].isna()]["codi_geo"].unique()
+    if len(sense_nom):
+        _VALIDATION_WARNINGS.append(f"{name}: codis sense província a geo/provincies.csv: {list(sense_nom)}")
+    _is_valid_series(df, "locals_cnae47", name, group_by="codi_geo")
+    _is_valid_series(df, "poblacio", name, group_by="codi_geo")
+
+    missatge = f"{len(df)} files" + ("" if via_pob == "api" else f" (padró via {via_pob})")
+    _record_status(name, "ok" if via_pob == "api" else "fallback", "api_ine", missatge)
+    save_cache(df, name)
+    return df
+
+
+def process_locals_ccaa_grups():
+    """
+    Locals per CCAA × grup CNAE 471-479 + divisió 47 (T=294), amb padró per
+    CCAA (T=29005 sumada via geo/provincies.csv).
+    1. API INE  2. Cache existent
+    Sortida: locals_ccaa_grups.csv.
+    """
+    name = "locals_ccaa_grups"
+    print("  Font 1: API INE (T=294 locals per grups)")
+    loc = ine.fetch_locals_ccaa_grups()
+    if loc.empty:
+        print("  Font 2: Cache existent")
+        df = load_cache(name)
+        if df.empty:
+            _record_status(name, "error", "cap", "API INE buida i sense cache")
+            return pd.DataFrame()
+        _record_status(name, "fallback", "cache", "API INE T=294 buida")
+        return df
+
+    geo = _load_provincies()
+    noms_ccaa = dict(zip(geo["codi_ccaa"], geo["ccaa"]))
+    noms_ccaa["00"] = "espanya"
+
+    # Padró per CCAA: reaprofita el de locals_provincia (mateixa font, ja
+    # descarregat en aquest run) per no tornar a baixar la T=29005.
+    lp = load_cache("locals_provincia")
+    pob = pd.DataFrame(columns=["codi_geo", "any", "poblacio"])
+    if not lp.empty:
+        lp = lp.astype({"codi_geo": str, "codi_ccaa": str})
+        pp = lp[lp["nivell_geo"] == "provincia"]
+        pob_ccaa = (pp.groupby(["codi_ccaa", "any"])
+                      .agg(poblacio=("poblacio", "sum"), n=("poblacio", "count"))
+                      .reset_index())
+        # Només anys amb totes les províncies de la CCAA amb padró.
+        n_prov = geo.groupby("codi_ccaa").size()
+        pob_ccaa = pob_ccaa[pob_ccaa["n"] == pob_ccaa["codi_ccaa"].map(n_prov)]
+        pob_ccaa = pob_ccaa.rename(columns={"codi_ccaa": "codi_geo"})[["codi_geo", "any", "poblacio"]]
+        pob_esp = lp[lp["nivell_geo"] == "espanya"][["codi_geo", "any", "poblacio"]]
+        pob = pd.concat([pob_ccaa, pob_esp], ignore_index=True).dropna()
+
+    loc["any"] = loc["any"].astype(int)
+    pob["any"] = pob["any"].astype(int)
+    pob["poblacio"] = pd.to_numeric(pob["poblacio"], errors="coerce").astype(float)
+    df = loc.merge(pob, on=["codi_geo", "any"], how="left")
+    df["nivell_geo"] = df["codi_geo"].map(lambda c: "espanya" if c == "00" else "ccaa")
+    df["ccaa"] = df["codi_geo"].map(noms_ccaa)
+    df["cnae_nom"] = df["cnae"].map(ine.CNAE_47_MARGES_LABELS)
+    mask = df["poblacio"].notna() & (df["poblacio"] > 0)
+    df.loc[mask, "locals_per_1000hab"] = (
+        df.loc[mask, "locals"] / df.loc[mask, "poblacio"] * 1000).round(3)
+    df = _marca_trencaments(df, "locals", ["codi_geo", "cnae"])
+    df["font"] = "INE DIRCE T=294 (locals); INE Padró T=29005 sumat per CCAA"
+
+    cols = ["nivell_geo", "codi_geo", "ccaa", "any", "cnae", "cnae_nom", "locals",
+            "poblacio", "locals_per_1000hab", "var_interanual_pct",
+            "travessa_trencament", "nota_trencament", "font"]
+    df = df[cols].astype({"locals": "Int64", "poblacio": "Int64"})
+
+    _is_valid_series(df, "locals", name, group_by=["codi_geo", "cnae"])
+    _record_status(name, "ok", "api_ine", f"{len(df)} files")
+    save_cache(df, name)
     return df
 
 
@@ -2038,6 +2222,12 @@ def process_all():
 
     print("\n2. Empreses:")
     process_empreses()
+
+    print("\n2b. Locals CNAE 47 per província (DIRCE T=301 + padró T=29005):")
+    process_locals_provincia()
+
+    print("\n2c. Locals per CCAA × grup 471-479 (DIRCE T=294):")
+    process_locals_ccaa_grups()
 
     print("\n3. Productivitat:")
     process_productivitat()

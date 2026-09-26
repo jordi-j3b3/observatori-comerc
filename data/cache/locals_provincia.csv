@@ -1,0 +1,849 @@
+nivell_geo,codi_geo,provincia,codi_ccaa,ccaa,any,locals_cnae47,poblacio,locals_per_1000hab,var_interanual_pct,travessa_trencament,nota_trencament,font
+espanya,00,Espanya,00,espanya,2010,617548,47021031,13.133,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2011,606131,47190493,12.844,-1.85,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2012,600595,47265321,12.707,-0.91,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2013,592172,47129783,12.565,-1.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2014,583908,46771341,12.484,-1.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2015,583796,46624382,12.521,-0.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2016,576211,46557008,12.376,-1.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2017,573676,46572132,12.318,-0.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2018,566822,46722980,12.132,-1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2019,559301,47026208,11.893,-1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2020,550310,47450795,11.597,-1.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2021,541464,47385107,11.427,-1.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2022,543658,47475420,11.451,0.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2023,507591,48022515,10.57,-6.63,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2024,500340,48587813,10.298,-1.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+espanya,00,Espanya,00,espanya,2025,494302,49114494,10.064,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2010,3652,317352,11.508,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2011,3553,319227,11.13,-2.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2012,3410,322557,10.572,-4.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2013,3326,321417,10.348,-2.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2014,3274,321932,10.17,-1.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2015,3250,323648,10.042,-0.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2016,3323,324126,10.252,2.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2017,3092,326574,9.468,-6.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2018,3143,328868,9.557,1.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2019,3080,331549,9.29,-2.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2020,3037,333940,9.094,-1.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2021,2930,333626,8.782,-3.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2022,2912,334412,8.708,-0.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2023,2794,336686,8.299,-4.05,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2024,2768,339137,8.162,-0.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,01,Araba/Álava,16,País Vasco,2025,2695,342161,7.876,-2.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2010,5500,401682,13.692,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2011,5464,402318,13.581,-0.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2012,5510,402837,13.678,0.84,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2013,5432,400007,13.58,-1.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2014,5468,396987,13.774,0.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2015,5500,394580,13.939,0.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2016,5366,392118,13.685,-2.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2017,5245,390032,13.448,-2.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2018,5075,388786,13.053,-3.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2019,4991,388167,12.858,-1.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2020,4889,388270,12.592,-2.04,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2021,4881,386464,12.63,-0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2022,4859,385727,12.597,-0.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2023,4506,387174,11.638,-7.26,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2024,4367,388599,11.238,-3.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,02,Albacete,08,Castilla - La Mancha,2025,4265,390406,10.925,-2.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2010,27130,1926285,14.084,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2011,26857,1934127,13.886,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2012,26750,1943910,13.761,-0.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2013,26405,1945642,13.571,-1.29,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2014,25930,1868438,13.878,-1.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2015,26164,1855047,14.104,0.9,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2016,26023,1836459,14.17,-0.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2017,25917,1825332,14.199,-0.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2018,25731,1838819,13.993,-0.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2019,25686,1858683,13.819,-0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2020,25152,1879888,13.38,-2.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2021,24807,1881762,13.183,-1.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2022,24869,1901594,13.078,0.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2023,23087,1950357,11.837,-7.17,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2024,22864,1991259,11.482,-0.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,03,Alicante/Alacant,10,Comunitat Valenciana,2025,22759,2030037,11.211,-0.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2010,9616,695560,13.825,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2011,9310,702819,13.247,-3.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2012,9264,704219,13.155,-0.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2013,9148,699329,13.081,-1.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2014,8876,701688,12.649,-2.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2015,8959,701211,12.776,0.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2016,8971,704297,12.738,0.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2017,9077,706672,12.845,1.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2018,8974,709340,12.651,-1.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2019,8874,716820,12.38,-1.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2020,8803,727945,12.093,-0.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2021,8872,731792,12.124,0.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2022,8919,740534,12.044,0.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2023,8358,753920,11.086,-6.29,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2024,8201,763030,10.748,-1.88,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,04,Almería,01,Andalucía,2025,8111,773577,10.485,-1.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2010,2467,171896,14.352,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2011,2430,172704,14.07,-1.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2012,2434,171265,14.212,0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2013,2397,168825,14.198,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2014,2352,167015,14.083,-1.88,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2015,2350,164925,14.249,-0.09,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2016,2313,162514,14.233,-1.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2017,2275,160700,14.157,-1.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2018,2208,158498,13.931,-2.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2019,2193,157640,13.911,-0.68,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2020,2153,157664,13.656,-1.82,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2021,2116,158421,13.357,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2022,2089,158140,13.21,-1.28,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2023,1996,158407,12.6,-4.45,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2024,1946,158989,12.24,-2.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,05,Ávila,07,Castilla y León,2025,1878,159887,11.746,-3.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2010,9799,692137,14.158,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2011,9534,693921,13.739,-2.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2012,9627,694533,13.861,0.98,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2013,9682,693729,13.956,0.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2014,9349,690929,13.531,-3.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2015,9356,686730,13.624,0.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2016,9235,684113,13.499,-1.29,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2017,9109,679884,13.398,-1.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2018,9043,676376,13.37,-0.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2019,9071,673559,13.467,0.31,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2020,9006,672137,13.399,-0.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2021,8734,669943,13.037,-3.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2022,8781,666971,13.165,0.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2023,8270,665089,12.434,-5.82,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2024,8136,664970,12.235,-1.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,06,Badajoz,11,Extremadura,2025,7913,663886,11.919,-2.74,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2010,15283,1106049,13.818,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2011,14761,1113114,13.261,-3.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2012,14604,1119439,13.046,-1.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2013,14369,1111674,12.926,-1.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2014,14020,1103442,12.706,-2.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2015,14000,1104479,12.676,-0.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2016,13932,1107220,12.583,-0.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2017,14149,1115999,12.678,1.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2018,14048,1128908,12.444,-0.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2019,13896,1149460,12.089,-1.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2020,13574,1171543,11.586,-2.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2021,13231,1173008,11.28,-2.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2022,13533,1176659,11.501,2.28,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2023,12846,1197261,10.729,-5.08,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2024,12931,1221403,10.587,0.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,07,Illes Balears,04,Balears (Illes),2025,12902,1237480,10.426,-0.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2010,71838,5511147,13.035,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2011,71167,5529099,12.871,-0.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2012,70821,5552050,12.756,-0.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2013,69173,5540925,12.484,-2.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2014,68745,5523784,12.445,-0.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2015,68315,5523922,12.367,-0.63,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2016,67465,5542680,12.172,-1.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2017,67937,5576037,12.184,0.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2018,67495,5609350,12.033,-0.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2019,66325,5664579,11.709,-1.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2020,65734,5743402,11.445,-0.89,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2021,65884,5714730,11.529,0.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2022,66104,5727615,11.541,0.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2023,61675,5805500,10.624,-6.7,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2024,61256,5899063,10.384,-0.68,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,08,Barcelona,09,Cataluña,2025,60611,5983325,10.13,-1.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2010,4797,374826,12.798,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2011,4699,375657,12.509,-2.04,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2012,4707,374970,12.553,0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2013,4603,371248,12.399,-2.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2014,4514,366900,12.303,-1.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2015,4487,364002,12.327,-0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2016,4417,360995,12.236,-1.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2017,4432,358171,12.374,0.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2018,4320,357070,12.098,-2.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2019,4213,356958,11.803,-2.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2020,4101,357650,11.467,-2.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2021,4052,356055,11.38,-1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2022,4019,355045,11.32,-0.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2023,3853,357180,10.787,-4.13,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2024,3769,358948,10.5,-2.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,09,Burgos,07,Castilla y León,2025,3700,361556,10.234,-1.83,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2010,5964,415083,14.368,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2011,5889,415446,14.175,-1.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2012,5827,413597,14.089,-1.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2013,5718,410275,13.937,-1.87,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2014,5580,408703,13.653,-2.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2015,5570,406267,13.71,-0.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2016,5461,403665,13.529,-1.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2017,5402,400036,13.504,-1.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2018,5410,396487,13.645,0.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2019,5398,394151,13.695,-0.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2020,5369,391850,13.702,-0.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2021,5301,389558,13.608,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2022,5306,387805,13.682,0.09,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2023,4890,387434,12.622,-7.84,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2024,4701,387820,12.122,-3.87,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,10,Cáceres,11,Extremadura,2025,4607,387752,11.881,-2.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2010,16629,1236739,13.446,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2011,16305,1243519,13.112,-1.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2012,16022,1245164,12.867,-1.74,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2013,15696,1238492,12.673,-2.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2014,15499,1240175,12.497,-1.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2015,15589,1240284,12.569,0.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2016,15431,1239889,12.445,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2017,15480,1239435,12.49,0.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2018,15251,1238714,12.312,-1.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2019,15075,1240155,12.156,-1.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2020,15113,1244049,12.148,0.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2021,15113,1245960,12.13,0.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2022,15331,1246781,12.296,1.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2023,14451,1250539,11.556,-5.74,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2024,14313,1254291,11.411,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,11,Cádiz,01,Andalucía,2025,14117,1257041,11.23,-1.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2010,8210,604274,13.587,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2011,8055,604344,13.329,-1.89,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2012,7969,604564,13.181,-1.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2013,7791,601699,12.948,-2.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2014,7692,587508,13.093,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2015,7530,582327,12.931,-2.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2016,7355,579245,12.698,-2.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2017,7281,575470,12.652,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2018,7117,576898,12.337,-2.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2019,6967,579962,12.013,-2.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2020,7483,585590,12.779,7.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2021,7508,587064,12.789,0.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2022,7612,590616,12.888,1.39,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2023,6873,603952,11.38,-9.71,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2024,6617,615849,10.745,-3.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,12,Castellón/Castelló,10,Comunitat Valenciana,2025,6415,627173,10.228,-3.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2010,7568,529453,14.294,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2011,7407,530175,13.971,-2.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2012,7325,530250,13.814,-1.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2013,7258,524962,13.826,-0.91,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2014,7174,519613,13.806,-1.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2015,7215,513713,14.045,0.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2016,7054,506888,13.916,-2.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2017,6930,502578,13.789,-1.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2018,6796,499100,13.617,-1.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2019,6728,495761,13.571,-1.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2020,6480,495045,13.09,-3.69,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2021,6403,492591,12.999,-1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2022,6406,490806,13.052,0.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2023,5968,491127,12.152,-6.84,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2024,5795,492640,11.763,-2.9,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,13,Ciudad Real,08,Castilla - La Mancha,2025,5675,494407,11.478,-2.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2010,11911,805108,14.794,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2011,11769,805857,14.604,-1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2012,11620,804498,14.444,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2013,11394,802422,14.2,-1.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2014,11216,799402,14.03,-1.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2015,11281,795611,14.179,0.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2016,11107,791610,14.031,-1.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2017,11174,788219,14.176,0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2018,10909,785240,13.893,-2.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2019,10805,782979,13.8,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2020,10618,781451,13.588,-1.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2021,10526,776789,13.551,-0.87,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2022,10589,772464,13.708,0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2023,9917,773997,12.813,-6.35,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2024,9708,772152,12.573,-2.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,14,Córdoba,01,Andalucía,2025,9579,772153,12.406,-1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2010,16642,1146458,14.516,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2011,15942,1147124,13.897,-4.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2012,15915,1143911,13.913,-0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2013,15724,1138161,13.815,-1.2,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2014,15415,1132735,13.609,-1.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2015,15363,1127196,13.629,-0.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2016,14981,1122799,13.343,-2.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2017,14830,1120294,13.238,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2018,14605,1119351,13.048,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2019,14377,1119596,12.841,-1.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2020,13730,1121815,12.239,-4.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2021,13368,1120134,11.934,-2.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2022,13260,1119180,11.848,-0.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2023,12463,1123426,11.094,-6.01,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2024,12240,1128320,10.848,-1.79,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,15,A Coruña,12,Galicia,2025,12035,1135612,10.598,-1.67,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2010,2937,217716,13.49,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2011,2921,219138,13.33,-0.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2012,2925,218036,13.415,0.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2013,2961,211899,13.974,1.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2014,2921,207449,14.081,-1.35,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2015,2899,203841,14.222,-0.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2016,2849,201071,14.169,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2017,2805,198718,14.115,-1.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2018,2746,197222,13.923,-2.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2019,2677,196329,13.635,-2.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2020,2641,196139,13.465,-1.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2021,2564,195516,13.114,-2.92,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2022,2578,195215,13.206,0.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2023,2408,197139,12.215,-6.59,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2024,2369,197606,11.989,-1.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,16,Cuenca,08,Castilla - La Mancha,2025,2309,198216,11.649,-2.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2010,10967,753046,14.564,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2011,10856,756810,14.344,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2012,10942,761627,14.367,0.79,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2013,10831,761632,14.221,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2014,10747,756156,14.213,-0.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2015,10772,753054,14.304,0.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2016,10514,753576,13.952,-2.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2017,10696,755716,14.153,1.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2018,10541,761947,13.834,-1.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2019,10325,771044,13.391,-2.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2020,10241,781788,13.099,-0.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2021,10089,786596,12.826,-1.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2022,10292,793478,12.971,2.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2023,9728,809266,12.021,-5.48,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2024,9715,822952,11.805,-0.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,17,Girona,09,Cataluña,2025,9658,832026,11.608,-0.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2010,12564,918072,13.685,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2011,12460,924550,13.477,-0.83,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2012,12260,922928,13.284,-1.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2013,12115,919319,13.178,-1.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2014,12013,919455,13.065,-0.84,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2015,12172,917297,13.269,1.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2016,12098,915392,13.216,-0.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2017,12398,912938,13.58,2.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2018,12380,912075,13.573,-0.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2019,12307,914678,13.455,-0.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2020,12124,919168,13.19,-1.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2021,11864,921338,12.877,-2.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2022,11895,921987,12.901,0.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2023,11087,930181,11.919,-6.79,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2024,10782,937135,11.505,-2.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,18,Granada,01,Andalucía,2025,10672,942618,11.322,-1.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2010,2235,251563,8.884,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2011,2201,256461,8.582,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2012,2226,259537,8.577,1.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2013,2211,257723,8.579,-0.67,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2014,2154,255426,8.433,-2.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2015,2175,253686,8.574,0.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2016,2107,252882,8.332,-3.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2017,2077,253310,8.199,-1.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2018,2087,254308,8.207,0.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2019,2063,257762,8.004,-1.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2020,2028,261995,7.741,-1.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2021,2026,265588,7.628,-0.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2022,2013,268127,7.508,-0.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2023,1910,274598,6.956,-5.12,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2024,1886,279860,6.739,-1.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,19,Guadalajara,08,Castilla - La Mancha,2025,1861,285390,6.521,-1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2010,10126,707263,14.317,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2011,9836,709607,13.861,-2.86,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2012,9386,712097,13.181,-4.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2013,9163,713818,12.837,-2.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2014,8982,715148,12.56,-1.98,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2015,9002,716834,12.558,0.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2016,9091,717832,12.665,0.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2017,8453,719282,11.752,-7.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2018,8626,720592,11.971,2.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2019,8456,723576,11.686,-1.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2020,8257,727121,11.356,-2.35,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2021,7843,726033,10.803,-5.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2022,7803,724418,10.771,-0.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2023,7506,728027,10.31,-3.81,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2024,7417,731182,10.144,-1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,20,Gipuzkoa,16,País Vasco,2025,7232,733365,9.861,-2.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2010,7221,518081,13.938,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2011,7048,521968,13.503,-2.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2012,6951,522862,13.294,-1.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2013,6812,520668,13.083,-2.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2014,6665,519229,12.836,-2.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2015,6532,520017,12.561,-2.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2016,6534,519596,12.575,0.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2017,6467,518930,12.462,-1.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2018,6377,519932,12.265,-1.39,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2019,6335,521870,12.139,-0.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2020,6346,524278,12.104,0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2021,6307,525835,11.994,-0.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2022,6399,528763,12.102,1.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2023,6087,530824,11.467,-4.88,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2024,6022,533448,11.289,-1.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,21,Huelva,01,Andalucía,2025,5949,535703,11.105,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2010,3193,228566,13.97,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2011,3151,228361,13.798,-1.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2012,3131,227609,13.756,-0.63,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2013,3053,226329,13.489,-2.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2014,2990,224909,13.294,-2.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2015,2963,222909,13.292,-0.9,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2016,2945,221079,13.321,-0.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2017,2860,219702,13.018,-2.89,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2018,2820,219345,12.856,-1.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2019,2709,220461,12.288,-3.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2020,2617,222687,11.752,-3.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2021,2572,224264,11.469,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2022,2576,225456,11.426,0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2023,2457,227077,10.82,-4.62,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2024,2445,228634,10.694,-0.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,22,Huesca,02,Aragón,2025,2436,230624,10.563,-0.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2010,9422,670761,14.047,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2011,9211,670600,13.735,-2.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2012,8928,670242,13.321,-3.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2013,8877,664916,13.351,-0.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2014,8704,659033,13.207,-1.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2015,8671,654170,13.255,-0.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2016,8649,648250,13.342,-0.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2017,8682,643484,13.492,0.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2018,8573,638099,13.435,-1.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2019,8537,633564,13.475,-0.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2020,8488,631381,13.444,-0.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2021,8486,627190,13.53,-0.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2022,8529,623761,13.674,0.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2023,8025,620242,12.938,-5.91,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2024,7787,618678,12.587,-2.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,23,Jaén,01,Andalucía,2025,7635,617604,12.362,-1.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2010,6607,499284,13.233,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2011,6503,497799,13.064,-1.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2012,6424,494451,12.992,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2013,6390,489752,13.047,-0.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2014,6187,484694,12.765,-3.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2015,6153,479395,12.835,-0.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2016,6041,473604,12.755,-1.82,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2017,5958,468316,12.722,-1.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2018,5768,463746,12.438,-3.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2019,5649,460001,12.28,-2.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2020,5482,456439,12.01,-2.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2021,5349,451706,11.842,-2.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2022,5325,448179,11.881,-0.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2023,4977,447463,11.123,-6.54,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2024,4848,446445,10.859,-2.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,24,León,07,Castilla y León,2025,4720,446771,10.565,-2.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2010,6333,439768,14.401,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2011,6207,442308,14.033,-1.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2012,6138,443032,13.855,-1.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2013,5927,440915,13.443,-3.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2014,5839,438001,13.331,-1.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2015,5750,436029,13.187,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2016,5624,434041,12.957,-2.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2017,5596,432384,12.942,-0.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2018,5463,432866,12.621,-2.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2019,5356,434930,12.315,-1.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2020,5195,438517,11.847,-3.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2021,5145,439727,11.7,-0.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2022,5169,441443,11.709,0.47,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2023,4882,446793,10.927,-5.55,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2024,4843,451197,10.734,-0.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,25,Lleida,09,Cataluña,2025,4724,456106,10.357,-2.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2010,4375,322415,13.569,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2011,4322,322955,13.383,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2012,4291,323609,13.26,-0.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2013,4247,322027,13.188,-1.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2014,4167,319002,13.063,-1.88,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2015,4165,317053,13.137,-0.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2016,4079,315794,12.917,-2.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2017,4069,315381,12.902,-0.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2018,3999,315675,12.668,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2019,3814,316798,12.039,-4.63,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2020,3764,319914,11.766,-1.31,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2021,3688,319796,11.532,-2.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2022,3646,319892,11.398,-1.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2023,3472,322490,10.766,-4.77,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2024,3440,324399,10.604,-0.92,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,26,La Rioja,17,Rioja (La),2025,3438,327286,10.505,-0.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2010,5048,353504,14.28,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2011,4923,351530,14.004,-2.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2012,4923,348902,14.11,0.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2013,4877,346005,14.095,-0.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2014,4777,342748,13.937,-2.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2015,4802,339386,14.149,0.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2016,4766,336527,14.162,-0.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2017,4708,333634,14.111,-1.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2018,4604,331327,13.896,-2.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2019,4544,329587,13.787,-1.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2020,4374,327946,13.338,-3.74,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2021,4285,326013,13.144,-2.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2022,4231,323989,13.059,-1.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2023,3975,323956,12.27,-6.05,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2024,3905,324842,12.021,-1.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,27,Lugo,12,Galicia,2025,3779,325759,11.601,-3.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2010,71047,6458684,11.0,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2011,69584,6489680,10.722,-2.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2012,69351,6498560,10.672,-0.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2013,69082,6495551,10.635,-0.39,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2014,68396,6454440,10.597,-0.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2015,68554,6436996,10.65,0.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2016,66950,6466996,10.353,-2.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2017,66736,6507184,10.256,-0.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2018,65969,6578079,10.029,-1.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2019,65270,6663394,9.795,-1.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2020,64176,6779888,9.466,-1.68,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2021,62991,6751251,9.33,-1.85,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2022,63644,6750336,9.428,1.04,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2023,57639,6859914,8.402,-9.44,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2024,57045,7001715,8.147,-1.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,28,Madrid,13,Madrid (Comunidad de),2025,57076,7137031,7.997,0.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2010,23267,1609557,14.456,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2011,22951,1625827,14.117,-1.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2012,22651,1641098,13.802,-1.31,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2013,22580,1652999,13.66,-0.31,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2014,22724,1621968,14.01,0.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2015,22729,1628973,13.953,0.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2016,22449,1629298,13.778,-1.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2017,22334,1630615,13.697,-0.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2018,22037,1641121,13.428,-1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2019,21904,1661785,13.181,-0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2020,22003,1685920,13.051,0.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2021,21378,1695651,12.608,-2.84,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2022,21662,1717504,12.612,1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2023,20296,1751600,11.587,-6.31,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2024,20051,1773136,11.308,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,29,Málaga,01,Andalucía,2025,20018,1791092,11.176,-0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2010,18151,1461979,12.415,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2011,17986,1470069,12.235,-0.91,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2012,17757,1474449,12.043,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2013,17610,1472049,11.963,-0.83,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2014,17483,1466818,11.919,-0.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2015,17648,1467288,12.028,0.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2016,17646,1464847,12.046,-0.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2017,17711,1470273,12.046,0.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2018,17528,1478509,11.855,-1.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2019,17315,1493898,11.59,-1.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2020,17019,1511251,11.262,-1.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2021,16828,1518486,11.082,-1.12,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2022,16777,1531878,10.952,-0.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2023,15893,1552457,10.237,-5.27,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2024,15555,1571933,9.895,-2.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,30,Murcia,14,Murcia (Región de),2025,15407,1589138,9.695,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2010,7866,636924,12.35,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2011,7802,642051,12.152,-0.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2012,7733,644566,11.997,-0.88,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2013,7760,644477,12.041,0.35,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2014,7792,640790,12.16,0.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2015,7912,640476,12.353,1.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2016,7917,640647,12.358,0.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2017,7821,643234,12.159,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2018,7710,647554,11.906,-1.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2019,7537,654214,11.521,-2.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2020,7414,661197,11.213,-1.63,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2021,7269,661537,10.988,-1.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2022,7328,664117,11.034,0.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2023,6618,671746,9.852,-9.69,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2024,6529,678338,9.625,-1.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,31,Navarra,15,Navarra (Comunidad Foral de),2025,6571,683500,9.614,0.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2010,4685,335219,13.976,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2011,4620,333257,13.863,-1.39,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2012,4599,330257,13.926,-0.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2013,4542,326724,13.902,-1.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2014,4509,322293,13.99,-0.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2015,4489,318391,14.099,-0.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2016,4400,314853,13.975,-1.98,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2017,4379,311680,14.05,-0.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2018,4273,309293,13.815,-2.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2019,4164,307651,13.535,-2.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2020,3977,306650,12.969,-4.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2021,3850,305223,12.614,-3.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2022,3782,304280,12.429,-1.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2023,3530,304550,11.591,-6.66,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2024,3445,304592,11.31,-2.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,32,Ourense,12,Galicia,2025,3357,305573,10.986,-2.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2010,13807,1084341,12.733,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2011,13385,1081487,12.376,-3.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2012,13352,1077360,12.393,-0.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2013,12963,1068165,12.136,-2.91,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2014,12865,1061756,12.117,-0.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2015,12707,1051229,12.088,-1.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2016,12486,1042608,11.976,-1.74,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2017,12472,1034960,12.051,-0.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2018,12189,1028244,11.854,-2.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2019,11825,1022800,11.561,-2.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2020,11534,1018784,11.321,-2.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2021,11250,1011792,11.119,-2.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2022,11190,1004686,11.138,-0.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2023,10591,1005283,10.535,-5.35,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2024,10321,1008028,10.239,-2.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,33,Asturias,03,Asturias (Principado de),2025,10063,1013529,9.929,-2.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2010,2500,172510,14.492,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2011,2469,171668,14.382,-1.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2012,2429,170713,14.229,-1.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2013,2374,168955,14.051,-2.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2014,2311,167609,13.788,-2.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2015,2262,166035,13.624,-2.12,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2016,2189,164644,13.295,-3.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2017,2143,163390,13.116,-2.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2018,2117,162035,13.065,-1.21,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2019,2042,160980,12.685,-3.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2020,1949,160321,12.157,-4.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2021,1880,159123,11.815,-3.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2022,1863,158008,11.791,-0.9,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2023,1763,157752,11.176,-5.37,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2024,1726,158115,10.916,-2.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,34,Palencia,07,Castilla y León,2025,1679,158687,10.581,-2.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2010,15184,1090605,13.923,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2011,14586,1096980,13.297,-3.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2012,14506,1100813,13.178,-0.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2013,14406,1103850,13.051,-0.69,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2014,14003,1100027,12.73,-2.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2015,14207,1098406,12.934,1.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2016,14045,1097800,12.794,-1.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2017,14093,1100480,12.806,0.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2018,14319,1109175,12.91,1.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2019,14311,1120406,12.773,-0.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2020,14061,1131065,12.432,-1.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2021,13408,1128539,11.881,-4.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2022,13496,1129395,11.95,0.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2023,12438,1140258,10.908,-7.84,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2024,12350,1154453,10.698,-0.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,35,Las Palmas,05,Canarias,2025,12197,1167555,10.447,-1.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2010,14306,962472,14.864,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2011,13968,963511,14.497,-2.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2012,13843,958428,14.443,-0.89,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2013,13600,955050,14.24,-1.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2014,13330,950919,14.018,-1.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2015,13263,947374,14.0,-0.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2016,13086,944346,13.857,-1.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2017,13007,942731,13.797,-0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2018,12807,941772,13.599,-1.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2019,12580,942665,13.345,-1.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2020,12122,945408,12.822,-3.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2021,11907,944275,12.61,-1.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2022,11904,943015,12.623,-0.03,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2023,11210,944245,11.872,-5.83,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2024,10906,945599,11.533,-2.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,36,Pontevedra,12,Galicia,2025,10584,946225,11.186,-2.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2010,5014,353619,14.179,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2011,4765,352986,13.499,-4.97,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2012,4694,350564,13.39,-1.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2013,4688,345548,13.567,-0.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2014,4566,342459,13.333,-2.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2015,4494,339395,13.241,-1.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2016,4341,335985,12.92,-3.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2017,4334,333603,12.991,-0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2018,4193,331473,12.65,-3.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2019,4139,330119,12.538,-1.29,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2020,4009,329245,12.176,-3.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2021,3958,327338,12.091,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2022,3888,325898,11.93,-1.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2023,3682,327170,11.254,-5.3,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2024,3602,327685,10.992,-2.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,37,Salamanca,07,Castilla y León,2025,3518,328779,10.7,-2.33,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2010,14232,1027914,13.846,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2011,13748,1029789,13.35,-3.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2012,13724,1017531,13.488,-0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2013,13487,1014829,13.29,-1.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2014,13331,1004788,13.267,-1.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2015,13339,1001900,13.314,0.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2016,13303,1004124,13.248,-0.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2017,13454,1007641,13.352,1.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2018,13562,1018510,13.316,0.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2019,13705,1032983,13.267,1.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2020,13351,1044887,12.777,-2.58,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2021,12746,1044405,12.204,-4.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2022,12759,1048306,12.171,0.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2023,11671,1061790,10.992,-8.53,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2024,11494,1074409,10.698,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,38,Santa Cruz de Tenerife,05,Canarias,2025,11296,1082421,10.436,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2010,7442,592250,12.566,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2011,7372,593121,12.429,-0.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2012,7259,593861,12.223,-1.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2013,7091,591888,11.98,-2.31,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2014,6974,588656,11.847,-1.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2015,6930,585179,11.843,-0.63,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2016,6794,582206,11.669,-1.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2017,6746,580295,11.625,-0.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2018,6598,580229,11.371,-2.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2019,6514,581078,11.21,-1.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2020,6317,582905,10.837,-3.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2021,6300,584507,10.778,-0.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2022,6273,585402,10.716,-0.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2023,5955,588419,10.12,-5.07,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2024,5851,591563,9.891,-1.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,39,Cantabria,06,Cantabria,2025,5770,593964,9.714,-1.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2010,2315,164268,14.093,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2011,2242,164169,13.657,-3.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2012,2203,163701,13.457,-1.74,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2013,2195,161702,13.574,-0.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2014,2135,159303,13.402,-2.73,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2015,2126,157570,13.492,-0.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2016,2091,155652,13.434,-1.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2017,2101,154184,13.627,0.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2018,2036,153342,13.278,-3.09,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2019,2017,153129,13.172,-0.93,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2020,1961,153478,12.777,-2.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2021,1941,153663,12.632,-1.02,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2022,1918,153803,12.47,-1.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2023,1803,155258,11.613,-6.0,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2024,1759,156788,11.219,-2.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,40,Segovia,07,Castilla y León,2025,1713,158470,10.81,-2.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2010,25896,1917097,13.508,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2011,25461,1928962,13.199,-1.68,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2012,25165,1938974,12.979,-1.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2013,24915,1942155,12.829,-0.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2014,24490,1941355,12.615,-1.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2015,24592,1941480,12.667,0.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2016,24473,1939775,12.616,-0.48,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2017,24620,1939527,12.694,0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2018,24174,1939887,12.462,-1.81,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2019,23807,1942389,12.257,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2020,23787,1950219,12.197,-0.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2021,23694,1947852,12.164,-0.39,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2022,23901,1948393,12.267,0.87,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2023,22418,1957210,11.454,-6.2,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2024,22101,1967746,11.232,-1.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,41,Sevilla,01,Andalucía,2025,21810,1976624,11.034,-1.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2010,1207,95258,12.671,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2011,1187,95223,12.465,-1.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2012,1224,94522,12.949,3.12,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2013,1210,93291,12.97,-1.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2014,1165,92221,12.633,-3.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2015,1155,91006,12.691,-0.86,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2016,1129,90040,12.539,-2.25,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2017,1134,88903,12.755,0.44,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2018,1117,88600,12.607,-1.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2019,1089,88636,12.286,-2.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2020,1048,88884,11.791,-3.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2021,1044,88747,11.764,-0.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2022,1042,88377,11.79,-0.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2023,994,89482,11.108,-4.61,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2024,980,90150,10.871,-1.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,42,Soria,07,Castilla y León,2025,954,90234,10.573,-2.65,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2010,10406,808420,12.872,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2011,10212,811401,12.586,-1.86,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2012,10121,814199,12.431,-0.89,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2013,9846,810178,12.153,-2.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2014,9651,800962,12.049,-1.98,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2015,9646,795101,12.132,-0.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2016,9493,792299,11.982,-1.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2017,9435,791693,11.917,-0.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2018,9212,795902,11.574,-2.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2019,8964,804664,11.14,-2.69,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2020,8892,816772,10.887,-0.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2021,8739,822309,10.627,-1.72,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2022,8928,830075,10.756,2.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2023,8346,847566,9.847,-6.52,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2024,8282,861531,9.613,-0.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,43,Tarragona,09,Cataluña,2025,8196,874808,9.369,-1.04,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2010,2003,145277,13.787,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2011,1964,144607,13.582,-1.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2012,1947,143728,13.546,-0.87,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2013,1893,142183,13.314,-2.77,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2014,1927,140365,13.728,1.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2015,1924,138932,13.849,-0.16,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2016,1892,136977,13.813,-1.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2017,1882,135562,13.883,-0.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2018,1860,134572,13.822,-1.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2019,1819,134137,13.561,-2.2,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2020,1758,134176,13.102,-3.35,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2021,1709,134545,12.702,-2.79,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2022,1722,134421,12.81,0.76,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2023,1628,135237,12.038,-5.46,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2024,1603,135661,11.816,-1.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,44,Teruel,02,Aragón,2025,1532,136197,11.248,-4.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2010,8866,697959,12.703,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2011,8809,707242,12.455,-0.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2012,8725,711228,12.268,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2013,8628,706407,12.214,-1.11,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2014,8420,699136,12.043,-2.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2015,8373,693371,12.076,-0.56,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2016,8234,688672,11.956,-1.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2017,8117,686841,11.818,-1.42,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2018,7979,687391,11.608,-1.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2019,7880,694844,11.341,-1.24,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2020,7676,703772,10.907,-2.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2021,7573,709403,10.675,-1.34,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2022,7586,713453,10.633,0.17,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2023,7234,728496,9.93,-4.64,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2024,7211,740148,9.743,-0.32,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,45,Toledo,08,Castilla - La Mancha,2025,7091,750815,9.444,-1.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2010,32389,2581147,12.548,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2011,32206,2578719,12.489,-0.57,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2012,31720,2580792,12.291,-1.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2013,30972,2566474,12.068,-2.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2014,30400,2548898,11.927,-1.85,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2015,30360,2543315,11.937,-0.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2016,29621,2544264,11.642,-2.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2017,29336,2540707,11.546,-0.96,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2018,28768,2547986,11.29,-1.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2019,28704,2565124,11.19,-0.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2020,28011,2591875,10.807,-2.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2021,27560,2589312,10.644,-1.61,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2022,27613,2605757,10.597,0.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2023,25771,2656291,9.702,-6.67,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2024,25529,2709433,9.422,-0.94,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,46,Valencia/València,10,Comunitat Valenciana,2025,25272,2758633,9.161,-1.01,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2010,6910,533640,12.949,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2011,6696,534874,12.519,-3.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2012,6669,534280,12.482,-0.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2013,6638,532284,12.471,-0.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2014,6497,529157,12.278,-2.12,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2015,6435,526288,12.227,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2016,6302,523679,12.034,-2.07,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2017,6225,521130,11.945,-1.22,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2018,6044,519851,11.626,-2.91,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2019,5899,519546,11.354,-2.4,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2020,5735,520649,11.015,-2.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2021,5603,519361,10.788,-2.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2022,5592,517975,10.796,-0.2,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2023,5313,521071,10.196,-4.99,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2024,5180,525398,9.859,-2.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,47,Valladolid,07,Castilla y León,2025,5154,528841,9.746,-0.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2010,15485,1153724,13.422,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2011,15001,1155772,12.979,-3.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2012,14450,1158439,12.474,-3.67,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2013,14008,1156447,12.113,-3.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2014,13696,1151905,11.89,-2.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2015,13500,1148775,11.752,-1.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2016,13660,1147576,11.903,1.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2017,12623,1148302,10.993,-7.59,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2018,12797,1149628,11.131,1.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2019,12419,1152651,10.774,-2.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2020,12147,1159443,10.477,-2.19,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2021,11721,1154334,10.154,-3.51,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2022,11589,1149344,10.083,-1.13,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2023,11162,1154306,9.67,-3.68,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2024,10833,1160133,9.338,-2.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,48,Bizkaia,16,País Vasco,2025,10600,1166816,9.085,-2.15,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2010,2702,194214,13.912,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2011,2694,193383,13.931,-0.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2012,2673,191612,13.95,-0.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2013,2660,188270,14.129,-0.49,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2014,2626,185432,14.162,-1.28,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2015,2600,183436,14.174,-0.99,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2016,2561,180406,14.196,-1.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2017,2496,177404,14.07,-2.54,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2018,2412,174549,13.818,-3.37,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2019,2351,172539,13.626,-2.53,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2020,2279,170588,13.36,-3.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2021,2178,168725,12.909,-4.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2022,2155,167215,12.888,-1.06,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2023,2032,166366,12.214,-5.71,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2024,1986,165832,11.976,-2.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,49,Zamora,07,Castilla y León,2025,1952,165275,11.811,-1.71,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2010,11301,973252,11.612,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2011,11129,973325,11.434,-1.52,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2012,10891,978130,11.135,-2.14,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2013,10844,978638,11.081,-0.43,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2014,10824,960111,11.274,-0.18,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2015,10802,956006,11.299,-0.2,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2016,10582,950507,11.133,-2.04,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2017,10478,953486,10.989,-0.98,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2018,10140,954811,10.62,-3.23,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2019,9831,964693,10.191,-3.05,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2020,9501,972528,9.769,-3.36,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2021,9330,967452,9.644,-1.8,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2022,9407,966438,9.734,0.83,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2023,8813,977413,9.017,-6.31,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2024,8681,983539,8.826,-1.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,50,Zaragoza,02,Aragón,2025,8648,991991,8.718,-0.38,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2010,1162,80579,14.421,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2011,1151,82376,13.973,-0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2012,1159,84018,13.795,0.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2013,1170,84180,13.899,0.95,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2014,1163,84963,13.688,-0.6,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2015,1199,84263,14.229,3.1,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2016,1174,84519,13.89,-2.09,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2017,1191,84959,14.019,1.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2018,1191,85144,13.988,0.0,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2019,1146,84777,13.518,-3.78,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2020,1145,84202,13.598,-0.09,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2021,1094,83517,13.099,-4.45,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2022,1089,83117,13.102,-0.46,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2023,977,83039,11.766,-10.28,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2024,945,83229,11.354,-3.28,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,51,Ceuta,18,Ceuta,2025,902,83595,10.79,-4.55,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2010,1371,76034,18.031,,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2011,1362,78476,17.356,-0.66,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2012,1420,80802,17.574,4.26,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2013,1430,83679,17.089,0.7,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2014,1380,84509,16.33,-3.5,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2015,1565,85584,18.286,13.41,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2016,1662,86026,19.32,6.2,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2017,1709,86120,19.844,2.83,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2018,1681,86384,19.46,-1.64,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2019,1618,86487,18.708,-3.75,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2020,1639,87076,18.823,1.3,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2021,1569,86261,18.189,-4.27,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2022,1505,85170,17.671,-4.08,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2023,1353,85491,15.826,-10.1,True,La variació 2022→2023 travessa el trencament de sèrie DIRCE de 2023: no comparable.,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2024,1304,85811,15.196,-3.62,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
+provincia,52,Melilla,19,Melilla,2025,1267,86780,14.6,-2.84,False,,INE DIRCE T=301 (locals); INE Padró T=29005 sumat per província
