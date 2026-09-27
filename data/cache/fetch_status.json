@@ -59,6 +59,16 @@
     "font": "api_ine",
     "missatge": "1184 files"
   },
+  "locals_ccaa_grups": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "3200 files"
+  },
+  "locals_provincia": {
+    "estat": "ok",
+    "font": "api_ine",
+    "missatge": "848 files"
+  },
   "ocupacio_comerc": {
     "estat": "ok",
     "font": "api_eurostat",
