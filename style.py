@@ -1468,6 +1468,16 @@ def load_geojson_spain_ccaa(with_canaries_inset=True):
         return json.load(f)
 
 
+def load_geojson_spain_provincies(with_canaries_inset=True):
+    """Carrega el GeoJSON de províncies (IGN, CC BY 4.0), amb `codi_prov` a
+    properties. Mateix trasllat de les Canàries (35 i 38) que el de CCAA."""
+    import json
+    base = os.path.dirname(__file__)
+    fname = "spain_provincies_inset.geojson" if with_canaries_inset else "spain_provincies.geojson"
+    with open(os.path.join(base, "data", "geo", fname), "r") as f:
+        return json.load(f)
+
+
 def canaries_inset_layers():
     """Retorna les capes mapbox per dibuixar el requadre i l'etiqueta CANARIES
     al voltant de l'inset traslladat. Per usar com a `map_layers=...` al
