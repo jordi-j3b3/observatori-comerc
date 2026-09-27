@@ -626,13 +626,18 @@ with tab_prov:
                 _e_a0 = _lp_esp[_lp_esp["any"] == _a0].iloc[0]["locals_cnae47"]
                 _e_a1 = _lp_esp[_lp_esp["any"] == _a1].iloc[0]["locals_cnae47"]
                 _e_pct = (_e_a1 / _e_a0 - 1) * 100
-                fig_rk.add_vline(
-                    x=_e_pct, line_dash="dash", line_color=OCRE, line_width=2,
-                    annotation_text=f"{_ESP}: {fpct(_e_pct, 1)}", annotation_position="bottom left")
+                fig_rk.add_vline(x=_e_pct, line_dash="dash", line_color=OCRE, line_width=2)
+                fig_rk.add_annotation(
+                    x=_e_pct, y=1.0, yref="paper", yanchor="bottom", showarrow=False,
+                    text=f"{_ESP}: {fpct(_e_pct, 1)}", font=dict(size=11, color=OCRE))
+                # Marge a banda i banda perquè les etiquetes de fora de la barra no es tallin
+                _span = max(_r["_pct"].max(), 0) - min(_r["_pct"].min(), 0)
                 apply_layout(fig_rk,
                     xaxis_title="%",
+                    xaxis_range=[min(_r["_pct"].min(), 0) - _span * 0.25,
+                                 max(_r["_pct"].max(), 0) + _span * 0.25],
                     height=max(600, len(_r) * 22 + 120),
-                    margin=dict(l=190, r=130, t=50, b=50))
+                    margin=dict(l=190, r=40, t=60, b=50))
                 st.plotly_chart(fig_rk, use_container_width=True)
                 source(f"{_SRC_DIRCE} (taula 301). " + ("Càlcul propi" if _ca else "Cálculo propio"))
 
