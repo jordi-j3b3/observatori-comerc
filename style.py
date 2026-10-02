@@ -2074,15 +2074,22 @@ _MESOS_ES_1IDX = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio",
 
 
 def _load_updates_log():
+    # Es rellegeix quan canvia el fitxer: el procés de Streamlit Cloud viu dies i
+    # el pipeline diari reescriu el log; amb una cache per a tota la vida del
+    # procés, l'etiqueta de frescor quedava congelada fins al Reboot.
     global _UPDATES_LOG_CACHE
-    if _UPDATES_LOG_CACHE is None:
-        p = os.path.join(os.path.dirname(__file__), "data", "cache", "updates_log.json")
+    p = os.path.join(os.path.dirname(__file__), "data", "cache", "updates_log.json")
+    try:
+        mtime = os.path.getmtime(p)
+    except OSError:
+        mtime = None
+    if _UPDATES_LOG_CACHE is None or _UPDATES_LOG_CACHE[0] != mtime:
         try:
             with open(p, encoding="utf-8") as f:
-                _UPDATES_LOG_CACHE = json.load(f)
+                _UPDATES_LOG_CACHE = (mtime, json.load(f))
         except Exception:
-            _UPDATES_LOG_CACHE = {}
-    return _UPDATES_LOG_CACHE
+            _UPDATES_LOG_CACHE = (mtime, {})
+    return _UPDATES_LOG_CACHE[1]
 
 
 def _fmt_period(s, ca):
