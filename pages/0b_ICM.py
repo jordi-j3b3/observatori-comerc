@@ -72,9 +72,33 @@ def load_confianca():
     return df.dropna(subset=["data"]).sort_values("data")
 
 
+@st.cache_data(ttl=3600)
+def load_ipc_grups():
+    """IPC per grups (INE T=76125) amb la variació anual calculada sobre l'índex."""
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, "ipc_coicop.parquet")
+    if os.path.exists(pq):
+        df = pd.read_parquet(pq)
+    else:
+        csv = os.path.join(base, "ipc_coicop.csv")
+        if not os.path.exists(csv):
+            return pd.DataFrame()
+        df = pd.read_csv(csv)
+    df["data"] = pd.to_datetime(df["periode"], format="%Y-%m", errors="coerce")
+    df["grup_codi"] = pd.to_numeric(df["grup_codi"], errors="coerce")
+    df = df.dropna(subset=["data", "ipc", "grup_codi"])
+    _prev = df[["grup_codi", "data", "ipc"]].copy()
+    _prev["data"] = _prev["data"] + pd.DateOffset(months=12)
+    df = df.merge(_prev.rename(columns={"ipc": "ipc_12m"}),
+                  on=["grup_codi", "data"], how="left")
+    df["var_anual"] = (df["ipc"] / df["ipc_12m"] - 1) * 100
+    return df.sort_values(["grup_codi", "data"])
+
+
 df = load_icm()
 df_distrib = load_icm_distribucion()
 df_conf = load_confianca()
+df_ipc = load_ipc_grups()
 
 kicker("Pols mensual del consum · ICM (INE)" if _ca
        else "Pulso mensual del consumo · ICM (INE)")
@@ -254,12 +278,13 @@ with c4:
             fpct(val, 1),
         )
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     ("Nacional" if _ca else "Nacional"),
     ("Per branca" if _ca else "Por rama"),
     ("Per CCAA" if _ca else "Por CCAA"),
     ("Per format" if _ca else "Por formato"),
     ("Confiança del consumidor" if _ca else "Confianza del consumidor"),
+    ("Preus per grups" if _ca else "Precios por grupos"),
 ])
 
 with tab1:
@@ -881,6 +906,147 @@ with tab5:
                "(ei_bsco_m). Sèries desestacionalitzades." if _ca else
                "Comisión Europea, encuesta armonizada a los consumidores, vía Eurostat "
                "(ei_bsco_m). Series desestacionalizadas.")
+
+with tab6:
+    _ipc = df_ipc.dropna(subset=["var_anual"]) if not df_ipc.empty else df_ipc
+    if _ipc.empty:
+        st.info("Encara no hi ha dades de l'IPC per grups a la cache."
+                if _ca else
+                "Aún no hay datos del IPC por grupos en la caché.")
+    else:
+        _lang = st.session_state.lang
+        # Etiquetes pròpies: el CSV diu "Parament de la llar", que fa pensar en
+        # subministraments; el grup 05 és mobiliari i equipament domèstic.
+        _ipc_lbl = {
+            0: "IPC general",
+            1: ("Alimentació i begudes" if _ca else "Alimentación y bebidas"),
+            3: ("Vestit i calçat" if _ca else "Vestido y calzado"),
+            5: ("Mobles i equipament de la llar" if _ca
+                else "Muebles y equipamiento del hogar"),
+        }
+        _ipc_col = {0: GRAY_DARK, 1: NAVY, 3: OCRE_DEEP, 5: G2_P}
+        _grups_cistella = [1, 3, 5]
+
+        _ipc_dt = _ipc[_ipc["grup_codi"] == 0]["data"].max()
+        _ipc_last = _ipc[_ipc["data"] == _ipc_dt].set_index("grup_codi")["var_anual"]
+        _gen_v = float(_ipc_last.get(0)) if 0 in _ipc_last.index else None
+        _cist = {g: float(_ipc_last[g]) for g in _grups_cistella if g in _ipc_last.index}
+        _n_sota = sum(1 for v in _cist.values() if _gen_v is not None and v < _gen_v)
+
+        if _gen_v is not None and _cist:
+            if _ca:
+                if _n_sota == len(_cist):
+                    _tit = (f"Els preus de la cistella del comerç pugen menys "
+                            f"que l'IPC general ({fpct(_gen_v, 1)})")
+                elif _n_sota == 0:
+                    _tit = (f"Els preus de la cistella del comerç pugen més "
+                            f"que l'IPC general ({fpct(_gen_v, 1)})")
+                else:
+                    _tit = (f"{_n_sota} dels {len(_cist)} grups de la cistella del comerç "
+                            f"pugen menys que l'IPC general ({fpct(_gen_v, 1)})")
+                exhibit_header(
+                    6, _tit,
+                    note="Variació anual de l'IPC dels tres grups de despesa que es compren "
+                         "sobretot al comerç al detall, davant de l'índex general.")
+            else:
+                if _n_sota == len(_cist):
+                    _tit = (f"Los precios de la cesta del comercio suben menos "
+                            f"que el IPC general ({fpct(_gen_v, 1)})")
+                elif _n_sota == 0:
+                    _tit = (f"Los precios de la cesta del comercio suben más "
+                            f"que el IPC general ({fpct(_gen_v, 1)})")
+                else:
+                    _tit = (f"{_n_sota} de los {len(_cist)} grupos de la cesta del comercio "
+                            f"suben menos que el IPC general ({fpct(_gen_v, 1)})")
+                exhibit_header(
+                    6, _tit,
+                    note="Variación anual del IPC de los tres grupos de gasto que se compran "
+                         "sobre todo en el comercio minorista, frente al índice general.")
+
+        st.caption(
+            ("Darrera dada disponible: " if _ca else "Último dato disponible: ")
+            + format_mes_any(_ipc_dt, _lang)
+        )
+        _kc = st.columns(4)
+        for _i, _g in enumerate([0] + _grups_cistella):
+            with _kc[_i]:
+                st.metric(_ipc_lbl[_g],
+                          fpct(float(_ipc_last[_g]), 1) if _g in _ipc_last.index else "—")
+
+        _periodes_ipc = {
+            ("24 mesos" if _ca else "24 meses"): 24,
+            ("60 mesos" if _ca else "60 meses"): 60,
+            ("Des de 2007" if _ca else "Desde 2007"): "2007-01-01",
+        }
+        _per_ipc_lbl = st.radio(
+            ("Període" if _ca else "Período"),
+            list(_periodes_ipc.keys()), index=1, horizontal=True, key="ipc_per",
+        )
+        _per_ipc = _periodes_ipc[_per_ipc_lbl]
+        if isinstance(_per_ipc, int):
+            _ipc_from = _ipc_dt - pd.DateOffset(months=_per_ipc - 1)
+        else:
+            _ipc_from = pd.Timestamp(_per_ipc)
+        _ipc_plot = _ipc[_ipc["data"] >= _ipc_from]
+
+        fig_ipc = go.Figure()
+        for _g in [1, 3, 5, 0]:
+            _s = _ipc_plot[_ipc_plot["grup_codi"] == _g]
+            if _s.empty:
+                continue
+            _lbl_s = [format_mes_any(d, _lang) for d in _s["data"]]
+            fig_ipc.add_trace(go.Scatter(
+                x=_s["data"], y=_s["var_anual"],
+                mode="lines",
+                name=_ipc_lbl[_g],
+                line=dict(color=_ipc_col[_g], width=2.6 if _g == 0 else 2.2,
+                          dash="dot" if _g == 0 else "solid"),
+                customdata=_lbl_s,
+                hovertemplate=f"<b>{_ipc_lbl[_g]}</b><br>%{{customdata}}: %{{y:+.1f}}%<extra></extra>",
+            ))
+        fig_ipc.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+        apply_layout(fig_ipc,
+            yaxis_title=("Variació anual (%)" if _ca else "Variación anual (%)"),
+            height=440,
+        )
+        fig_ipc.update_xaxes(tickformat="%m/%Y")
+        st.plotly_chart(fig_ipc, use_container_width=True)
+        source("INE, Índice de Precios de Consumo (taula 76125), base 2021=100. "
+               "Variació anual calculada sobre l'índex." if _ca else
+               "INE, Índice de Precios de Consumo (tabla 76125), base 2021=100. "
+               "Variación anual calculada sobre el índice.")
+
+        if _gen_v is not None and _cist:
+            _g_max = max(_cist, key=_cist.get)
+            _g_min = min(_cist, key=_cist.get)
+            if _ca:
+                _dif = ("Quan l'IPC general puja més que aquests tres grups, la diferència "
+                        "ve dels grups que no hi són, com l'habitatge, el transport o els serveis."
+                        if _n_sota == len(_cist) else
+                        "La comparació amb l'IPC general indica si el comerç al detall "
+                        "acompanya la inflació o hi va per sota.")
+                insight(
+                    f"A <strong>{format_mes_any(_ipc_dt, 'ca')}</strong>, l'IPC general "
+                    f"varia un <strong>{fpct(_gen_v, 1)}</strong> interanual. Dels grups que "
+                    f"es compren al comerç, el que més s'encareix és "
+                    f"<strong>{_ipc_lbl[_g_max].lower()}</strong> ({fpct(_cist[_g_max], 1)}) "
+                    f"i el que menys, <strong>{_ipc_lbl[_g_min].lower()}</strong> "
+                    f"({fpct(_cist[_g_min], 1)}). {_dif}"
+                )
+            else:
+                _dif = ("Cuando el IPC general sube más que estos tres grupos, la diferencia "
+                        "viene de los grupos que no están, como la vivienda, el transporte o los servicios."
+                        if _n_sota == len(_cist) else
+                        "La comparación con el IPC general indica si el comercio minorista "
+                        "acompaña la inflación o va por debajo.")
+                insight(
+                    f"En <strong>{format_mes_any(_ipc_dt, 'es')}</strong>, el IPC general "
+                    f"varía un <strong>{fpct(_gen_v, 1)}</strong> interanual. De los grupos que "
+                    f"se compran en el comercio, el que más se encarece es "
+                    f"<strong>{_ipc_lbl[_g_max].lower()}</strong> ({fpct(_cist[_g_max], 1)}) "
+                    f"y el que menos, <strong>{_ipc_lbl[_g_min].lower()}</strong> "
+                    f"({fpct(_cist[_g_min], 1)}). {_dif}"
+                )
 
 # ─── Expander: evolució ocupació ──────────────────────────────
 

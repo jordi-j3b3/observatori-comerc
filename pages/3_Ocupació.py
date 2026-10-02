@@ -45,9 +45,22 @@ def load_ocu_sx(sig):  # 'sig' (mida+data del CSV) trenca la cache quan canvien 
     return pd.read_csv(_OCU_PATH) if os.path.exists(_OCU_PATH) else pd.DataFrame()
 
 
+@st.cache_data(ttl=3600)
+def load_epa():
+    p = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "epa_retail.csv")
+    if not os.path.exists(p):
+        return pd.DataFrame()
+    d = pd.read_csv(p)
+    # Inici de trimestre com a data, per a l'eix i per creuar amb l'any anterior
+    d["data"] = pd.to_datetime(
+        d["any"].astype(str) + "-" + ((d["trimestre"] - 1) * 3 + 1).astype(str) + "-01")
+    return d.sort_values(["sexe", "data"])
+
+
 df_prod = load_prod()
 df_emp = load_empreses()
 df_eaes = load_eaes()
+df_epa = load_epa()
 _ocu_sig = ((os.path.getsize(_OCU_PATH), int(os.path.getmtime(_OCU_PATH)))
             if os.path.exists(_OCU_PATH) else (0, 0))
 df_ocu = load_ocu_sx(_ocu_sig)
@@ -193,10 +206,11 @@ if _takeaways:
     key_takeaways(_takeaways, label=_tk_label)
 freshness_badge(["ocupacio_comerc", "eaes"], st.session_state.lang)
 
-tab_vol, tab_sal, tab_perfil = st.tabs([
+tab_vol, tab_sal, tab_perfil, tab_epa = st.tabs([
     ("Volum i intensitat" if _ca else "Volumen e intensidad"),
     ("Salaris" if _ca else "Salarios"),
     ("Perfil: sexe i edat" if _ca else "Perfil: sexo y edad"),
+    ("Conjuntura trimestral (EPA)" if _ca else "Coyuntura trimestral (EPA)"),
 ])
 
 # ════════════════════════════════════════════════════════════
@@ -832,6 +846,189 @@ with tab_perfil:
              f"mientras el peso de los 50 años o más ha subido del {fpct(sen_first, 1, sign=False)} al {fpct(sen_es, 1, sign=False)}. "
              f"El <strong>relevo generacional es débil</strong>: entran cada vez menos jóvenes y la plantilla envejece.")
         )
+
+# ════════════════════════════════════════════════════════════
+# TAB 4: CONJUNTURA TRIMESTRAL (EPA, INE)
+# ════════════════════════════════════════════════════════════
+with tab_epa:
+    if df_epa.empty:
+        st.info("Sense dades de l'EPA disponibles." if _ca
+                else "Sin datos de la EPA disponibles.")
+    else:
+        if _ca:
+            intro(
+                "L'<strong>Enquesta de Població Activa</strong> (INE) dona el pols trimestral "
+                "de l'ocupació, mentre que les altres pestanyes treballen amb dades anuals. "
+                "La sèrie no està desestacionalitzada, i per això cada trimestre es compara "
+                "amb el mateix trimestre de l'any anterior. Els <strong>ocupats</strong> són "
+                "del comerç al detall (CNAE 47). Els <strong>aturats</strong> i les "
+                "<strong>hores</strong> només es publiquen per a tot el sector comerç "
+                "(secció G), que inclou també l'engròs i els vehicles."
+            )
+        else:
+            intro(
+                "La <strong>Encuesta de Población Activa</strong> (INE) da el pulso trimestral "
+                "del empleo, mientras que las otras pestañas trabajan con datos anuales. "
+                "La serie no está desestacionalizada, por eso cada trimestre se compara "
+                "con el mismo trimestre del año anterior. Los <strong>ocupados</strong> son "
+                "del comercio minorista (CNAE 47). Los <strong>parados</strong> y las "
+                "<strong>horas</strong> solo se publican para todo el sector comercio "
+                "(sección G), que incluye también el mayorista y los vehículos."
+            )
+
+        _ep = df_epa[df_epa["sexe"] == "total"].set_index("data").sort_index()
+        _ep_dt = _ep.index.max()
+        _ep_prev_dt = _ep_dt - pd.DateOffset(years=1)
+        _ep_l = _ep.loc[_ep_dt]
+        _ep_p = _ep.loc[_ep_prev_dt] if _ep_prev_dt in _ep.index else None
+        _ep_lbl = f"T{int(_ep_l['trimestre'])} {int(_ep_l['any'])}"
+
+        def _yoy(col):
+            if _ep_p is None or pd.isna(_ep_p[col]) or not _ep_p[col]:
+                return None
+            return (float(_ep_l[col]) / float(_ep_p[col]) - 1) * 100
+
+        _v_ocu = _yoy("ocupats_cnae47_milers")
+        _v_atu = _yoy("aturats_seccio_g_milers")
+        _d_hor = (float(_ep_l["hores_setmana_seccio_g"]) - float(_ep_p["hores_setmana_seccio_g"])
+                  if _ep_p is not None else None)
+
+        st.caption(("Darrera dada disponible: " if _ca else "Último dato disponible: ")
+                   + _ep_lbl)
+        _e1, _e2, _e3, _e4 = st.columns(4)
+        with _e1:
+            st.metric(("Ocupats comerç al detall (milers)" if _ca
+                       else "Ocupados comercio minorista (miles)"),
+                      fnum(float(_ep_l["ocupats_cnae47_milers"]), 1))
+        with _e2:
+            st.metric(("Variació anual ocupats" if _ca else "Variación anual ocupados"),
+                      fpct(_v_ocu, 1) if _v_ocu is not None else "—")
+        with _e3:
+            st.metric(("Aturats sector comerç (milers)" if _ca
+                       else "Parados sector comercio (miles)"),
+                      fnum(float(_ep_l["aturats_seccio_g_milers"]), 1))
+        with _e4:
+            st.metric(("Hores setmanals per ocupat" if _ca
+                       else "Horas semanales por ocupado"),
+                      fnum(float(_ep_l["hores_setmana_seccio_g"]), 1))
+
+        def _q_lbls(idx):
+            return [f"T{(d.month - 1) // 3 + 1} {d.year}" for d in idx]
+
+        # ─── Ex. 1: ocupats CNAE 47 per sexe ───
+        if _v_ocu is not None:
+            if _ca:
+                _verb = "creix" if _v_ocu > 0 else ("cau" if _v_ocu < 0 else "no varia")
+                exhibit_header(
+                    1, f"L'ocupació del comerç al detall {_verb} un "
+                       f"{fpct(abs(_v_ocu), 1, sign=False)} interanual el {_ep_lbl}",
+                    note="Ocupats del comerç al detall (CNAE 47), en milers, per sexe.")
+            else:
+                _verb = "crece" if _v_ocu > 0 else ("cae" if _v_ocu < 0 else "no varía")
+                exhibit_header(
+                    1, f"El empleo del comercio minorista {_verb} un "
+                       f"{fpct(abs(_v_ocu), 1, sign=False)} interanual en el {_ep_lbl}",
+                    note="Ocupados del comercio minorista (CNAE 47), en miles, por sexo.")
+
+        _sx_lbl = {
+            "total": "Total",
+            "dones": ("Dones" if _ca else "Mujeres"),
+            "homes": ("Homes" if _ca else "Hombres"),
+        }
+        _sx_style = {
+            "total": dict(color=NAVY, width=2.8),
+            "dones": dict(color=OCRE_DEEP, width=2),
+            "homes": dict(color=G2_P, width=2),
+        }
+        fig_epa = go.Figure()
+        for _sx in ["total", "dones", "homes"]:
+            _s = df_epa[df_epa["sexe"] == _sx].set_index("data").sort_index()
+            fig_epa.add_trace(go.Scatter(
+                x=_s.index, y=_s["ocupats_cnae47_milers"], mode="lines",
+                name=_sx_lbl[_sx], line=_sx_style[_sx],
+                customdata=_q_lbls(_s.index),
+                hovertemplate=f"<b>{_sx_lbl[_sx]}</b><br>%{{customdata}}: %{{y:,.1f}}<extra></extra>"))
+        apply_layout(fig_epa, yaxis_title=("Milers d'ocupats" if _ca else "Miles de ocupados"),
+                     height=420, separators=",.")
+        st.plotly_chart(fig_epa, use_container_width=True)
+        source("INE, Encuesta de Población Activa (taula 65123), CNAE 47" if _ca
+               else "INE, Encuesta de Población Activa (tabla 65123), CNAE 47")
+
+        # ─── Ex. 2: aturats i hores, secció G ───
+        if _v_atu is not None:
+            if _ca:
+                _verb_a = "baixa" if _v_atu < 0 else ("puja" if _v_atu > 0 else "no varia")
+                exhibit_header(
+                    2, f"L'atur del sector comerç {_verb_a} un "
+                       f"{fpct(abs(_v_atu), 1, sign=False)} interanual el {_ep_lbl}",
+                    note="Aturats segons el sector de la seva darrera feina (secció G: "
+                         "detall, engròs i vehicles), en milers.")
+            else:
+                _verb_a = "baja" if _v_atu < 0 else ("sube" if _v_atu > 0 else "no varía")
+                exhibit_header(
+                    2, f"El paro del sector comercio {_verb_a} un "
+                       f"{fpct(abs(_v_atu), 1, sign=False)} interanual en el {_ep_lbl}",
+                    note="Parados según el sector de su último empleo (sección G: "
+                         "minorista, mayorista y vehículos), en miles.")
+        _lbl_ep = _q_lbls(_ep.index)
+        fig_atu = go.Figure()
+        fig_atu.add_trace(go.Scatter(
+            x=_ep.index, y=_ep["aturats_seccio_g_milers"], mode="lines",
+            name=("Aturats" if _ca else "Parados"),
+            line=dict(color=NAVY, width=2.6),
+            fill="tozeroy", fillcolor="rgba(11,58,102,0.06)",
+            customdata=_lbl_ep,
+            hovertemplate="%{customdata}: <b>%{y:,.1f}</b><extra></extra>"))
+        apply_layout(fig_atu, yaxis_title=("Milers d'aturats" if _ca else "Miles de parados"),
+                     height=380, showlegend=False, separators=",.")
+        st.plotly_chart(fig_atu, use_container_width=True)
+        source("INE, Encuesta de Población Activa (taula 65249), secció G" if _ca
+               else "INE, Encuesta de Población Activa (tabla 65249), sección G")
+
+        if _ca:
+            exhibit_header(
+                3, "Hores efectives setmanals per ocupat al sector comerç",
+                note="Mitjana d'hores treballades de veritat la setmana de referència "
+                     "(secció G). El tercer trimestre baixa cada any per les vacances.")
+        else:
+            exhibit_header(
+                3, "Horas efectivas semanales por ocupado en el sector comercio",
+                note="Media de horas realmente trabajadas en la semana de referencia "
+                     "(sección G). El tercer trimestre baja cada año por las vacaciones.")
+        fig_hor = go.Figure()
+        fig_hor.add_trace(go.Scatter(
+            x=_ep.index, y=_ep["hores_setmana_seccio_g"], mode="lines+markers",
+            line=dict(color=OCRE_DEEP, width=2.2), marker=dict(size=4),
+            customdata=_lbl_ep,
+            hovertemplate="%{customdata}: <b>%{y:,.1f} h</b><extra></extra>"))
+        apply_layout(fig_hor, yaxis_title=("Hores per setmana" if _ca else "Horas por semana"),
+                     height=340, showlegend=False, separators=",.")
+        st.plotly_chart(fig_hor, use_container_width=True)
+        source("INE, Encuesta de Población Activa (taula 65159), secció G" if _ca
+               else "INE, Encuesta de Población Activa (tabla 65159), sección G")
+
+        if _v_ocu is not None and _v_atu is not None and _d_hor is not None:
+            _ep_prev_lbl = f"T{int(_ep_l['trimestre'])} {int(_ep_l['any']) - 1}"
+            if _ca:
+                insight(
+                    f"El <strong>{_ep_lbl}</strong>, el comerç al detall ocupa "
+                    f"<strong>{fnum(float(_ep_l['ocupats_cnae47_milers']) / 1000, 2)} milions</strong> de "
+                    f"persones, un <strong>{fpct(_v_ocu, 1)}</strong> respecte al {_ep_prev_lbl}. "
+                    f"Al conjunt del sector comerç, els aturats varien un "
+                    f"<strong>{fpct(_v_atu, 1)}</strong> i la jornada efectiva passa de "
+                    f"{fnum(float(_ep_p['hores_setmana_seccio_g']), 1)} a "
+                    f"{fnum(float(_ep_l['hores_setmana_seccio_g']), 1)} hores setmanals."
+                )
+            else:
+                insight(
+                    f"En el <strong>{_ep_lbl}</strong>, el comercio minorista ocupa a "
+                    f"<strong>{fnum(float(_ep_l['ocupats_cnae47_milers']) / 1000, 2)} millones</strong> de "
+                    f"personas, un <strong>{fpct(_v_ocu, 1)}</strong> respecto al {_ep_prev_lbl}. "
+                    f"En el conjunto del sector comercio, los parados varían un "
+                    f"<strong>{fpct(_v_atu, 1)}</strong> y la jornada efectiva pasa de "
+                    f"{fnum(float(_ep_p['hores_setmana_seccio_g']), 1)} a "
+                    f"{fnum(float(_ep_l['hores_setmana_seccio_g']), 1)} horas semanales."
+                )
 
 # ─── Descàrrega de dades ─────────────────────────────────────
 with st.expander(t("download_data")):
