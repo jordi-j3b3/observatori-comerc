@@ -225,10 +225,7 @@ Conseqüències per a la col·laboració:
 - Juny i juliol són píxel a `indicador_comertia.csv` (`font=grafic_pdf`), però els dos
   valors **es poden corroborar en text** amb els articles del 5 d'agost. Si mai es
   citen, citar la premsa i no el gràfic.
-- **Discrepància per revisar**: per a l'agost de 2025, `overrides.json` porta 2,3 llegit
-  del gràfic i El Punt Avui (8-9-2025) publica **2,7%** citant Comertia. És el cas del
-  punt 3 amb una font de text disponible. No s'ha tocat res: la correcció la decideix
-  el Jordi, i afecta l'últim any mòbil de l'eix 1.
+- **Agost de 2025 RESOLT (2026-10-02)**: es manté el 2,3. Els PDF de juliol i d'agost de 2026 el donen tots dos; el 2,7 d'El Punt Avui és l'única font discrepant.
 - A 2026-09-06 **no consta enlloc l'Indicador de l'agost de 2026**, que per cadència
   (mediana de 5 dies) tocaria cap al 5 de setembre. Comprovar-ho abans del dia 15.
 
@@ -246,6 +243,10 @@ o sigui dotze cadenes anuals paral·leles, una per mes de calendari. El valor te
 depèn de quin mes tanca la finestra i es mou uns quants punts en canviar de mes sense que
 hi hagi passat res. Presentar-lo tot sol el fa fràgil; si ha d'anar a un document, val més
 acompanyar-lo d'una mitjana mòbil de dotze mesos del diferencial.
+
+### Estat a 2026-10-02 (preparació de la reunió)
+
+Reunió pendent de data amb **Elisabet Vilalta**, directora general (han acceptat parlar). Preparats l'argumentari (Word, OneDrive `OBSERVATORI/COMERTIA/`) i l'exemple interactiu (`analisi/comertia_demo_reunio.py` → `data/raw/comertia/exemple_interactiu_comertia.html`, amb còpia a la mateixa carpeta d'OneDrive). L'agost de 2026 (+5,2%) ve del PDF que va passar el Jordi; el PDF dona revisions sense avís de l'abril (7,2→7,4), el maig (2,1→1,5) i el juliol (7,6→6,8). `overrides.json` accepta ara entrades amb font i `substitueix` (el fetcher les aplica per sobre de la nota). Amb l'agost: diferencial MM12 contra grans cadenes −2,9 punts, negatiu els 25 mesos; contra petites cadenes, +4,2. **L'escletxa acumulada dins la finestra salta de 2,1 a 7,3 punts afegint un sol mes: no fer-la servir.**
 
 **Gràfic de suport per a la reunió** (afegit 2026-09-06): `diferencial()` i
 `_svg_diferencial()` a `analisi/comertia_posicio_competitiva.py` donen el diferencial

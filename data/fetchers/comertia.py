@@ -418,10 +418,29 @@ def build_serie(desa=True, verbose=True):
         return df
 
     overrides = _carrega_overrides()
+    # Revisions: Comertia corregeix mesos ja publicats sense avisar. Un dict amb
+    # "substitueix": true mana sobre la nota de premsa (l'original es conserva
+    # dins el mateix dict, a "valor_original"), perquè l'anàlisi faci servir les
+    # xifres que ells publiquen ara.
+    revisats = {k for k, v in overrides.items() if isinstance(v, dict) and v.get("substitueix")}
+    if revisats:
+        df = df[~df["data"].isin(revisats)]
     ja_hi_son = set(df["data"])
-    extres = [{"data": k, "valor": float(v), "font": "grafic_pdf",
-               "data_publicacio": None, "retard_dies": None, "titol": None}
-              for k, v in overrides.items() if k not in ja_hi_son]
+    extres = []
+    for k, v in overrides.items():
+        if k in ja_hi_son:
+            continue
+        # Un número sol = llegit del gràfic del PDF. Un dict porta la font
+        # (p. ex. la premsa, des que Comertia ja no penja les notes al web).
+        if isinstance(v, dict):
+            pub = v.get("data_publicacio")
+            retard = ((pd.Timestamp(pub) - (pd.Timestamp(k) + pd.offsets.MonthEnd(0))).days
+                      if pub else None)
+            extres.append({"data": k, "valor": float(v["valor"]), "font": v.get("font", "premsa"),
+                           "data_publicacio": pub, "retard_dies": retard, "titol": v.get("titol")})
+        else:
+            extres.append({"data": k, "valor": float(v), "font": "grafic_pdf",
+                           "data_publicacio": None, "retard_dies": None, "titol": None})
     if extres:
         df = pd.concat([df, pd.DataFrame(extres)], ignore_index=True)
     df = df.sort_values("data").reset_index(drop=True)
