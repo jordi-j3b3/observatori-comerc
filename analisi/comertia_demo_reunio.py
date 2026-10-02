@@ -7,8 +7,9 @@ Dues peces, i prou:
      Catalunya, surt el creixement en volum. És l'ajuda metodològica que s'ofereix.
   2. Amb qui us compareu: l'últim any, en volum, Comertia al costat dels formats
      de distribució de l'INE.
-  3. Què més us podem aportar: preus per sector (IPC), formats cada mes i
-     confiança del consumidor, cadascun amb un exemple real.
+  3. Fins on es pot arribar: els sectors de Comertia al costat del mateix grup de
+     productes de l'ICM, cada dada de l'enquesta amb la seva referència oficial, i
+     el plantejament en dues fases (fitxa gratuïta ara, observatori a mida després).
 
 Pàgina HTML autocontinguda amb l'estil de l'Observatori (Manrope, navy, ocre). Porta
 dades de Comertia: la sortida va a `data/raw/comertia/` (ignorat pel git) i NO es
@@ -70,46 +71,28 @@ def carrega():
     return mesos, sorted(comparativa, key=lambda x: -x["v"]), resum_any
 
 
-# Sectors de l'Indicador amb un grup de l'IPC que hi casa (IPC d'Espanya, INE T=76125).
-# Restauració (grup 11) i oci i cultura (grup 09) encara no són al dataset.
-SECTOR_IPC = {"Alimentació Bàsica": ("Alimentació i begudes no alcohòliques", "Alimentació bàsica"),
-              "Equipament de la Llar": ("Parament de la llar", "Equipament de la llar"),
-              "Moda": ("Vestit i calçat", "Moda")}
+# Sectors de l'Indicador amb el grup de producte de l'ICM que hi casa (INE, Espanya,
+# facturació a preus corrents, la mateixa base que l'Indicador).
+SECTOR_ICM = {"Alimentació Bàsica": ("Alimentación (4711+472)", "Alimentació bàsica"),
+              "Equipament de la Llar": ("Equipo del hogar (4743+4752+4754+4759+4763)", "Equipament de la llar"),
+              "Moda": ("Equipo personal (4751+4771+4772)", "Moda")}
 
 
 def carrega_aportacions():
-    """Exemples reals per a les tres peces de 'Què més us podem aportar'."""
+    """Exemple real per a la part 3: sectors de Comertia al costat del mercat."""
     det = pd.read_csv(os.path.join(RAW, "detall_sectorial.csv"))
     det = det[det["indicador"] == "creixement"]
-    complets = [m for m, g in det.groupby("data") if set(SECTOR_IPC) <= set(g["sector"])]
+    icm = pd.read_parquet(os.path.join(CACHE, "icm.parquet"))
+    icm["data"] = pd.to_datetime(icm["data"])
+    icm = icm[(icm["ambit"] == "nacional") & (icm["tipus"] == "nominal") & (icm["indicador"] == "var_anual")]
+    complets = [m for m, g in det.groupby("data") if set(SECTOR_ICM) <= set(g["sector"])]
     mes = max(complets)
-    ipc = pd.read_csv(os.path.join(CACHE, "ipc_coicop.csv"))
-    ipc["data"] = pd.to_datetime(ipc["periode"])
-    piv = ipc.pivot(index="data", columns="grup", values="ipc")
-    var = (piv / piv.shift(12) - 1) * 100
     sectors = []
-    for sec, (grup, nom) in SECTOR_IPC.items():
-        euros = float(det[(det["data"] == mes) & (det["sector"] == sec)]["valor"].iloc[0])
-        preu = float(var.loc[pd.Timestamp(mes), grup])
-        sectors.append({"nom": nom, "euros": round(euros, 1), "preu": round(preu, 1),
-                        "volum": round(((1 + euros / 100) / (1 + preu / 100) - 1) * 100, 1)})
-
-    fr = pd.read_parquet(os.path.join(CACHE, "icm_distribucion.parquet"))
-    fr["data"] = pd.to_datetime(fr["data"])
-    fr = fr[(fr["tipus"] == "real") & (fr["indicador"] == "var_anual")]
-    ult = fr["data"].max()
-    formats = {FORMATS[m]: round(float(fr[(fr["data"] == ult) & (fr["modo"] == m)]["valor"].iloc[0]), 1)
-               for m in ("Grandes cadenas", "Pequeñas cadenas")}
-
-    icc_tot = pd.read_csv(os.path.join(CACHE, "confianza_consumidor.csv"))
-    icc = icc_tot.iloc[-1]
-    return {"mes_sectors": mes[:7], "sectors": sectors,
-            "mes_formats": ult.strftime("%Y-%m"), "formats": formats,
-            "icc": {"mes": icc["periode"], "index": round(float(icc["index_confianca"]), 1),
-                    "fin": round(float(icc["expectatives_financera"]), 1),
-                    "eco": round(float(icc["expectatives_economica"]), 1),
-                    "mitjana": round(float(icc_tot["index_confianca"].mean()), 1),
-                    "des_de": int(icc_tot["any"].min())}}
+    for sec, (branca, nom) in SECTOR_ICM.items():
+        com = float(det[(det["data"] == mes) & (det["sector"] == sec)]["valor"].iloc[0])
+        mer = float(icm[(icm["data"] == pd.Timestamp(mes)) & (icm["branca"] == branca)]["valor"].iloc[0])
+        sectors.append({"nom": nom, "comertia": round(com, 1), "mercat": round(mer, 1), "dif": round(com - mer, 1)})
+    return {"mes": mes[:7], "sectors": sectors}
 
 
 HTML = r"""<!doctype html>
@@ -156,23 +139,26 @@ HTML = r"""<!doctype html>
   .fill { position:absolute; top:0; height:16px; border-radius:2px; }
   .val { font-size:15px; font-weight:800; text-align:right; font-variant-numeric:tabular-nums; }
   .font { font-size:12px; color:var(--g2); line-height:1.55; margin-top:16px; }
-  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:6px; }
-  .card { border-top:3px solid var(--navy); background:#f6f8fa; padding:18px 18px 16px; }
-  .card .ct { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ocre); }
-  .card h3 { font-size:17px; font-weight:800; color:var(--ink); line-height:1.25; margin:6px 0 12px; }
-  .card table { width:100%; border-collapse:collapse; font-size:13px; margin:0 0 12px; font-variant-numeric:tabular-nums; }
-  .card th { text-align:right; font-weight:700; color:var(--g1); padding:0 0 6px; font-size:11px; }
-  .card th:first-child, .card td:first-child { text-align:left; }
-  .card td { text-align:right; padding:5px 0; border-top:1px solid var(--line); }
-  .card td + td, .card th + th { padding-left:12px; white-space:nowrap; }
-  .card td.vol { font-weight:800; color:var(--navy); }
-  .card .gran { font-size:34px; font-weight:800; letter-spacing:-.03em; color:var(--navy); line-height:1; margin:2px 0 8px; }
-  .card p { font-size:14px; line-height:1.55; margin:0 0 8px; }
-  .card .ajuda { font-size:13px; color:var(--ink); border-top:1px solid var(--line); padding-top:10px; margin:10px 0 0; }
-  .card .ajuda b { color:var(--ocre); }
+  table.t { width:100%; border-collapse:collapse; font-size:15px; margin:8px 0 6px; font-variant-numeric:tabular-nums; }
+  table.t th { text-align:left; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--g1); padding:0 10px 8px 0; border-bottom:2px solid var(--ink); }
+  table.t td { padding:10px 10px 10px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.t td.n, table.t th.n { text-align:right; white-space:nowrap; }
+  table.t td.com { color:var(--ocre); font-weight:800; }
+  table.t td.pos { color:var(--teal); font-weight:800; }
+  table.t td.neg { color:var(--red); font-weight:800; }
+  .estat { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; white-space:nowrap; }
+  .estat.si { background:#e3efec; color:var(--teal); }
+  .estat.nou { background:#f3ebdc; color:var(--ocre); }
+  h3 { font-size:17px; font-weight:800; color:var(--ink); margin:26px 0 4px; }
+  .fases { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px; }
+  .fase { border-top:3px solid var(--navy); background:#f6f8fa; padding:16px 18px; }
+  .fase.despres { border-top-color:var(--ocre); }
+  .fase .ct { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ocre); }
+  .fase h4 { font-size:17px; font-weight:800; color:var(--ink); margin:6px 0 8px; }
+  .fase ul { margin:0; padding-left:18px; font-size:14.5px; line-height:1.6; }
   footer { margin-top:44px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; color:var(--g2); line-height:1.6; }
   @media (max-width:640px) { .xifres { grid-template-columns:1fr; } .xifra + .xifra { border-left:0; border-top:1px solid var(--line); }
-    .bar-row { grid-template-columns:130px 1fr 54px; } .cards { grid-template-columns:1fr; } .xifra .v { font-size:42px; } }
+    .bar-row { grid-template-columns:130px 1fr 54px; } .fases { grid-template-columns:1fr; } .xifra .v { font-size:42px; } }
 </style>
 </head>
 <body>
@@ -201,12 +187,36 @@ HTML = r"""<!doctype html>
   <p class="font">Comertia: Indicador en euros, deflactat amb l'efecte preu del comerç al detall de Catalunya. Formats: INE, Índices de Comercio al por Menor per modo de distribució, Espanya, sense estacions de servei, preus constants (l'INE no publica aquest desglossament per comunitats). Catalunya: ICM de Catalunya sense estacions de servei, preus constants.</p>
 
   <hr>
-  <div class="no">3 · Què més us podem aportar</div>
-  <h2>Tres peces de l'Observatori que poden acompanyar cada Indicador</h2>
-  <p class="note">Totes surten de dades oficials que l'Observatori ja actualitza cada setmana. Cada una respon una pregunta que avui l'Indicador deixa oberta.</p>
-  <div class="cards" id="cards"></div>
+  <div class="no">3 · Fins on es pot arribar</div>
+  <h2>Cada dada que ja recolliu, al costat de la seva referència oficial</h2>
+  <p class="note">Les parts 1 i 2 fan servir només la xifra total de l'Indicador. Però l'enquesta recull molt més: vendes per sector, venda en línia, plantilla, absentisme. Cada una d'aquestes dades té una referència oficial que la pot explicar.</p>
 
-  <footer>Document de treball per a la conversa amb Comertia. No publicat. Fonts: Comertia, Indicador Comertia (xifres de l'última edició publicada; detall sectorial de les notes de premsa); INE, Índices de Comercio al por Menor i Índice de Precios de Consumo per grups (Espanya); Comissió Europea, enquesta als consumidors (via Eurostat). L'efecte preu és el del comerç al detall català sense estacions de servei; el panell de Comertia inclou també restauració i automoció, o sigui que és una aproximació. Elaboració: Observatori del Comerç, J3B3 Consulting.</footer>
+  <h3 id="t3"></h3>
+  <p class="note" style="margin-bottom:6px">Vendes dels socis de Comertia per sector i del mateix grup de productes al conjunt d'Espanya, segons l'INE. Totes dues en euros.</p>
+  <table class="t" id="sectors"></table>
+  <p class="font" style="margin-top:6px">INE, Índices de Comercio al por Menor per tipus de producte, Espanya, preus corrents. Moda: equipament personal (tèxtil, confecció i calçat). Comertia: detall sectorial de la nota de premsa del mes.</p>
+
+  <h3>El que ja mesureu, i el que hi posaríem al costat</h3>
+  <table class="t">
+    <tr><th>A l'Indicador</th><th>Referència oficial</th><th></th></tr>
+    <tr><td>Vendes totals</td><td>Comerç al detall de Catalunya i formats de distribució (INE)</td><td><span class="estat si">Parts 1 i 2</span></td></tr>
+    <tr><td>Vendes per sector</td><td>Mateix grup de productes i branca del comerç (INE)</td><td><span class="estat si">Exemple de dalt</span></td></tr>
+    <tr><td>Pes de la venda en línia</td><td>Venda per internet del comerç al detall (INE) i comerç electrònic (CNMC)</td><td><span class="estat si">A l'Observatori</span></td></tr>
+    <tr><td>Plantilla</td><td>Ocupats del comerç al detall (EPA, INE)</td><td><span class="estat si">A l'Observatori</span></td></tr>
+    <tr><td>Absentisme</td><td>Hores no treballades per incapacitat temporal (Enquesta trimestral de cost laboral, INE)</td><td><span class="estat nou">S'hi pot afegir</span></td></tr>
+    <tr><td>Establiments</td><td>Locals del comerç al detall per subsector a Catalunya (DIRCE, INE)</td><td><span class="estat si">A l'Observatori</span></td></tr>
+    <tr><td>Marges i tiquet mitjà</td><td>Marge sobre vendes per branca (Estadística estructural d'empreses, INE)</td><td><span class="estat si">A l'Observatori</span></td></tr>
+  </table>
+
+  <h3>Com començaríem</h3>
+  <div class="fases">
+    <div class="fase"><div class="ct">Ara</div><h4>La fitxa del mes</h4>
+      <ul><li>Les parts 1 i 2 d'aquesta pàgina, amb cada Indicador.</li><li>Sense cost per a Comertia.</li><li>Amb la marca de l'Observatori.</li></ul></div>
+    <div class="fase despres"><div class="ct">Després</div><h4>Un observatori per a Comertia</h4>
+      <ul><li>Totes les dades de l'enquesta, cadascuna amb la seva referència oficial.</li><li>Actualització automàtica quan arriba l'enquesta del mes.</li><li>Un quadre de comandament per als socis, amb Catalunya al centre.</li></ul></div>
+  </div>
+
+  <footer>Document de treball per a la conversa amb Comertia. No publicat. Fonts: Comertia, Indicador Comertia (xifres de l'última edició publicada; detall sectorial de les notes de premsa); INE, Índices de Comercio al por Menor. L'efecte preu és el del comerç al detall català sense estacions de servei; el panell de Comertia inclou també restauració i automoció, o sigui que és una aproximació. Elaboració: Observatori del Comerç, J3B3 Consulting.</footer>
 </div>
 
 <script>
@@ -277,27 +287,11 @@ document.getElementById("barres").innerHTML = COMP.map(c => {
 }).join("");
 
 const AP = __AP__;
-const nomCurt = m => nom(m);
-const files = AP.sectors.map(x => `<tr><td>${x.nom}</td><td>${fmt(x.euros)}%</td><td>${fmt(x.preu)}%</td><td class="vol">${fmt(x.volum)}%</td></tr>`).join("");
-document.getElementById("cards").innerHTML = `
-  <div class="card"><div class="ct">Preus per sector</div>
-    <h3>Cada sector, amb els seus preus</h3>
-    <table><tr><th>${nom(AP.mes_sectors)}</th><th>Euros</th><th>Preus</th><th>Volum</th></tr>${files}</table>
-    <p>Els preus no pugen igual a tots els sectors, i per això el volum de cada un s'allunya de la xifra en euros de manera diferent.</p>
-    <p class="ajuda"><b>Com us ajuda:</b> el detall per sectors que ja publiqueu, també en volum. Hi afegiríem restauració i oci, que encara no hi són.</p></div>
-  <div class="card"><div class="ct">Formats de distribució</div>
-    <h3>Si guanyeu o perdeu terreny, cada mes</h3>
-    <table><tr><th>${nom(AP.mes_formats)}</th><th>Volum</th></tr>
-      <tr><td>Grans cadenes</td><td class="vol">${fmt(AP.formats["Grans cadenes"])}%</td></tr>
-      <tr><td>Petites cadenes</td><td class="vol">${fmt(AP.formats["Petites cadenes"])}%</td></tr>
-      <tr><td>Comertia</td><td class="vol" style="color:#b07d2b">${fmt(MESOS[MESOS.length - 1].volum)}%</td></tr></table>
-    <p>La comparació de la part 2, cada mes amb el mes nou. Dades de l'INE per a Espanya.</p>
-    <p class="ajuda"><b>Com us ajuda:</b> saber, amb cada Indicador, contra quin tipus d'operador creixeu i contra quin no.</p></div>
-  <div class="card"><div class="ct">Confiança del consumidor</div>
-    <h3>Què esperen les llars abans que surti el mes</h3>
-    <div class="gran">${fmt(AP.icc.index)}</div>
-    <p>Indicador de confiança de ${nom(AP.icc.mes)} a Espanya (de −100 a +100; mitjana des de ${AP.icc.des_de}: ${fmt(AP.icc.mitjana)}), que surt a final de mes. Les llars esperen millorar les seves finances (${fmt(AP.icc.fin)}) i veuen pitjor l'economia general (${fmt(AP.icc.eco)}).</p>
-    <p class="ajuda"><b>Com us ajuda:</b> un context de demanda per comentar l'Indicador, disponible abans que el publiqueu.</p></div>`;
+document.getElementById("t3").textContent = "Un exemple: els vostres sectors al costat del mercat (" + nom(AP.mes) + ")";
+document.getElementById("sectors").innerHTML =
+  '<tr><th>Sector</th><th class="n">Comertia</th><th class="n">Mercat (Espanya)</th><th class="n">Diferència</th></tr>' +
+  AP.sectors.map(x => `<tr><td>${x.nom}</td><td class="n com">${fmt(x.comertia)}%</td><td class="n">${fmt(x.mercat)}%</td>` +
+    `<td class="n ${x.dif >= 0 ? "pos" : "neg"}">${fmt(x.dif)} p.</td></tr>`).join("");
 
 mostra();
 </script>
