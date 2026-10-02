@@ -1,18 +1,21 @@
 """
-Exemple interactiu per a la reunió amb Comertia (eix 1: posició competitiva per format).
+Exemple interactiu per a la reunió amb Comertia.
 
-Pàgina HTML autocontinguda, sense cap dependència externa, per obrir en local al
-portàtil. Porta dades de Comertia, o sigui que la sortida va a `data/raw/comertia/`
-(ignorat pel git) i NO es publica enlloc.
+Dues peces, i prou:
+  1. La xifra de l'Indicador en euros i en volum: l'Indicador és facturació
+     (preus corrents); descomptant el que han pujat els preus del comerç a
+     Catalunya, surt el creixement en volum. És l'ajuda metodològica que s'ofereix.
+  2. Amb qui us compareu: l'últim any, en volum, Comertia al costat dels formats
+     de distribució de l'INE.
 
-Tres peces:
-  1. La fitxa del mes: el requadre que acompanyaria cada Indicador Comertia.
-  2. Contra qui es mesura: diferencial mensual i mitjana mòbil de 12 mesos contra
-     cada format de distribució de l'INE.
-  3. Tres setmanes abans que l'INE: dia de publicació de Comertia i de l'INE.
+Pàgina HTML autocontinguda amb l'estil de l'Observatori (Manrope, navy, ocre). Porta
+dades de Comertia: la sortida va a `data/raw/comertia/` (ignorat pel git) i NO es
+publica. Llegeix `posicio_competitiva.csv` (sortida de comertia_posicio_competitiva.py),
+`data/cache/icm.parquet` i `data/cache/icm_distribucion.parquet`.
 
-Llegeix `posicio_competitiva.csv` (sortida de comertia_posicio_competitiva.py) i
-`indicador_comertia.csv` (comertia.build_serie). Cal executar abans aquells dos.
+Deflactor: efecte preu implícit de l'ICM de Catalunya sense estacions de servei,
+(1 + nominal) / (1 + real) − 1 sobre les variacions interanuals (sèrie original).
+És una aproximació: el panell de Comertia inclou restauració i automoció.
 
 Ús: python analisi/comertia_demo_reunio.py
 """
@@ -21,48 +24,48 @@ import os
 
 import pandas as pd
 
-RAW = os.path.join(os.path.dirname(__file__), "..", "data", "raw", "comertia")
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+RAW = os.path.join(ROOT, "data", "raw", "comertia")
+CACHE = os.path.join(ROOT, "data", "cache")
 OUT = os.path.join(RAW, "exemple_interactiu_comertia.html")
 
-SERIES = ["Comertia", "Grans cadenes", "Empreses unilocalitzades", "Petites cadenes",
-          "Grans superfícies", "Catalunya, total"]
-
-# Data en què l'INE va publicar l'ICM de cada mes, segons el dia que el motor de
-# l'Observatori el va incorporar (historial de data/cache/icm.csv). Només els mesos
-# que el motor ha vist sortir: abans del maig de 2026 no hi era.
-INE_PUBLICACIO = {
-    "2026-04": "2026-05-28",
-    "2026-05": "2026-06-29",
-    "2026-06": "2026-07-28",
-    "2026-07": "2026-08-28",
-    "2026-08": "2026-09-29",
-}
-# Comertia no penja les notes al web des del juny de 2026: data de la premsa o del PDF.
-COMERTIA_PUBLICACIO_EXTRA = {
-    "2026-04": "2026-05-08",  # nota de premsa (la xifra s'ha revisat després al PDF)
-    "2026-05": "2026-06-05",  # nota de premsa (íd.)
-    "2026-07": "2026-08-05",  # ViaEmpresa, El Nacional i Ràdio Balaguer, 5-8-2026
-    "2026-08": "2026-09-07",  # Indicador_Comertia_Agost_2026.pdf
-}
+SENSE_473 = "Comercio al por menor sin Estaciones de Servicio (47 sin 473)"
+FORMATS = {"Grandes cadenas": "Grans cadenes", "Empresas unilocalizadas": "Empreses unilocalitzades",
+           "Grandes Superficies": "Grans superfícies", "Pequeñas cadenas": "Petites cadenes"}
+MESOS_GRAFIC = 13   # com el gràfic del PDF de l'Indicador
 
 
 def carrega():
     pc = pd.read_csv(os.path.join(RAW, "posicio_competitiva.csv"))
-    pc["mes"] = pc["mes"].str[:7]
-    mesos = []
-    for _, r in pc.iterrows():
-        mesos.append({"mes": r["mes"], **{s: (None if pd.isna(r[s]) else round(float(r[s]), 1))
-                                          for s in SERIES}})
-    ic = pd.read_csv(os.path.join(RAW, "indicador_comertia.csv"))
-    ic["mes"] = ic["data"].str[:7]
-    pub = {m: d for m, d in zip(ic["mes"], ic["data_publicacio"]) if isinstance(d, str)}
-    pub.update(COMERTIA_PUBLICACIO_EXTRA)
-    calendari = []
-    for mes, ine in INE_PUBLICACIO.items():
-        com = pub.get(mes)
-        dies = (pd.Timestamp(ine) - pd.Timestamp(com)).days if com else None
-        calendari.append({"mes": mes, "comertia": com, "ine": ine, "dies": dies})
-    return mesos, calendari
+    pc["data"] = pd.to_datetime(pc["mes"])
+    com = pc.set_index("data")["Comertia"]
+
+    icm = pd.read_parquet(os.path.join(CACHE, "icm.parquet"))
+    icm["data"] = pd.to_datetime(icm["data"])
+    cat = (icm[(icm["ambit"] == "Cataluña") & (icm["branca"] == SENSE_473) & (icm["indicador"] == "var_anual")]
+           .pivot_table(index="data", columns="tipus", values="valor"))
+    preu = ((1 + cat["nominal"] / 100) / (1 + cat["real"] / 100) - 1) * 100
+
+    m = pd.DataFrame({"euros": com, "preu": preu, "cat_real": cat["real"]}).dropna(subset=["euros", "preu"])
+    m["volum"] = ((1 + m["euros"] / 100) / (1 + m["preu"] / 100) - 1) * 100
+
+    fr = pd.read_parquet(os.path.join(CACHE, "icm_distribucion.parquet"))
+    fr["data"] = pd.to_datetime(fr["data"])
+    fr = (fr[(fr["tipus"] == "real") & (fr["indicador"] == "var_anual")]
+          .pivot_table(index="data", columns="modo", values="valor"))
+
+    ult = m.index.max()
+    any_ = m[m.index > ult - pd.DateOffset(months=12)]
+    comparativa = [{"nom": "Comertia", "v": round(any_["volum"].mean(), 1)}]
+    for es, ca in FORMATS.items():
+        comparativa.append({"nom": ca, "v": round(fr.loc[any_.index, es].mean(), 1)})
+    comparativa.append({"nom": "Catalunya, comerç al detall", "v": round(any_["cat_real"].mean(), 1)})
+
+    mesos = [{"mes": d.strftime("%Y-%m"), "euros": round(r.euros, 1), "volum": round(r.volum, 1),
+              "preu": round(r.preu, 1)} for d, r in m.tail(MESOS_GRAFIC).iterrows()]
+    resum_any = {"euros": round(any_["euros"].mean(), 1), "volum": round(any_["volum"].mean(), 1),
+                 "des": any_.index.min().strftime("%Y-%m"), "fins": ult.strftime("%Y-%m")}
+    return mesos, sorted(comparativa, key=lambda x: -x["v"]), resum_any
 
 
 HTML = r"""<!doctype html>
@@ -70,257 +73,146 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>L'Indicador Comertia, en context</title>
+<title>L'Indicador Comertia, en euros i en volum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --navy: #003366; --ink: #1d2733; --muted: #6b7684; --line: #e3e7ec;
-    --ocre: #bf8a2e; --teal: #2f7d72; --red: #c0392b; --bg: #f5f6f8; --card: #ffffff;
-    --comertia: #bf8a2e;
-  }
+  :root { --navy:#0b3a66; --ocre:#b07d2b; --teal:#2f7d72; --red:#c0392b;
+          --ink:#1a2b3a; --body:#37485a; --g1:#5e6b78; --g2:#9aa6b2; --line:#e4e9ee; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
-  header .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ocre); font-weight: 700; }
-  header h1 { font-family: Georgia, "Times New Roman", serif; font-size: 34px; color: var(--navy); margin: 8px 0 6px; line-height: 1.15; }
-  header p { color: var(--muted); margin: 0; font-size: 15px; line-height: 1.5; max-width: 720px; }
-  nav { display: flex; gap: 6px; margin: 26px 0 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  nav button { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; font-size: 15px;
-               color: var(--muted); cursor: pointer; font-weight: 600; }
-  nav button.on { color: var(--navy); border-bottom-color: var(--navy); }
-  section { display: none; padding-top: 22px; }
-  section.on { display: block; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 24px 26px; }
-  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-  .row label { font-size: 13px; color: var(--muted); font-weight: 600; }
-  select, .pill { font-size: 15px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
-  .pill { cursor: pointer; }
-  .pill.on { background: var(--navy); color: #fff; border-color: var(--navy); }
-  .arrow { font-size: 18px; width: 38px; cursor: pointer; }
-  .fitxa-cap { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap;
-               border-bottom: 2px solid var(--navy); padding-bottom: 14px; margin-bottom: 16px; }
-  .fitxa-cap .tit { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-  .fitxa-cap .mes { font-family: Georgia, serif; font-size: 24px; color: var(--navy); margin-top: 4px; }
-  .big { font-family: Georgia, serif; font-size: 52px; color: var(--comertia); line-height: 1; font-weight: 700; }
-  .big small { font-size: 14px; color: var(--muted); display: block; font-family: inherit; font-weight: 600; text-align: right; margin-top: 4px; }
-  .bars { margin: 6px 0 4px; }
-  .bar-row { display: grid; grid-template-columns: 200px 1fr 64px; align-items: center; gap: 12px; padding: 6px 0; }
-  .bar-row .nom { font-size: 14px; }
-  .bar-row.com .nom { font-weight: 700; color: var(--comertia); }
-  .track { position: relative; height: 18px; }
-  .zero { position: absolute; top: -4px; bottom: -4px; width: 1px; background: #9aa4af; }
-  .fill { position: absolute; top: 0; height: 18px; border-radius: 2px; transition: all .35s ease; }
-  .val { font-size: 14px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
-  .lectura { font-size: 16px; line-height: 1.55; margin: 16px 0 0; padding: 14px 16px; background: #f7f3ea; border-left: 4px solid var(--ocre); }
-  .peu { font-size: 12px; color: var(--muted); line-height: 1.5; margin-top: 14px; }
-  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 4px 0 14px; }
-  .stat { flex: 1 1 180px; border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; }
-  .stat b { display: block; font-family: Georgia, serif; font-size: 26px; color: var(--navy); }
-  .stat span { font-size: 13px; color: var(--muted); }
-  svg text { font-size: 11px; fill: #6b7684; }
-  .tl-row { display: grid; grid-template-columns: 110px 1fr 90px; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .tl-row .m { font-weight: 700; color: var(--navy); }
-  .tl-track { position: relative; height: 34px; }
-  .tl-line { position: absolute; top: 16px; left: 0; right: 0; height: 2px; background: var(--line); }
-  .tl-gap { position: absolute; top: 14px; height: 6px; background: #f1e3c6; }
-  .dot { position: absolute; top: 9px; width: 16px; height: 16px; border-radius: 50%; transform: translateX(-50%); border: 2px solid #fff; }
-  .dot.c { background: var(--comertia); } .dot.i { background: var(--navy); }
-  .tl-lbl { position: absolute; top: -4px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
-  .tl-days { font-family: Georgia, serif; font-size: 20px; color: var(--ocre); font-weight: 700; text-align: right; }
-  .llegenda { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin: 6px 0 0; flex-wrap: wrap; }
-  .llegenda i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-right: 6px; }
-  footer { margin-top: 30px; font-size: 12px; color: var(--muted); line-height: 1.6; }
-  @media (max-width: 640px) {
-    .bar-row { grid-template-columns: 120px 1fr 56px; }
-    .tl-row { grid-template-columns: 70px 1fr 64px; }
-    header h1 { font-size: 27px; }
-  }
+  body { margin:0; background:#fff; color:var(--body); font-family:'Manrope', system-ui, -apple-system, sans-serif; }
+  .wrap { max-width:880px; margin:0 auto; padding:44px 24px 64px; }
+  .kicker { font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ocre); }
+  h1 { font-size:clamp(28px,4vw,40px); font-weight:800; letter-spacing:-.03em; line-height:1.1; color:var(--ink); margin:10px 0 12px; }
+  .deck { font-size:17px; line-height:1.6; max-width:62ch; margin:0 0 8px; }
+  hr { border:0; border-top:2px solid var(--ink); margin:34px 0 26px; }
+  .no { font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ocre); }
+  h2 { font-size:clamp(20px,2.6vw,26px); font-weight:800; letter-spacing:-.015em; line-height:1.2; color:var(--ink); margin:4px 0 10px; max-width:40ch; }
+  .note { font-size:15.5px; line-height:1.6; max-width:64ch; margin:0 0 22px; }
+  .xifres { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:0 0 8px; }
+  .xifra { padding:22px 18px; }
+  .xifra + .xifra { border-left:1px solid var(--line); }
+  .xifra .v { font-size:52px; font-weight:800; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums; }
+  .xifra .l { font-size:14px; font-weight:700; color:var(--ink); margin-top:10px; }
+  .xifra .s { font-size:13px; color:var(--g1); margin-top:4px; line-height:1.45; }
+  .mes { font-size:13px; color:var(--g1); margin:14px 0 4px; }
+  .mes b { color:var(--ink); }
+  svg text { font-family:'Manrope', system-ui, sans-serif; font-size:11px; fill:var(--g1); }
+  .llegenda { display:flex; gap:22px; font-size:13px; color:var(--g1); margin:4px 0 0; flex-wrap:wrap; }
+  .llegenda i { display:inline-block; width:22px; height:3px; vertical-align:middle; margin-right:8px; }
+  .ajuda { font-size:13px; color:var(--g1); margin:6px 0 0; }
+  .insight { border-top:3px solid var(--navy); background:#f6f8fa; padding:16px 20px; margin:22px 0 0; font-size:16px; line-height:1.6; color:var(--ink); }
+  .insight .t { font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ocre); margin-bottom:6px; }
+  .insight b { background:linear-gradient(180deg,transparent 60%,rgba(176,125,43,.25) 60%,rgba(176,125,43,.25) 92%,transparent 92%); }
+  .bar-row { display:grid; grid-template-columns:230px 1fr 64px; align-items:center; gap:14px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .bar-row .n { font-size:15px; }
+  .bar-row.com .n { font-weight:800; color:var(--ocre); }
+  .track { position:relative; height:16px; }
+  .zero { position:absolute; top:-6px; bottom:-6px; width:1px; background:var(--g2); }
+  .fill { position:absolute; top:0; height:16px; border-radius:2px; }
+  .val { font-size:15px; font-weight:800; text-align:right; font-variant-numeric:tabular-nums; }
+  .font { font-size:12px; color:var(--g2); line-height:1.55; margin-top:16px; }
+  footer { margin-top:44px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; color:var(--g2); line-height:1.6; }
+  @media (max-width:640px) { .xifres { grid-template-columns:1fr; } .xifra + .xifra { border-left:0; border-top:1px solid var(--line); }
+    .bar-row { grid-template-columns:130px 1fr 54px; } .xifra .v { font-size:42px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="eyebrow">Observatori del Comerç · J3B3 Consulting</div>
-    <h1>L'Indicador Comertia, en context</h1>
-    <p>Exemple de treball per a la conversa amb Comertia. Cada mes, la xifra de l'Indicador al costat dels formats de distribució que publica l'INE. Dades fins a l'agost de 2026.</p>
-  </header>
+  <div class="kicker">Observatori del Comerç · J3B3 Consulting</div>
+  <h1>L'Indicador Comertia, en euros i en volum</h1>
+  <p class="deck">L'Indicador mesura la facturació dels socis en euros. Quan els preus pugen, una part d'aquest creixement és inflació. Descomptant-la, s'obté el que creix el volum de vendes, que és la mateixa base amb què l'INE i Idescat publiquen les seves sèries.</p>
 
-  <nav>
-    <button class="on" data-s="fitxa">La fitxa del mes</button>
-    <button data-s="dif">Contra qui es mesura</button>
-    <button data-s="cal">Tres setmanes abans</button>
-  </nav>
+  <hr>
+  <div class="no">1 · La xifra del mes</div>
+  <h2 id="t1"></h2>
+  <div class="mes">Mes: <b id="mes-nom"></b> <span id="mes-ajuda">· toca un altre mes al gràfic</span></div>
+  <div class="xifres">
+    <div class="xifra"><div class="v" style="color:var(--ocre)" id="x-euros"></div><div class="l">En euros</div><div class="s">La xifra de l'Indicador Comertia, tal com es publica.</div></div>
+    <div class="xifra"><div class="v" style="color:var(--navy)" id="x-volum"></div><div class="l">En volum</div><div class="s" id="x-preu"></div></div>
+  </div>
+  <svg id="g1" viewBox="0 0 840 300" width="100%" role="img" aria-label="Indicador Comertia en euros i en volum"></svg>
+  <div class="llegenda"><span><i style="background:var(--ocre)"></i>En euros (Indicador)</span><span><i style="background:var(--navy)"></i>En volum (descomptant preus)</span></div>
+  <div class="insight" id="ins1"><div class="t">Lectura</div><span></span></div>
 
-  <section id="fitxa" class="on">
-    <div class="card">
-      <div class="row">
-        <button class="pill arrow" id="prev" aria-label="Mes anterior">‹</button>
-        <select id="mes"></select>
-        <button class="pill arrow" id="next" aria-label="Mes següent">›</button>
-      </div>
-      <div class="fitxa-cap">
-        <div><div class="tit">Indicador Comertia en context</div><div class="mes" id="f-mes"></div></div>
-        <div class="big" id="f-com"></div>
-      </div>
-      <div class="bars" id="f-bars"></div>
-      <p class="lectura" id="f-lect"></p>
-      <p class="peu">Variació interanual de la facturació a preus corrents, la mateixa base que l'Indicador Comertia. Formats de distribució: INE, Índices de Comercio al por Menor per modo de distribució, Espanya, sense estacions de servei, dades ajustades de calendari (l'INE no publica aquest desglossament per comunitats). Catalunya, total: ICM de Catalunya, sèrie original.</p>
-    </div>
-  </section>
+  <hr>
+  <div class="no">2 · Amb qui us compareu</div>
+  <h2>En volum, Comertia creix menys que les grans cadenes i molt per sobre de les petites</h2>
+  <p class="note" id="nota2"></p>
+  <div id="barres"></div>
+  <p class="font">Comertia: Indicador en euros, deflactat amb l'efecte preu del comerç al detall de Catalunya. Formats: INE, Índices de Comercio al por Menor per modo de distribució, Espanya, sense estacions de servei, preus constants (l'INE no publica aquest desglossament per comunitats). Catalunya: ICM de Catalunya sense estacions de servei, preus constants.</p>
 
-  <section id="dif">
-    <div class="card">
-      <div class="row" id="formats"></div>
-      <div class="stats">
-        <div class="stat"><b id="s-mm"></b><span>diferencial mitjà dels últims 12 mesos</span></div>
-        <div class="stat"><b id="s-mesos"></b><span>mesos amb la mitjana de 12 mesos per sota de zero</span></div>
-        <div class="stat"><b id="s-bat"></b><span>mesos en què Comertia creix més</span></div>
-      </div>
-      <svg id="chart" viewBox="0 0 920 340" width="100%" role="img" aria-label="Diferencial mensual de Comertia"></svg>
-      <div class="llegenda"><span><i style="background:#c9d3de"></i>Diferencial del mes (punts)</span><span><i style="background:var(--navy)"></i>Mitjana mòbil de 12 mesos</span></div>
-      <p class="lectura" id="d-lect"></p>
-    </div>
-  </section>
-
-  <section id="cal">
-    <div class="card">
-      <p style="margin:0 0 6px; font-size:15px; line-height:1.55;">Dia en què es publica cada mes: l'Indicador Comertia i l'Índex de Comerç al Detall de l'INE.</p>
-      <div class="llegenda" style="margin-bottom:8px;"><span><i style="background:var(--comertia)"></i>Indicador Comertia</span><span><i style="background:var(--navy)"></i>INE</span></div>
-      <div id="tl"></div>
-      <p class="lectura" id="c-lect"></p>
-      <p class="peu">Dates de l'INE: dia en què el motor de l'Observatori va incorporar cada mes. Dates de Comertia: nota de premsa, premsa o PDF de l'Indicador.</p>
-    </div>
-  </section>
-
-  <footer>Document de treball, no publicat. Fonts: Comertia, Indicador Comertia (notes de premsa i PDF mensual, xifres de l'última edició publicada); INE, Índices de Comercio al por Menor. Elaboració: Observatori del Comerç, J3B3 Consulting.</footer>
+  <footer>Document de treball per a la conversa amb Comertia. No publicat. Fonts: Comertia, Indicador Comertia (xifres de l'última edició publicada); INE, Índices de Comercio al por Menor. L'efecte preu és el del comerç al detall català sense estacions de servei; el panell de Comertia inclou també restauració i automoció, o sigui que és una aproximació. Elaboració: Observatori del Comerç, J3B3 Consulting.</footer>
 </div>
 
 <script>
 const MESOS = __MESOS__;
-const CAL = __CAL__;
-const FORMATS = ["Grans cadenes", "Petites cadenes", "Empreses unilocalitzades", "Grans superfícies", "Catalunya, total"];
-const NOMS_MES = ["gener","febrer","març","abril","maig","juny","juliol","agost","setembre","octubre","novembre","desembre"];
-const COL = {"Comertia":"#bf8a2e","Grans cadenes":"#003366","Empreses unilocalitzades":"#5b7a99","Petites cadenes":"#8aa1b8","Grans superfícies":"#a9b7c6","Catalunya, total":"#2f7d72"};
-
+const COMP = __COMP__;
+const ANY = __ANY__;
+const NOMS = ["gener","febrer","març","abril","maig","juny","juliol","agost","setembre","octubre","novembre","desembre"];
 const fmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", ",");
-const nomMes = m => { const [a, b] = m.split("-"); return NOMS_MES[+b - 1] + " de " + a; };
-const nomMesCurt = m => { const [a, b] = m.split("-"); return NOMS_MES[+b - 1].slice(0, 3) + " " + a.slice(2); };
-const deMes = m => (/^[aeiou]/.test(NOMS_MES[+m.split("-")[1] - 1]) ? "d'" : "de ");
+const nom = m => { const [a, b] = m.split("-"); return NOMS[+b - 1] + " de " + a; };
+const curt = m => { const [a, b] = m.split("-"); return NOMS[+b - 1].slice(0, 3) + " " + a.slice(2); };
+let sel = MESOS.length - 1;
 
-// Pestanyes
-document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
-  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
-  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === b.dataset.s));
-});
-
-// 1. Fitxa del mes
-const sel = document.getElementById("mes");
-MESOS.forEach((m, i) => { const o = document.createElement("option"); o.value = i; o.textContent = nomMes(m.mes); sel.appendChild(o); });
-sel.value = MESOS.length - 1;
-document.getElementById("prev").onclick = () => { if (+sel.value > 0) { sel.value = +sel.value - 1; fitxa(); } };
-document.getElementById("next").onclick = () => { if (+sel.value < MESOS.length - 1) { sel.value = +sel.value + 1; fitxa(); } };
-sel.onchange = fitxa;
-
-function fitxa() {
-  const m = MESOS[+sel.value];
-  document.getElementById("f-mes").textContent = nomMes(m.mes);
-  document.getElementById("f-com").innerHTML = fmt(m["Comertia"]) + "%<small>Indicador Comertia</small>";
-  const files = ["Comertia", ...FORMATS].filter(s => m[s] !== null).map(s => ({s, v: m[s]})).sort((a, b) => b.v - a.v);
-  const max = Math.max(...files.map(f => Math.abs(f.v)), 1);
-  const span = 2 * max; const z = 50;
-  document.getElementById("f-bars").innerHTML = files.map(f => {
-    const w = Math.abs(f.v) / span * 100;
-    const left = f.v >= 0 ? z : z - w;
-    return `<div class="bar-row ${f.s === "Comertia" ? "com" : ""}"><div class="nom">${f.s}</div>
-      <div class="track"><div class="zero" style="left:${z}%"></div>
-      <div class="fill" style="left:${left}%;width:${w}%;background:${COL[f.s]}"></div></div>
-      <div class="val" style="color:${f.v < 0 ? "#c0392b" : "#1d2733"}">${fmt(f.v)}%</div></div>`;
-  }).join("");
-  const pos = files.findIndex(f => f.s === "Comertia") + 1;
-  const dg = m["Comertia"] - m["Grans cadenes"], dp = m["Comertia"] - m["Petites cadenes"];
-  const t1 = Math.abs(dg) < 0.05 ? "creix com les grans cadenes"
-           : `creix ${fmt(Math.abs(dg)).replace("+", "")} punts ${dg > 0 ? "per sobre" : "per sota"} de les grans cadenes`;
-  const t2 = Math.abs(dp) < 0.05 ? "igual que les petites cadenes"
-           : `i ${fmt(Math.abs(dp)).replace("+", "")} punts ${dp > 0 ? "per sobre" : "per sota"} de les petites cadenes`;
-  document.getElementById("f-lect").textContent =
-    `El mes ${deMes(m.mes)}${nomMes(m.mes)}, Comertia ${t1} ${t2}. Queda en la posició ${pos} de ${files.length} sèries.`;
+function mostra() {
+  const m = MESOS[sel];
+  document.getElementById("t1").textContent =
+    `${nom(m.mes).charAt(0).toUpperCase() + nom(m.mes).slice(1)}: ${fmt(m.euros)}% en euros, ${fmt(m.volum)}% en volum`;
+  document.getElementById("mes-nom").textContent = nom(m.mes);
+  document.getElementById("x-euros").textContent = fmt(m.euros) + "%";
+  document.getElementById("x-volum").textContent = fmt(m.volum) + "%";
+  document.getElementById("x-preu").textContent =
+    `Descomptant que els preus del comerç a Catalunya han variat un ${fmt(m.preu)}% en un any.`;
+  dibuixa();
 }
-fitxa();
 
-// 2. Diferencial contra cada format
-let fmtSel = "Grans cadenes";
-const fb = document.getElementById("formats");
-fb.innerHTML = '<label>Comparar amb:</label>' + FORMATS.map(f => `<button class="pill ${f === fmtSel ? "on" : ""}" data-f="${f}">${f}</button>`).join("");
-fb.querySelectorAll("button").forEach(b => b.onclick = () => { fmtSel = b.dataset.f; fb.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); dif(); });
-
-function dif() {
-  const d = MESOS.map(m => ({mes: m.mes, v: (m["Comertia"] !== null && m[fmtSel] !== null) ? m["Comertia"] - m[fmtSel] : null}));
-  const mm = d.map((x, i) => {
-    if (i < 11) return null;
-    const w = d.slice(i - 11, i + 1).map(y => y.v);
-    return w.some(v => v === null) ? null : w.reduce((a, b) => a + b, 0) / 12;
-  });
-  const mmv = mm.filter(v => v !== null);
-  const sota = mmv.filter(v => v < 0).length;
-  const bat = d.filter(x => x.v !== null && x.v > 0).length;
-  document.getElementById("s-mm").textContent = fmt(mmv[mmv.length - 1]) + " p.";
-  document.getElementById("s-mesos").textContent = `${sota} de ${mmv.length}`;
-  document.getElementById("s-bat").textContent = `${bat} de ${d.length}`;
-
-  const W = 920, H = 340, M = {t: 16, r: 16, b: 34, l: 44};
-  const vals = d.map(x => x.v).filter(v => v !== null).concat(mmv);
-  const lim = Math.ceil(Math.max(...vals.map(Math.abs)) / 2) * 2;
-  const x = i => M.l + (i + 0.5) * (W - M.l - M.r) / d.length;
-  const y = v => M.t + (lim - v) / (2 * lim) * (H - M.t - M.b);
-  const bw = (W - M.l - M.r) / d.length * 0.7;
+function dibuixa() {
+  const W = 840, H = 300, M = {t: 18, r: 18, b: 34, l: 40};
+  const vals = MESOS.flatMap(m => [m.euros, m.volum]);
+  const lo = Math.min(0, Math.floor(Math.min(...vals))), hi = Math.ceil(Math.max(...vals)) + 1;
+  const x = i => M.l + i * (W - M.l - M.r) / (MESOS.length - 1);
+  const y = v => M.t + (hi - v) / (hi - lo) * (H - M.t - M.b);
   let s = "";
-  for (let t = -lim; t <= lim; t += lim / 2) {
-    s += `<line x1="${M.l}" x2="${W - M.r}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "#9aa4af" : "#eef1f4"}"/>`;
-    s += `<text x="${M.l - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`;
+  for (let t = lo; t <= hi; t += 2) {
+    s += `<line x1="${M.l}" x2="${W - M.r}" y1="${y(t)}" y2="${y(t)}" stroke="${t === 0 ? "#9aa6b2" : "#eef1f4"}"/>`;
+    s += `<text x="${M.l - 8}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`;
   }
-  d.forEach((p, i) => {
-    if (p.v === null) return;
-    const y0 = y(0), y1 = y(p.v);
-    s += `<rect x="${x(i) - bw / 2}" y="${Math.min(y0, y1)}" width="${bw}" height="${Math.abs(y1 - y0)}" fill="${p.v >= 0 ? "#d7c39b" : "#c9d3de"}"><title>${nomMes(p.mes)}: ${fmt(p.v)} punts</title></rect>`;
-    if (i % 3 === 0) s += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle">${nomMesCurt(p.mes)}</text>`;
+  // franja de l'efecte preu entre les dues línies
+  let area = MESOS.map((m, i) => `${x(i)},${y(m.euros)}`).join(" ") + " " +
+             MESOS.map((m, i) => `${x(i)},${y(m.volum)}`).reverse().join(" ");
+  s += `<polygon points="${area}" fill="rgba(176,125,43,.10)"/>`;
+  s += `<rect x="${x(sel) - 14}" y="${M.t}" width="28" height="${H - M.t - M.b}" fill="rgba(11,58,102,.06)"/>`;
+  [["euros", "#b07d2b"], ["volum", "#0b3a66"]].forEach(([k, c]) => {
+    s += `<polyline points="${MESOS.map((m, i) => `${x(i)},${y(m[k])}`).join(" ")}" fill="none" stroke="${c}" stroke-width="2.6"/>`;
+    MESOS.forEach((m, i) => s += `<circle cx="${x(i)}" cy="${y(m[k])}" r="${i === sel ? 5 : 3.2}" fill="${i === sel ? c : "#fff"}" stroke="${c}" stroke-width="2"/>`);
   });
-  let path = "";
-  mm.forEach((v, i) => { if (v !== null) path += (path ? " L " : "M ") + x(i) + " " + y(v); });
-  s += `<path d="${path}" fill="none" stroke="#003366" stroke-width="2.5"/>`;
-  mm.forEach((v, i) => { if (v !== null) s += `<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#003366"><title>Mitjana de 12 mesos fins a ${nomMes(d[i].mes)}: ${fmt(v)} punts</title></circle>`; });
-  document.getElementById("chart").innerHTML = s;
-
-  const ult = mmv[mmv.length - 1];
-  document.getElementById("d-lect").textContent = sota === mmv.length
-    ? `Contra ${fmtSel.toLowerCase()}, la mitjana de 12 mesos queda per sota de zero tots els ${mmv.length} mesos de la sèrie. Ara és de ${fmt(ult)} punts.`
-    : sota === 0
-      ? `Contra ${fmtSel.toLowerCase()}, la mitjana de 12 mesos queda per sobre de zero tots els ${mmv.length} mesos de la sèrie. Ara és de ${fmt(ult)} punts.`
-      : `Contra ${fmtSel.toLowerCase()}, la mitjana de 12 mesos queda per sota de zero ${sota} de ${mmv.length} mesos. Ara és de ${fmt(ult)} punts.`;
-}
-dif();
-
-// 3. Calendari de publicació
-function tl() {
-  const dia = s => new Date(s + "T12:00:00");
-  const rows = CAL.map(c => {
-    const ini = dia(c.mes + "-01"); ini.setMonth(ini.getMonth() + 1);  // primer dia del mes següent
-    const span = 40 * 864e5;
-    const pc = d => Math.min(100, Math.max(0, (dia(d) - ini) / span * 100));
-    const dfmt = d => { const x = dia(d); return x.getDate() + "/" + (x.getMonth() + 1); };
-    let h = `<div class="tl-row"><div class="m">${nomMesCurt(c.mes)}</div><div class="tl-track"><div class="tl-line"></div>`;
-    if (c.comertia) h += `<div class="tl-gap" style="left:${pc(c.comertia)}%;width:${pc(c.ine) - pc(c.comertia)}%"></div>
-       <div class="dot c" style="left:${pc(c.comertia)}%" title="Comertia: ${dfmt(c.comertia)}"></div><div class="tl-lbl" style="left:${pc(c.comertia)}%">${dfmt(c.comertia)}</div>`;
-    h += `<div class="dot i" style="left:${pc(c.ine)}%" title="INE: ${dfmt(c.ine)}"></div><div class="tl-lbl" style="left:${pc(c.ine)}%">${dfmt(c.ine)}</div></div>`;
-    h += `<div class="tl-days">${c.dies !== null ? c.dies + " dies" : "<span style='font-size:12px;color:#6b7684'>sense data</span>"}</div></div>`;
-    return h;
+  MESOS.forEach((m, i) => {
+    s += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" style="${i === sel ? "font-weight:800;fill:#1a2b3a" : ""}">${curt(m.mes)}</text>`;
+    s += `<rect x="${x(i) - 22}" y="0" width="44" height="${H}" fill="transparent" style="cursor:pointer" data-i="${i}"><title>${nom(m.mes)}: ${fmt(m.euros)}% en euros, ${fmt(m.volum)}% en volum</title></rect>`;
   });
-  document.getElementById("tl").innerHTML = rows.join("");
-  const ds = CAL.map(c => c.dies).filter(v => v !== null).sort((a, b) => a - b);
-  const med = ds.length % 2 ? ds[(ds.length - 1) / 2] : (ds[ds.length / 2 - 1] + ds[ds.length / 2]) / 2;
-  document.getElementById("c-lect").textContent =
-    `L'Indicador Comertia arriba entre ${ds[0]} i ${ds[ds.length - 1]} dies abans que l'INE (mediana de ${String(med).replace(".", ",")}). Durant unes tres setmanes, és l'única xifra del mes que hi ha sobre la taula.`;
+  const g = document.getElementById("g1");
+  g.innerHTML = s;
+  g.querySelectorAll("rect[data-i]").forEach(r => r.onclick = () => { sel = +r.dataset.i; document.getElementById("mes-ajuda").style.display = "none"; mostra(); });
 }
-tl();
+
+const part = Math.round((ANY.euros - ANY.volum) / ANY.euros * 100);
+document.querySelector("#ins1 span").innerHTML =
+  `En els últims 12 mesos, l'Indicador creix un <b>${fmt(ANY.euros)}%</b> de mitjana en euros i un <b>${fmt(ANY.volum)}%</b> en volum. ` +
+  `Prop ${part >= 40 && part < 50 ? "de la meitat" : "d'un " + part + "%"} del creixement que es publica correspon a l'augment de preus.`;
+
+document.getElementById("nota2").textContent =
+  `Variació interanual en volum, mitjana de ${nom(ANY.des)} a ${nom(ANY.fins)}. Tot a preus constants, perquè les xifres siguin comparables.`;
+const max = Math.max(...COMP.map(c => Math.abs(c.v)));
+document.getElementById("barres").innerHTML = COMP.map(c => {
+  const w = Math.abs(c.v) / (2 * max) * 100, left = c.v >= 0 ? 50 : 50 - w;
+  const col = c.nom === "Comertia" ? "#b07d2b" : (c.v < 0 ? "#c0392b" : "#0b3a66");
+  return `<div class="bar-row ${c.nom === "Comertia" ? "com" : ""}"><div class="n">${c.nom}</div>
+    <div class="track"><div class="zero" style="left:50%"></div><div class="fill" style="left:${left}%;width:${w}%;background:${col}"></div></div>
+    <div class="val" style="color:${c.v < 0 ? "#c0392b" : "#1a2b3a"}">${fmt(c.v)}%</div></div>`;
+}).join("");
+
+mostra();
 </script>
 </body>
 </html>
@@ -328,14 +220,15 @@ tl();
 
 
 def main():
-    mesos, calendari = carrega()
+    mesos, comparativa, resum_any = carrega()
     html = (HTML.replace("__MESOS__", json.dumps(mesos, ensure_ascii=False))
-                .replace("__CAL__", json.dumps(calendari, ensure_ascii=False)))
+                .replace("__COMP__", json.dumps(comparativa, ensure_ascii=False))
+                .replace("__ANY__", json.dumps(resum_any, ensure_ascii=False)))
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(html)
     print(f"Escrit: {OUT}")
-    print(f"  {len(mesos)} mesos, de {mesos[0]['mes']} a {mesos[-1]['mes']}")
-    print("  Calendari:", ", ".join(f"{c['mes']}: {c['dies']} dies" for c in calendari))
+    print(f"  Últim any: {resum_any['euros']}% en euros, {resum_any['volum']}% en volum")
+    print("  Comparativa:", ", ".join(f"{c['nom']} {c['v']}" for c in comparativa))
 
 
 if __name__ == "__main__":
