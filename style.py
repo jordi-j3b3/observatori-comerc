@@ -174,6 +174,15 @@ def setup_lang(show_selector=True):
     abans de construir títols i navegació.
     """
     TRANS = _load_translations()
+    # Primera càrrega de la sessió: ?lang=ca|es fixa l'idioma. Els subdominis hi
+    # redirigeixen (observatori-comerc.j3b3.com → ?lang=ca). Només un cop: després
+    # mana el selector, encara que el paràmetre segueixi a la URL.
+    if "_lang_url_llegit" not in st.session_state:
+        st.session_state["_lang_url_llegit"] = True
+        _param = st.query_params.get("lang")
+        _per_codi = {v: k for k, v in _LANG_OPTIONS.items()}
+        if _param in _per_codi:
+            st.session_state["lang_selector"] = _per_codi[_param]
     _label = st.session_state.get("lang_selector", "Castellano")
     st.session_state.lang = _LANG_OPTIONS.get(_label, "es")
 

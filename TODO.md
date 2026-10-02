@@ -27,9 +27,9 @@ Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del 
 
 ---
 
-## Multi-idioma per subdomini
+## ~~Multi-idioma per subdomini~~ FET 2026-10-02
 
-**Estat**: opció validada, implementació pendent.
+**Estat**: fet. Els redirects 301 de cPanel ja hi eren des del juliol, però l'app no llegia `?lang` i el subdomini català s'obria en castellà. Ara `setup_lang()` el llegeix a la primera càrrega de la sessió; després mana el selector. Sense paràmetre, el defecte segueix sent castellà (no `ca` com deia l'esquema d'aquí sota), que és el que vol el subdomini castellà, que redirigeix sense paràmetre.
 
 **Objectiu**: quan un usuari entra per `observatorio-comercio.j3b3.com`, el dashboard ha de carregar en castellà; quan entra per `observatori-comerc.j3b3.com` (o `observatori-comerc.streamlit.app`), en català.
 
