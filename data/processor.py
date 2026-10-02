@@ -1997,7 +1997,11 @@ def save_last_update():
 # Datasets vigilats pel sistema d'alertes de la home. Per cada un, la
 # columna que marca la "última dada de la sèrie" i l'etiqueta editorial.
 DATASETS_VIGILATS = {
-    "pib_vab":               {"col": "any",     "ca": "PIB i VAB",                  "es": "PIB y VAB"},
+    # "valor": columna que ha de tenir dada perquè el període compti. Cal quan la
+    # font publica abans el total que el desglossament: el 30/09/2026 l'INE va
+    # donar el VAB total de 2025 sense el del CNAE 47, i la novetat deia 2025.
+    "pib_vab":               {"col": "any",     "ca": "PIB i VAB",                  "es": "PIB y VAB",
+                              "valor": "vab_cnae47_corrents"},
     "empreses":              {"col": "any",     "ca": "Empreses",                   "es": "Empresas"},
     "productivitat":         {"col": "any",     "ca": "Productivitat",              "es": "Productividad"},
     "ecommerce":             {"col": "any",     "ca": "E-commerce",                 "es": "E-commerce"},
@@ -2037,12 +2041,15 @@ CACHES_NO_VIGILATS = {
 }
 
 
-def _dataset_last_marker(name, col):
+def _dataset_last_marker(name, col, valor=None):
     """Retorna un string que identifica la última dada de la sèrie d'un
-    dataset (any, periode YYYY-MM o data YYYY-MM-DD), o None si no es pot."""
+    dataset (any, periode YYYY-MM o data YYYY-MM-DD), o None si no es pot.
+    Si es dona `valor`, només compten les files on aquesta columna té dada."""
     df = load_cache(name)
     if df.empty or col not in df.columns:
         return None
+    if valor and valor in df.columns:
+        df = df[df[valor].notna()]
     serie = df[col].dropna()
     if serie.empty:
         return None
@@ -2080,7 +2087,7 @@ def record_dataset_updates():
     today = date.today().isoformat()
     nous = 0
     for name, cfg in DATASETS_VIGILATS.items():
-        marker = _dataset_last_marker(name, cfg["col"])
+        marker = _dataset_last_marker(name, cfg["col"], cfg.get("valor"))
         if marker is None:
             continue
         prev = log["datasets"].get(name, {}).get("last_data")

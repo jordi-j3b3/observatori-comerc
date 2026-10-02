@@ -1,7 +1,7 @@
 {
  "datasets": {
   "pib_vab": {
-   "last_data": "2025",
+   "last_data": "2024",
    "detected_at": "2026-09-30"
   },
   "empreses": {
@@ -110,7 +110,7 @@
    "dataset": "pib_vab",
    "label_ca": "PIB i VAB",
    "label_es": "PIB y VAB",
-   "last_data": "2025",
+   "last_data": "2024",
    "detected_at": "2026-09-30"
   },
   {
