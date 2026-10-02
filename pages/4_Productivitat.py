@@ -29,7 +29,14 @@ def load_data():
         return pd.read_csv(path)
     return pd.DataFrame()
 
+@st.cache_data(ttl=3600)
+def load_marges_branca():
+    path = os.path.join(os.path.dirname(__file__), "..", "data", "cache", "marges_branca_ine.csv")
+    return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
+
+
 df = load_data()
+df_mb = load_marges_branca()
 
 _ca = st.session_state.lang == "ca"
 
@@ -993,6 +1000,130 @@ with tab3:
                 f"la única palanca real es la eficiencia operativa."
             )
             insight(txt)
+
+        # ─── Gràfic 3: Marge operatiu per branca (INE T=76818) ───
+        if not df_mb.empty:
+            _mb_lbl = {
+                471: ("Súper i hiper (no especialitzats)" if _ca
+                      else "Súper e híper (no especializados)"),
+                472: ("Alimentació especialitzada" if _ca
+                      else "Alimentación especializada"),
+                473: ("Estacions de servei" if _ca else "Estaciones de servicio"),
+                474: ("Equips informàtics i telecomunicacions" if _ca
+                      else "Equipos informáticos y telecomunicaciones"),
+                475: ("Equipament de la llar" if _ca else "Equipamiento del hogar"),
+                476: ("Cultura i lleure" if _ca else "Cultura y ocio"),
+                477: ("Moda, calçat, farmàcia i altres" if _ca
+                      else "Moda, calzado, farmacia y otros"),
+                479: ("Venda fora d'establiment (internet i altres)" if _ca
+                      else "Venta fuera de establecimiento (internet y otros)"),
+            }
+            _mb = df_mb.dropna(subset=["marge_vendes_pct"]).copy()
+            _mb["cnae"] = pd.to_numeric(_mb["cnae"], errors="coerce")
+            _mb_y1 = int(_mb["any"].max())
+            _mb_y0 = int(_mb["any"].min())
+            _mb_p = (_mb.pivot_table(index="cnae", columns="any",
+                                     values="marge_vendes_pct", aggfunc="first")
+                     .dropna(subset=[_mb_y1]).sort_values(_mb_y1))
+            _mb_p["label"] = [_mb_lbl.get(int(c), str(int(c))) for c in _mb_p.index]
+            _c_max, _c_min = _mb_p[_mb_y1].idxmax(), _mb_p[_mb_y1].idxmin()
+
+            _v_min = fnum(_mb_p.loc[_c_min, _mb_y1], 1)
+            _v_max = fnum(_mb_p.loc[_c_max, _mb_y1], 1)
+            if _ca:
+                exhibit_header(
+                    3, f"Segons la branca, el marge operatiu va d'un {_v_min}% a un {_v_max}% "
+                       f"de les vendes",
+                    note=f"Excedent brut d'explotació sobre xifra de negoci per branca del "
+                         f"comerç al detall, {_mb_y0} i {_mb_y1}.",
+                )
+            else:
+                exhibit_header(
+                    3, f"Según la rama, el margen operativo va de un {_v_min}% a un {_v_max}% "
+                       f"de las ventas",
+                    note=f"Excedente bruto de explotación sobre cifra de negocios por rama del "
+                         f"comercio minorista, {_mb_y0} y {_mb_y1}.",
+                )
+
+            fig_mb = go.Figure()
+            # Línia que uneix els dos anys de cada branca
+            for _c, _r in _mb_p.iterrows():
+                if pd.notna(_r.get(_mb_y0)):
+                    fig_mb.add_trace(go.Scatter(
+                        x=[_r[_mb_y0], _r[_mb_y1]], y=[_r["label"], _r["label"]],
+                        mode="lines", line=dict(color="#cdd5dd", width=3),
+                        showlegend=False, hoverinfo="skip"))
+            fig_mb.add_trace(go.Scatter(
+                x=_mb_p[_mb_y0], y=_mb_p["label"], mode="markers", name=str(_mb_y0),
+                marker=dict(color=G2_P, size=11),
+                hovertemplate=f"<b>%{{y}}</b><br>{_mb_y0}: %{{x:.1f}}%<extra></extra>"))
+            fig_mb.add_trace(go.Scatter(
+                x=_mb_p[_mb_y1], y=_mb_p["label"], mode="markers", name=str(_mb_y1),
+                marker=dict(color=NAVY, size=13),
+                hovertemplate=f"<b>%{{y}}</b><br>{_mb_y1}: %{{x:.1f}}%<extra></extra>"))
+            # Etiqueta del darrer any a la dreta del punt més extern, perquè no la tapi el de l'any inicial
+            fig_mb.add_trace(go.Scatter(
+                x=_mb_p[[_mb_y0, _mb_y1]].max(axis=1) + 0.25, y=_mb_p["label"], mode="text",
+                text=[fnum(v, 1) + "%" for v in _mb_p[_mb_y1]],
+                textposition="middle right", showlegend=False, hoverinfo="skip",
+                textfont=dict(size=12, color=NAVY, family="Manrope, system-ui, sans-serif")))
+            _layout_mb = premium_plotly_layout(height=max(380, len(_mb_p) * 46 + 90),
+                                               margin_right=60,
+                                               ytitle="")
+            _layout_mb["showlegend"] = True
+            _layout_mb["hovermode"] = "closest"
+            _layout_mb["xaxis"].update(
+                title=dict(text=("% sobre xifra de negoci" if _ca else "% sobre cifra de negocios"),
+                           font=dict(color=G2_P, size=12)),
+                rangemode="tozero", tickformat=".0f", dtick=2,
+                showspikes=False, showgrid=True, gridcolor="#eef1f4")
+            _layout_mb["yaxis"].update(type="category", showgrid=False, automargin=True)
+            _layout_mb["yaxis"].pop("tickformat", None)
+            _layout_mb["legend"] = dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+                font=dict(family="Manrope, system-ui, sans-serif", size=12, color=G1_P),
+                bgcolor="rgba(0,0,0,0)",
+            )
+            fig_mb.update_layout(**_layout_mb)
+            st.plotly_chart(fig_mb, use_container_width=True, config=_CHART_CONFIG)
+            source(("INE, Estadística Estructural d'Empreses Sector Comerç (taula 76818). "
+                    "L'INE no publica la branca 478 (parades i mercats ambulants)") if _ca else
+                   ("INE, Estadística Estructural de Empresas Sector Comercio (tabla 76818). "
+                    "El INE no publica la rama 478 (puestos y mercadillos)"))
+
+            _mb_d = (_mb_p[_mb_y1] - _mb_p[_mb_y0]).dropna().round(1)
+            _n_puja = int((_mb_d > 0).sum())
+            _ratio = _mb_p.loc[_c_max, _mb_y1] / _mb_p.loc[_c_min, _mb_y1]
+
+            def _llista(codis, conj):
+                noms = [f"«{_mb_lbl[int(c)].lower()}»" for c in codis]
+                return noms[0] if len(noms) == 1 else ", ".join(noms[:-1]) + f" {conj} " + noms[-1]
+
+            _up = _mb_d[_mb_d == _mb_d.max()].index
+            _dn = _mb_d[_mb_d == _mb_d.min()].index
+            _pt = lambda v: f"{v:+.1f}".replace(".", ",")
+            if _ca:
+                insight(
+                    f"El {_mb_y1}, el marge operatiu oscil·la entre un <strong>{_v_min}%</strong> "
+                    f"({_mb_lbl[int(_c_min)].lower()}) i un <strong>{_v_max}%</strong> "
+                    f"({_mb_lbl[int(_c_max)].lower()}), {fnum(_ratio, 1)} vegades més. "
+                    f"Entre {_mb_y0} i {_mb_y1} el marge puja a <strong>{_n_puja} de {len(_mb_d)}</strong> branques. "
+                    f"{'Les que més guanyen són' if len(_up) > 1 else 'La que més guanya és'} "
+                    f"{_llista(_up, 'i')} ({_pt(_mb_d.max())} punts), i "
+                    f"{'les que més perden,' if len(_dn) > 1 else 'la que més perd,'} "
+                    f"{_llista(_dn, 'i')} ({_pt(_mb_d.min())} punts)."
+                )
+            else:
+                insight(
+                    f"En {_mb_y1}, el margen operativo oscila entre un <strong>{_v_min}%</strong> "
+                    f"({_mb_lbl[int(_c_min)].lower()}) y un <strong>{_v_max}%</strong> "
+                    f"({_mb_lbl[int(_c_max)].lower()}), {fnum(_ratio, 1)} veces más. "
+                    f"Entre {_mb_y0} y {_mb_y1} el margen sube en <strong>{_n_puja} de {len(_mb_d)}</strong> ramas. "
+                    f"{'Las que más ganan son' if len(_up) > 1 else 'La que más gana es'} "
+                    f"{_llista(_up, 'y')} ({_pt(_mb_d.max())} puntos), y "
+                    f"{'las que más pierden,' if len(_dn) > 1 else 'la que más pierde,'} "
+                    f"{_llista(_dn, 'y')} ({_pt(_mb_d.min())} puntos)."
+                )
 
         # ─── Avis metodologic ─────────────────────────────────────
         if _ca:
