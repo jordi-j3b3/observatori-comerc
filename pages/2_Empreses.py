@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -135,10 +136,11 @@ key_takeaways(_takeaways, label=_tk_label)
 freshness_badge("empreses", st.session_state.lang)
 
 # ─── TABS ────────────────────────────────────────────────────
-tab_esp, tab_ccaa = st.tabs([
+_tabs_lbl = [
     ("Espanya" if _ca else "España"),
     ("Comunitats autònomes" if _ca else "Comunidades autónomas"),
-])
+]
+tab_esp, tab_ccaa = st.tabs(_tabs_lbl, default=tab_destinacio("pages/2_Empreses.py", _tabs_lbl))
 
 # ════════════════════════════════════════════════════════════
 # TAB 1: ESPANYA

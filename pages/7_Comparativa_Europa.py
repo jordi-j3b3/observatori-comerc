@@ -15,6 +15,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -188,12 +189,13 @@ if df_europa.empty and df_mens.empty and df_total.empty:
 
 # ─── TABS ────────────────────────────────────────────────────
 
-tab1, tab2, tab3, tab4 = st.tabs([
+_tabs_lbl = [
     ("Pes sobre el PIB" if _ca else "Peso sobre el PIB"),
     ("Posicionament" if _ca else "Posicionamiento"),
     ("Estructura empresarial" if _ca else "Estructura empresarial"),
     ("Pols mensual" if _ca else "Pulso mensual"),
-])
+]
+tab1, tab2, tab3, tab4 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/7_Comparativa_Europa.py", _tabs_lbl))
 
 # ═══════════════════════════════════════════════════════════════
 # TAB 1 — POSICIONAMENT ESTRUCTURAL

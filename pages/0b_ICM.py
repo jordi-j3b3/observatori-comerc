@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (inject_css, inject_premium_page_css, setup_lang, page_header,
                    insight, source, page_meta, fnum, fpct, apply_layout,
                    highlight_expander, format_mes_any,
@@ -278,14 +279,15 @@ with c4:
             fpct(val, 1),
         )
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+_tabs_lbl = [
     ("Nacional" if _ca else "Nacional"),
     ("Per branca" if _ca else "Por rama"),
     ("Per CCAA" if _ca else "Por CCAA"),
     ("Per format" if _ca else "Por formato"),
     ("Confiança del consumidor" if _ca else "Confianza del consumidor"),
     ("Preus per grups" if _ca else "Precios por grupos"),
-])
+]
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/0b_ICM.py", _tabs_lbl))
 
 with tab1:
     if _ca:

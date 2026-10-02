@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (inject_css, inject_premium_page_css, setup_lang, page_header,
                    insight, intro, source, page_meta,
                    fnum, fpct, apply_layout, highlight_expander,
@@ -206,12 +207,13 @@ if _takeaways:
     key_takeaways(_takeaways, label=_tk_label)
 freshness_badge(["ocupacio_comerc", "eaes"], st.session_state.lang)
 
-tab_vol, tab_sal, tab_perfil, tab_epa = st.tabs([
+_tabs_lbl = [
     ("Volum i intensitat" if _ca else "Volumen e intensidad"),
     ("Salaris" if _ca else "Salarios"),
     ("Perfil: sexe i edat" if _ca else "Perfil: sexo y edad"),
     ("Conjuntura trimestral (EPA)" if _ca else "Coyuntura trimestral (EPA)"),
-])
+]
+tab_vol, tab_sal, tab_perfil, tab_epa = st.tabs(_tabs_lbl, default=tab_destinacio("pages/3_Ocupació.py", _tabs_lbl))
 
 # ════════════════════════════════════════════════════════════
 # TAB 1: VOLUM I INTENSITAT (personal ocupat, hores, treb/empresa)

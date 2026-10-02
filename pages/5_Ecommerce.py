@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -158,10 +159,11 @@ key_takeaways(_takeaways, label=_tk_label)
 freshness_badge(["ecommerce", "digitalitzacio_comerc"], st.session_state.lang)
 
 # ─── TABS ────────────────────────────────────────────────────
-tab_ec, tab_dig = st.tabs([
+_tabs_lbl = [
     "E-commerce",
     ("Digitalització" if _ca else "Digitalización"),
-])
+]
+tab_ec, tab_dig = st.tabs(_tabs_lbl, default=tab_destinacio("pages/5_Ecommerce.py", _tabs_lbl))
 
 # ════════════════════════════════════════════════════════════
 # TAB 1: E-COMMERCE (volum de negoci online, CNMC)

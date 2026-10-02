@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -301,12 +302,13 @@ freshness_badge(["subsectors_dirce", "subsectors_eas", "subsectors_epf"], st.ses
 
 # ─── TABS ────────────────────────────────────────────────────
 
-tab1, tab2, tab3, tab4 = st.tabs([
+_tabs_lbl = [
     ("Estructura empresarial" if _ca else "Estructura empresarial"),
     ("Activitat i productivitat" if _ca else "Actividad y productividad"),
     ("Demanda (despesa famílies)" if _ca else "Demanda (gasto familias)"),
     ("Detall alimentació" if _ca else "Detalle alimentación"),
-])
+]
+tab1, tab2, tab3, tab4 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/9_Subsectors.py", _tabs_lbl))
 
 # ============================================================
 # TAB 1: ESTRUCTURA - DIRCE

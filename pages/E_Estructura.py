@@ -15,6 +15,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (inject_css, setup_lang, page_header, insight, intro, source,
                    fpct, apply_layout, PURPLE, GREEN, GRAY, RED,
                    inject_premium_page_css, kicker, action_title, deck)
@@ -113,11 +114,12 @@ def _line(fig, x, y, name, color, dash=None, width=3, hover=None):
         hovertemplate=f"{hover or name}: %{{y:.1f}} %<extra></extra>"))
 
 
-tab_sint, tab_bs, tab_on = st.tabs([
+_tabs_lbl = [
     ("El doble pinçament" if _ca else "El doble pinzamiento"),
     ("Béns → serveis" if _ca else "Bienes → servicios"),
     ("Penetració online" if _ca else "Penetración online"),
-])
+]
+tab_sint, tab_bs, tab_on = st.tabs(_tabs_lbl, default=tab_destinacio("pages/E_Estructura.py", _tabs_lbl))
 
 # ════════════════════════════════════════════ TAB 1 · SÍNTESI
 with tab_sint:

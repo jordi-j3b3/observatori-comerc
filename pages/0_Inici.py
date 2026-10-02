@@ -17,6 +17,7 @@ import os, sys
 from datetime import date
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import DESTINS, anar_a, oblidar_destinacio
 from style import (inject_css, inject_premium_page_css, inject_home_css,
                    setup_lang, page_header, fnum, fpct, page_meta,
                    newsletter_form, format_mes_any,
@@ -33,6 +34,7 @@ page_header()
 
 _ca = st.session_state.lang == "ca"
 _avui = date.today()
+oblidar_destinacio()  # la pestanya forçada d'una novetat només val per a un salt
 _NDIR = os.path.join(os.path.dirname(__file__), "..", "data", "newsletter")
 
 # ─── DADES ─────────────────────────────────────────────────────
@@ -461,9 +463,27 @@ for _ev in load_updates_log().get("events", []):
         _recents.append((_ev, _ago))
 
 if _recents:
-    _rows = ""
-    for _ev, _ago in _recents:
-        _lbl = _ev.get("label_ca" if _ca else "label_es", _ev.get("dataset", ""))
+    # Fila amb enllaç: el filet passa de la fila de text al contenidor sencer, i el
+    # botó es pinta com un enllaç de text (l'estil global dels botons li posa caixa).
+    st.markdown(
+        '<style>'
+        '[class*="st-key-novrow_"] { border-bottom: 1px solid #f2f4f7; gap: 0; }'
+        '[class*="st-key-novrow_"] .h-upd-row { border-bottom: none; }'
+        '[class*="st-key-novlink_"] { padding-top: 6px; }'
+        '[class*="st-key-novlink_"] button { border: none !important; background: none !important;'
+        ' box-shadow: none !important; padding: 0 !important; min-height: 0 !important; }'
+        '[class*="st-key-novlink_"] button p { font-family: Manrope, system-ui, sans-serif !important;'
+        ' font-size: 13px !important; font-weight: 700 !important; color: #0b3a66 !important;'
+        ' text-transform: none !important; letter-spacing: 0 !important; white-space: nowrap; }'
+        '[class*="st-key-novlink_"] button:hover p { color: #b07d2b !important; }'
+        '</style>'
+        f'<div class="h-sec-eyebrow" style="margin-bottom:6px;">'
+        f'{"Novetats" if _ca else "Novedades"}</div>',
+        unsafe_allow_html=True,
+    )
+    for _i, (_ev, _ago) in enumerate(_recents):
+        _ds = _ev.get("dataset", "")
+        _lbl = _ev.get("label_ca" if _ca else "label_es", _ds)
         _marker = _fmt_marker(_ev.get("last_data", ""), st.session_state.lang)
         if _ago == 0:
             _when = "avui" if _ca else "hoy"
@@ -472,14 +492,20 @@ if _recents:
         else:
             _when = f"fa {_ago} dies" if _ca else f"hace {_ago} días"
         _verb = "actualitzat amb dades de" if _ca else "actualizado con datos de"
-        _rows += (f'<div class="h-upd-row"><span class="l"><b>{_lbl}</b> {_verb} '
-                  f'<span class="m">{_marker}</span></span>'
-                  f'<span class="r">{_when}</span></div>')
-    st.markdown(
-        f'<div class="h-sec-eyebrow" style="margin-bottom:6px;">'
-        f'{"Novetats" if _ca else "Novedades"}</div>{_rows}',
-        unsafe_allow_html=True,
-    )
+        _row = (f'<div class="h-upd-row"><span class="l"><b>{_lbl}</b> {_verb} '
+                f'<span class="m">{_marker}</span></span>'
+                f'<span class="r">{_when}</span></div>')
+        if _ds in DESTINS:
+            with st.container(key=f"novrow_{_i}"):
+                _c_txt, _c_link = st.columns([9, 1], vertical_alignment="center", gap="small")
+                with _c_txt:
+                    st.markdown(_row, unsafe_allow_html=True)
+                with _c_link:
+                    if st.button(("Veure →" if _ca else "Ver →"), key=f"novlink_{_i}_{_ds}",
+                                 type="tertiary"):
+                        anar_a(_ds)
+        else:
+            st.markdown(_row, unsafe_allow_html=True)
 
 home_rule(space_before=44, space_after=0, strong=True)
 home_space("m")

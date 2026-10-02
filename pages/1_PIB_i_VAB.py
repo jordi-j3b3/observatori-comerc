@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -127,10 +128,11 @@ freshness_badge("pib_vab", st.session_state.lang)
 
 # ─── TABS ────────────────────────────────────────────────────
 
-tab1, tab2 = st.tabs([
+_tabs_lbl = [
     "Espanya" if _ca else "España",
     "Comunitats autònomes" if _ca else "Comunidades autónomas",
-])
+]
+tab1, tab2 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/1_PIB_i_VAB.py", _tabs_lbl))
 
 # ============================================================
 # TAB 1: ESPANYA

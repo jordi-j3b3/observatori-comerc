@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import os, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from navegacio import tab_destinacio
 from style import (
     inject_css, inject_premium_page_css, setup_lang, page_header,
     insight, source, page_meta,
@@ -64,11 +65,12 @@ _SRC_PADRO = ("Padró continu (taula 29005)" if _ca else "Padrón continuo (tabl
 kicker("Anàlisi territorial · Comerç al detall per CCAA i província" if _ca
        else "Análisis territorial · Comercio minorista por CCAA y provincia")
 
-tab_mag, tab_prov, tab_grup = st.tabs([
+_tabs_lbl = [
     ("Magnituds per CCAA" if _ca else "Magnitudes por CCAA"),
     ("Locals per província" if _ca else "Locales por provincia"),
     ("Locals per subsector" if _ca else "Locales por subsector"),
-])
+]
+tab_mag, tab_prov, tab_grup = st.tabs(_tabs_lbl, default=tab_destinacio("pages/6_Territori.py", _tabs_lbl))
 
 # ════════════════════════════════════════════════════════════
 # TAB 1: MAGNITUDS PER CCAA (Estadística Estructural + Eurostat)
