@@ -57,8 +57,24 @@ def load_icm_distribucion():
     return df.dropna(subset=["data"])
 
 
+@st.cache_data(ttl=3600)
+def load_confianca():
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, "confianza_consumidor.parquet")
+    if os.path.exists(pq):
+        df = pd.read_parquet(pq)
+    else:
+        csv = os.path.join(base, "confianza_consumidor.csv")
+        if not os.path.exists(csv):
+            return pd.DataFrame()
+        df = pd.read_csv(csv)
+    df["data"] = pd.to_datetime(df["periode"], format="%Y-%m", errors="coerce")
+    return df.dropna(subset=["data"]).sort_values("data")
+
+
 df = load_icm()
 df_distrib = load_icm_distribucion()
+df_conf = load_confianca()
 
 kicker("Pols mensual del consum · ICM (INE)" if _ca
        else "Pulso mensual del consumo · ICM (INE)")
@@ -238,11 +254,12 @@ with c4:
             fpct(val, 1),
         )
 
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     ("Nacional" if _ca else "Nacional"),
     ("Per branca" if _ca else "Por rama"),
     ("Per CCAA" if _ca else "Por CCAA"),
     ("Per format" if _ca else "Por formato"),
+    ("Confiança del consumidor" if _ca else "Confianza del consumidor"),
 ])
 
 with tab1:
@@ -665,6 +682,205 @@ with tab4:
                             f"Cuando ventas y empleo caen a la vez en un mismo formato, "
                             f"la desaceleración es estructural, no solo de precios."
                         )
+
+with tab5:
+    if df_conf.empty:
+        st.info("Encara no hi ha dades de confiança del consumidor a la cache."
+                if _ca else
+                "Aún no hay datos de confianza del consumidor en la caché.")
+    else:
+        _lang = st.session_state.lang
+
+        def _pts(v):
+            """Diferència en punts de balanç, amb signe i coma decimal."""
+            r = round(v, 1)
+            return "0,0" if r == 0 else f"{r:+.1f}".replace(".", ",")
+
+        _cf = df_conf.dropna(subset=["index_confianca"])
+        _cf_last = _cf.iloc[-1]
+        _cf_v = float(_cf_last["index_confianca"])
+        _cf_dt = _cf_last["data"]
+        _cf_any_inici = int(_cf["data"].iloc[0].year)
+        _cf_mitjana = float(_cf["index_confianca"].mean())
+        _cf_prev = _cf[_cf["data"] == _cf_dt - pd.DateOffset(months=1)]
+        _cf_12m = _cf[_cf["data"] == _cf_dt - pd.DateOffset(months=12)]
+        _cf_d1 = (_cf_v - float(_cf_prev.iloc[0]["index_confianca"])
+                  if not _cf_prev.empty else None)
+        _cf_d12 = (_cf_v - float(_cf_12m.iloc[0]["index_confianca"])
+                   if not _cf_12m.empty else None)
+        _cf_gap = _cf_v - _cf_mitjana
+
+        if _ca:
+            _pos = "per sota" if _cf_gap < 0 else "per sobre"
+            exhibit_header(
+                5, f"La confiança del consumidor és {fnum(abs(_cf_gap), 1)} punts "
+                   f"{_pos} de la mitjana des de {_cf_any_inici}",
+                note="Balanç entre respostes positives i negatives (de −100 a +100), "
+                     "desestacionalitzat. Espanya.")
+        else:
+            _pos = "por debajo" if _cf_gap < 0 else "por encima"
+            exhibit_header(
+                5, f"La confianza del consumidor está {fnum(abs(_cf_gap), 1)} puntos "
+                   f"{_pos} de la media desde {_cf_any_inici}",
+                note="Balance entre respuestas positivas y negativas (de −100 a +100), "
+                     "desestacionalizado. España.")
+
+        st.caption(
+            ("Darrera dada disponible: " if _ca else "Último dato disponible: ")
+            + format_mes_any(_cf_dt, _lang)
+        )
+        _k1, _k2, _k3, _k4 = st.columns(4)
+        with _k1:
+            st.metric(("Indicador de confiança" if _ca else "Indicador de confianza"),
+                      fnum(_cf_v, 1))
+        with _k2:
+            st.metric(("Canvi mensual (punts)" if _ca else "Cambio mensual (puntos)"),
+                      _pts(_cf_d1) if _cf_d1 is not None else "—")
+        with _k3:
+            st.metric(("Canvi en 12 mesos (punts)" if _ca else "Cambio en 12 meses (puntos)"),
+                      _pts(_cf_d12) if _cf_d12 is not None else "—")
+        with _k4:
+            st.metric((f"Mitjana des de {_cf_any_inici}" if _ca
+                       else f"Media desde {_cf_any_inici}"),
+                      fnum(_cf_mitjana, 1))
+
+        _periodes_cf = {
+            ("24 mesos" if _ca else "24 meses"): 24,
+            ("60 mesos" if _ca else "60 meses"): 60,
+            ("Des de 2007" if _ca else "Desde 2007"): "2007-01-01",
+            (f"Des de {_cf_any_inici}" if _ca else f"Desde {_cf_any_inici}"): None,
+        }
+        _per_cf_lbl = st.radio(
+            ("Període" if _ca else "Período"),
+            list(_periodes_cf.keys()), index=1, horizontal=True, key="conf_per",
+        )
+        _per_cf = _periodes_cf[_per_cf_lbl]
+        if isinstance(_per_cf, int):
+            _cf_plot = _cf.tail(_per_cf)
+        elif isinstance(_per_cf, str):
+            _cf_plot = _cf[_cf["data"] >= _per_cf]
+        else:
+            _cf_plot = _cf
+
+        _lbl_cf = [format_mes_any(d, _lang) for d in _cf_plot["data"]]
+        fig_cf = go.Figure()
+        fig_cf.add_trace(go.Scatter(
+            x=_cf_plot["data"], y=_cf_plot["index_confianca"],
+            mode="lines+markers" if len(_cf_plot) <= 60 else "lines",
+            name=("Indicador de confiança" if _ca else "Indicador de confianza"),
+            line=dict(color=NAVY, width=2.6),
+            marker=dict(size=4),
+            customdata=_lbl_cf,
+            hovertemplate="%{customdata}: <b>%{y:.1f}</b><extra></extra>",
+        ))
+        fig_cf.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+        fig_cf.add_hline(
+            y=_cf_mitjana, line_dash="dash", line_color=OCRE_DEEP, line_width=1.4,
+            annotation_text=(f"Mitjana des de {_cf_any_inici}: {fnum(_cf_mitjana, 1)}"
+                             if _ca else
+                             f"Media desde {_cf_any_inici}: {fnum(_cf_mitjana, 1)}"),
+            annotation_position="top right",
+            annotation_font=dict(size=11, color=OCRE_DEEP),
+        )
+        apply_layout(fig_cf,
+            yaxis_title=("Balanç (punts)" if _ca else "Balance (puntos)"),
+            height=420,
+            showlegend=False,
+        )
+        fig_cf.update_xaxes(tickformat="%m/%Y")
+        st.plotly_chart(fig_cf, use_container_width=True)
+        source("Comissió Europea, enquesta harmonitzada als consumidors, via Eurostat "
+               "(ei_bsco_m). Sèrie desestacionalitzada." if _ca else
+               "Comisión Europea, encuesta armonizada a los consumidores, vía Eurostat "
+               "(ei_bsco_m). Serie desestacionalizada.")
+
+        if _ca:
+            _dir1 = ("" if _cf_d1 is None else
+                     f" Respecte al mes anterior, {'puja' if _cf_d1 > 0 else ('baixa' if _cf_d1 < 0 else 'no es mou')}"
+                     + (f" {fnum(abs(_cf_d1), 1)} punts." if round(_cf_d1, 1) != 0 else "."))
+            _dir12 = ("" if _cf_d12 is None else
+                      f" En dotze mesos, la variació és de <strong>{_pts(_cf_d12)} punts</strong>.")
+            insight(
+                f"Al <strong>{format_mes_any(_cf_dt, 'ca')}</strong>, l'indicador de "
+                f"confiança del consumidor se situa en <strong>{fnum(_cf_v, 1)}</strong>, "
+                f"{fnum(abs(_cf_gap), 1)} punts {_pos} de la mitjana des de {_cf_any_inici} "
+                f"({fnum(_cf_mitjana, 1)}).{_dir1}{_dir12} "
+                f"Un balanç negatiu vol dir que hi ha més llars pessimistes que optimistes."
+            )
+        else:
+            _dir1 = ("" if _cf_d1 is None else
+                     f" Respecto al mes anterior, {'sube' if _cf_d1 > 0 else ('baja' if _cf_d1 < 0 else 'no se mueve')}"
+                     + (f" {fnum(abs(_cf_d1), 1)} puntos." if round(_cf_d1, 1) != 0 else "."))
+            _dir12 = ("" if _cf_d12 is None else
+                      f" En doce meses, la variación es de <strong>{_pts(_cf_d12)} puntos</strong>.")
+            insight(
+                f"En <strong>{format_mes_any(_cf_dt, 'es')}</strong>, el indicador de "
+                f"confianza del consumidor se sitúa en <strong>{fnum(_cf_v, 1)}</strong>, "
+                f"{fnum(abs(_cf_gap), 1)} puntos {_pos} de la media desde {_cf_any_inici} "
+                f"({fnum(_cf_mitjana, 1)}).{_dir1}{_dir12} "
+                f"Un balance negativo significa que hay más hogares pesimistas que optimistas."
+            )
+
+        # ─── Components de l'enquesta ──────────────────────
+        st.markdown("---")
+        if _ca:
+            st.markdown(
+                "**Què pensen les llars**: quatre preguntes de l'enquesta, en el "
+                "mateix període. L'indicador compost combina la situació financera "
+                "de la llar (passada i futura), la situació econòmica general futura "
+                "i la intenció de fer compres importants."
+            )
+        else:
+            st.markdown(
+                "**Qué piensan los hogares**: cuatro preguntas de la encuesta, en el "
+                "mismo período. El indicador compuesto combina la situación financiera "
+                "del hogar (pasada y futura), la situación económica general futura "
+                "y la intención de realizar compras importantes."
+            )
+
+        _comp_lbl = {
+            "situacio_actual_financera": (
+                "Finances de la llar, darrers 12 mesos" if _ca
+                else "Finanzas del hogar, últimos 12 meses"),
+            "expectatives_financera": (
+                "Finances de la llar, propers 12 mesos" if _ca
+                else "Finanzas del hogar, próximos 12 meses"),
+            "situacio_actual_economica": (
+                "Economia general, darrers 12 mesos" if _ca
+                else "Economía general, últimos 12 meses"),
+            "expectatives_economica": (
+                "Economia general, propers 12 mesos" if _ca
+                else "Economía general, próximos 12 meses"),
+        }
+        _comp_style = {
+            "situacio_actual_financera": dict(color=NAVY, width=2.2, dash="dot"),
+            "expectatives_financera": dict(color=NAVY, width=2.4),
+            "situacio_actual_economica": dict(color=OCRE_DEEP, width=2.2, dash="dot"),
+            "expectatives_economica": dict(color=OCRE_DEEP, width=2.4),
+        }
+        fig_cc2 = go.Figure()
+        for _c, _lbl in _comp_lbl.items():
+            if _c not in _cf_plot.columns:
+                continue
+            fig_cc2.add_trace(go.Scatter(
+                x=_cf_plot["data"], y=_cf_plot[_c],
+                mode="lines",
+                name=_lbl,
+                line=_comp_style[_c],
+                customdata=_lbl_cf,
+                hovertemplate=f"<b>{_lbl}</b><br>%{{customdata}}: %{{y:.1f}}<extra></extra>",
+            ))
+        fig_cc2.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+        apply_layout(fig_cc2,
+            yaxis_title=("Balanç (punts)" if _ca else "Balance (puntos)"),
+            height=440,
+        )
+        fig_cc2.update_xaxes(tickformat="%m/%Y")
+        st.plotly_chart(fig_cc2, use_container_width=True)
+        source("Comissió Europea, enquesta harmonitzada als consumidors, via Eurostat "
+               "(ei_bsco_m). Sèries desestacionalitzades." if _ca else
+               "Comisión Europea, encuesta armonizada a los consumidores, vía Eurostat "
+               "(ei_bsco_m). Series desestacionalizadas.")
 
 # ─── Expander: evolució ocupació ──────────────────────────────
 
