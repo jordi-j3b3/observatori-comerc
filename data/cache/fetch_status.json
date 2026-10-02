@@ -2,7 +2,7 @@
   "cdmge": {
     "estat": "ok",
     "font": "api_ine",
-    "missatge": "13177 files"
+    "missatge": "13268 files"
   },
   "confianza_consumidor": {
     "estat": "ok",
@@ -15,9 +15,9 @@
     "missatge": "59 registres"
   },
   "ecommerce": {
-    "estat": "ok",
-    "font": "api_cnmc",
-    "missatge": "13 files"
+    "estat": "fallback",
+    "font": "cache",
+    "missatge": "API CNMC buida"
   },
   "empreses": {
     "estat": "ok",
@@ -37,7 +37,7 @@
   "europa_retail_mensual": {
     "estat": "ok",
     "font": "api_eurostat",
-    "missatge": "8996 files"
+    "missatge": "8998 files"
   },
   "europa_vab": {
     "estat": "ok",

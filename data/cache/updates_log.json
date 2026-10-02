@@ -41,8 +41,8 @@
    "detected_at": "2026-09-26"
   },
   "cdmge": {
-   "last_data": "2026-08-31",
-   "detected_at": "2026-09-25"
+   "last_data": "2026-09-15",
+   "detected_at": "2026-10-02"
   },
   "ipc": {
    "last_data": "2025",
@@ -106,6 +106,13 @@
   }
  },
  "events": [
+  {
+   "dataset": "cdmge",
+   "label_ca": "Pols diari",
+   "label_es": "Pulso diario",
+   "last_data": "2026-09-15",
+   "detected_at": "2026-10-02"
+  },
   {
    "dataset": "pib_vab",
    "label_ca": "PIB i VAB",
