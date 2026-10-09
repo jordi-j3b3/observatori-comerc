@@ -103,6 +103,10 @@
   "confianza_consumidor": {
    "last_data": "2026-09",
    "detected_at": "2026-09-29"
+  },
+  "targetes_tpv": {
+   "last_data": "2026-06-30",
+   "detected_at": "2026-10-09"
   }
  },
  "events": [

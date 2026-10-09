@@ -83,5 +83,10 @@
     "estat": "ok",
     "font": "api_ine",
     "missatge": "7 files"
+  },
+  "targetes_tpv": {
+    "estat": "ok",
+    "font": "xlsx_bde",
+    "missatge": "86 files"
   }
 }
