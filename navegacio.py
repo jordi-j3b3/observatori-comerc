@@ -13,6 +13,7 @@ DESTINS = {
     "icm_distribucion":                ("pages/0b_ICM.py", 3),
     "confianza_consumidor":            ("pages/0b_ICM.py", 4),
     "ipc_coicop":                      ("pages/0b_ICM.py", 5),
+    "targetes_tpv":                    ("pages/0b_ICM.py", 6),
     "pib_vab":                         ("pages/1_PIB_i_VAB.py", 0),
     "empreses":                        ("pages/2_Empreses.py", 0),
     "ocupacio_comerc":                 ("pages/3_Ocupació.py", 2),

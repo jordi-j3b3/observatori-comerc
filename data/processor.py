@@ -8,7 +8,7 @@ Jerarquia de fonts:
 import os
 import json
 import pandas as pd
-from data.fetchers import ine, eurostat, cnmc
+from data.fetchers import ine, eurostat, cnmc, bde
 from data.config import trencaments_travessats
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
@@ -1540,6 +1540,30 @@ def process_confianza_consumidor():
     return df
 
 
+def process_targetes_tpv():
+    """
+    Compres amb targeta en terminals de punt de venda (Banco de España, STMP).
+    Trimestral des de 2005: operacions, import i tiquet mitjà. Totes les
+    activitats (no només CNAE 47): context del consum pagat amb targeta.
+    No crítica: fallback silenciós a cache.
+    """
+    print("  Carregant compres amb targeta en TPV (Banco de España)...")
+    try:
+        df = bde.fetch_targetes_tpv()
+    except Exception as e:
+        print(f"  Error BdE targetes: {e}")
+        df_cache = load_cache("targetes_tpv")
+        _record_status("targetes_tpv", "fallback" if not df_cache.empty else "error",
+                       "cache", f"Excepcio BdE: {e}")
+        return df_cache
+
+    _is_valid_series(df, "import_milions", "targetes_tpv")
+    save_cache(df, "targetes_tpv")
+    _record_status("targetes_tpv", "ok", "xlsx_bde", f"{len(df)} files")
+    print(f"  Targetes TPV: {len(df)} files, {df['periode'].min()}-{df['periode'].max()}")
+    return df
+
+
 def process_europa_retail_mensual():
     """
     Volum de vendes mensual del comerç minorista G47 per país (Eurostat sts_trtu_m).
@@ -2024,6 +2048,7 @@ DATASETS_VIGILATS = {
     "ipc_coicop":            {"col": "periode", "ca": "IPC per grups (alimentació, vestit, llar)", "es": "IPC por grupos (alimentación, vestido, hogar)"},
     "epa_retail":            {"col": "periode", "ca": "EPA — ocupats, aturats i hores",  "es": "EPA — ocupados, parados y horas"},
     "confianza_consumidor":  {"col": "periode", "ca": "Confiança del consumidor",     "es": "Confianza del consumidor"},
+    "targetes_tpv":          {"col": "data",    "ca": "Compres amb targeta (Banc d'Espanya)", "es": "Compras con tarjeta (Banco de España)"},
     "estructura_retail":     {"col": "any",     "ca": "Estructura del comerç a la UE (SBS)", "es": "Estructura del comercio en la UE (SBS)"},
     "estructura_retail_mida": {"col": "any",    "ca": "Comerç UE per mida d'empresa", "es": "Comercio UE por tamaño de empresa"},
     "estructura_retail_supervivencia": {"col": "any", "ca": "Supervivència d'empreses (UE)", "es": "Supervivencia de empresas (UE)"},
@@ -2277,6 +2302,9 @@ def process_all():
 
     print("\n8d. Confiança del consumidor (Eurostat ei_bsco_m):")
     process_confianza_consumidor()
+
+    print("\n8e. Compres amb targeta en TPV (Banco de España):")
+    process_targetes_tpv()
 
     print("\n9. CDMGE — comerc diari grans empreses:")
     process_cdmge()

@@ -74,6 +74,22 @@ def load_confianca():
 
 
 @st.cache_data(ttl=3600)
+def load_targetes():
+    """Compres amb targeta en TPV (Banco de España), trimestral."""
+    base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
+    pq = os.path.join(base, "targetes_tpv.parquet")
+    if os.path.exists(pq):
+        df = pd.read_parquet(pq)
+    else:
+        csv = os.path.join(base, "targetes_tpv.csv")
+        if not os.path.exists(csv):
+            return pd.DataFrame()
+        df = pd.read_csv(csv)
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    return df.dropna(subset=["data"]).sort_values("data")
+
+
+@st.cache_data(ttl=3600)
 def load_ipc_grups():
     """IPC per grups (INE T=76125) amb la variació anual calculada sobre l'índex."""
     base = os.path.join(os.path.dirname(__file__), "..", "data", "cache")
@@ -100,6 +116,7 @@ df = load_icm()
 df_distrib = load_icm_distribucion()
 df_conf = load_confianca()
 df_ipc = load_ipc_grups()
+df_tpv = load_targetes()
 
 kicker("Pols mensual del consum · ICM (INE)" if _ca
        else "Pulso mensual del consumo · ICM (INE)")
@@ -286,8 +303,9 @@ _tabs_lbl = [
     ("Per format" if _ca else "Por formato"),
     ("Confiança del consumidor" if _ca else "Confianza del consumidor"),
     ("Preus per grups" if _ca else "Precios por grupos"),
+    ("Pagaments amb targeta" if _ca else "Pagos con tarjeta"),
 ]
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/0b_ICM.py", _tabs_lbl))
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(_tabs_lbl, default=tab_destinacio("pages/0b_ICM.py", _tabs_lbl))
 
 with tab1:
     if _ca:
@@ -1051,6 +1069,124 @@ with tab6:
                 )
 
 # ─── Expander: evolució ocupació ──────────────────────────────
+
+with tab7:
+    if df_tpv.empty:
+        st.info("Encara no hi ha dades de pagaments amb targeta a la cache."
+                if _ca else
+                "Aún no hay datos de pagos con tarjeta en la caché.")
+    else:
+        def _trim(r):
+            return f"T{int(r['trimestre'])} {int(r['any'])}"
+
+        _tp = df_tpv.copy()
+        _tp["etiqueta"] = [_trim(r) for _, r in _tp.iterrows()]
+        _tp_last = _tp.iloc[-1]
+        _tp_lbl = _tp_last["etiqueta"]
+        _tp_first = _tp.iloc[0]
+        _v_imp = float(_tp_last["var_import"])
+        _v_ope = float(_tp_last["var_operacions"])
+        _v_tiq = float(_tp_last["var_tiquet"])
+
+        if _ca:
+            exhibit_header(
+                7, f"L'import pagat amb targeta {'creix' if _v_imp >= 0 else 'cau'} un {fpct(abs(_v_imp), 1, sign=False)} "
+                   f"interanual el {_tp_lbl}",
+                note="Compres amb targetes espanyoles en terminals de punt de venda "
+                     "situats a Espanya. Totes les activitats (comerç, restauració, "
+                     "carburants...), no només el comerç al detall. Euros corrents.")
+        else:
+            exhibit_header(
+                7, f"El importe pagado con tarjeta {'crece' if _v_imp >= 0 else 'cae'} un {fpct(abs(_v_imp), 1, sign=False)} "
+                   f"interanual en el {_tp_lbl}",
+                note="Compras con tarjetas españolas en terminales de punto de venta "
+                     "situados en España. Todas las actividades (comercio, restauración, "
+                     "carburantes...), no solo el comercio minorista. Euros corrientes.")
+
+        st.caption(("Darrera dada disponible: " if _ca else "Último dato disponible: ") + _tp_lbl)
+        _t1, _t2, _t3, _t4 = st.columns(4)
+        with _t1:
+            st.metric(("Import del trimestre" if _ca else "Importe del trimestre"),
+                      f"{fnum(float(_tp_last['import_milions']), 0)} M€")
+        with _t2:
+            st.metric(("Variació de l'import" if _ca else "Variación del importe"),
+                      fpct(_v_imp, 1))
+        with _t3:
+            st.metric(("Variació d'operacions" if _ca else "Variación de operaciones"),
+                      fpct(_v_ope, 1))
+        with _t4:
+            st.metric(("Import mitjà per compra" if _ca else "Importe medio por compra"),
+                      f"{fnum(float(_tp_last['tiquet_mitja_eur']), 1)} €",
+                      delta=fpct(_v_tiq, 1), delta_color="off")
+
+        _periodes_tp = {
+            ("Des de 2019" if _ca else "Desde 2019"): "2019-01-01",
+            ("Des de 2006" if _ca else "Desde 2006"): "2006-01-01",
+        }
+        _per_tp_lbl = st.radio(("Període" if _ca else "Período"), list(_periodes_tp.keys()),
+                               index=0, horizontal=True, key="tpv_per")
+        _tp_plot = _tp[_tp["data"] >= _periodes_tp[_per_tp_lbl]].dropna(subset=["var_import"])
+
+        fig_tp = go.Figure()
+        for _col, _nom, _color, _dash in [
+            ("var_import", ("Import" if _ca else "Importe"), NAVY, None),
+            ("var_operacions", ("Operacions" if _ca else "Operaciones"), OCRE_DEEP, "dot"),
+        ]:
+            fig_tp.add_trace(go.Scatter(
+                x=_tp_plot["data"], y=_tp_plot[_col], mode="lines+markers",
+                name=_nom, line=dict(color=_color, width=2.4, dash=_dash),
+                marker=dict(size=4), customdata=_tp_plot["etiqueta"],
+                hovertemplate=f"<b>{_nom}</b><br>%{{customdata}}: %{{y:+.1f}}%<extra></extra>",
+            ))
+        fig_tp.add_hline(y=0, line_dash="solid", line_color="#999", line_width=1)
+        apply_layout(fig_tp,
+            yaxis_title=("Variació interanual (%)" if _ca else "Variación interanual (%)"),
+            height=420,
+        )
+        st.plotly_chart(fig_tp, use_container_width=True)
+        source("Banc d'Espanya, operacions de compra en terminals de punt de venda "
+               "(dades del Sistema de Tarjetas y Medios de Pago)." if _ca else
+               "Banco de España, operaciones de compra en terminales de punto de venta "
+               "(datos del Sistema de Tarjetas y Medios de Pago).")
+
+        st.markdown("---")
+        st.markdown("**Import mitjà per compra amb targeta**" if _ca
+                    else "**Importe medio por compra con tarjeta**")
+        fig_tq = go.Figure()
+        fig_tq.add_trace(go.Scatter(
+            x=_tp["data"], y=_tp["tiquet_mitja_eur"], mode="lines",
+            line=dict(color=NAVY, width=2.6), name="",
+            customdata=_tp["etiqueta"],
+            hovertemplate="%{customdata}: <b>%{y:.1f} €</b><extra></extra>",
+        ))
+        apply_layout(fig_tq, yaxis_title=("Euros per compra" if _ca else "Euros por compra"),
+                     height=360, showlegend=False)
+        st.plotly_chart(fig_tq, use_container_width=True)
+        source("Banc d'Espanya. Càlcul propi: import / nombre d'operacions. Euros corrents."
+               if _ca else
+               "Banco de España. Cálculo propio: importe / número de operaciones. Euros corrientes.")
+
+        _tq0, _tq1 = float(_tp_first["tiquet_mitja_eur"]), float(_tp_last["tiquet_mitja_eur"])
+        if _ca:
+            insight(
+                f"El {_tp_lbl} es van pagar amb targeta <strong>{fnum(float(_tp_last['import_milions']), 0)} "
+                f"milions d'euros</strong> en terminals de punt de venda, un {fpct(abs(_v_imp), 1, sign=False)} "
+                f"{'més' if _v_imp >= 0 else 'menys'} que un any abans. Les operacions "
+                f"{'creixen' if _v_ope >= 0 else 'cauen'} un {fpct(abs(_v_ope), 1, sign=False)}. L'import mitjà per compra "
+                f"ha passat de {fnum(_tq0, 1)} € el {_tp_first['etiqueta']} a "
+                f"<strong>{fnum(_tq1, 1)} €</strong>, en euros corrents: la targeta s'usa cada cop més "
+                f"per a pagaments petits. Inclou totes les activitats, no només el comerç al detall."
+            )
+        else:
+            insight(
+                f"En el {_tp_lbl} se pagaron con tarjeta <strong>{fnum(float(_tp_last['import_milions']), 0)} "
+                f"millones de euros</strong> en terminales de punto de venta, un {fpct(abs(_v_imp), 1, sign=False)} "
+                f"{'más' if _v_imp >= 0 else 'menos'} que un año antes. Las operaciones "
+                f"{'crecen' if _v_ope >= 0 else 'caen'} un {fpct(abs(_v_ope), 1, sign=False)}. El importe medio por compra "
+                f"ha pasado de {fnum(_tq0, 1)} € en el {_tp_first['etiqueta']} a "
+                f"<strong>{fnum(_tq1, 1)} €</strong>, en euros corrientes: la tarjeta se usa cada vez más "
+                f"para pagos pequeños. Incluye todas las actividades, no solo el comercio minorista."
+            )
 
 _lbl_ocu_exp = ("Veure evolució de l'ocupació mensual"
                 if _ca else

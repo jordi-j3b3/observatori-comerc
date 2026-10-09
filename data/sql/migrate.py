@@ -330,6 +330,18 @@ for col, label, desc in [
          "Eurostat", "ei_bsco_m", "monthly", "balanç de respostes (-100..100)", False, False,
          "confianza_consumidor", col, _monthly_date)
 
+# --- targetes_tpv (Banco de España, STMP) — no crítica — sense dimensió ---
+for col, unit, desc in [
+    ("import_milions", "M EUR", "Import de les compres amb targeta en terminals de punt de venda a Espanya (totes les activitats, no només comerç)."),
+    ("operacions_milers", "milers d'operacions", "Nombre de compres amb targeta en terminals de punt de venda a Espanya."),
+    ("tiquet_mitja_eur", "EUR per operació", "Import mitjà per compra amb targeta (import / operacions)."),
+    ("var_import", "% variació interanual", "Variació interanual de l'import de les compres amb targeta en TPV."),
+    ("var_operacions", "% variació interanual", "Variació interanual del nombre de compres amb targeta en TPV."),
+]:
+    _add(f"targetes_tpv_{col}", f"Compres amb targeta en TPV — {col}", desc,
+         "Banco de España", "tarjetas1.xlsx (STMP)", "quarterly", unit, False,
+         col == "tiquet_mitja_eur", "targetes_tpv", col, _asis_date)
+
 # --- digitalitzacio_comerc (Eurostat isoc_*) — no crítica — dims: tech, pais ---
 _add("digitalitzacio_comerc", "Digitalització del comerç (TIC)",
      "Percentatge d'empreses del comerç (G47) que adopten venda electrònica, IA o núvol.",
