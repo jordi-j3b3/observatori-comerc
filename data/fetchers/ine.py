@@ -1155,7 +1155,15 @@ def fetch_icm():
     Documentació: https://www.ine.es/dyngs/INEbase/es/operacion.htm?
                   c=Estadistica_C&cid=1254736176900
     """
-    ICM_TABLES = [60096, 59787, 60110, 60111, 60114, 60115]
+    # 60103: real × agrupacions (alimentació, equipament...), parella de la 59787
+    # nominal; sense ella no es pot calcular el preu implícit de cada agrupació.
+    ICM_TABLES = [60096, 59787, 60103, 60110, 60111, 60114, 60115]
+
+    # La 60115 porta, a més del total, l'ocupació per mode de distribució amb la
+    # mateixa branca. Aquí sobren (són a fetch_icm_distribucion): si es quedessin,
+    # hi hauria cinc valors per mes sota una sola branca.
+    MODES = {"Empresas unilocalizadas", "Pequeñas cadenas", "Grandes cadenas",
+             "Grandes Superficies"}
 
     INDICADOR_MAP = {
         "Índice": "index",
@@ -1212,6 +1220,8 @@ def fetch_icm():
             parts = [p for p in nombre.rstrip(".").split(". ") if p.strip()]
             if len(parts) < 3:
                 continue
+            if MODES & {p.strip() for p in parts}:
+                continue
 
             ambit = _extreu_ambit(parts)
             tipus = _classifica_tipus(nombre)
@@ -1252,6 +1262,9 @@ def fetch_icm():
     df = df.dropna(subset=["data"]).drop_duplicates(
         subset=["serie_id", "data", "indicador"]
     )
+    # 60096 i 60103 publiquen totes dues el real del 47 sense 473, amb noms de
+    # sèrie diferents: una sola fila per branca, àmbit, indicador i mes.
+    df = df.drop_duplicates(subset=["ambit", "tipus", "branca", "indicador", "data"])
     df = df.sort_values(["tipus", "ambit", "branca", "indicador", "data"]).reset_index(drop=True)
     return df
 

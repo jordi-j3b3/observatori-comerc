@@ -24,7 +24,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "observatori.duckd
 # — _get_metadata() l'afegeix amb una consulta petita addicional.
 _METADATA_COLS = ["serie_id", "name", "description", "source",
                    "frequency", "date_start", "date_end", "is_critical", "is_derived",
-                   "nota_trencament"]
+                   "nota_trencament", "formula", "fonts_origen"]
 
 
 def _connect(db_path=None):
@@ -70,6 +70,14 @@ def _get_metadata(con, serie_id):
         "SELECT source_table FROM observations WHERE serie_id = ? LIMIT 1", [serie_id]
     ).fetchone()
     meta["source_table"] = tbl[0] if tbl else None
+    # Avisos de qualitat presents a la sèrie, amb el text: viatgen amb les dades.
+    meta["avisos"] = [dict(codi=c, text=t) for c, t in con.execute("""
+        SELECT DISTINCT a.avis_codi, a.text
+        FROM (SELECT DISTINCT unnest(string_split(avis, ',')) AS codi
+              FROM observations WHERE serie_id = ? AND avis IS NOT NULL) o
+        JOIN dim_avis a ON a.avis_codi = o.codi
+        ORDER BY 1
+    """, [serie_id]).fetchall()]
     return meta
 
 

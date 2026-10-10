@@ -204,6 +204,37 @@ def _build_branca():
 DIM_BRANCA, ALIES_BRANCA = _build_branca()
 
 
+# ─── Avisos de qualitat ──────────────────────────────────────────────────────
+# Viatgen amb cada observació (columna avis) i els derivats els hereten, perquè
+# un càlcul fet amb una dada amb reserves no surti net.
+
+DIM_AVIS = [
+    dict(avis_codi="dirce_2023",
+         text="Posterior al trencament de sèrie del DIRCE del 2023: no és comparable "
+              "amb els anys anteriors. Cap variació que travessi el 2023 es pot "
+              "presentar sense aquest avís."),
+    dict(avis_codi="icm_brut",
+         text="ICM en brut, sense corregir d'estacionalitat ni de calendari. Només "
+              "són interpretables les variacions interanuals i les mitjanes anuals; "
+              "no quadra amb sèries corregides (CVEC d'Idescat, Eurostat)."),
+    dict(avis_codi="vab_ccaa_estimat",
+         text="VAB per CCAA estimat per J3B3 a partir de ràtios nacionals o de la "
+              "comptabilitat regional: no és una dada publicada per l'INE."),
+    dict(avis_codi="seccio_g",
+         text="Secció G sencera (comerç a l'engròs, al detall i reparació de "
+              "vehicles): l'INE no la desglossa per al CNAE 47."),
+    dict(avis_codi="tpv_totes_activitats",
+         text="Compres amb targeta en TPV de totes les activitats (restauració, "
+              "transport, serveis...), no només del comerç al detall."),
+    dict(avis_codi="deflactor_general",
+         text="Deflactat amb l'IPC general, no amb un índex de preus propi del "
+              "comerç ni de la branca: és una aproximació."),
+    dict(avis_codi="abast_diferent",
+         text="Ràtio entre dues fonts que no mesuren el mateix univers: serveix per a "
+              "l'ordre de magnitud i la tendència, no com a xifra exacta."),
+]
+
+
 # ─── Resolució ───────────────────────────────────────────────────────────────
 
 class ClauDesconeguda(ValueError):

@@ -1889,17 +1889,18 @@ def process_icm():
     ICM — Índices de Comercio al por Menor (INE, base 2021=100).
     Sèrie mensual oficial del comerç al detall espanyol.
 
-    6 taules INE combinades:
+    7 taules INE combinades:
       - 60096 (cifra real Nacional × branca)
       - 59787 (cifra nominal Nacional × especials agregats)
+      - 60103 (cifra real Nacional × especials agregats)
       - 60110 (cifra nominal per CCAA)
       - 60111 (cifra real per CCAA)
       - 60114 (ocupació Nacional)
-      - 60115 (ocupació Nacional × especials agregats)
+      - 60115 (ocupació Nacional; els modes de distribució es descarten)
 
     Genera data/cache/icm.csv (~48k files típicament).
     """
-    print("  Carregant ICM (taules 60096+59787+60110+60111+60114+60115)...")
+    print("  Carregant ICM (taules 60096+59787+60103+60110+60111+60114+60115)...")
     df = ine.fetch_icm()
     if df.empty:
         print("  AVIS: cap dada ICM; mantenint cache existent")

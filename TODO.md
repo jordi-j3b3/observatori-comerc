@@ -13,23 +13,25 @@ Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del 
 - `migrate.py::CLAUS` diu on és el territori i la branca de cada sèrie. Una sèrie sense regla o una etiqueta nova fa fallar la migració. Al workflow diari, el pas de DuckDB va després del commit de dades, perquè una fallada no deixi el dashboard sense actualitzar.
 - Comprovació: la suma de locals per província (T=301) quadra amb la de CCAA (T=294) a les 304 parelles CCAA × any.
 
-### 2. Indicadors derivats (~2-3 dies)
+### 2. Indicadors derivats — primera tanda FETA 2026-10-10
 
-Calculats al motor, mai pel model, desats com a sèries amb `is_derived=True`, la fórmula i les fonts d'origen. Han d'heretar els avisos de qualitat de les fonts (trencament DIRCE 2023; ICM per CCAA en brut, només variació interanual).
+`data/sql/derivats.py`: 12 sèries `der_*` calculades per `migrate.py` després de les de base, amb `formula` i `fonts_origen` a `series_metadata`. Avisos de qualitat per observació (columna `avis`, textos a `dim_avis`, definits a `dimensions.DIM_AVIS`); els derivats hereten la unió dels avisos de les dades que fan servir, i `query.py` els retorna amb el text dins de `metadata["avisos"]`.
 
-| Derivat | Creuament |
-|---|---|
-| Vendes, VAB i personal per local, reals, per CCAA | EEE + IPC |
-| Deflactor implícit per branca contra l'IPC del grup | ICM nominal/real + IPC per grups |
-| Productivitat conjuntural mensual per branca i CCAA | ICM real / ICM ocupació |
-| Quadrant creixement × marge per branca | ICM + marges INE |
-| Quota del comerç sobre la despesa de les llars per grup | EPF + EAS |
-| Saturació: densitat contra vendes per CCAA | locals per 1.000 hab + ICM |
-| Pes del canal online sobre les vendes del sector | CNMC + EEE |
-| Divergència entre les tres mesures del consum | CDMGE + ICM + TPV |
-| Bretxa entre modes de distribució | ICM per modes |
+Fets: vendes per local, per ocupat i per habitant (reals, per CCAA); ocupats per local; deflactor implícit de l'ICM per branca i la seva diferència amb l'IPC del grup; productivitat aparent mensual; variació de la mitjana anual de l'ICM real i nominal (per branca i CCAA); modes de distribució relatius a les empreses d'un local; pes del comerç electrònic sobre les vendes; targeta contra ICM. Verificats contra càlcul independent i contra les variacions publicades per l'INE.
 
-Pendent per fer-ho: avisos de qualitat a nivell d'observació (avui `nota_trencament` és per sèrie).
+Correccions de base trobades pel camí:
+- 22 sèries de l'INE (EEE per CCAA, productivitat, subsectors) eren en euros però etiquetades "M EUR" a DuckDB.
+- `fetch_icm()` barrejava l'ocupació per mode de distribució (T=60115) amb el total del 47 sense 473: cinc valors per mes sota la mateixa branca. El KPI d'ocupació de "Pols mensual" mostrava les grans superfícies (+1,4% a l'agost del 2026) en lloc del total (0,0%). Ara es descarten els modes (són a `icm_distribucion`).
+- Afegida la T=60103 (ICM real per agrupacions: alimentació, equipament personal i de la llar, salut, resta), parella de la 59787 nominal.
+
+Pendents de la llista:
+
+| Derivat | Creuament | Què falta |
+|---|---|---|
+| Quadrant creixement × marge per branca | `der_icm_real_var_anual` + marges INE | Les dues sèries ja comparteixen `cnae_codi`; la classificació va al motor de fets |
+| Quota del comerç sobre la despesa de les llars per grup | EPF + EAS | Cal el nombre de llars (INE, Encuesta Continua de Hogares) |
+| Saturació: densitat contra vendes per CCAA | locals per 1.000 hab + `der_vendes_per_habitant_real` | Les dues sèries ja comparteixen `geo_codi`; la lectura va al motor de fets |
+| Divergència amb el CDMGE | CDMGE + ICM + TPV | Aclarir què mesura cada indicador del CDMGE abans d'agregar-lo a trimestres |
 
 ### 3. Motor de fets (~2 dies)
 

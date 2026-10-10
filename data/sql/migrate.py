@@ -22,10 +22,11 @@ import duckdb
 import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from data.config import nota_trencament_dirce  # noqa: E402
+from data.config import TRENCAMENTS_DIRCE, nota_trencament_dirce  # noqa: E402
+from data.sql.derivats import DERIVATS  # noqa: E402
 from data.sql.dimensions import (  # noqa: E402
     ALIES_BRANCA, ALIES_CCAA_INE, ALIES_PROV_INE, ALIES_TERRITORI,
-    DIM_BRANCA, DIM_TERRITORI, resol,
+    DIM_AVIS, DIM_BRANCA, DIM_TERRITORI, resol,
 )
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
@@ -260,22 +261,22 @@ _add("locals_ccaa_grup", "Locals per CCAA i grup CNAE 47",
 
 # --- productivitat (INE T=36194 EEE Comercio + T=36199 P&L + T=50902 IPC) — CRITICAL ---
 _PROD = [
-    ("xifra_negoci_constants", "M EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Xifra de negoci del comerç al detall, preus constants."),
-    ("valor_afegit_constants", "M EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Valor afegit del comerç al detall, preus constants."),
+    ("xifra_negoci_constants", "EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Xifra de negoci del comerç al detall, preus constants."),
+    ("valor_afegit_constants", "EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Valor afegit del comerç al detall, preus constants."),
     ("personal_ocupat", "persones", "T=36194", "Personal ocupat al comerç al detall."),
     ("hores_treballades", "milers d'hores", "T=36194", "Hores treballades pel personal remunerat, comerç al detall."),
     ("productivitat_va_hora", "EUR/hora", "T=36194 (ràtio derivada)", "Productivitat: valor afegit constant per hora treballada."),
     ("productivitat_xn_hora", "EUR/hora", "T=36194 (ràtio derivada)", "Productivitat: xifra de negoci constant per hora treballada."),
-    ("gastos_personal", "M EUR (preus corrents)", "T=36194", "Despeses de personal, comerç al detall."),
-    ("gastos_personal_constants", "M EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Despeses de personal, preus constants."),
+    ("gastos_personal", "EUR (preus corrents)", "T=36194", "Despeses de personal, comerç al detall."),
+    ("gastos_personal_constants", "EUR (preus constants)", "T=36194 (deflactat amb T=50902)", "Despeses de personal, preus constants."),
     ("quota_salarial", "ràtio (0-1)", "T=36194 (ràtio derivada)", "Despeses de personal sobre valor afegit."),
-    ("excedent_brut", "M EUR (preus corrents)", "T=36194 (ràtio derivada)", "Excedent brut d'explotació (valor afegit - despeses de personal)."),
+    ("excedent_brut", "EUR (preus corrents)", "T=36194 (ràtio derivada)", "Excedent brut d'explotació (valor afegit - despeses de personal)."),
     ("cost_laboral_per_ocupat", "EUR/persona", "T=36194 (ràtio derivada)", "Cost laboral mitjà per ocupat."),
     ("cost_laboral_hora", "EUR/hora", "T=36194+50902 (ràtio derivada)", "Cost laboral per hora treballada, preus constants."),
-    ("cogs", "M EUR (preus corrents)", "T=36199", "Consum de béns i serveis per a revenda (cost de mercaderia venuda)."),
-    ("cogs_constants", "M EUR (preus constants)", "T=36199 (deflactat amb T=50902)", "COGS, preus constants."),
-    ("serveis_exteriors", "M EUR (preus corrents)", "T=36199", "Despeses en serveis exteriors (lloguers, energia, serveis externs)."),
-    ("serveis_exteriors_constants", "M EUR (preus constants)", "T=36199 (deflactat amb T=50902)", "Serveis exteriors, preus constants."),
+    ("cogs", "EUR (preus corrents)", "T=36199", "Consum de béns i serveis per a revenda (cost de mercaderia venuda)."),
+    ("cogs_constants", "EUR (preus constants)", "T=36199 (deflactat amb T=50902)", "COGS, preus constants."),
+    ("serveis_exteriors", "EUR (preus corrents)", "T=36199", "Despeses en serveis exteriors (lloguers, energia, serveis externs)."),
+    ("serveis_exteriors_constants", "EUR (preus constants)", "T=36199 (deflactat amb T=50902)", "Serveis exteriors, preus constants."),
     ("marge_brut", "ràtio (0-1)", "T=36194+36199 (ràtio derivada)", "Marge brut comptable: (vendes - COGS) / vendes."),
 ]
 for col, unit, tbl, desc in _PROD:
@@ -375,13 +376,13 @@ for sid, col, unit, desc in [
 # --- eee_ccaa (INE T=76817 + Eurostat nama_10r_3gva/nama_10_a64 per vab_eurostat) — no crítica ---
 _EEE_CCAA = [
     ("locals", "nombre de locals", "T=76817", "Nombre de locals del comerç al detall, per CCAA."),
-    ("xifra_negoci", "M EUR", "T=76817", "Xifra de negoci del comerç al detall, per CCAA."),
-    ("sous_salaris", "M EUR", "T=76817", "Sous i salaris del comerç al detall, per CCAA."),
-    ("inversio", "M EUR", "T=76817", "Inversió en actius materials, per CCAA."),
+    ("xifra_negoci", "EUR", "T=76817", "Xifra de negoci del comerç al detall, per CCAA."),
+    ("sous_salaris", "EUR", "T=76817", "Sous i salaris del comerç al detall, per CCAA."),
+    ("inversio", "EUR", "T=76817", "Inversió en actius materials, per CCAA."),
     ("personal_ocupat", "persones", "T=76817", "Personal ocupat del comerç al detall, per CCAA."),
-    ("vab_estimat", "M EUR", "T=76817 (estimació via ràtio VA/XN)", "VAB estimat per CCAA (mètode ràtio nacional, preus constants)."),
-    ("vab_estimat_nominal", "M EUR", "T=76817 (estimació via ràtio VAB corrents/XN)", "VAB estimat per CCAA (mètode ràtio nacional, preus corrents)."),
-    ("vab_eurostat", "M EUR", "Eurostat nama_10r_3gva+nama_10_a64 (mètode híbrid)", "VAB estimat per CCAA (mètode híbrid comptabilitat regional)."),
+    ("vab_estimat", "EUR", "T=76817 (estimació via ràtio VA/XN)", "VAB estimat per CCAA (mètode ràtio nacional, preus constants)."),
+    ("vab_estimat_nominal", "EUR", "T=76817 (estimació via ràtio VAB corrents/XN)", "VAB estimat per CCAA (mètode ràtio nacional, preus corrents)."),
+    ("vab_eurostat", "EUR", "Eurostat nama_10r_3gva+nama_10_a64 (mètode híbrid)", "VAB estimat per CCAA (mètode híbrid comptabilitat regional)."),
     ("pes_cnae47_pib", "ràtio (0-1)", "Eurostat nama_10r_3gva+nama_10_a64", "Pes del CNAE 47 sobre el PIB de cada CCAA."),
 ]
 for col, unit, tbl, desc in _EEE_CCAA:
@@ -398,9 +399,9 @@ _add("subsectors_dirce_empreses", "Subsectors CNAE 47 — empreses (DIRCE)",
 # --- subsectors_eas (INE T=76818) — no crítica — dim: nom (subsector) ---
 for col, unit, desc in [
     ("n_empreses_eas", "nombre d'empreses", "Empreses per subsector CNAE 47 (font EAS)."),
-    ("xifra_negoci", "M EUR", "Xifra de negoci per subsector CNAE 47."),
-    ("valor_afegit", "M EUR", "Valor afegit per subsector CNAE 47."),
-    ("inversio", "M EUR", "Inversió per subsector CNAE 47."),
+    ("xifra_negoci", "EUR", "Xifra de negoci per subsector CNAE 47."),
+    ("valor_afegit", "EUR", "Valor afegit per subsector CNAE 47."),
+    ("inversio", "EUR", "Inversió per subsector CNAE 47."),
     ("personal_ocupat", "persones", "Personal ocupat per subsector CNAE 47."),
 ]:
     _add(f"subsectors_eas_{col}", f"Subsectors EAS — {col}", desc, "INE", "T=76818",
@@ -409,10 +410,10 @@ for col, unit, desc in [
 # --- subsectors_472 (INE T=76818, detall alimentació) — no crítica — dim: nom ---
 for col, unit, desc in [
     ("n_empreses_eas", "nombre d'empreses", "Empreses per categoria d'alimentació (472)."),
-    ("xifra_negoci", "M EUR (preus corrents)", "Xifra de negoci per categoria d'alimentació."),
-    ("xifra_negoci_constants", "M EUR (preus constants)", "Xifra de negoci per categoria d'alimentació, preus constants."),
-    ("valor_afegit", "M EUR", "Valor afegit per categoria d'alimentació."),
-    ("inversio", "M EUR", "Inversió per categoria d'alimentació."),
+    ("xifra_negoci", "EUR (preus corrents)", "Xifra de negoci per categoria d'alimentació."),
+    ("xifra_negoci_constants", "EUR (preus constants)", "Xifra de negoci per categoria d'alimentació, preus constants."),
+    ("valor_afegit", "EUR", "Valor afegit per categoria d'alimentació."),
+    ("inversio", "EUR", "Inversió per categoria d'alimentació."),
     ("personal_ocupat", "persones", "Personal ocupat per categoria d'alimentació."),
 ]:
     _add(f"subsectors_472_{col}", f"Subsectors 472 — {col}", desc, "INE", "T=76818",
@@ -569,9 +570,54 @@ def _clau(tidy, spec, alies_defecte, que):
     return resol(tidy[dim], alies, que=que).values
 
 
+# ─── Avisos de qualitat per observació (codis a dimensions.DIM_AVIS) ─────────
+AVIS = [
+    ("icm_distribucio_", None),                  # aquesta sí que és CVEC
+    ("icm_", "icm_brut"),
+    ("eee_ccaa_vab_", "vab_ccaa_estimat"),
+    ("eee_ccaa_pes_cnae47_pib", "vab_ccaa_estimat"),
+    ("epa_retail_aturats", "seccio_g"),
+    ("epa_retail_hores", "seccio_g"),
+    ("targetes_tpv_", "tpv_totes_activitats"),
+    ("productivitat_productivitat_", "deflactor_general"),
+    ("productivitat_cost_laboral_hora", "deflactor_general"),
+]
+
+
+def _avis_base(s, tidy):
+    codis = pd.Series([set() for _ in range(len(tidy))], index=tidy.index)
+    for prefix, codi in AVIS:
+        if s["serie_id"].startswith(prefix):
+            if codi:
+                codis.apply(lambda c, k=codi: c.add(k))
+            break
+    if "T=50902" in s["source_table"] and "constants" in s["serie_id"]:
+        codis.apply(lambda c: c.add("deflactor_general"))
+    if s.get("nota_trencament") == _NOTA_DIRCE and TRENCAMENTS_DIRCE:
+        anys = pd.to_datetime(tidy["date"]).dt.year
+        for t in sorted(TRENCAMENTS_DIRCE):
+            for i in tidy.index[anys >= t]:
+                codis[i].add(f"dirce_{t}")
+    return codis.map(lambda c: ",".join(sorted(c)) or None)
+
+
+_CODIS_AVIS = {a["avis_codi"] for a in DIM_AVIS}
+
+
+def _comprova_avis(serie_id, avis):
+    usats = {c for v in avis.dropna() for c in v.split(",")}
+    falten = usats - _CODIS_AVIS
+    if falten:
+        raise KeyError(f"{serie_id}: avisos sense text a DIM_AVIS: {sorted(falten)}")
+
+
 def _carrega_dimensions(con):
     con.execute("DELETE FROM dim_territori")
     con.execute("DELETE FROM dim_branca")
+    con.execute("DELETE FROM dim_avis")
+    con.register("da", pd.DataFrame(DIM_AVIS))
+    con.execute("INSERT INTO dim_avis SELECT avis_codi, text FROM da")
+    con.unregister("da")
     con.register("dt", pd.DataFrame(DIM_TERRITORI))
     con.execute("INSERT INTO dim_territori SELECT geo_codi, nivell, nom, geo_pare, "
                 "codi_ine, codi_eurostat FROM dt")
@@ -601,6 +647,38 @@ SKIPPED = [
 ]
 
 
+_OBS_COLS = ["serie_id", "date", "frequency", "value", "unit", "dim_1", "dim_2",
+             "dim_3", "source_table", "is_critical", "is_derived", "is_public",
+             "geo_codi", "cnae_codi", "avis"]
+
+
+def _desa(con, s, tidy):
+    if tidy.empty:
+        raise ValueError(f"{s['serie_id']}: cap observació (algun creuament no casa)")
+    _comprova_avis(s["serie_id"], tidy["avis"])
+    date_start, date_end = tidy["date"].min(), tidy["date"].max()
+
+    # Ordre: esborrar filles (observations) abans que el pare (series_metadata);
+    # inserir pare abans que filles (restriccio FOREIGN KEY).
+    con.execute("DELETE FROM observations WHERE serie_id = ?", [s["serie_id"]])
+    con.execute("DELETE FROM series_metadata WHERE serie_id = ?", [s["serie_id"]])
+    con.execute("""
+        INSERT INTO series_metadata
+        (serie_id, name, description, source, frequency, date_start, date_end,
+         is_critical, is_derived, is_public, nota_trencament, formula, fonts_origen)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [s["serie_id"], s["name"], s["description"], s["source"], s["frequency"],
+          date_start, date_end, s["is_critical"], s["is_derived"], s["is_public"],
+          s.get("nota_trencament"), s.get("formula"), s.get("fonts_origen")])
+
+    con.register("tidy_df", tidy[_OBS_COLS])
+    con.execute(f"INSERT INTO observations ({', '.join(_OBS_COLS)}) "
+                f"SELECT {', '.join(_OBS_COLS)} FROM tidy_df")
+    con.unregister("tidy_df")
+
+    print(f"    {len(tidy)} files, {date_start} .. {date_end}")
+
+
 def migrate(db_path=DB_PATH, series=None):
     if series is None:
         series = SERIES + SERIES_EXTRA
@@ -627,31 +705,21 @@ def migrate(db_path=DB_PATH, series=None):
         geo, cnae = _regla(s["serie_id"])
         tidy["geo_codi"] = _clau(tidy, geo, ALIES_TERRITORI, f"{s['serie_id']}: territori")
         tidy["cnae_codi"] = _clau(tidy, cnae, ALIES_BRANCA, f"{s['serie_id']}: branca")
+        tidy["avis"] = _avis_base(s, tidy)
+        _desa(con, s, tidy)
 
-        cols = ["serie_id", "date", "frequency", "value", "unit", "dim_1", "dim_2",
-                "dim_3", "source_table", "is_critical", "is_derived", "is_public",
-                "geo_codi", "cnae_codi"]
-        date_start, date_end = tidy["date"].min(), tidy["date"].max()
-
-        # Ordre: esborrar filles (observations) abans que el pare (series_metadata);
-        # inserir pare abans que filles (restriccio FOREIGN KEY).
-        con.execute("DELETE FROM observations WHERE serie_id = ?", [s["serie_id"]])
-        con.execute("DELETE FROM series_metadata WHERE serie_id = ?", [s["serie_id"]])
-        con.execute("""
-            INSERT INTO series_metadata
-            (serie_id, name, description, source, frequency, date_start, date_end,
-             is_critical, is_derived, is_public, nota_trencament)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, [s["serie_id"], s["name"], s["description"], s["source"], s["frequency"],
-              date_start, date_end, s["is_critical"], s["is_derived"], s["is_public"],
-              s.get("nota_trencament")])
-
-        con.register("tidy_df", tidy[cols])
-        con.execute(f"INSERT INTO observations ({', '.join(cols)}) "
-                    f"SELECT {', '.join(cols)} FROM tidy_df")
-        con.unregister("tidy_df")
-
-        print(f"    {len(tidy)} files, {date_start} .. {date_end}")
+    # Derivats: després de les sèries de base, que llegeixen de la mateixa base.
+    for d in DERIVATS:
+        print(f"  Derivant {d['serie_id']}...")
+        tidy = d["build"](con)
+        tidy["date"] = pd.to_datetime(tidy["date"]).dt.date
+        s = dict(d, source="J3B3 (derivat)", source_table=d["formula"],
+                 is_critical=False, is_derived=True, is_public=True)
+        for k, v in [("serie_id", d["serie_id"]), ("frequency", d["frequency"]),
+                     ("unit", d["unit"]), ("source_table", d["formula"]),
+                     ("is_critical", False), ("is_derived", True), ("is_public", True)]:
+            tidy[k] = v
+        _desa(con, s, tidy)
 
     n_series = con.execute("SELECT count(*) FROM series_metadata").fetchone()[0]
     n_obs = con.execute("SELECT count(*) FROM observations").fetchone()[0]

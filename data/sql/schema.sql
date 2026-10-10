@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS observations (
 
 ALTER TABLE observations ADD COLUMN IF NOT EXISTS geo_codi VARCHAR;
 ALTER TABLE observations ADD COLUMN IF NOT EXISTS cnae_codi VARCHAR;
+-- Avisos de qualitat de l'observació: codis de dim_avis separats per comes, NULL si cap.
+-- Els derivats hereten la unió dels avisos de les observacions que fan servir.
+ALTER TABLE observations ADD COLUMN IF NOT EXISTS avis VARCHAR;
+
+CREATE TABLE IF NOT EXISTS dim_avis (
+    avis_codi VARCHAR PRIMARY KEY,
+    text      VARCHAR NOT NULL
+);
+
+-- Derivats (is_derived): com es calculen i de quines sèries surten.
+ALTER TABLE series_metadata ADD COLUMN IF NOT EXISTS formula VARCHAR;
+ALTER TABLE series_metadata ADD COLUMN IF NOT EXISTS fonts_origen VARCHAR;
 
 CREATE INDEX IF NOT EXISTS idx_obs_serie_date ON observations(serie_id, date);
 
