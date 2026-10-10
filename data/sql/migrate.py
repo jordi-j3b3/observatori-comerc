@@ -23,6 +23,10 @@ import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from data.config import nota_trencament_dirce  # noqa: E402
+from data.sql.dimensions import (  # noqa: E402
+    ALIES_BRANCA, ALIES_CCAA_INE, ALIES_PROV_INE, ALIES_TERRITORI,
+    DIM_BRANCA, DIM_TERRITORI, resol,
+)
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "..", "cache")
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "observatori.duckdb")
@@ -503,6 +507,80 @@ for col, unit, desc in [
     ))
 
 
+# ─── Claus comunes: on és el territori i on és la branca de cada sèrie ──────
+# Per prefix de serie_id, el primer que coincideix. Cada valor és:
+#   - un codi fix ("pais:ES", "47") si tota la sèrie és d'un sol territori o branca;
+#   - "dim_N" si la clau és en aquella dimensió (es tradueix amb els àlies generals);
+#   - ("dim_N", alies) si cal un diccionari d'àlies propi (codis INE numèrics);
+#   - None si no aplica (IPC, targetes: no són d'una branca CNAE).
+# Una sèrie nova sense regla fa fallar la migració: cal decidir-ho, no endevinar-ho.
+CLAUS = [
+    ("icm_distribucio_", "pais:ES", "47"),
+    ("icm_", "dim_2", "dim_1"),
+    ("epa_retail_ocupats", "pais:ES", "47"),
+    ("epa_retail_", "pais:ES", "G"),             # aturats i hores: només secció G
+    ("ipc", "pais:ES", None),                    # ipc i ipc_coicop
+    ("pib_vab_vab_total", "pais:ES", None),
+    ("pib_vab_", "pais:ES", "47"),
+    ("empreses_poblacio", "dim_1", None),
+    ("empreses_", "dim_1", "47"),
+    ("locals_prov_", ("dim_1", ALIES_PROV_INE), "47"),
+    ("poblacio_prov", ("dim_1", ALIES_PROV_INE), None),
+    ("locals_ccaa_grup", ("dim_1", ALIES_CCAA_INE), "dim_2"),
+    ("productivitat_", "pais:ES", "47"),
+    ("europa_vab_vab_total", "dim_1", None),
+    ("europa_vab_", "dim_1", "47"),
+    ("europa_retail_mensual_", "dim_1", "47"),
+    ("confianza_consumidor_", "pais:ES", None),
+    ("targetes_tpv_", "pais:ES", None),          # totes les activitats, no CNAE 47
+    ("digitalitzacio_comerc", "dim_2", "47"),
+    ("ocupacio_comerc", "dim_1", "47"),
+    ("eaes", "pais:ES", None),                   # dim_1 = sector de tota l'economia
+    ("ecommerce_total", "pais:ES", None),
+    ("ecommerce_", "pais:ES", "47"),
+    ("eee_ccaa_", "dim_1", "47"),
+    ("subsectors_epf", "pais:ES", None),         # categories de consum, no CNAE
+    ("subsectors_", "pais:ES", "dim_1"),
+    ("marges_branca_ine", "pais:ES", "dim_1"),
+    ("cdmge", "pais:ES", "47"),
+    ("estructura_consum_", "dim_1", None),
+    ("estructura_comerc_", "pais:ES", None),
+    ("estructura_retail", "dim_1", "47"),
+]
+
+
+def _regla(serie_id):
+    for prefix, geo, cnae in CLAUS:
+        if serie_id.startswith(prefix):
+            return geo, cnae
+    raise KeyError(f"{serie_id}: sense regla a CLAUS (territori i branca). "
+                   "Afegeix-la a data/sql/migrate.py.")
+
+
+def _clau(tidy, spec, alies_defecte, que):
+    if spec is None:
+        return None
+    if isinstance(spec, tuple):
+        dim, alies = spec
+    elif spec.startswith("dim_"):
+        dim, alies = spec, alies_defecte
+    else:
+        return spec
+    return resol(tidy[dim], alies, que=que).values
+
+
+def _carrega_dimensions(con):
+    con.execute("DELETE FROM dim_territori")
+    con.execute("DELETE FROM dim_branca")
+    con.register("dt", pd.DataFrame(DIM_TERRITORI))
+    con.execute("INSERT INTO dim_territori SELECT geo_codi, nivell, nom, geo_pare, "
+                "codi_ine, codi_eurostat FROM dt")
+    con.unregister("dt")
+    con.register("db", pd.DataFrame(DIM_BRANCA))
+    con.execute("INSERT INTO dim_branca SELECT cnae_codi, nivell, nom, cnae_pare FROM db")
+    con.unregister("db")
+
+
 # ─── Exclosos: no encaixen amb l'esquema observations (series temporals) ────
 SKIPPED = [
     dict(cache="municipal", reason="Exclòs del chatbot públic (decisió explícita 2026-08-03). "
@@ -530,6 +608,7 @@ def migrate(db_path=DB_PATH, series=None):
     con = duckdb.connect(db_path)
     with open(SCHEMA_PATH) as f:
         con.execute(f.read())
+    _carrega_dimensions(con)
 
     for s in series:
         print(f"  Migrant {s['serie_id']}...")
@@ -545,9 +624,13 @@ def migrate(db_path=DB_PATH, series=None):
         tidy["is_critical"] = s["is_critical"]
         tidy["is_derived"] = s["is_derived"]
         tidy["is_public"] = s["is_public"]
+        geo, cnae = _regla(s["serie_id"])
+        tidy["geo_codi"] = _clau(tidy, geo, ALIES_TERRITORI, f"{s['serie_id']}: territori")
+        tidy["cnae_codi"] = _clau(tidy, cnae, ALIES_BRANCA, f"{s['serie_id']}: branca")
 
         cols = ["serie_id", "date", "frequency", "value", "unit", "dim_1", "dim_2",
-                "dim_3", "source_table", "is_critical", "is_derived", "is_public"]
+                "dim_3", "source_table", "is_critical", "is_derived", "is_public",
+                "geo_codi", "cnae_codi"]
         date_start, date_end = tidy["date"].min(), tidy["date"].max()
 
         # Ordre: esborrar filles (observations) abans que el pare (series_metadata);
@@ -564,7 +647,8 @@ def migrate(db_path=DB_PATH, series=None):
               s.get("nota_trencament")])
 
         con.register("tidy_df", tidy[cols])
-        con.execute("INSERT INTO observations SELECT * FROM tidy_df")
+        con.execute(f"INSERT INTO observations ({', '.join(cols)}) "
+                    f"SELECT {', '.join(cols)} FROM tidy_df")
         con.unregister("tidy_df")
 
         print(f"    {len(tidy)} files, {date_start} .. {date_end}")

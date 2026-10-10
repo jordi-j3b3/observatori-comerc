@@ -31,11 +31,6 @@ jobs:
             cd $GITHUB_WORKSPACE
             python -m data.processor
 
-        - name: Build DuckDB (capa de dades pel chatbot)
-          run: |
-            cd $GITHUB_WORKSPACE
-            python data/sql/migrate.py
-
         - name: Commit updated data
           run: |
             git config user.name 'github-actions[bot]'
@@ -43,4 +38,11 @@ jobs:
             git add data/cache
             git diff --staged --quiet || git commit -m "Actualitzacio trimestral de dades $(date +%Y-%m-%d)"                                                                                                                                                                    
             git pull --rebase                                                                                                                                                                                                                                                   
-            git push 
+            git push
+
+        # Després del commit: si una font canvia una etiqueta de territori o branca,
+        # migrate.py falla i el job surt vermell, però les dades del dashboard ja són desades.
+        - name: Build DuckDB (capa de dades pel chatbot)
+          run: |
+            cd $GITHUB_WORKSPACE
+            python data/sql/migrate.py 

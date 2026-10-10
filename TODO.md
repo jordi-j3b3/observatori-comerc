@@ -2,6 +2,49 @@
 
 Llistat de tasques pendents al projecte. No incloure aquí l'estat operatiu del dia a dia (això va a les memòries del repo Claude).
 
+## Motor de coneixement: creuar fonts abans del xatbot
+
+**Origen**: anàlisi del 2026-10-10. El motor té 31 datasets i 106 sèries a DuckDB, però les set funcions de `data/sql/query.py` treballen sèrie a sèrie. Avui el creuament només el fa una persona (newsletter) o un script fet a mà (`analisi/comertia_*.py`). Si el xatbot surt ara, consultarà sèries, no en traurà coneixement. Ordre acordat: claus comunes, derivats, motor de fets, fonts noves; el xatbot, després.
+
+### ~~1. Claus comunes de territori i branca~~ FET 2026-10-10
+
+- `data/sql/dimensions.py`: codis canònics de territori (`pais:ES`, `agr:EU27_2020`, `ccaa:09`, `prov:08`) i de branca (`G`, `47`, `471`…`4791`, agrupacions de l'ICM `47_ALIM`…), amb totes les etiquetes de cada font.
+- DuckDB: taules `dim_territori` i `dim_branca`, i columnes `geo_codi` i `cnae_codi` a `observations` (104.505 files, totes amb territori; les que no són d'una branca CNAE, com l'IPC o les targetes, amb `cnae_codi` NULL).
+- `migrate.py::CLAUS` diu on és el territori i la branca de cada sèrie. Una sèrie sense regla o una etiqueta nova fa fallar la migració. Al workflow diari, el pas de DuckDB va després del commit de dades, perquè una fallada no deixi el dashboard sense actualitzar.
+- Comprovació: la suma de locals per província (T=301) quadra amb la de CCAA (T=294) a les 304 parelles CCAA × any.
+
+### 2. Indicadors derivats (~2-3 dies)
+
+Calculats al motor, mai pel model, desats com a sèries amb `is_derived=True`, la fórmula i les fonts d'origen. Han d'heretar els avisos de qualitat de les fonts (trencament DIRCE 2023; ICM per CCAA en brut, només variació interanual).
+
+| Derivat | Creuament |
+|---|---|
+| Vendes, VAB i personal per local, reals, per CCAA | EEE + IPC |
+| Deflactor implícit per branca contra l'IPC del grup | ICM nominal/real + IPC per grups |
+| Productivitat conjuntural mensual per branca i CCAA | ICM real / ICM ocupació |
+| Quadrant creixement × marge per branca | ICM + marges INE |
+| Quota del comerç sobre la despesa de les llars per grup | EPF + EAS |
+| Saturació: densitat contra vendes per CCAA | locals per 1.000 hab + ICM |
+| Pes del canal online sobre les vendes del sector | CNMC + EEE |
+| Divergència entre les tres mesures del consum | CDMGE + ICM + TPV |
+| Bretxa entre modes de distribució | ICM per modes |
+
+Pendent per fer-ho: avisos de qualitat a nivell d'observació (avui `nota_trencament` és per sèrie).
+
+### 3. Motor de fets (~2 dies)
+
+Regles deterministes sobre sèries i derivats (màxim o mínim des de quan, canvis de posició al rànquing de CCAA, inflexions, divergències entre fonts per sobre d'un llindar). Sortida: taula `fets` (enunciat, valor, comparació, fonts, data, avisos), que alimenta el xatbot (`get_facts`, `get_derived`), la tesi de la portada, la newsletter i les candidates a predicció.
+
+### 4. Fonts noves oficials i gratuïtes
+
+Per ordre: afiliació a la Seguretat Social per activitat (verificar fins a quin nivell territorial baixa la divisió 47), Eurostat `sts_trtu_m` amb el desglossament del G47 (alimentació, no alimentació, internet), Central de Balances del Banco de España per sector i mida, Atlas de Distribució de Renda de les Llars (INE), FRONTUR/EGATUR per CCAA, estadística cadastral de superfície comercial per municipi.
+
+### 5. Fonts de pagament o amb llicència (motor intern, no dashboard)
+
+Decisió del Jordi. Per ordre: aprofitar a fons SABI si ja hi ha accés; llicència de CaixaBank Research (consum amb targeta per sector); Alimarket (cens de superfícies amb m²); Idealista/data (lloguers de locals). Kantar i NielsenIQ, no ara.
+
+---
+
 ## ICM per CCAA: sèrie en brut, no CVEC — no quadra amb Idescat
 
 **Origen**: detectat 2026-08-02 comparant Catalunya/Balears (juny 2026) amb l'ICD d'Idescat (https://www.idescat.cat/pub/?id=icd).
